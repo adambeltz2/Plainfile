@@ -56,8 +56,6 @@ Nothing here is a promise of order. Remove an item when it ships.
   _Affected: `src/fsa-storage.ts`, `web/store.ts`._
 - `[FEATURE]` Optional git sync in server mode: commit and pull on a schedule. _Affected:
   `src/server.ts`._
-- `[FEATURE]` Local safety net: keep the last few versions of a file in `.plainfile/history/` before
-  each write, with a Restore button. _Affected: new `src/history.ts`._
 - `[FEATURE]` Conflict screen: when a file changed on disk and you have unsaved edits, show both
   versions side by side and let you keep either or merge. _Affected: `web/notes.ts`._
 - `[DEBT]` The File System Access API has no compare-and-swap, so a very small window remains
@@ -147,6 +145,12 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 ## Notes and the editor
 
+- `[FEATURE]` Word count and reading time. Focus mode is built. _Affected: `web/notes.ts`._
+- `[FEATURE]` History: keep versions on a timer while you type, label a version ("before the
+  rewrite"), see a word-level diff, and clear a note's history. _Affected: `src/history.ts`,
+  `web/notes.ts`._
+- `[FEATURE]` Focus mode extras: a typewriter scroll, a dimmed-paragraph mode, and a daily word goal.
+  _Affected: `web/notes.ts`, `web/app.css`._
 - `[FEATURE]` **Autocomplete** for `[[links]]` (note titles and aliases), `#tags` and `@people` as
   you type. _Affected: `web/editor.ts`._
 - `[FEATURE]` Slash menu: `/` inserts a heading, task, date, link, table or template. _Affected:
@@ -164,8 +168,6 @@ Nothing here is a promise of order. Remove an item when it ships.
 - `[FEATURE]` Hover a `[[link]]` to preview the note. _Affected: `web/editor.ts`._
 - `[FEATURE]` Outline panel from headings, fold sections, and find in note (Ctrl F). _Affected:
   `web/editor.ts`, `web/notes.ts`._
-- `[FEATURE]` Word count and reading time, and a focus mode with the side panels hidden. _Affected:
-  `web/notes.ts`._
 - `[FEATURE]` Several notes open as tabs, and a recent notes list. _Affected: `web/notes.ts`._
 - `[FEATURE]` Pin or star notes for quick access. _Affected: `.plainfile/config.md`, `web/notes.ts`._
 - `[FEATURE]` Properties panel: edit tags as chips with autocomplete, add any key, a date picker for

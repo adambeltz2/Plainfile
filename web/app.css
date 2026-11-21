@@ -357,3 +357,18 @@ th { background: var(--soft); font-weight: 600; white-space: nowrap; }
   .only-narrow { display: inline-block; }
   .frame.notes.has-note > .side { display: none; }
 }
+
+/* ---------- version history ---------- */
+.vrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.vrow:last-child { border-bottom: 0; }
+
+/* ---------- focus mode: the note alone ---------- */
+.wrap.focus .bar, .wrap.focus .foot, .wrap.focus .side, .wrap.focus .source, .wrap.focus .hide-in-focus { display: none !important; }
+.wrap.focus .frame.notes { grid-template-columns: minmax(0, 1fr); border: 0; background: var(--bg); min-height: 0; }
+.wrap.focus .editor-main { width: 100%; max-width: 46rem; margin: 0 auto; padding-top: 6px; }
+.wrap.focus .ed-head { position: sticky; top: 0; z-index: 3; background: var(--bg); padding: 8px 0; border-bottom: 1px solid var(--line); }
+.wrap.focus .ed-head .path { display: none; }
+.wrap.focus .editor-host .cm-editor { border: 0; min-height: 75vh; }
+.wrap.focus .editor-host .cm-editor.cm-focused { outline: 0; }
+.wrap.focus .editor-host .cm-scroller { font-size: 17.5px; line-height: 1.85; }
+.wrap.focus .editor-host .cm-content { padding: 20px 0 40vh; }

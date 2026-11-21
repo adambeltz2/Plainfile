@@ -119,7 +119,8 @@ function landing(): string {
 
 function shell(): string {
   const hc = healthCount();
-  let h = '<div class="wrap"><header class="bar"><h1>Plainfile</h1>';
+  const focusing = state.screen === 'notes' && notes.notes.focus && !!notes.notes.path;
+  let h = `<div class="wrap${focusing ? ' focus' : ''}"><header class="bar"><h1>Plainfile</h1>`;
   h += `<span class="tag-pill${state.demo ? '' : ' inv'}" title="${esc(state.name)}">${esc(state.name)}</span>`;
   h += '<nav class="nav" aria-label="Screens">';
   for (const n of NAV) {
@@ -319,6 +320,12 @@ app.addEventListener('dragend', () => board.dragEnd());
 app.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && state.modal) {
     newmenu.closeModal();
+    return;
+  }
+  if (e.key === 'Escape' && state.screen === 'notes' && notes.notes.focus && !document.querySelector('.cm-tooltip-autocomplete, .date-menu')) {
+    notes.notes.focus = false;
+    notes.notes.wantFocus = true;
+    requestRender();
     return;
   }
   if (state.modal && e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {

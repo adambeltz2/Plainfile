@@ -1,4 +1,4 @@
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
 import { Compartment, EditorState, Transaction, type Range } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, WidgetType, keymap, type DecorationSet, type ViewUpdate } from '@codemirror/view';
@@ -313,6 +313,10 @@ export interface EditorHandle {
   setXray(on: boolean): void;
   focus(): void;
   hasFocus(): boolean;
+  undo(): void;
+  redo(): void;
+  canUndo(): boolean;
+  canRedo(): boolean;
   goToLine(line: number): void;
   goToOffset(offset: number): void;
   /** Replace the whole text with `next` using the smallest change, so undo and the cursor survive. */
@@ -377,6 +381,16 @@ export function createEditor(o: { text: string; crlf: boolean; today: () => stri
     },
     focus: () => view.focus(),
     hasFocus: () => view.hasFocus,
+    undo() {
+      undo(view);
+      view.focus();
+    },
+    redo() {
+      redo(view);
+      view.focus();
+    },
+    canUndo: () => undoDepth(view.state) > 0,
+    canRedo: () => redoDepth(view.state) > 0,
     goToLine(n) {
       const line = view.state.doc.line(Math.max(1, Math.min(n, view.state.doc.lines)));
       view.dispatch({ selection: { anchor: line.from }, effects: EditorView.scrollIntoView(line.from, { y: 'center' }) });

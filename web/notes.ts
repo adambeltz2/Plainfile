@@ -1,5 +1,6 @@
 import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type DeletePlan, type TrashItem } from '../src/delete';
 import { lineDiff, type LineChange } from '../src/diff';
+import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type Version } from '../src/history';
 import { frontmatterText, setFrontmatterField } from '../src/frontmatter';
 import { dirname } from '../src/index';
 import { parseNote } from '../src/parse';
@@ -37,6 +38,13 @@ export const notes = {
   trash: [] as TrashItem[],
   trashOpen: false,
   purgeArm: undefined as string | undefined,
+  versions: [] as Version[],
+  historyOpen: false,
+  lastSnapshotAt: undefined as number | undefined,
+  compare: undefined as undefined | { path: string; text: string },
+  /** Focus mode: the editor alone, centred, with everything else hidden. */
+  focus: false,
+  wantFocus: false,
 };
 
 const STATUSES = ['todo', 'doing', 'waiting', 'done'];
@@ -79,6 +87,17 @@ async function save(): Promise<void> {
   notes.saving = true;
   setStatus('Saving…');
   try {
+    // Keep what is on disk now as a version before it is overwritten: always for the first save in
+    // a session, then at most every few minutes. This is best effort and never blocks the save.
+    if (shouldSnapshot(notes.lastSnapshotAt, Date.now())) {
+      try {
+        await snapshot(storage, path, notes.saved);
+        notes.lastSnapshotAt = Date.now();
+        void refreshVersions();
+      } catch {
+        /* history is a safety net, not a requirement */
+      }
+    }
     const entry = await storage.write(path, text, notes.mtime);
     notes.diff = lineDiff(notes.saved, text) ?? undefined;
     notes.saved = text;
@@ -158,6 +177,9 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
     notes.yaml = false;
     notes.status = 'Saved';
     notes.pending = at;
+    notes.lastSnapshotAt = undefined;
+    notes.compare = undefined;
+    notes.versions = [];
     notes.lastDeleted = undefined;
     notes.confirmDelete = undefined;
     notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush() });
@@ -172,6 +194,7 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
 }
 
 function onChange(): void {
+  updateHistoryButtons();
   schedule();
   window.clearTimeout(notes.sideTimer);
   notes.sideTimer = window.setTimeout(refreshSide, 300);
@@ -366,6 +389,82 @@ function propsHtml(): string {
   return out + (add.length ? `<div class="row-gap">${add.join('')}</div>` : '');
 }
 
+export function updateHistoryButtons(): void {
+  const h = notes.handle;
+  const u = document.getElementById('note-undo') as HTMLButtonElement | null;
+  const r = document.getElementById('note-redo') as HTMLButtonElement | null;
+  if (u) u.disabled = !h?.canUndo();
+  if (r) r.disabled = !h?.canRedo();
+}
+
+async function refreshVersions(): Promise<void> {
+  const { storage } = state;
+  if (!storage || !notes.path) return;
+  notes.versions = await listVersions(storage, notes.path).catch(() => []);
+  refreshSide();
+}
+
+function ago(d: Date): string {
+  const s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
+  if (s < 90) return 'just now';
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  return `${Math.round(s / 86400)} d ago`;
+}
+
+function sizeOf(n: number): string {
+  return n < 1024 ? `${n} bytes` : `${(n / 1024).toFixed(1)} KB`;
+}
+
+function historyHtml(): string {
+  const n = notes.versions.length;
+  let h = `<h2 style="margin-top:16px">History <button class="btn small" data-act="history-toggle" aria-expanded="${notes.historyOpen}">${n} saved</button></h2>`;
+  if (!n) return `${h}<p class="muted small" style="margin:0">Earlier versions of this note appear here after you edit and save it, so a mistake can be undone even after you close it.</p>`;
+  if (!notes.historyOpen) return h;
+  const cur = notes.handle?.getText() ?? '';
+  h += '<ul class="plain small">';
+  for (const v of notes.versions) {
+    const d = stampToDate(v.stamp);
+    h +=
+      `<li class="vrow"><div><b>${esc(d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }))}</b> <span class="muted">${esc(ago(d))} · ${esc(sizeOf(v.size))}</span></div>` +
+      `<span class="acts"><button class="btn small" data-act="ver-compare" data-ver="${esc(v.path)}">Compare</button><button class="btn small" data-act="ver-restore" data-ver="${esc(v.path)}">Restore</button></span>`;
+    if (notes.compare?.path === v.path) {
+      const c = lineDiff(cur, notes.compare.text);
+      h += '<div class="diff plain-box" style="width:100%">';
+      if (!c) h += '<div class="muted">Identical to what you have now.</div>';
+      else {
+        h += `<div class="cap">If you restore this</div><div class="muted">from line ${c.start}</div>`;
+        for (const l of c.removed.slice(0, 5)) h += `<div class="del"><span class="sg">−</span><span>${esc(l) || ' '}</span></div>`;
+        for (const l of c.added.slice(0, 5)) h += `<div class="add"><span class="sg">+</span><span>${esc(l) || ' '}</span></div>`;
+        const more = Math.max(c.removed.length, c.added.length) - 5;
+        if (more > 0) h += `<div class="muted">and ${more} more changed line${more === 1 ? '' : 's'}</div>`;
+      }
+      h += '</div>';
+    }
+    h += '</li>';
+  }
+  return `${h}</ul><p class="muted small" style="margin:6px 0 0">Restoring is an edit, so Undo brings back what you had.</p>`;
+}
+
+async function restoreVersion(path: string): Promise<void> {
+  const h = notes.handle;
+  const { storage } = state;
+  const v = notes.versions.find((x) => x.path === path);
+  if (!h || !storage || !notes.path || !v) return;
+  const text = await readVersion(storage, v);
+  try {
+    await snapshot(storage, notes.path, h.getText());
+    notes.lastSnapshotAt = Date.now();
+  } catch {
+    /* best effort */
+  }
+  h.applyText(text);
+  notes.compare = undefined;
+  setStatus('Restored an earlier version. Undo brings back what you had.');
+  await refreshVersions();
+  updateHistoryButtons();
+}
+
 function sideHtml(): string {
   const idx = state.index;
   if (!notes.path || !idx) return '<h2>Note</h2><p class="muted small" style="margin:0">Open a note to see its properties, links and what changed.</p>';
@@ -388,7 +487,7 @@ function sideHtml(): string {
       h += `<ul class="plain small" style="margin-top:6px">${c.notes.slice(0, 10).map((n) => `<li><button class="link" data-open="${esc(n.path)}">${esc(n.title)}</button></li>`).join('')}</ul>`;
     }
   }
-  return h + diffHtml();
+  return h + historyHtml() + diffHtml();
 }
 
 export function refreshSide(): void {
@@ -411,7 +510,10 @@ export function html(): string {
     const n = idx.notes.get(notes.path);
     main =
       `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(n?.title ?? notes.path)}</h2><div class="mono muted small path">${esc(notes.path)}</div></div>` +
-      `<div class="ed-actions"><button class="btn only-narrow" data-act="note-close">All notes</button><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button><button class="btn" data-act="explore-note">Explore</button><button class="btn" data-act="rename-note">Rename</button><button class="btn" data-act="delete-note">Delete</button>` +
+      `<div class="ed-actions"><button class="btn only-narrow hide-in-focus" data-act="note-close">All notes</button>` +
+      `<button class="btn" id="note-undo" data-act="note-undo" disabled>Undo</button><button class="btn" id="note-redo" data-act="note-redo" disabled>Redo</button>` +
+      `<button class="btn" data-act="focus-toggle" aria-pressed="${notes.focus}">${notes.focus ? 'Exit focus' : 'Focus'}</button><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button>` +
+      `<button class="btn hide-in-focus" data-act="explore-note">Explore</button><button class="btn hide-in-focus" data-act="rename-note">Rename</button><button class="btn hide-in-focus" data-act="delete-note">Delete</button>` +
       `<span id="note-status" class="status" role="status">${esc(notes.status)}</span></div></div>` +
       `<div id="note-banner">${bannerHtml()}</div><div id="editor-slot" class="editor-slot"></div>`;
   }
@@ -438,6 +540,12 @@ export function afterRender(refocus: boolean): void {
   else if (p.offset !== undefined) h.goToOffset(p.offset);
   else if (refocus) h.focus();
   h.setXray(notes.xray);
+  if (notes.wantFocus) {
+    notes.wantFocus = false;
+    h.focus();
+  }
+  updateHistoryButtons();
+  if (notes.versions.length === 0 && notes.path) void refreshVersions();
 }
 
 /** True if the editor has the keyboard focus, so a redraw can give it back. */
@@ -473,6 +581,34 @@ export async function click(target: HTMLElement): Promise<boolean> {
       return true;
     case 'add-prop':
       applyProperty(act.dataset.key ?? '', act.dataset.val ?? '');
+      return true;
+    case 'note-undo':
+      notes.handle?.undo();
+      updateHistoryButtons();
+      return true;
+    case 'note-redo':
+      notes.handle?.redo();
+      updateHistoryButtons();
+      return true;
+    case 'focus-toggle':
+      notes.focus = !notes.focus;
+      notes.wantFocus = true;
+      render();
+      return true;
+    case 'history-toggle':
+      notes.historyOpen = !notes.historyOpen;
+      refreshSide();
+      return true;
+    case 'ver-compare': {
+      const p = act.dataset.ver ?? '';
+      const v = notes.versions.find((x) => x.path === p);
+      if (notes.compare?.path === p) notes.compare = undefined;
+      else if (v && state.storage) notes.compare = { path: p, text: await readVersion(state.storage, v) };
+      refreshSide();
+      return true;
+    }
+    case 'ver-restore':
+      await restoreVersion(act.dataset.ver ?? '');
       return true;
     case 'note-close':
       await flush();

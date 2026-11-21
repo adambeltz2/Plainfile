@@ -4,6 +4,26 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.24.0] - 2026-11-21
+
+### Added
+- **Focus mode.** A Focus button above the editor hides the header, navigation, sidebars and
+  footer and centres the note at a comfortable reading width with larger text. The cursor stays
+  in the note, Undo, Redo, X-ray and the save status stay on screen, and Esc or Exit focus brings
+  everything back. Works on phones.
+- **Undo and Redo buttons**, so a phone can undo without a keyboard. They are disabled when there
+  is nothing to undo or redo.
+- **Version history.** Before the app overwrites a note it keeps what was on disk in
+  `.plainfile/history/`: always for the first save in a session, then at most one every five
+  minutes, and the newest 30 per note. A History section in the note's side panel lists them
+  with **Compare** (exactly which lines would change) and **Restore**. Restoring is an edit, so
+  Undo brings back what you had, and the version you had is kept too. History survives closing
+  the note, and is hidden from the notes list and search.
+
+### Notes on saving
+- Notes autosave about 0.8 seconds after you stop typing. Ctrl or Cmd S saves at once, and leaving
+  the note saves too. The status beside the title shows Unsaved changes, Saving, then Saved.
+
 ## [0.23.0] - 2026-11-21
 
 ### Added
