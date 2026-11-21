@@ -1,5 +1,6 @@
 import { parse as parseYaml } from 'yaml';
 import type { VaultIndex } from './index';
+import { listProjects } from './projects';
 import { ExistsError, type VaultStorage } from './storage';
 
 /**
@@ -38,6 +39,8 @@ export interface Template {
   body: string;
   /** "built-in" or the path of the template file. */
   source: string;
+  /** Not shown in the New menu. Used from a project's own buttons. */
+  hidden?: boolean;
 }
 
 export const BUILT_IN: Template[] = [
@@ -60,7 +63,45 @@ export const BUILT_IN: Template[] = [
       { id: 'title', label: 'Title', default: '' },
       { id: 'due', label: 'Due', default: '{{date+7d}}' },
     ],
-    fm: 'title: {{title}}\nstatus: todo\ndue: {{due}}',
+    fm: 'title: {{title}}\nstatus: todo\ndue: {{due}}\ncreated: {{date}}\ntags: []\npeople: []',
+    body: '\n{{cursor}}\n',
+    source: 'built-in',
+  },
+  {
+    name: 'Project',
+    description: 'A project folder with an index note. Tasks and notes can then be filed into it.',
+    folder: 'projects/{{title|slug}}',
+    filename: 'index',
+    prompts: [
+      { id: 'title', label: 'Project name', default: '' },
+      { id: 'goal', label: 'Goal (optional)', default: '' },
+    ],
+    fm: 'title: {{title}}\ntype: project\nactive: true\nsortOrder: {{sortOrder}}\ncreated: {{date}}\ntags: []',
+    body: '\n## Goal\n{{goal}}\n\n## Notes\n- \n\n## Tasks\n- [ ] {{cursor}}\n',
+    source: 'built-in',
+  },
+  {
+    name: 'Project task',
+    description: 'A task file inside a project.',
+    hidden: true,
+    folder: '{{projectDir}}/tasks',
+    filename: '{{title}}',
+    prompts: [
+      { id: 'title', label: 'Title', default: '' },
+      { id: 'due', label: 'Due', default: '{{date+7d}}' },
+    ],
+    fm: 'title: {{title}}\nstatus: todo\ndue: {{due}}\ncreated: {{date}}\nproject: {{projectName}}\ntags: []\npeople: []',
+    body: '\n{{cursor}}\n',
+    source: 'built-in',
+  },
+  {
+    name: 'Project note',
+    description: 'A note inside a project.',
+    hidden: true,
+    folder: '{{projectDir}}',
+    filename: '{{title}}',
+    prompts: [{ id: 'title', label: 'Title', default: '' }],
+    fm: 'title: {{title}}\ncreated: {{date}}\nproject: {{projectName}}\ntags: []',
     body: '\n{{cursor}}\n',
     source: 'built-in',
   },
@@ -102,8 +143,8 @@ export const BUILT_IN: Template[] = [
   },
 ];
 
-const VAR = /\{\{\s*(\w+)(?:\+(\d+)d)?\s*\}\}/g;
-const BUILT_IN_VARS = new Set(['date', 'cursor']);
+const VAR = /\{\{\s*(\w+)(?:\+(\d+)d)?(?:\|(\w+))?\s*\}\}/g;
+const BUILT_IN_VARS = new Set(['date', 'cursor', 'sortOrder', 'projectDir', 'projectName']);
 
 export function addDays(iso: string, n: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -111,12 +152,27 @@ export function addDays(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** "Kitchen Remodel" becomes "kitchen-remodel". */
+export function slug(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** Values the app fills in itself, which a template can use without asking: {{sortOrder}} is the next project number. */
+export function templateExtras(index: VaultIndex): Record<string, string> {
+  const orders = listProjects(index).map((p) => p.sortOrder ?? 0);
+  return { sortOrder: String((orders.length ? Math.max(...orders) : 0) + 1) };
+}
+
 /** Replace {{date}}, {{date+Nd}} and prompt values. {{cursor}} is left for the caller. */
 function expand(s: string, values: Record<string, string>, today: string): string {
-  return s.replace(VAR, (m, name: string, plus?: string) => {
+  return s.replace(VAR, (m, name: string, plus?: string, mod?: string) => {
     if (name === 'date') return plus ? addDays(today, Number(plus)) : today;
     if (name === 'cursor') return m;
-    return values[name] ?? '';
+    const v = values[name] ?? '';
+    return mod === 'slug' ? slug(v) : v;
   });
 }
 
@@ -231,7 +287,7 @@ export async function createFromTemplate(
   values: Record<string, string>,
   today: string,
 ): Promise<Rendered> {
-  const r = renderTemplate(t, values, today);
+  const r = renderTemplate(t, { ...templateExtras(index), ...values }, today);
   const base = r.path.replace(/\.md$/i, '');
   for (let n = 1; n < 1000; n++) {
     const path = n === 1 ? r.path : `${base} ${n}.md`;

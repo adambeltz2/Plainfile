@@ -26,14 +26,16 @@ tags:                          # or one per line
   - meeting
 
 See #launch and #area/home     # tags can sit in the text too`,
-  task: `- [ ] Send logo files @dana due:2026-11-23 #launch
+  task: `- [ ] Send logo files @dana #launch due:2026-11-23 created:2026-11-21
 - [x] Share staging link`,
   taskfile: `---
 title: Write pricing page copy
 status: doing
 due: 2026-11-24
+created: 2026-11-21
 project: website-relaunch
 tags: [launch]
+people: [dana]
 ---
 Draft three tiers.`,
   links: `[[pricing-research]]                 a link by name
@@ -48,7 +50,8 @@ active: true
 sortOrder: 1
 ---
 Cabinet quote came in at $14,200.`,
-  dates: `due:2026-11-23          what Plainfile writes
+  dates: `created:2026-11-21      when it was added (filled in for you)
+due:2026-11-23          what Plainfile writes
 #due:2026-11-23         from the first Notebook app
 📅 2026-11-23           Obsidian Tasks
 [due:: 2026-11-23]      Dataview`,
@@ -72,6 +75,8 @@ const KEYS: [string, string, string][] = [
   ['tags', 'tags: [launch, meeting]', 'Same as #launch in the text. Find them with tag:launch in Search.'],
   ['status', 'status: doing', 'Makes a task file (in a tasks/ folder, or with type: task). Board columns: todo, doing, waiting, done.'],
   ['due', 'due: 2026-11-24', 'The date for a task file. It appears in Today.'],
+  ['created', 'created: 2026-11-21', 'When a note or task was made. Plainfile fills it in for tasks, notes in a project, and new projects.'],
+  ['people', 'people: [dana, sam]', 'Who a task file involves, the same as @dana in an inline task. Search with @dana.'],
   ['project', 'project: website-relaunch', 'Groups task files on the Board and links related notes in Explorer.'],
   ['aliases', 'aliases: [Dana, D. Ortiz]', 'Other names a [[link]] can use. Renaming a note adds its old name here.'],
   ['active', 'active: true', 'With sortOrder, makes a numbered Project card. active: false keeps it, collapsed.'],
@@ -159,7 +164,7 @@ export function html(): string {
   h += section('links', 'Links', '<p>Links are worked out from your files, so back-links are never stored. Rename a note in Plainfile and every link to it is rewritten.</p>' + block('links', 'Linking', EX.links));
 
   h +=
-    section('notebook', 'Follow-ups and projects', '<p>From the first Notebook app, still supported. Any line tagged <code>#followup</code> appears in Follow-ups. A note with <code>active</code> or <code>sortOrder</code> becomes a numbered card in Projects.</p>' + block('follow', 'A follow-up', EX.follow) + block('project', 'A project note', EX.project));
+    section('notebook', 'Follow-ups and projects', '<p>From the first Notebook app, still supported. Any line tagged <code>#followup</code> appears in Follow-ups. A note with <code>active</code> or <code>sortOrder</code> becomes a numbered card in Projects. Make one with <b>+ New</b> then <b>Project</b>: it creates a folder with an index note, and the + Task and + Note buttons on its card file new things inside it.</p>' + block('follow', 'A follow-up', EX.follow) + block('project', 'A project note', EX.project));
 
   h +=
     section('search', 'Search', '<p>Words search titles, text, paths and tags. Add operators to narrow them. Press Ctrl or Cmd K anywhere.</p><div class="table-wrap"><table><tbody>' +

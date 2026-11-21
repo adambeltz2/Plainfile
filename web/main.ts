@@ -226,6 +226,15 @@ app.addEventListener('click', (e) => {
         return newmenu.openTemplate('Note');
       case 'new-task-file':
         return newmenu.openTemplate('Task');
+      case 'proj-task':
+      case 'proj-note': {
+        const path = target.closest<HTMLElement>('[data-act]')?.dataset.path ?? '';
+        const n = state.index?.notes.get(path);
+        if (!n) return;
+        const dir = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+        const projectName = n.name.toLowerCase() === 'index' && dir ? (dir.split('/').pop() as string) : n.name;
+        return newmenu.openTemplate(act === 'proj-task' ? 'Project task' : 'Project note', { projectDir: dir, projectName });
+      }
       case 'rename-note':
         return void rename.openRename(notes.notes.path);
       case 'review-renames':

@@ -57,6 +57,15 @@ describe('parseNote', () => {
     expect(n.tags).toEqual(['followup']);
   });
 
+  it('reads when a task was created, in three styles, and keeps it out of the title', () => {
+    const n = parse('a.md', '- [ ] One created:2026-11-21 due:2026-11-24\n- [ ] Two ➕ 2026-11-20\n- [ ] Three [created:: 2026-11-19]');
+    expect(n.tasks.map((t) => [t.title, t.created])).toEqual([
+      ['One', '2026-11-21'],
+      ['Two', '2026-11-20'],
+      ['Three', '2026-11-19'],
+    ]);
+  });
+
   it('ignores checkboxes, links and tags inside code fences and code spans', () => {
     const n = parse('a.md', '```\n- [ ] fenced [[nope]] #nope\n```\nInline `[[also-nope]] #nope` and [[real]].');
     expect(n.tasks).toEqual([]);

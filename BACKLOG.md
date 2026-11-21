@@ -111,6 +111,19 @@ Nothing here is a promise of order. Remove an item when it ships.
 - `[FEATURE]` Optional reminders: a badge with the overdue count on the installed app icon
   (`navigator.setAppBadge`), and notifications while the app is open. _Affected: `web/main.ts`._
 
+## Projects
+
+- `[FEATURE]` Move a task or note into a project (and out of one) with every link updated.
+  _Affected: `src/rename.ts`, `web/today.ts`._
+- `[FEATURE]` Choose the project when quick-adding a task, so it goes to that project's tasks instead
+  of the Inbox. _Affected: `src/capture.ts`, `web/today.ts`._
+- `[FEATURE]` A project page with progress (done and open counts), the next due task, recent
+  activity and its follow-ups in one place. _Affected: new `web/project.ts`._
+- `[FEATURE]` Finish or archive a project: set `active: false`, and offer to move it to `archive/`.
+  _Affected: `src/frontmatter.ts`, `web/notes.ts`._
+- `[FEATURE]` Reorder projects by dragging cards, writing `sortOrder` for each. _Affected:
+  `web/today.ts`._
+
 ## Views
 
 - `[FEATURE]` **Calendar** (month and week) showing tasks by due date and notes by `date`.
@@ -246,7 +259,7 @@ Nothing here is a promise of order. Remove an item when it ships.
   a template". _Affected: new `web/templates.ts`._
 - `[FEATURE]` More variables: `{{time}}`, `{{weekday}}`, `{{clipboard}}`, `{{selection}}`, and
   prompt types (menu, date, yes or no). _Affected: `src/templates.ts`._
-- `[FEATURE]` Project scaffolds: one template that creates a folder with several files. _Affected:
+- `[FEATURE]` Project scaffolds with more than one file: for example a project that starts with a kickoff note and three task files. _Affected:
   `src/templates.ts`._
 - `[FEATURE]` Create the daily or weekly note automatically on first open of the day. _Affected:
   `src/templates.ts`, `web/main.ts`._

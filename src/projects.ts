@@ -1,4 +1,4 @@
-import { dirname, type VaultIndex } from './index';
+import { dirname, type TaskItem, type VaultIndex } from './index';
 import type { Note } from './parse';
 
 /**
@@ -60,6 +60,22 @@ export function listProjects(index: VaultIndex): Project[] {
   let k = 0;
   for (const p of out) if (p.active) p.number = ++k;
   return out;
+}
+
+/** The notes and open tasks that belong to a project. */
+export function projectContents(index: VaultIndex, path: string): { notes: Note[]; tasks: TaskItem[] } {
+  const me = index.notes.get(path);
+  if (!me) return { notes: [], tasks: [] };
+  const covered = scope(index, me);
+  const paths = new Set(covered.map((n) => n.path));
+  return {
+    notes: covered.filter((n) => n.path !== path).sort((a, b) => a.path.localeCompare(b.path)),
+    tasks: index.tasks().filter((t) => paths.has(t.path) && !t.done),
+  };
+}
+
+export function isProjectNote(n: Note): boolean {
+  return isProject(n);
 }
 
 export interface FollowUp {

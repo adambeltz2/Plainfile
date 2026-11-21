@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { parseNote } from '../src/parse';
-import { listFollowUps, listProjects } from '../src/projects';
+import { listFollowUps, listProjects, projectContents } from '../src/projects';
 
 const parse = (text: string) => parseNote('a.md', text, { mtime: 1, size: 0 });
 
@@ -66,5 +66,20 @@ describe('listProjects', () => {
       { path: 'a.md', line: 2, title: 'Call back', from: 'Alpha' },
       { path: 'b.md', line: 1, title: 'Other', from: 'b' },
     ]);
+  });
+});
+
+describe('projectContents', () => {
+  it('lists the notes and open tasks that belong to a folder project', async () => {
+    const index = await setup({
+      'site/index.md': '---\ntype: project\n---\n- [ ] Home task',
+      'site/notes.md': 'A note\n- [ ] Note task\n- [x] Done task',
+      'site/tasks/a.md': '---\ntitle: A\nstatus: todo\n---\n',
+      'site/tasks/b.md': '---\ntitle: B\nstatus: done\n---\n',
+      'other/x.md': '- [ ] Elsewhere',
+    });
+    const c = projectContents(index, 'site/index.md');
+    expect(c.notes.map((n) => n.path)).toEqual(['site/notes.md', 'site/tasks/a.md', 'site/tasks/b.md']);
+    expect(c.tasks.map((t) => t.title).sort()).toEqual(['A', 'Home task', 'Note task']);
   });
 });

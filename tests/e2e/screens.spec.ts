@@ -19,14 +19,14 @@ test.describe('quick add and New menu', () => {
     await page.locator('#quick-text').fill('Call Dana');
     await page.locator('#quick-due').fill(today);
     await page.locator('#quick-text').press('Enter');
-    await expect(page.locator('.diff .add')).toHaveText(`+- [ ] Call Dana due:${today}`);
-    expect(await readFile(page, dir, 'inbox/Inbox.md')).toBe(`# Inbox\n\n- [ ] Call Dana due:${today}\n`);
+    await expect(page.locator('.diff .add')).toHaveText(`+- [ ] Call Dana due:${today} created:${today}`);
+    expect(await readFile(page, dir, 'inbox/Inbox.md')).toBe(`# Inbox\n\n- [ ] Call Dana due:${today} created:${today}\n`);
     await expect(page.locator('.task .t', { hasText: 'Call Dana' })).toBeVisible();
 
     await page.locator('#quick-text').fill('Second one');
     await page.locator('#quick-text').press('Enter');
-    await expect(page.locator('.diff .add')).toHaveText('+- [ ] Second one');
-    expect(await readFile(page, dir, 'inbox/Inbox.md')).toBe(`# Inbox\n\n- [ ] Call Dana due:${today}\n- [ ] Second one\n`);
+    await expect(page.locator('.diff .add')).toHaveText(`+- [ ] Second one created:${today}`);
+    expect(await readFile(page, dir, 'inbox/Inbox.md')).toBe(`# Inbox\n\n- [ ] Call Dana due:${today} created:${today}\n- [ ] Second one created:${today}\n`);
   });
 
   test('+ New from a template shows a live preview, creates the file, and opens it in the editor', async ({ page }) => {

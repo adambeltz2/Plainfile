@@ -4,6 +4,27 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.21.0] - 2026-11-21
+
+### Added
+- **New Project.** + New then Project creates `projects/<name>/index.md` (type project, active,
+  numbered after your last project, with today as its created date) and shows it in Projects.
+  Each project card, and the project's own page, has **+ Task** and **+ Note** buttons that file a
+  new task file or note inside the project folder with `project:` already set. The project's page
+  lists its open tasks and notes. Tasks and notes made this way also show on the Board under
+  that project.
+- **Created date on tasks.** Quick add writes `created:<today>`, new task files get a `created:`
+  line, and Today shows a quiet "added" date. Read in three styles: `created:`, `➕ date` and
+  `[created:: date]`.
+- **Tags and people placeholders.** Quick add has `@people` and `#tags` fields, and new task
+  files start with `tags: []` and `people: []` to fill in. `people` on a task file shows as
+  `@names` and is found by `@dana` in Search.
+- The cheat sheet covers `created`, `people` and the project buttons.
+
+### Changed
+- Template variables can use `|slug` (for example `{{title|slug}}`) and the app supplies
+  `{{sortOrder}}`, `{{projectDir}}` and `{{projectName}}`.
+
 ## [0.20.0] - 2026-11-21
 
 ### Added

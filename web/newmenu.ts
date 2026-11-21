@@ -1,4 +1,4 @@
-import { createFromTemplate, promptDefault, renderTemplate, type Template } from '../src/templates';
+import { createFromTemplate, promptDefault, renderTemplate, templateExtras, type Template } from '../src/templates';
 import { openNote } from './notes';
 import { errorMessage, quickAdd, render, state, today } from './store';
 import { esc } from './util';
@@ -8,10 +8,11 @@ export function openNew(): void {
   render();
 }
 
-export function openTemplate(name: string): void {
+/** Open a template's form. `extras` are values the app already knows, such as which project a task belongs to. */
+export function openTemplate(name: string, extras: Record<string, string> = {}): void {
   const t = state.templates.find((x) => x.name === name);
   if (!t) return;
-  state.modal = { step: 'template', name, values: Object.fromEntries(t.prompts.map((p) => [p.id, promptDefault(p, today())])), error: '' };
+  state.modal = { step: 'template', name, values: Object.fromEntries(t.prompts.map((p) => [p.id, promptDefault(p, today())])), extras, error: '' };
   render();
 }
 
@@ -25,8 +26,8 @@ function currentTemplate(): Template | undefined {
   return m?.step === 'template' ? state.templates.find((t) => t.name === m.name) : undefined;
 }
 
-function preview(t: Template, values: Record<string, string>): string {
-  const r = renderTemplate(t, values, today());
+function preview(t: Template, values: Record<string, string>, extras: Record<string, string>): string {
+  const r = renderTemplate(t, { ...(state.index ? templateExtras(state.index) : {}), ...extras, ...values }, today());
   return `<div class="mono small" id="tpl-path" style="overflow-wrap:anywhere;margin-bottom:6px">${esc(r.path)}</div><pre class="code" id="tpl-preview">${esc(r.content.trimEnd())}</pre>`;
 }
 
@@ -39,14 +40,17 @@ export function html(): string {
       '<h2>New</h2><ul class="plain menu">' +
       '<li><button class="menu-item" data-new-task><b>Task</b><span>Add a line to your Inbox. Quickest way to capture something.</span></button></li>' +
       state.templates
+        .filter((t) => !t.hidden)
         .map((t) => `<li><button class="menu-item" data-tpl="${esc(t.name)}"><b>${esc(t.name)}</b><span>${esc(t.description || (t.source === 'built-in' ? '' : 'Your template'))}</span></button></li>`)
         .join('') +
       '</ul><p class="muted small" style="margin:10px 0 0">Add your own templates as markdown files in <code>.plainfile/templates/</code>.</p>';
   } else if (m.step === 'task') {
     body =
-      '<h2>New task</h2><p class="muted small" style="margin:0 0 10px">Added to <code>inbox/Inbox.md</code>. Nothing else in that file changes.</p>' +
+      '<h2>New task</h2><p class="muted small" style="margin:0 0 10px">Added to <code>inbox/Inbox.md</code> with today as its created date. Nothing else in that file changes.</p>' +
       `<div class="fld"><label for="new-task-text">Task</label><input id="new-task-text" class="inp" type="text" autocomplete="off" value="${esc(m.text)}" placeholder="Call Dana about the logo files"></div>` +
       `<div class="fld"><label for="new-task-due">Due date (optional)</label><input id="new-task-due" class="inp date" type="date" value="${esc(m.due)}"></div>` +
+      `<div class="fld"><label for="new-task-people">People (optional)</label><input id="new-task-people" class="inp" type="text" autocomplete="off" placeholder="@dana @sam" value="${esc(m.people)}"></div>` +
+      `<div class="fld"><label for="new-task-tags">Tags (optional)</label><input id="new-task-tags" class="inp" type="text" autocomplete="off" placeholder="#launch #home" value="${esc(m.tags)}"></div>` +
       (m.error ? `<div class="notice err small">${esc(m.error)}</div>` : '') +
       '<div class="row-gap"><button class="btn primary" data-act="create-task">Add task</button><button class="btn" data-act="modal-back">Back</button></div>';
   } else {
@@ -61,7 +65,7 @@ export function html(): string {
       `<h2>New ${esc(t.name.toLowerCase())}</h2><div class="tplgrid"><div>${fields}` +
       (m.error ? `<div class="notice err small">${esc(m.error)}</div>` : '') +
       '<div class="row-gap"><button class="btn primary" data-act="create-template">Create file</button><button class="btn" data-act="modal-back">Back</button></div></div>' +
-      `<div><div class="grp" style="margin-top:0">Creates</div>${preview(t, m.values)}</div></div>`;
+      `<div><div class="grp" style="margin-top:0">Creates</div>${preview(t, m.values, m.extras)}</div></div>`;
   }
   return `<div class="modal-back" data-backdrop><div class="modal" role="dialog" aria-modal="true" aria-label="New">${body}<button class="modal-x btn small" data-act="modal-close" aria-label="Close">Close</button></div></div>`;
 }
@@ -74,7 +78,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   if (target.closest('[data-new-task]')) {
-    state.modal = { step: 'task', text: '', due: '', error: '' };
+    state.modal = { step: 'task', text: '', due: '', tags: '', people: '', error: '' };
     render();
     return true;
   }
@@ -93,7 +97,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   if (act === 'create-task' && m.step === 'task') {
-    const err = await quickAdd(m.text, m.due);
+    const err = await quickAdd(m.text, m.due, m.tags, m.people);
     if (err) {
       m.error = err;
       render();
@@ -110,7 +114,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
     const { storage, index } = state;
     if (!t || !storage || !index) return true;
     try {
-      const r = await createFromTemplate(storage, index, t, m.values, today());
+      const r = await createFromTemplate(storage, index, t, { ...m.extras, ...m.values }, today());
       state.modal = undefined;
       await openNote(r.path, r.cursor !== undefined ? { offset: r.cursor } : {});
     } catch (e) {
@@ -129,6 +133,8 @@ export function input(e: Event): boolean {
   if (m.step === 'task') {
     if (t.id === 'new-task-text') m.text = t.value;
     else if (t.id === 'new-task-due') m.due = t.value;
+    else if (t.id === 'new-task-people') m.people = t.value;
+    else if (t.id === 'new-task-tags') m.tags = t.value;
     else return false;
     return true;
   }
@@ -136,7 +142,7 @@ export function input(e: Event): boolean {
     m.values[t.dataset.tplField] = t.value;
     const tpl = currentTemplate();
     const box = document.querySelector('.modal .tplgrid > div:last-child');
-    if (tpl && box) box.innerHTML = `<div class="grp" style="margin-top:0">Creates</div>${preview(tpl, m.values)}`;
+    if (tpl && box) box.innerHTML = `<div class="grp" style="margin-top:0">Creates</div>${preview(tpl, m.values, m.extras)}`;
     return true;
   }
   return false;

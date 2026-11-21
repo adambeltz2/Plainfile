@@ -3,7 +3,7 @@ import { INBOX_FILE, addTask, cleanTaskText } from '../src/capture';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { ConflictError } from '../src/storage';
-import { BUILT_IN, createFromTemplate, loadTemplates, parseTemplateFile, promptDefault, renderTemplate } from '../src/templates';
+import { BUILT_IN, createFromTemplate, loadTemplates, parseTemplateFile, promptDefault, renderTemplate, slug, templateExtras } from '../src/templates';
 
 const TODAY = '2026-11-21';
 const byName = (n: string) => BUILT_IN.find((t) => t.name === n)!;
@@ -81,7 +81,7 @@ describe('template files', () => {
     const own = file.replace('Weekly review', 'Meeting');
     const { store } = await setup({ '.plainfile/templates/review.md': file, '.plainfile/templates/meeting.md': own });
     const all = await loadTemplates(store);
-    expect(all.map((t) => t.name)).toEqual(['Note', 'Task', 'Daily journal', 'Person', 'Weekly review', 'Meeting']);
+    expect(all.map((t) => t.name)).toEqual(['Note', 'Task', 'Project', 'Project task', 'Project note', 'Daily journal', 'Person', 'Weekly review', 'Meeting']);
     expect(all.find((t) => t.name === 'Meeting')!.source).toBe('.plainfile/templates/meeting.md');
   });
 });
@@ -123,5 +123,66 @@ describe('addTask', () => {
     const { store, index } = await setup();
     await expect(addTask(store, index, { text: '   ' })).rejects.toThrow('Type something');
     expect(cleanTaskText('- [ ] Buy milk\nand eggs')).toBe('Buy milk and eggs');
+  });
+});
+
+describe('task files', () => {
+  it('start with a created date and empty tags and people to fill in', async () => {
+    const { store, index } = await setup();
+    const r = await createFromTemplate(store, index, byName('Task'), { title: 'Write launch email', due: '2026-11-24' }, TODAY);
+    expect(r.content).toBe('---\ntitle: Write launch email\nstatus: todo\ndue: 2026-11-24\ncreated: 2026-11-21\ntags: []\npeople: []\n---\n\n\n');
+    expect(index.tasks()[0]).toMatchObject({ title: 'Write launch email', created: '2026-11-21', who: [] });
+  });
+
+  it('read people from the frontmatter as @names, like an inline task', async () => {
+    const { store, index } = await setup({ 'tasks/a.md': '---\nstatus: todo\npeople: [Dana, "Sam Lee"]\ncreated: 2026-11-20\n---\n' });
+    expect(index.tasks()[0]).toMatchObject({ who: ['@dana', '@sam-lee'], created: '2026-11-20' });
+  });
+});
+
+describe('projects', () => {
+  it('slug makes folder-friendly names', () => {
+    expect(slug('Kitchen Remodel!')).toBe('kitchen-remodel');
+    expect(slug('  Café & Bar 2026 ')).toBe('café-bar-2026');
+  });
+
+  it('a new project is a folder with an index note numbered after the last one', async () => {
+    const { store, index } = await setup({ 'projects/a/index.md': '---\ntype: project\nactive: true\nsortOrder: 4\n---\n' });
+    expect(templateExtras(index)).toEqual({ sortOrder: '5' });
+    const r = await createFromTemplate(store, index, byName('Project'), { title: 'Kitchen Remodel', goal: 'New cabinets' }, TODAY);
+    expect(r.path).toBe('projects/kitchen-remodel/index.md');
+    expect(r.content).toBe('---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 5\ncreated: 2026-11-21\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Notes\n- \n\n## Tasks\n- [ ] \n');
+  });
+
+  it('the first project is number 1', async () => {
+    const { index } = await setup();
+    expect(templateExtras(index)).toEqual({ sortOrder: '1' });
+  });
+
+  it('project tasks and notes are filed inside the project and say which project they belong to', async () => {
+    const { store, index } = await setup();
+    const vals = { projectDir: 'projects/kitchen-remodel', projectName: 'kitchen-remodel' };
+    const task = await createFromTemplate(store, index, byName('Project task'), { ...vals, title: 'Order cabinets', due: '2026-11-28' }, TODAY);
+    expect(task.path).toBe('projects/kitchen-remodel/tasks/Order cabinets.md');
+    expect(task.content).toContain('project: kitchen-remodel\ntags: []\npeople: []');
+    const note = await createFromTemplate(store, index, byName('Project note'), { ...vals, title: 'Quote from Dana' }, TODAY);
+    expect(note.path).toBe('projects/kitchen-remodel/Quote from Dana.md');
+    expect(note.content).toContain('created: 2026-11-21\nproject: kitchen-remodel');
+    // A project at the top level files into tasks/ with no leading slash.
+    expect(renderTemplate(byName('Project task'), { projectDir: '', projectName: 'x', title: 'T', due: '' }, TODAY).path).toBe('tasks/T.md');
+  });
+});
+
+describe('quick add details', () => {
+  it('writes the created date, and tags and people if given, without repeating ones already typed', async () => {
+    const { store, index } = await setup();
+    const r = await addTask(store, index, { text: 'Call Dana @dana', due: '2026-11-24', created: TODAY, tags: ['#launch', 'home'], people: ['@dana', 'Sam Lee'] });
+    expect(r.after).toBe('- [ ] Call Dana @dana @Sam-Lee #launch #home due:2026-11-24 created:2026-11-21');
+    expect(index.tasks()[0]).toMatchObject({ title: 'Call Dana', due: '2026-11-24', created: '2026-11-21', who: ['@dana', '@sam-lee'], tags: ['launch', 'home'] });
+  });
+
+  it('leaves out anything not given', async () => {
+    const { store, index } = await setup();
+    expect((await addTask(store, index, { text: 'Plain', created: TODAY })).after).toBe('- [ ] Plain created:2026-11-21');
   });
 });

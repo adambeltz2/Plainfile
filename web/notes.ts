@@ -2,6 +2,7 @@ import { lineDiff, type LineChange } from '../src/diff';
 import { frontmatterText, setFrontmatterField } from '../src/frontmatter';
 import { dirname } from '../src/index';
 import { parseNote } from '../src/parse';
+import { isProjectNote, projectContents } from '../src/projects';
 import { addDays } from '../src/query';
 import { ConflictError } from '../src/storage';
 import { createEditor, type EditorHandle } from './editor';
@@ -264,6 +265,19 @@ function sideHtml(): string {
   h += back.length
     ? `<ul class="plain">${back.map((b) => `<li><button class="link mono" data-open="${esc(b.from)}" data-line="${b.line}">${esc(b.from)}:${b.line}</button></li>`).join('')}</ul>`
     : '<p class="muted small" style="margin:0">No other note links here.</p>';
+  const me = idx.notes.get(notes.path);
+  if (me && isProjectNote(me)) {
+    const c = projectContents(idx, notes.path);
+    h += '<h2 style="margin-top:16px">In this project</h2>';
+    h += `<div class="row-gap" style="margin-top:0"><button class="btn small" data-act="proj-task" data-path="${esc(notes.path)}">+ Task</button><button class="btn small" data-act="proj-note" data-path="${esc(notes.path)}">+ Note</button></div>`;
+    h += `<p class="muted small" style="margin:8px 0 4px">${c.tasks.length} open task${c.tasks.length === 1 ? '' : 's'}, ${c.notes.length} note${c.notes.length === 1 ? '' : 's'}</p>`;
+    if (c.tasks.length) {
+      h += `<ul class="plain small">${c.tasks.slice(0, 8).map((t) => `<li><button class="link" data-open="${esc(t.path)}" data-line="${t.line}">${esc(t.title)}</button>${t.due ? ` <span class="muted">${esc(t.due)}</span>` : ''}</li>`).join('')}</ul>`;
+    }
+    if (c.notes.length) {
+      h += `<ul class="plain small" style="margin-top:6px">${c.notes.slice(0, 10).map((n) => `<li><button class="link" data-open="${esc(n.path)}">${esc(n.title)}</button></li>`).join('')}</ul>`;
+    }
+  }
   return h + diffHtml();
 }
 

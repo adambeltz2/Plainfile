@@ -16,8 +16,8 @@ export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | '
 
 export type Modal =
   | { step: 'menu' }
-  | { step: 'task'; text: string; due: string; error: string }
-  | { step: 'template'; name: string; values: Record<string, string>; error: string };
+  | { step: 'task'; text: string; due: string; tags: string; people: string; error: string }
+  | { step: 'template'; name: string; values: Record<string, string>; extras: Record<string, string>; error: string };
 
 export interface Context {
   path: string;
@@ -180,11 +180,16 @@ export function healthCount(): number {
 /* ---------- capture ---------- */
 
 /** Quick add a task to the Inbox. Returns an error message, or null on success. */
-export async function quickAdd(text: string, due: string): Promise<string | null> {
+/** Split "launch, home #work" into ["launch", "home", "work"]. */
+export function words(s: string): string[] {
+  return s.split(/[\s,]+/).map((x) => x.replace(/^[#@]/, '')).filter(Boolean);
+}
+
+export async function quickAdd(text: string, due: string, tags = '', people = ''): Promise<string | null> {
   const { storage, index } = state;
   if (!storage || !index) return 'Open a folder first.';
   try {
-    const r: ChangeResult = await addTask(storage, index, { text, due: due || undefined });
+    const r: ChangeResult = await addTask(storage, index, { text, due: due || undefined, created: today(), tags: words(tags), people: words(people) });
     state.log = r;
     state.selected = `${r.path}:${r.line}`;
     state.context = undefined;

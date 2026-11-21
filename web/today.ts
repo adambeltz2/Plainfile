@@ -6,7 +6,7 @@ import { setTaskDone } from '../src/writeback';
 import { loadContext, justDone, quickAdd, render, state, today, writeFailure, errorMessage, rescan, type TodayViewId } from './store';
 import { esc } from './util';
 
-export const quick = { text: '', due: '', error: '' };
+export const quick = { text: '', due: '', tags: '', people: '', error: '' };
 
 const VIEWS: { id: TodayViewId; label: string }[] = [
   { id: 'today', label: 'Today' },
@@ -87,6 +87,7 @@ function chips(t: TaskItem): string {
     out.push(`<span class="chip${late ? ' late' : ''}">${late ? 'Overdue · ' : ''}${esc(fmtDate(t.due))}</span>`);
   }
   if (t.status) out.push(`<span class="chip">${esc(t.status)}</span>`);
+  if (t.created) out.push(`<span class="chip quiet" title="Created ${esc(t.created)}">added ${esc(fmtDate(t.created))}</span>`);
   for (const w of t.who) out.push(`<span class="chip mono">${esc(w)}</span>`);
   for (const g of t.tags) out.push(`<span class="chip mono">#${esc(g)}</span>`);
   out.push(
@@ -157,10 +158,11 @@ function projectsHtml(): string {
     `<span class="pnum" aria-hidden="true">${p.number ?? '–'}</span>` +
     `<span class="ptitle">${esc(p.title)}</span><span class="pprev">${esc(p.preview) || '&nbsp;'}</span>` +
     `<span class="chips">${p.openTasks ? `<span class="chip">${p.openTasks} task${p.openTasks === 1 ? '' : 's'}</span>` : ''}` +
-    `${p.followups ? `<span class="chip">${p.followups} follow-up${p.followups === 1 ? '' : 's'}</span>` : ''}</span></button></li>`;
+    `${p.followups ? `<span class="chip">${p.followups} follow-up${p.followups === 1 ? '' : 's'}</span>` : ''}</span></button>` +
+    `<div class="pacts"><button class="btn small" data-act="proj-task" data-path="${esc(p.path)}">+ Task</button><button class="btn small" data-act="proj-note" data-path="${esc(p.path)}">+ Note</button></div></li>`;
   let h = `<p class="meta">${active.length} active project${active.length === 1 ? '' : 's'}, numbered in sort order</p>`;
   if (!all.length) {
-    return `${h}<div class="empty">No projects yet. A project is a note with <code>active: true</code> or <code>sortOrder: 1</code> in its frontmatter, or <code>type: project</code>. Active projects are numbered in sort order. A folder's <code>index.md</code> covers every note in that folder.</div>`;
+    return `${h}<div class="empty">No projects yet. Make one with <b>+ New</b> then <b>Project</b>. A project is a note with <code>active: true</code> or <code>sortOrder: 1</code> in its frontmatter, or <code>type: project</code>. Active projects are numbered in sort order. A folder's <code>index.md</code> covers every note in that folder.</div>`;
   }
   h += `<ul class="pgrid">${active.map(card).join('')}</ul>`;
   if (inactive.length) {
@@ -208,7 +210,9 @@ export function html(): string {
   const label = VIEWS.find((v) => v.id === state.view)?.label ?? 'Today';
   h += '<section class="main">';
   h += `<form class="quick" data-quick><label class="sr" for="quick-text">Add a task</label>` +
-    `<input id="quick-text" class="inp" type="text" autocomplete="off" placeholder="Add a task and press Enter. It goes to your Inbox." value="${esc(quick.text)}">` +
+    `<input id="quick-text" class="inp" type="text" autocomplete="off" placeholder="Add a task and press Enter. It goes to your Inbox, dated today." value="${esc(quick.text)}">` +
+    `<label class="sr" for="quick-people">People</label><input id="quick-people" class="inp mini" type="text" autocomplete="off" placeholder="@people" value="${esc(quick.people)}">` +
+    `<label class="sr" for="quick-tags">Tags</label><input id="quick-tags" class="inp mini" type="text" autocomplete="off" placeholder="#tags" value="${esc(quick.tags)}">` +
     `<label class="sr" for="quick-due">Due date</label><input id="quick-due" class="inp date" type="date" value="${esc(quick.due)}">` +
     `<button class="btn primary" type="submit">Add</button></form>`;
   if (quick.error) h += `<div class="notice err small">${esc(quick.error)}</div>`;
@@ -265,11 +269,13 @@ async function toggle(id: string): Promise<void> {
 }
 
 export async function submitQuick(): Promise<void> {
-  const err = await quickAdd(quick.text, quick.due);
+  const err = await quickAdd(quick.text, quick.due, quick.tags, quick.people);
   quick.error = err ?? '';
   if (!err) {
     quick.text = '';
     quick.due = '';
+    quick.tags = '';
+    quick.people = '';
     state.view = state.view === 'today' || state.view === 'all' || state.view === 'inbox' ? state.view : 'inbox';
     if (state.selected) await loadContext(state.selected).catch(() => undefined);
   }
@@ -322,6 +328,14 @@ export function input(e: Event): boolean {
   }
   if (t.id === 'quick-due') {
     quick.due = t.value;
+    return true;
+  }
+  if (t.id === 'quick-tags') {
+    quick.tags = t.value;
+    return true;
+  }
+  if (t.id === 'quick-people') {
+    quick.people = t.value;
     return true;
   }
   return false;

@@ -26,6 +26,8 @@ export interface InlineTask {
   raw: string;
   title: string;
   due?: string;
+  /** When the task was added, from `created:2026-11-21` (or Obsidian Tasks' ➕ date). */
+  created?: string;
   who: string[];
   tags: string[];
 }
@@ -35,6 +37,7 @@ export interface FileTask {
   status: string;
   done: boolean;
   due?: string;
+  created?: string;
   statusLine: number; // 1-based line of `status:` in the frontmatter
   statusRaw: string;
 }
@@ -70,6 +73,12 @@ const DUE_PATTERNS = [
   new RegExp(String.raw`#?\bdue:\s?(${DATE})`, 'i'), // due:2026-11-23, and #due:2026-11-23 from the first Notebook app
   new RegExp(String.raw`📅\s*(${DATE})`), // Obsidian Tasks
   new RegExp(String.raw`\[due::\s*(${DATE})\]`, 'i'), // Dataview
+];
+
+const CREATED_PATTERNS = [
+  new RegExp(String.raw`\bcreated:\s?(${DATE})`, 'i'), // created:2026-11-21
+  new RegExp(String.raw`➕\s*(${DATE})`), // Obsidian Tasks
+  new RegExp(String.raw`\[created::\s*(${DATE})\]`, 'i'), // Dataview
 ];
 
 const TASK_LINE = /^(\s*)([-*+]|\d+[.)]) \[( |x|X)\](?: (.*))?$/;
@@ -125,9 +134,17 @@ function toIsoDate(v: unknown): string | undefined {
 
 function cleanTitle(text: string): string {
   let t = text;
-  for (const p of DUE_PATTERNS) t = t.replace(new RegExp(p.source, p.flags + 'g'), ' ');
+  for (const p of [...DUE_PATTERNS, ...CREATED_PATTERNS]) t = t.replace(new RegExp(p.source, p.flags + 'g'), ' ');
   t = t.replace(WHO, '$1').replace(TAG, '$1');
   return t.replace(/\s+/g, ' ').trim();
+}
+
+export function extractCreated(text: string): string | undefined {
+  for (const p of CREATED_PATTERNS) {
+    const m = p.exec(text);
+    if (m) return m[1];
+  }
+  return undefined;
 }
 
 export function extractDue(text: string): string | undefined {
@@ -217,6 +234,7 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         raw: line,
         title: cleanTitle(rest),
         due: extractDue(rest),
+        created: extractCreated(rest),
         who: [...rest.matchAll(WHO)].map((x) => `@${(x[2] ?? '').toLowerCase()}`),
         tags: taskTags,
       });
@@ -242,6 +260,7 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         status,
         done: DONE_STATUSES.has(status),
         due: toIsoDate(fm.due),
+        created: toIsoDate(fm.created),
         statusLine: idx + 2,
         statusRaw: lines[idx + 1] ?? '',
       };

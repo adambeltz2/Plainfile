@@ -11,6 +11,8 @@ export interface TaskItem {
   title: string;
   done: boolean;
   due?: string;
+  /** When the task was added, if it says so. */
+  created?: string;
   who: string[];
   tags: string[];
   status?: string;
@@ -209,7 +211,8 @@ export class VaultIndex {
           title: n.title,
           done: f.done,
           due: f.due,
-          who: [],
+          created: f.created,
+          who: peopleOf(n.frontmatter.people),
           tags: n.tags,
           status: f.status,
         });
@@ -223,6 +226,12 @@ export class VaultIndex {
   }
 }
 
+/** `people: [Dana, sam]` in a task file's frontmatter, as the `@dana` names an inline task uses. */
+function peopleOf(v: unknown): string[] {
+  const list = Array.isArray(v) ? v : typeof v === 'string' ? v.split(/[,\s]+/) : [];
+  return list.map((x) => String(x).trim().replace(/^@/, '').toLowerCase().replace(/\s+/g, '-')).filter(Boolean).map((x) => `@${x}`);
+}
+
 function inlineItem(n: Note, t: InlineTask): TaskItem {
   return {
     id: `${n.path}:${t.line}`,
@@ -232,6 +241,7 @@ function inlineItem(n: Note, t: InlineTask): TaskItem {
     title: t.title,
     done: t.state === 'x',
     due: t.due,
+    created: t.created,
     who: t.who,
     tags: t.tags,
   };

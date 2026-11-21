@@ -309,3 +309,9 @@ th { background: var(--soft); font-weight: 600; white-space: nowrap; }
 .cloud-tag:hover { text-decoration: underline; }
 .cloud-tag sup { font-size: 10px; color: var(--mute); margin-left: 2px; }
 .gsec h4 { margin: 16px 0 4px; font-size: 14px; }
+
+/* ---------- quick add extras and project actions ---------- */
+.inp.mini { width: 7.5rem; flex: none; }
+.chip.quiet { color: var(--mute); border-style: dotted; }
+.pacts { display: flex; gap: 6px; padding: 0 12px 10px; }
+.pcard { display: flex; flex-direction: column; }

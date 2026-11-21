@@ -20,12 +20,25 @@ export function cleanTaskText(text: string): string {
 export async function addTask(
   storage: VaultStorage,
   index: VaultIndex,
-  input: { text: string; due?: string },
+  input: { text: string; due?: string; /** Today, written as `created:` so you can see when it was added. */ created?: string; tags?: string[]; people?: string[] },
   path: string = INBOX_FILE,
 ): Promise<ChangeResult> {
   const text = cleanTaskText(input.text);
   if (!text) throw new Error('Type something for the task first.');
-  const task = `- [ ] ${text}${input.due && !/\bdue:/i.test(text) ? ` due:${input.due}` : ''}`;
+  const has = (re: RegExp): boolean => re.test(text);
+  const people = (input.people ?? [])
+    .map((x) => x.trim().replace(/^@/, '').replace(/\s+/g, '-'))
+    .filter((x) => x && !has(new RegExp(`@${x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`, 'i')))
+    .map((x) => ` @${x}`)
+    .join('');
+  const tags = (input.tags ?? [])
+    .map((x) => x.trim().replace(/^#/, '').replace(/\s+/g, '-'))
+    .filter((x) => x && !has(new RegExp(`#${x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w/-])`, 'i')))
+    .map((x) => ` #${x}`)
+    .join('');
+  const due = input.due && !has(/\bdue:/i) ? ` due:${input.due}` : '';
+  const created = input.created && !has(/\bcreated:/i) ? ` created:${input.created}` : '';
+  const task = `- [ ] ${text}${people}${tags}${due}${created}`;
 
   try {
     const content = `# Inbox\n\n${task}\n`;
