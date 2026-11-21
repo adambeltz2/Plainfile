@@ -1,5 +1,6 @@
 import { fsaSupported, FsaStorage } from '../src/fsa-storage';
 import * as board from './board';
+import * as calendarScreen from './calendar';
 import * as cloudUi from './cloud';
 import * as explore from './explore';
 import * as guide from './guide';
@@ -80,6 +81,7 @@ function themeControl(): string {
 const NAV: { id: ScreenId; label: string }[] = [
   { id: 'home', label: 'Home' },
   { id: 'today', label: 'Today' },
+  { id: 'calendar', label: 'Calendar' },
   { id: 'projects', label: 'Projects' },
   { id: 'board', label: 'Board' },
   { id: 'notes', label: 'Notes' },
@@ -156,7 +158,7 @@ function tabbar(hc: number): string {
   const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${state.screen === id}">${label}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
-      ['search:Search', 'board:Board', 'explore:Explore', 'review:Weekly review', 'health:Vault health', 'guide:Cheat sheet']
+      ['search:Search', 'calendar:Calendar', 'board:Board', 'explore:Explore', 'review:Weekly review', 'health:Vault health', 'guide:Cheat sheet']
         .map((x) => {
           const [id, label] = x.split(':') as [ScreenId, string];
           return `<button class="btn" data-nav="${id}" data-more-item>${label}${id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
@@ -205,6 +207,9 @@ function shell(): string {
     h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside Plainfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
   }
   switch (state.screen) {
+    case 'calendar':
+      h += calendarScreen.html();
+      break;
     case 'home':
       h += homeScreen.html();
       break;
@@ -406,6 +411,9 @@ app.addEventListener('click', (e) => {
       case 'today':
         await todayScreen.click(target);
         break;
+      case 'calendar':
+        await calendarScreen.click(target);
+        break;
       case 'home':
         await homeScreen.click(target);
         break;
@@ -439,6 +447,9 @@ app.addEventListener('submit', (e) => {
   if (form.matches('[data-quick]')) {
     e.preventDefault();
     void todayScreen.submitQuick();
+  } else if (form.matches('[data-cal-add]')) {
+    e.preventDefault();
+    void calendarScreen.submitAdd();
   } else if (form.matches('[data-hub-saveview]')) {
     e.preventDefault();
     void hub.saveCurrentView();
@@ -456,6 +467,7 @@ app.addEventListener('input', (e) => {
   if (state.modal && newmenu.input(e)) return;
   if (state.screen === 'projects' && projectScreen.input(e)) return;
   if (state.screen === 'review' && reviewScreen.input(e)) return;
+  if (state.screen === 'calendar' && calendarScreen.input(e)) return;
   if (todayScreen.input(e)) return;
   if (explore.input(e)) return;
   if (rename.input(e)) return;
@@ -466,14 +478,15 @@ app.addEventListener('input', (e) => {
 app.addEventListener('change', (e) => {
   if (state.screen === 'projects' && projectScreen.change(e)) return;
   if (state.screen === 'review' && reviewScreen.change(e)) return;
+  if (state.screen === 'calendar' && calendarScreen.change(e)) return;
   if (rename.change(e)) return;
   notes.change(e);
 });
 
-app.addEventListener('dragstart', (e) => board.dragStart(e));
-app.addEventListener('dragover', (e) => board.dragOver(e));
-app.addEventListener('drop', (e) => board.drop(e));
-app.addEventListener('dragend', () => board.dragEnd());
+app.addEventListener('dragstart', (e) => (board.dragStart(e), calendarScreen.dragStart(e)));
+app.addEventListener('dragover', (e) => (board.dragOver(e), calendarScreen.dragOver(e)));
+app.addEventListener('drop', (e) => (board.drop(e), calendarScreen.drop(e)));
+app.addEventListener('dragend', () => (board.dragEnd(), calendarScreen.dragEnd()));
 
 // CodeMirror closes its suggestion list while handling Escape, before this page-level handler runs,
 // so note whether one was open at the start of the key press.

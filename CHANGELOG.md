@@ -4,6 +4,16 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.38.0] - 2026-11-21
+
+### Added
+- **Calendar.** A month, a week or an agenda of your tasks (by due date) and your dated notes (meetings, journal
+  entries: any note with a `date:`). Today is marked and every day lists what is on it, with a field to move a task
+  to another date and a box to add a task for that day. **Drag a task** to another day and its due date changes in
+  its own file (only that one value). On a phone the month shows a count per day and tapping a day lists it.
+  Next/Previous/Today buttons move through time. It is under Calendar in the header, under More on a phone, and in
+  Go to….
+
 ## [0.37.0] - 2026-11-21
 
 ### Added

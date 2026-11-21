@@ -24,6 +24,8 @@ await shot(page, 'today');
 await page.locator('#quick-text').fill('Send logos +website-relaunch @dana #launch due:friday');
 await page.locator('#quick-text').blur();
 await page.screenshot({ path: `${OUT}/quick-add.png`, clip: { x: 0, y: 60, width: 1280, height: 200 } });
+await nav(page, 'Calendar');
+await shot(page, 'calendar');
 await nav(page, 'Projects');
 await page.locator('.pcard .pbtn').first().click();
 await page.locator('.pstats').waitFor();
