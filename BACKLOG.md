@@ -15,6 +15,20 @@ Nothing here is a promise of order. Remove an item when it ships.
 7. Saved views and a view builder.
 8. Local server mode, or a Dropbox adapter, so Safari, iPhone and Firefox can use a real folder.
 
+## Refactors
+
+- `[REFACTOR]` **Split `web/notes.ts` (about 750 lines).** Separate the version history panel, the
+  trash and delete flow, and the properties panel into their own modules. Affects `web/notes.ts`.
+- `[REFACTOR]` **Replace innerHTML string templates with a tiny render helper** that escapes by
+  default, so a missing `esc()` cannot become an injection bug. Affects `web/*.ts`.
+- `[REFACTOR]` **One module for "what changed on disk" lines.** Tasks use `web/tasks.ts`; the note
+  editor still has its own multi-line version (`diffHtml` in `web/notes.ts`).
+- `[DEBT]` **Per-screen event routing in `web/main.ts`** is a long chain of `target.closest`
+  checks. Give each screen a `handles(target)` so ordering stops mattering (a `data-project`
+  clash with the Board already cost a failed test).
+- `[DEBT]` **Flaky browser tests under load:** `typeahead.spec.ts` "# offers the tags" and
+  "[[ offers the notes" fail occasionally when the whole suite runs in parallel, pass alone.
+
 ## Migration and compatibility
 
 - `[FEATURE]` **Import the first Notebook app's projects.** Notebook kept its data in this
