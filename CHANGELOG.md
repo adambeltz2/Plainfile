@@ -4,6 +4,33 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.25.0] - 2026-11-21
+
+### Added
+- **Type-ahead for things that already exist.**
+  - **In the editor:** `[[` offers your notes (and their aliases) and completes the link with
+    the shortest name that reaches it; `#` offers your tags; `@` offers your people (from
+    tasks, `people`/`attendees` frontmatter and person notes); and in the frontmatter, `project:`,
+    `type:`, `status:`, and the lists in `tags: [` and `people: [` offer the values already used.
+    The list appears over the page, so a phone screen does not clip it, and Esc closes it
+    without leaving focus mode.
+  - **In form fields:** the @people and #tags fields in quick add and the New task form, and
+    template prompts named like project, people, attendees, tags, type or status, show a dropdown
+    of what exists as you type. It leaves out names already in the field, never takes Enter
+    unless you have moved onto a suggestion (so Enter still adds the task), and Tab takes the
+    first one.
+- Core: `peopleNames`, `tagNames`, `projectNames`, `valueNames`, `linkTargets`, `matchSuggestions`.
+
+### Changed
+- **The due date in quick add is now visible.** On Android an empty date field showed as a tiny
+  blank box. It now has a "Due" label, is wide enough to read, and has **Today**, **Tomorrow**
+  and **Next week** buttons beside it (pressing a pressed one clears it). The New task form has
+  the same buttons.
+
+### Fixed
+- Esc closing a suggestion list also left focus mode, because the list was already closed by the
+  time the page checked.
+
 ## [0.24.1] - 2026-11-21
 
 ### Fixed

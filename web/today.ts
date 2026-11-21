@@ -211,9 +211,11 @@ export function html(): string {
   h += '<section class="main">';
   h += `<form class="quick" data-quick><label class="sr" for="quick-text">Add a task</label>` +
     `<input id="quick-text" class="inp" type="text" autocomplete="off" placeholder="Add a task and press Enter. It goes to your Inbox, dated today." value="${esc(quick.text)}">` +
-    `<label class="sr" for="quick-people">People</label><input id="quick-people" class="inp mini" type="text" autocomplete="off" placeholder="@people" value="${esc(quick.people)}">` +
-    `<label class="sr" for="quick-tags">Tags</label><input id="quick-tags" class="inp mini" type="text" autocomplete="off" placeholder="#tags" value="${esc(quick.tags)}">` +
-    `<label class="sr" for="quick-due">Due date</label><input id="quick-due" class="inp date" type="date" value="${esc(quick.due)}">` +
+    `<label class="sr" for="quick-people">People</label><input id="quick-people" class="inp mini" type="text" autocomplete="off" data-suggest="people" placeholder="@people" value="${esc(quick.people)}">` +
+    `<label class="sr" for="quick-tags">Tags</label><input id="quick-tags" class="inp mini" type="text" autocomplete="off" data-suggest="tags" placeholder="#tags" value="${esc(quick.tags)}">` +
+    `<div class="qdue" role="group" aria-label="Due date">` +
+    `<label class="datefield" for="quick-due"><span>Due</span><input id="quick-due" class="inp date" type="date" value="${esc(quick.due)}"></label>` +
+    `<span class="qpicks">${[['Today', 0], ['Tomorrow', 1], ['Next week', 7]].map(([l, n]) => `<button type="button" class="chip qpick" data-qdue="${addDays(today(), n as number)}" aria-pressed="${quick.due === addDays(today(), n as number)}">${l}</button>`).join('')}</span></div>` +
     `<button class="btn primary" type="submit">Add</button></form>`;
   if (quick.error) h += `<div class="notice err small">${esc(quick.error)}</div>`;
   h += `<h2 class="title">${esc(label)}</h2>`;
@@ -318,6 +320,11 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   return false;
+}
+
+export function setQuickDue(date: string): void {
+  quick.due = quick.due === date ? '' : date;
+  render();
 }
 
 export function input(e: Event): boolean {

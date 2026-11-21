@@ -1,8 +1,10 @@
 import { defaultKeymap, history, historyKeymap, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
+import { autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
 import { markdown } from '@codemirror/lang-markdown';
 import { Compartment, EditorState, Transaction, type Range } from '@codemirror/state';
-import { Decoration, EditorView, ViewPlugin, WidgetType, keymap, type DecorationSet, type ViewUpdate } from '@codemirror/view';
+import { Decoration, EditorView, ViewPlugin, WidgetType, keymap, tooltips, type DecorationSet, type ViewUpdate } from '@codemirror/view';
 import { addDays } from '../src/query';
+import type { LinkTarget, SuggestKind } from '../src/vocabulary';
 
 /**
  * The live editor. The text in the editor is the markdown file, character for character.
@@ -303,6 +305,72 @@ function openDateMenu(view: EditorView, chip: HTMLElement, today: () => string):
   menu.querySelector('button')?.focus();
 }
 
+/* ---------- type-ahead ---------- */
+
+/** What the editor can offer while typing. The screen supplies it from the vault. */
+export interface Suggester {
+  links(): LinkTarget[];
+  names(kind: SuggestKind): string[];
+}
+
+function applyLink(insert: string) {
+  return (view: EditorView, _c: unknown, from: number, to: number): void => {
+    const after = view.state.sliceDoc(to, to + 2);
+    const text = insert + (after === ']]' ? '' : ']]');
+    view.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + insert.length + 2 }, userEvent: 'input.complete' });
+  };
+}
+
+const SCALAR_KEYS: Record<string, SuggestKind> = { project: 'projects', type: 'types', status: 'statuses' };
+const LIST_KEYS: Record<string, SuggestKind> = { tags: 'tags', people: 'people', attendees: 'people' };
+
+function suggestSource(s: Suggester): CompletionSource {
+  const options = (kind: SuggestKind) => s.names(kind).map((n) => ({ label: n, type: 'keyword' }));
+  return (ctx: CompletionContext): CompletionResult | null => {
+    const doc = ctx.state.doc;
+    const line = doc.line(doc.lineAt(ctx.pos).number);
+    const before = line.text.slice(0, ctx.pos - line.from);
+    const fmEnd = (() => {
+      if (doc.lines < 2 || doc.line(1).text.replace(/\r$/, '') !== '---') return 0;
+      for (let n = 2; n <= doc.lines; n++) {
+        const t = doc.line(n).text.replace(/\r$/, '');
+        if (t === '---' || t === '...') return n;
+      }
+      return 0;
+    })();
+
+    if (!(fmEnd > 0 && line.number <= fmEnd)) {
+      const link = /\[\[([^\]|#\n]*)$/.exec(before);
+      if (link) {
+        const typed = link[1] ?? '';
+        return {
+          from: ctx.pos - typed.length,
+          options: s.links().map((t) => ({ label: t.label, detail: t.detail, apply: applyLink(t.insert), type: 'text' })),
+          validFor: /^[^\]|#]*$/,
+        };
+      }
+      const tag = /(?:^|[\s(])#([\p{L}\p{N}_/-]*)$/u.exec(before);
+      if (tag) return { from: ctx.pos - (tag[1] ?? '').length, options: options('tags'), validFor: /^[\p{L}\p{N}_/-]*$/u };
+      const who = /(?:^|[\s(])@([\p{L}\p{N}_-]*)$/u.exec(before);
+      if (who) return { from: ctx.pos - (who[1] ?? '').length, options: options('people'), validFor: /^[\p{L}\p{N}_-]*$/u };
+      return null;
+    }
+
+    const m = /^([A-Za-z_][\w-]*)\s*:\s?(.*)$/.exec(before);
+    if (!m) return null;
+    const key = (m[1] ?? '').toLowerCase();
+    const rest = m[2] ?? '';
+    const scalar = SCALAR_KEYS[key];
+    if (scalar && !rest.includes('[')) return { from: ctx.pos - rest.length, options: options(scalar), validFor: /^[^\s,\]]*$/ };
+    const list = LIST_KEYS[key];
+    if (list) {
+      const token = /(?:\[|,)\s*([^,\]]*)$/.exec(rest);
+      if (token) return { from: ctx.pos - (token[1] ?? '').length, options: options(list), validFor: /^[^,\]]*$/ };
+    }
+    return null;
+  };
+}
+
 /* ---------- public ---------- */
 
 export interface EditorHandle {
@@ -324,7 +392,7 @@ export interface EditorHandle {
   destroy(): void;
 }
 
-export function createEditor(o: { text: string; crlf: boolean; today: () => string; onChange(): void; onSave(): void }): EditorHandle {
+export function createEditor(o: { text: string; crlf: boolean; today: () => string; onChange(): void; onSave(): void; suggest?: Suggester }): EditorHandle {
   const mode = new Compartment();
   const host = document.createElement('div');
   host.className = 'editor-host';
@@ -349,6 +417,13 @@ export function createEditor(o: { text: string; crlf: boolean; today: () => stri
       EditorView.lineWrapping,
       EditorView.contentAttributes.of({ 'aria-label': 'Note text', spellcheck: 'true' }),
       normalizeMarkers,
+      ...(o.suggest
+        ? [
+            autocompletion({ override: [suggestSource(o.suggest)], icons: false, maxRenderedOptions: 40 }),
+            // Draw the list over the page, so a small editor or a phone screen does not clip it.
+            tooltips({ parent: document.body, position: 'fixed' }),
+          ]
+        : []),
       mode.of(livePreview),
       EditorView.domEventHandlers({
         mousedown(e, view) {

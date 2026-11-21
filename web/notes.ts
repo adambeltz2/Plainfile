@@ -1,11 +1,13 @@
 import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type DeletePlan, type TrashItem } from '../src/delete';
 import { lineDiff, type LineChange } from '../src/diff';
 import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type Version } from '../src/history';
+import { bestLinkTarget } from '../src/fixes';
 import { frontmatterText, setFrontmatterField } from '../src/frontmatter';
 import { dirname } from '../src/index';
 import { parseNote } from '../src/parse';
 import { isProjectNote, projectContents } from '../src/projects';
 import { addDays } from '../src/query';
+import { linkTargets, suggestionsFor, type LinkTarget } from '../src/vocabulary';
 import { ConflictError } from '../src/storage';
 import { createEditor, type EditorHandle } from './editor';
 import { errorMessage, onVaultChange, render, state, today } from './store';
@@ -184,7 +186,7 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
     notes.versions = [];
     notes.lastDeleted = undefined;
     notes.confirmDelete = undefined;
-    notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush() });
+    notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush(), suggest });
   } catch (e) {
     notes.handle?.destroy();
     notes.handle = undefined;
@@ -194,6 +196,21 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
   state.screen = 'notes';
   render();
 }
+
+/** The type-ahead for the editor: link targets (kept until the notes change) and the names already in use. */
+let linkCache: { version: number; path: string; list: LinkTarget[] } | undefined;
+const suggest = {
+  links(): LinkTarget[] {
+    const idx = state.index;
+    const path = notes.path;
+    if (!idx || !path) return [];
+    if (linkCache?.version !== idx.version || linkCache.path !== path) {
+      linkCache = { version: idx.version, path, list: linkTargets(idx, path, (s, t) => bestLinkTarget(idx, s, t)) };
+    }
+    return linkCache.list;
+  },
+  names: (kind: Parameters<typeof suggestionsFor>[1]): string[] => (state.index ? suggestionsFor(state.index, kind).map((s) => s.name) : []),
+};
 
 function onChange(): void {
   updateHistoryButtons();

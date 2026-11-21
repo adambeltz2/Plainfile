@@ -7,6 +7,7 @@ import * as newmenu from './newmenu';
 import * as notes from './notes';
 import * as rename from './rename';
 import * as search from './search';
+import * as suggest from './suggest';
 import { searchState } from './search';
 import {
   healthCount,
@@ -166,6 +167,7 @@ function shell(): string {
 }
 
 function render(): void {
+  suggest.close();
   const active = document.activeElement as HTMLInputElement | HTMLElement | null;
   const focusId = active && active !== document.body ? active.id : '';
   const key = active?.dataset?.toggle
@@ -204,6 +206,8 @@ app.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     if (state.modal && (await newmenu.click(target))) return;
 
+    const qd = target.closest<HTMLElement>('[data-qdue]')?.dataset.qdue;
+    if (qd) return todayScreen.setQuickDue(qd);
     const cp = target.closest<HTMLElement>('[data-copy]');
     if (cp) return void guide.copy(cp);
     if (state.screen === 'explore' && (await explore.click(target))) return;
@@ -300,6 +304,7 @@ app.addEventListener('submit', (e) => {
 });
 
 app.addEventListener('input', (e) => {
+  suggest.onInput(e);
   if (state.modal && newmenu.input(e)) return;
   if (todayScreen.input(e)) return;
   if (explore.input(e)) return;
@@ -318,12 +323,23 @@ app.addEventListener('dragover', (e) => board.dragOver(e));
 app.addEventListener('drop', (e) => board.drop(e));
 app.addEventListener('dragend', () => board.dragEnd());
 
+// CodeMirror closes its suggestion list while handling Escape, before this page-level handler runs,
+// so note whether one was open at the start of the key press.
+let listOpenAtEscape = false;
 app.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') listOpenAtEscape = !!document.querySelector('.cm-tooltip-autocomplete, .date-menu');
+}, true);
+
+app.addEventListener('focusin', (e) => suggest.onFocus(e));
+app.addEventListener('focusout', (e) => suggest.onBlur(e));
+
+app.addEventListener('keydown', (e) => {
+  if (suggest.onKeydown(e)) return;
   if (e.key === 'Escape' && state.modal) {
     newmenu.closeModal();
     return;
   }
-  if (e.key === 'Escape' && state.screen === 'notes' && notes.notes.focus && !document.querySelector('.cm-tooltip-autocomplete, .date-menu')) {
+  if (e.key === 'Escape' && state.screen === 'notes' && notes.notes.focus && !listOpenAtEscape) {
     notes.notes.focus = false;
     notes.notes.wantFocus = true;
     requestRender();

@@ -151,8 +151,9 @@ Nothing here is a promise of order. Remove an item when it ships.
   `web/notes.ts`._
 - `[FEATURE]` Focus mode extras: a typewriter scroll, a dimmed-paragraph mode, and a daily word goal.
   _Affected: `web/notes.ts`, `web/app.css`._
-- `[FEATURE]` **Autocomplete** for `[[links]]` (note titles and aliases), `#tags` and `@people` as
-  you type. _Affected: `web/editor.ts`._
+- `[FEATURE]` Type-ahead extras: suggestions for block-style lists in the frontmatter (`- launch`), a new-tag
+  prompt ("create #newtag?"), and ranking by how recently a name was used. The basics are built.
+  _Affected: `web/editor.ts`, `web/suggest.ts`._
 - `[FEATURE]` Slash menu: `/` inserts a heading, task, date, link, table or template. _Affected:
   `web/editor.ts`._
 - `[FEATURE]` Hold Alt to see the raw markdown, as the mockup showed. _Affected: `web/editor.ts`._

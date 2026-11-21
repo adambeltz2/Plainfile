@@ -137,3 +137,34 @@ test.describe('new project', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
 });
+
+test.describe('quick add due date', () => {
+  test('is labelled, wide enough to see on a phone, and has Today, Tomorrow and Next week buttons', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    const dir = await openVault(page, { 'a.md': '# A\n' });
+    await expect(page.locator('.datefield')).toContainText('Due');
+    const box = await page.locator('#quick-due').boundingBox();
+    expect(box!.width).toBeGreaterThan(110);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+    await page.getByRole('button', { name: 'Tomorrow' }).click();
+    await expect(page.locator('#quick-due')).toHaveValue(localDate(1));
+    await expect(page.getByRole('button', { name: 'Tomorrow' })).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#quick-text').fill('Pay invoice');
+    await page.locator('#quick-text').press('Enter');
+    await expect(page.locator('.diff .add')).toContainText(`due:${localDate(1)}`);
+    expect(await readFile(page, dir, 'inbox/Inbox.md')).toContain(`- [ ] Pay invoice due:${localDate(1)} created:${localDate(0)}`);
+    // Pressing the same pick again clears it, and the field is empty for the next task.
+    await page.getByRole('button', { name: 'Next week' }).click();
+    await expect(page.locator('#quick-due')).toHaveValue(localDate(7));
+    await page.getByRole('button', { name: 'Next week' }).click();
+    await expect(page.locator('#quick-due')).toHaveValue('');
+  });
+
+  test('the New task form has the same picks', async ({ page }) => {
+    await openVault(page, { 'a.md': '# A\n' });
+    await page.getByRole('button', { name: '+ New' }).click();
+    await page.locator('.modal').getByRole('button', { name: /^Task\b/ }).filter({ hasText: 'Add a line to your Inbox' }).click();
+    await page.locator('.modal').getByRole('button', { name: 'Today' }).click();
+    await expect(page.locator('#new-task-due')).toHaveValue(localDate(0));
+  });
+});

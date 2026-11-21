@@ -146,7 +146,7 @@ export function html(): string {
   h += '<h2 class="title">Cheat sheet</h2><p class="meta">How to write notes so Plainfile can use them. Everything here is plain text in your files. Nothing is required.</p>';
   h += `<nav class="toc" aria-label="Sections">${toc.map(([id, l]) => `<button class="chip" data-scroll="sec-${id}">${esc(l)}</button>`).join('')}</nav>`;
 
-  h += section('note', 'A note', '<p>A note is a markdown file. The block between the two <code>---</code> lines at the top is the <b>frontmatter</b>: properties as <code>key: value</code>. Everything under it is the note.</p>' + block('note', 'A meeting note', EX.note));
+  h += section('note', 'A note', '<p>A note is a markdown file. While you type, <code>[[</code>, <code>#</code>, <code>@</code> and frontmatter values such as <code>project:</code> offer what already exists. The block between the two <code>---</code> lines at the top is the <b>frontmatter</b>: properties as <code>key: value</code>. Everything under it is the note.</p>' + block('note', 'A meeting note', EX.note));
 
   h += section(
     'keys',

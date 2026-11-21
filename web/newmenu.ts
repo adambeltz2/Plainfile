@@ -1,4 +1,6 @@
 import { createFromTemplate, promptDefault, renderTemplate, templateExtras, type Template } from '../src/templates';
+import { addDays } from '../src/query';
+import { kindForPrompt } from '../src/vocabulary';
 import { openNote } from './notes';
 import { errorMessage, quickAdd, render, state, today } from './store';
 import { esc } from './util';
@@ -51,9 +53,9 @@ export function html(): string {
     body =
       '<h2>New task</h2><p class="muted small" style="margin:0 0 10px">Added to <code>inbox/Inbox.md</code> with today as its created date. Nothing else in that file changes.</p>' +
       `<div class="fld"><label for="new-task-text">Task</label><input id="new-task-text" class="inp" type="text" autocomplete="off" value="${esc(m.text)}" placeholder="Call Dana about the logo files"></div>` +
-      `<div class="fld"><label for="new-task-due">Due date (optional)</label><input id="new-task-due" class="inp date" type="date" value="${esc(m.due)}"></div>` +
-      `<div class="fld"><label for="new-task-people">People (optional)</label><input id="new-task-people" class="inp" type="text" autocomplete="off" placeholder="@dana @sam" value="${esc(m.people)}"></div>` +
-      `<div class="fld"><label for="new-task-tags">Tags (optional)</label><input id="new-task-tags" class="inp" type="text" autocomplete="off" placeholder="#launch #home" value="${esc(m.tags)}"></div>` +
+      `<div class="fld"><label for="new-task-due">Due date (optional)</label><div class="qdue"><input id="new-task-due" class="inp date" type="date" value="${esc(m.due)}"><span class="qpicks">${[['Today', 0], ['Tomorrow', 1], ['Next week', 7]].map(([l, n]) => `<button type="button" class="chip qpick" data-mdue="${addDays(today(), n as number)}" aria-pressed="${m.due === addDays(today(), n as number)}">${l}</button>`).join('')}</span></div></div>` +
+      `<div class="fld"><label for="new-task-people">People (optional)</label><input id="new-task-people" class="inp" type="text" autocomplete="off" data-suggest="people" placeholder="@dana @sam" value="${esc(m.people)}"></div>` +
+      `<div class="fld"><label for="new-task-tags">Tags (optional)</label><input id="new-task-tags" class="inp" type="text" autocomplete="off" data-suggest="tags" placeholder="#launch #home" value="${esc(m.tags)}"></div>` +
       (m.error ? `<div class="notice err small">${esc(m.error)}</div>` : '') +
       `<div class="row-gap"><button class="btn primary" data-act="create-task"${m.busy ? ' disabled' : ''}>${m.busy ? 'Adding…' : 'Add task'}</button><button class="btn" data-act="modal-back"${m.busy ? ' disabled' : ''}>Back</button></div>`;
   } else {
@@ -61,7 +63,10 @@ export function html(): string {
     if (!t) return '';
     const fields = t.prompts.length
       ? t.prompts
-          .map((p) => `<div class="fld"><label for="tpl-${esc(p.id)}">${esc(p.label)}</label><input id="tpl-${esc(p.id)}" class="inp" data-tpl-field="${esc(p.id)}" type="text" autocomplete="off" value="${esc(m.values[p.id] ?? '')}"></div>`)
+          .map((p) => {
+            const kind = kindForPrompt(p.id);
+            return `<div class="fld"><label for="tpl-${esc(p.id)}">${esc(p.label)}</label><input id="tpl-${esc(p.id)}" class="inp" data-tpl-field="${esc(p.id)}"${kind ? ` data-suggest="${kind}" data-suggest-sep="${kind === 'people' || kind === 'tags' ? ', ' : ''}"` : ''} type="text" autocomplete="off" value="${esc(m.values[p.id] ?? '')}"></div>`;
+          })
           .join('')
       : '<p class="muted small">This template has nothing to fill in.</p>';
     body =
@@ -82,6 +87,12 @@ export async function click(target: HTMLElement): Promise<boolean> {
   }
   if (target.closest('[data-new-task]')) {
     state.modal = { step: 'task', text: '', due: '', tags: '', people: '', error: '' };
+    render();
+    return true;
+  }
+  const md = target.closest<HTMLElement>('[data-mdue]')?.dataset.mdue;
+  if (md && m.step === 'task') {
+    m.due = m.due === md ? '' : md;
     render();
     return true;
   }
@@ -153,7 +164,7 @@ export function input(e: Event): boolean {
     return true;
   }
   if (m.step === 'template' && t.dataset.tplField) {
-    m.values[t.dataset.tplField] = t.value;
+    m.values[t.dataset.tplField] = t.value.replace(/[\s,]+$/, '');
     const tpl = currentTemplate();
     const box = document.querySelector('.modal .tplgrid > div:last-child');
     if (tpl && box) box.innerHTML = `<div class="grp" style="margin-top:0">Creates</div>${preview(tpl, m.values, m.extras)}`;
