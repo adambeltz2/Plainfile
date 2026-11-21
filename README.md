@@ -97,6 +97,7 @@ A note is a task file when it has `status` and lives in a `tasks/` folder or has
 - Typing `- [ ] ` converts to a checkbox as you type, and a typed `*` is saved as `-`.
   Inline formatting renders when you leave the line.
 - X-ray shows any note as raw markdown.
+- The ? button opens a cheat sheet of the syntax, with your own tags and frontmatter keys.
 
 ## Project docs
 

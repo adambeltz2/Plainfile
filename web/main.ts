@@ -1,10 +1,12 @@
 import { fsaSupported, FsaStorage } from '../src/fsa-storage';
 import * as board from './board';
+import * as guide from './guide';
 import * as health from './health';
 import * as newmenu from './newmenu';
 import * as notes from './notes';
 import * as rename from './rename';
 import * as search from './search';
+import { searchState } from './search';
 import {
   healthCount,
   loadContext,
@@ -77,6 +79,19 @@ async function go(screen: ScreenId): Promise<void> {
   if (screen === 'search') document.getElementById('search-q')?.focus();
 }
 
+const REPO = 'https://github.com/adambeltz2/Simple-Productivity';
+
+function footer(): string {
+  return (
+    '<footer class="foot">' +
+    `<span class="mono">Plainfile v${esc(__APP_VERSION__)}</span>` +
+    `<a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">What is new</a>` +
+    `<a href="${REPO}" target="_blank" rel="noopener noreferrer">GitHub</a>` +
+    (state.index ? '<button class="link" data-nav="guide">Cheat sheet</button>' : '') +
+    '</footer>'
+  );
+}
+
 function landing(): string {
   const supported = fsaSupported();
   let h = `<div class="theme-corner">${themeControl()}</div><main class="landing"><h1>Plainfile</h1>`;
@@ -96,7 +111,7 @@ function landing(): string {
       '<div class="notice">Opening a folder needs Chrome, Edge, Brave or Opera on a desktop computer. ' +
       'Other browsers can still try the sample vault. Support for them is planned.</div>';
   }
-  return `${h}</main>`;
+  return `${h}</main>${footer()}`;
 }
 
 function shell(): string {
@@ -111,7 +126,7 @@ function shell(): string {
   h += '<button class="btn primary" data-act="new">+ New</button>';
   h += '<button class="btn" data-act="rescan">Rescan</button>';
   if (fsaSupported()) h += '<button class="btn" data-act="open">Open folder</button>';
-  h += `${themeControl()}</header>`;
+  h += `<button class="btn" data-nav="guide" aria-label="Syntax cheat sheet" title="Syntax cheat sheet" aria-current="${state.screen === 'guide'}">?</button>${themeControl()}</header>`;
   if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
   if (state.renames.length && state.screen !== 'rename') {
     const r = state.renames[0]!;
@@ -120,6 +135,9 @@ function shell(): string {
   switch (state.screen) {
     case 'board':
       h += board.html();
+      break;
+    case 'guide':
+      h += guide.html();
       break;
     case 'rename':
       h += rename.html();
@@ -136,7 +154,7 @@ function shell(): string {
     default:
       h += todayScreen.html();
   }
-  return `${h}</div>`;
+  return `${h}${footer()}</div>`;
 }
 
 function render(): void {
@@ -177,6 +195,16 @@ app.addEventListener('click', (e) => {
   void (async () => {
     const target = e.target as HTMLElement;
     if (state.modal && (await newmenu.click(target))) return;
+
+    const cp = target.closest<HTMLElement>('[data-copy]');
+    if (cp) return void guide.copy(cp);
+    const sc = target.closest<HTMLElement>('[data-scroll]')?.dataset.scroll;
+    if (sc) return guide.scrollTo(sc);
+    const sq = target.closest<HTMLElement>('[data-search-q]')?.dataset.searchQ;
+    if (sq !== undefined) {
+      searchState.q = sq;
+      return void go('search');
+    }
 
     const theme = target.closest<HTMLElement>('[data-theme-set]')?.dataset.themeSet as ThemeSetting | undefined;
     if (theme) return setTheme(theme);

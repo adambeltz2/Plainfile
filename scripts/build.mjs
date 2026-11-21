@@ -17,6 +17,8 @@ function readTree(dir, out = {}) {
   return out;
 }
 
+const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+
 rmSync(join(root, 'dist'), { recursive: true, force: true });
 mkdirSync(join(root, 'dist'), { recursive: true });
 
@@ -28,7 +30,7 @@ await build({
   target: 'es2022',
   minify: true,
   sourcemap: true,
-  define: { __SAMPLE_VAULT__: JSON.stringify(readTree(sampleRoot)) },
+  define: { __SAMPLE_VAULT__: JSON.stringify(readTree(sampleRoot)), __APP_VERSION__: JSON.stringify(version) },
   logLevel: 'info',
 });
 
@@ -36,5 +38,4 @@ for (const f of ['index.html', 'app.css', 'manifest.json']) copyFileSync(join(ro
 cpSync(join(root, 'web', 'icons'), join(root, 'dist', 'icons'), { recursive: true });
 
 // The service worker's cache name carries the app version, so each release replaces the old cache.
-const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
 writeFileSync(join(root, 'dist', 'sw.js'), readFileSync(join(root, 'web', 'sw.js'), 'utf8').replace('__VERSION__', version));

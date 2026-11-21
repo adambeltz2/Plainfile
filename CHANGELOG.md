@@ -4,6 +4,21 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.20.0] - 2026-11-21
+
+### Added
+- **Cheat sheet** (the ? button in the header, and a footer link): how a note is written, the
+  frontmatter keys Plainfile understands, tags, tasks, dates, links, follow-ups and projects,
+  search operators and templates, each with an example you can copy. It also shows **your own
+  vault**: a tag cloud sized by how many notes use each tag (click one to search it) and the
+  frontmatter keys your notes actually use, with example values.
+- **Footer** on every screen with the app version, a link to what is new, and GitHub.
+- A **new app icon**: a plain white note on black, readable down to the 16 pixel tab icon.
+- A much larger **backlog**, grouped by area, with the suggested next items at the top.
+
+### Changed
+- The version shown in the footer comes from `package.json` at build time.
+
 ## [0.19.0] - 2026-11-21
 
 ### Added
