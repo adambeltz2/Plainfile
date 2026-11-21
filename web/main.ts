@@ -155,6 +155,12 @@ function shell(): string {
   if (fsaSupported()) h += '<button class="btn" data-act="open">Open folder</button>';
   h += `<button class="btn" data-nav="guide" aria-label="Syntax cheat sheet" title="Syntax cheat sheet" aria-current="${state.screen === 'guide'}">?</button>${themeControl()}</header>`;
   if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
+  if (state.index && state.index.notes.size === 0) {
+    const s = state.index.summary();
+    h += `<div class="notice small" role="status"><b>No markdown notes were found in this folder.</b> Plainfile looked through ${s.files.toLocaleString()} file${s.files === 1 ? '' : 's'} in ${s.folders.toLocaleString()} folder${s.folders === 1 ? '' : 's'}, down to ${s.depth} level${s.depth === 1 ? '' : 's'} deep` +
+      (s.types.length ? ` (types: ${s.types.map(([t, c]) => `.${esc(t)} ${c}`).join(', ')})` : '') +
+      `. There is no limit on how deep notes can be. Only files ending in <code>.md</code> count${s.hidden ? `, and ${s.hidden} item${s.hidden === 1 ? '' : 's'} whose names start with a dot (such as <code>.git</code>) are hidden` : ''}. Try <b>Open folder</b> and pick the folder that directly holds your notes.</div>`;
+  }
   const skipped = state.index?.skipped ?? [];
   if (skipped.length && !state.skippedHidden) {
     h += `<div class="notice small" role="status"><b>${skipped.length} file${skipped.length === 1 ? '' : 's'} could not be read and ${skipped.length === 1 ? 'was' : 'were'} skipped.</b> The rest of your folder opened normally. ` +

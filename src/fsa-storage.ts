@@ -37,7 +37,8 @@ export class FsaStorage implements VaultStorage {
    * with progress reported along the way.
    */
   async list(opts: ListOptions = {}): Promise<FileEntry[]> {
-    const { onProgress, signal, onSkip } = opts;
+    const { onProgress, signal, onSkip, onHidden } = opts;
+    let hidden = 0;
     const why = (e: unknown): string => (e instanceof Error ? e.message : String(e));
     this.seen.clear();
     let found = 0;
@@ -60,7 +61,10 @@ export class FsaStorage implements VaultStorage {
         batch.map(async ({ dir, prefix }) => {
           try {
             for await (const [name, handle] of dir.entries()) {
-              if (name.startsWith('.') || name === 'node_modules') continue;
+              if (name.startsWith('.') || name === 'node_modules') {
+                hidden++;
+                continue;
+              }
               const rel = prefix ? `${prefix}/${name}` : name;
               if (handle.kind === 'directory') queue.push({ dir: handle as FileSystemDirectoryHandle, prefix: rel });
               else {
@@ -78,6 +82,7 @@ export class FsaStorage implements VaultStorage {
       );
     }
     report(true);
+    onHidden?.(hidden);
 
     const out: FileEntry[] = [];
     await mapPool(

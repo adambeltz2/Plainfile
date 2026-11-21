@@ -64,3 +64,37 @@ test('files the browser refuses to read are skipped and listed, and the folder s
   await notice.getByRole('button', { name: 'Dismiss' }).click();
   await expect(page.locator('.notice', { hasText: 'could not be read' })).toHaveCount(0);
 });
+
+test('a folder with no markdown notes says what it did find, and deep notes are found', async ({ page }) => {
+  await page.evaluate(async () => {
+    const root = await navigator.storage.getDirectory();
+    const vault = await root.getDirectoryHandle(`empty-${Date.now()}`, { create: true });
+    let d = vault;
+    for (const n of ['a', 'b', 'c', 'd', 'e', 'f', 'g']) d = await d.getDirectoryHandle(n, { create: true });
+    const w = await (await d.getFileHandle('pic.png', { create: true })).createWritable();
+    await w.write('x');
+    await w.close();
+    await (await vault.getDirectoryHandle('.git', { create: true })).getFileHandle('x', { create: true });
+    await window.__plainfile!.openHandle(vault, 'nomd');
+  });
+  const n = page.locator('.notice', { hasText: 'No markdown notes were found' });
+  await expect(n).toContainText('1 file in 7 folders, down to 7 levels deep');
+  await expect(n).toContainText('.png 1');
+  await expect(n).toContainText('There is no limit on how deep');
+  await expect(n).toContainText('1 item whose names start with a dot');
+});
+
+test('notes many folders deep are found', async ({ page }) => {
+  await page.evaluate(async () => {
+    const root = await navigator.storage.getDirectory();
+    const vault = await root.getDirectoryHandle(`deep-${Date.now()}`, { create: true });
+    let d = vault;
+    for (let i = 0; i < 15; i++) d = await d.getDirectoryHandle(`level${i}`, { create: true });
+    const w = await (await d.getFileHandle('Deep note.md', { create: true })).createWritable();
+    await w.write('# Deep note\n- [ ] Found me due:2026-11-21');
+    await w.close();
+    await window.__plainfile!.openHandle(vault, 'deepvault');
+  });
+  await expect(page.locator('.notice', { hasText: 'No markdown notes' })).toHaveCount(0);
+  await expect(page.locator('.task', { hasText: 'Found me' })).toBeVisible();
+});

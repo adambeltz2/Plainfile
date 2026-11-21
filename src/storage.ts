@@ -22,6 +22,8 @@ export interface ListProgress {
 export interface ListOptions {
   /** Called for a file or folder that could not be looked at (a name the system refuses, no permission). It is left out. */
   onSkip?: (path: string, reason: string) => void;
+  /** How many files and folders were left out because their names start with a dot (such as `.git`), for explaining an empty result. */
+  onHidden?: (count: number) => void;
   onProgress?: (p: ListProgress) => void;
   signal?: AbortSignal;
 }

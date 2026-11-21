@@ -125,3 +125,14 @@ describe('files that cannot be read', () => {
     await expect(new VaultIndex(store).scan({ signal: ctrl.signal })).rejects.toMatchObject({ name: 'AbortError' });
   });
 });
+
+describe('summary of what a scan saw', () => {
+  it('counts files, folders, depth and types, with no limit on depth', async () => {
+    const deep = 'a/b/c/d/e/f/g/h/i/j/k/deep.md';
+    const store = new MemoryStorage({ [deep]: 'x', 'a/pic.png': 'p', 'a/b/other.png': 'p', 'top.md': 'y' });
+    const index = new VaultIndex(store);
+    await index.scan();
+    expect(index.notes.has(deep)).toBe(true);
+    expect(index.summary()).toMatchObject({ files: 4, depth: 11, types: [['md', 2], ['png', 2]] });
+  });
+});

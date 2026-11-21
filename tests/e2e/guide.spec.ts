@@ -40,8 +40,8 @@ test.describe('cheat sheet', () => {
   test('the section buttons jump to that section', async ({ page }) => {
     await page.getByRole('button', { name: 'Try the sample vault' }).click();
     await page.getByRole('button', { name: 'Syntax cheat sheet' }).click();
-    await page.locator('.toc').getByRole('button', { name: 'Keys' }).click();
-    await expect(page.locator('#sec-keys')).toContainText('Ctrl/Cmd + Shift + M');
+    await page.locator('.toc').getByRole('button', { name: 'Quick keys' }).click();
+    await expect(page.locator('#sec-shortcuts')).toContainText('Ctrl/Cmd + Shift + M');
     await page.locator('.toc').getByRole('button', { name: 'Templates' }).click();
     await expect(page.locator('#sec-templates')).toBeInViewport();
   });

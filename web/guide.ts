@@ -157,7 +157,7 @@ export function html(): string {
     ['links', 'Links'],
     ['notebook', 'Follow-ups and projects'],
     ['search', 'Search'],
-    ['keys', 'Keys'],
+    ['shortcuts', 'Quick keys'],
     ['templates', 'Templates'],
     ['vault', 'Your vault'],
   ];
@@ -191,7 +191,7 @@ export function html(): string {
       '</tbody></table></div>');
 
   h += section(
-    'keys',
+    'shortcuts',
     'Quick keys and menus',
     '<p>On a phone, use <b>Go to…</b> in the header and the <b>⋯ More</b> menu on a note. Pin a note to keep it at the top of the list (it writes <code>pinned: true</code>). Moving a note updates the links that would break and offers Undo.</p><div class="table-wrap"><table><tbody>' +
       SHORTCUTS.map(([k, d]) => `<tr><td class="mono small">${esc(k)}</td><td>${esc(d)}</td></tr>`).join('') +

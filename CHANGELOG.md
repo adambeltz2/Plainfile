@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.29.1] - 2026-11-21
+
+### Added
+- **A folder that shows no notes now explains itself.** The notice says how many files and folders
+  were looked through, how deep, the file types seen, how many dot-named items (`.git`) were hidden,
+  and that there is no limit on how deep notes can be. Notes 15 levels down are covered by a test.
+
+### Fixed
+- The Quick keys section of the cheat sheet no longer clashes with the frontmatter Keys section.
+- Type-ahead browser tests wait for the suggestion list to settle (no change to the app).
+
 ## [0.29.0] - 2026-11-21
 
 ### Added

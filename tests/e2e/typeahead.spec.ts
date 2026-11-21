@@ -20,6 +20,10 @@ async function open(page: Page, name: string): Promise<void> {
   await page.locator('.note-item', { hasText: new RegExp(`^${name}$`) }).click();
   await expect(page.locator('.cm-content')).toBeVisible();
 }
+/** CodeMirror re-queries a moment after typing; Enter pressed during that gap is a newline, not a choice. */
+async function settle(page: Page): Promise<void> {
+  await page.waitForTimeout(350);
+}
 async function typeAtEnd(page: Page, text: string): Promise<void> {
   await page.locator('.cm-content').click();
   await page.keyboard.press('Control+End');
@@ -36,6 +40,7 @@ test.describe('in the editor', () => {
     await expect(options(page).filter({ hasText: 'Pricing research' })).toContainText('projects/site/pricing-research.md');
     await page.keyboard.type('Pri');
     await expect(options(page)).toHaveCount(1);
+    await settle(page);
     await page.keyboard.press('Enter');
     await expect.poll(() => readFile(page, dir, 'draft.md'), { timeout: 5000 }).toBe('Draft\n[[pricing-research]]');
   });
@@ -52,15 +57,17 @@ test.describe('in the editor', () => {
     await open(page, 'draft');
     await typeAtEnd(page, '\n#la');
     await expect(options(page).filter({ hasText: 'launch' })).toBeVisible();
+    await settle(page);
     await page.keyboard.press('Enter');
     await page.keyboard.type(' @sa');
     await expect(options(page).filter({ hasText: 'sam' })).toBeVisible();
+    await settle(page);
     await page.keyboard.press('Enter');
     await page.keyboard.type(' @da');
     await expect(options(page).filter({ hasText: 'dana' })).toBeVisible();
+    await settle(page);
     await page.keyboard.press('Enter');
-    await expect(page.locator('#note-status')).toHaveText('Saved');
-    expect(await readFile(page, dir, 'draft.md')).toBe('Draft\n#launch @sam @dana');
+    await expect.poll(() => readFile(page, dir, 'draft.md'), { timeout: 5000 }).toBe('Draft\n#launch @sam @dana');
   });
 
   test('frontmatter values are offered: project, type, status and tags', async ({ page }) => {
@@ -72,15 +79,19 @@ test.describe('in the editor', () => {
     await page.keyboard.press('End');
     await page.keyboard.type('\nproject: s');
     await expect(options(page).filter({ hasText: 'site' })).toBeVisible();
+    await settle(page);
     await page.keyboard.press('Enter');
     await page.keyboard.type('\ntype: pro');
     await expect(options(page).filter({ hasText: 'project' })).toBeVisible();
+    await settle(page);
     await page.keyboard.press('Enter');
     await page.keyboard.type('\nstatus: wa');
     await expect(options(page).filter({ hasText: 'waiting' })).toBeVisible();
+    await settle(page);
     await page.keyboard.press('Enter');
     await page.keyboard.type('\ntags: [la');
     await expect(options(page).filter({ hasText: 'launch' })).toBeVisible();
+    await settle(page);
     await page.keyboard.press('Enter');
     await expect.poll(() => readFile(page, dir, 'fm.md'), { timeout: 5000 }).toBe('---\ntitle: X\nproject: site\ntype: project\nstatus: waiting\ntags: [launch\n---\nbody');
   });

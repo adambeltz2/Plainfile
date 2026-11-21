@@ -96,6 +96,23 @@ export class VaultIndex {
     return [...this.listSkipped, ...[...this.readSkipped].map(([path, reason]) => ({ path, reason }))].sort((a, b) => a.path.localeCompare(b.path));
   }
   private listSkipped: SkippedFile[] = [];
+  /** Items left out because their names start with a dot, from the latest scan. */
+  hiddenCount = 0;
+
+  /** What the latest scan saw, to explain a folder that shows no notes. */
+  summary(): { files: number; folders: number; depth: number; hidden: number; types: [string, number][] } {
+    const types = new Map<string, number>();
+    const dirs = new Set<string>();
+    let depth = 0;
+    for (const f of this.files) {
+      const ext = /\.([A-Za-z0-9]{1,8})$/.exec(f)?.[1]?.toLowerCase() ?? '(none)';
+      types.set(ext, (types.get(ext) ?? 0) + 1);
+      const parts = f.split('/');
+      depth = Math.max(depth, parts.length - 1);
+      for (let k = 1; k < parts.length; k++) dirs.add(parts.slice(0, k).join('/'));
+    }
+    return { files: this.files.size, folders: dirs.size, depth, hidden: this.hiddenCount, types: [...types].sort((a, b) => b[1] - a[1]).slice(0, 6) };
+  }
   private readSkipped = new Map<string, string>();
 
   async scan(opts: ScanOptions = {}): Promise<ScanResult> {
@@ -106,6 +123,7 @@ export class VaultIndex {
       signal,
       onProgress: (p) => onProgress?.({ phase: 'listing', ...p }),
       onSkip: (path, reason) => listSkipped.push({ path, reason }),
+      onHidden: (n) => (this.hiddenCount = n),
     });
     this.listSkipped = listSkipped;
     throwIfAborted(signal);
