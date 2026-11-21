@@ -26,19 +26,37 @@ const app = document.getElementById('app') as HTMLElement;
 
 /* ---------- theme ---------- */
 
-function isDark(): boolean {
+type ThemeSetting = 'light' | 'dark' | 'system';
+
+function themeSetting(): ThemeSetting {
   const set = document.documentElement.getAttribute('data-theme');
-  return set ? set === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return set === 'light' || set === 'dark' ? set : 'system';
 }
-function toggleTheme(): void {
-  const next = isDark() ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
+
+/** Light, dark, or follow the system. The choice is remembered on this device. */
+function setTheme(next: ThemeSetting): void {
+  if (next === 'system') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', next);
   try {
-    localStorage.setItem('plainfile-theme', next);
+    if (next === 'system') localStorage.removeItem('plainfile-theme');
+    else localStorage.setItem('plainfile-theme', next);
   } catch {
     /* private window: the choice just lasts for this visit */
   }
   requestRender();
+}
+
+function themeControl(): string {
+  const cur = themeSetting();
+  const btn = (v: ThemeSetting, label: string, title: string): string =>
+    `<button data-theme-set="${v}" aria-pressed="${cur === v}" title="${title}">${label}</button>`;
+  return (
+    '<div class="seg theme-seg" role="group" aria-label="Color theme">' +
+    btn('light', 'Light', 'Always light') +
+    btn('dark', 'Dark', 'Always dark') +
+    btn('system', 'Auto', 'Follow your device setting') +
+    '</div>'
+  );
 }
 
 /* ---------- screens ---------- */
@@ -61,7 +79,7 @@ async function go(screen: ScreenId): Promise<void> {
 
 function landing(): string {
   const supported = fsaSupported();
-  let h = '<main class="landing"><h1>Plainfile</h1>';
+  let h = `<div class="theme-corner">${themeControl()}</div><main class="landing"><h1>Plainfile</h1>`;
   h += '<p>One place for the tasks and notes in a folder of plain markdown files. Your files stay yours. Nothing is uploaded.</p>';
   if (state.busy) h += `<div class="notice">${esc(state.busy)}</div>`;
   if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
@@ -93,7 +111,7 @@ function shell(): string {
   h += '<button class="btn primary" data-act="new">+ New</button>';
   h += '<button class="btn" data-act="rescan">Rescan</button>';
   if (fsaSupported()) h += '<button class="btn" data-act="open">Open folder</button>';
-  h += `<button class="btn" data-act="theme" aria-label="Switch to ${isDark() ? 'light' : 'dark'} mode">${isDark() ? 'Light' : 'Dark'}</button></header>`;
+  h += `${themeControl()}</header>`;
   if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
   if (state.renames.length && state.screen !== 'rename') {
     const r = state.renames[0]!;
@@ -160,6 +178,9 @@ app.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     if (state.modal && (await newmenu.click(target))) return;
 
+    const theme = target.closest<HTMLElement>('[data-theme-set]')?.dataset.themeSet as ThemeSetting | undefined;
+    if (theme) return setTheme(theme);
+
     const nav = target.closest<HTMLElement>('[data-nav]')?.dataset.nav as ScreenId | undefined;
     if (nav) return void go(nav);
 
@@ -171,8 +192,6 @@ app.addEventListener('click', (e) => {
         return void reopenSaved();
       case 'demo':
         return void openSample(__SAMPLE_VAULT__);
-      case 'theme':
-        return toggleTheme();
       case 'new':
         return newmenu.openNew();
       case 'new-note':

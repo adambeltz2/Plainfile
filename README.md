@@ -90,7 +90,7 @@ A note is a task file when it has `status` and lives in a `tasks/` folder or has
 
 ## Interface design
 
-- Black and white only, following the system light or dark setting.
+- Black and white only. A Light, Dark or Auto control on every screen; Auto follows your device.
 - Typing `- [ ] ` converts to a checkbox as you type, and a typed `*` is saved as `-`.
   Inline formatting renders when you leave the line.
 - X-ray shows any note as raw markdown.

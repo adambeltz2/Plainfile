@@ -44,13 +44,35 @@ test('tag filter and All open view', async ({ page }) => {
   await expect(page.locator('.task').first()).toBeVisible();
 });
 
-test('theme toggle switches between light and dark', async ({ page }) => {
+test('theme: Light, Dark and Auto work on the landing screen and in the app, and are remembered', async ({ page }) => {
+  const group = page.getByRole('group', { name: 'Color theme' });
+  const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const attr = () => page.locator('html').getAttribute('data-theme');
+
+  // On the landing screen, before any folder is open.
+  await page.emulateMedia({ colorScheme: 'light' });
+  await group.getByRole('button', { name: 'Dark' }).click();
+  expect(await attr()).toBe('dark');
+  expect(await bg()).toBe('rgb(0, 0, 0)');
+  await expect(group.getByRole('button', { name: 'Dark' })).toHaveAttribute('aria-pressed', 'true');
+
+  // It survives a reload and carries into the app.
+  await page.reload();
+  expect(await bg()).toBe('rgb(0, 0, 0)');
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
-  await page.getByRole('button', { name: /Switch to dark mode|Switch to light mode/ }).click();
-  const first = await page.locator('html').getAttribute('data-theme');
-  expect(['light', 'dark']).toContain(first);
-  await page.getByRole('button', { name: /Switch to (dark|light) mode/ }).click();
-  expect(await page.locator('html').getAttribute('data-theme')).not.toBe(first);
+  await group.getByRole('button', { name: 'Light' }).click();
+  expect(await attr()).toBe('light');
+  expect(await bg()).toBe('rgb(255, 255, 255)');
+
+  // Auto follows the device, which here is set to dark.
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await group.getByRole('button', { name: 'Auto' }).click();
+  expect(await attr()).toBeNull();
+  expect(await bg()).toBe('rgb(0, 0, 0)');
+  await page.emulateMedia({ colorScheme: 'light' });
+  expect(await bg()).toBe('rgb(255, 255, 255)');
+  await page.reload();
+  expect(await attr()).toBeNull();
 });
 
 test('real folder: reads files, ticks one character, leaves everything else byte for byte', async ({ page }) => {

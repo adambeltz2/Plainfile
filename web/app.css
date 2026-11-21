@@ -47,6 +47,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--fg); o
 .btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
 .btn[disabled] { opacity: 0.5; cursor: default; }
 
+/* Theme control */
+.theme-seg button { padding: 3px 10px; font-size: 13px; }
+.theme-corner { position: fixed; top: max(12px, env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); z-index: 5; }
+
 /* Landing */
 .landing { max-width: 34rem; margin: 12vh auto 0; display: flex; flex-direction: column; gap: 14px; }
 .landing h1 { font-size: 30px; margin: 0; letter-spacing: -0.02em; }

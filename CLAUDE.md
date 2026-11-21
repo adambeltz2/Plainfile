@@ -47,7 +47,7 @@ Plainfile (working name) is the successor to **Notebook**, the single-file app t
 *   **Versioning:** Bump the version in `package.json` on every deploy-intended change and add an entry to `CHANGELOG.md`. Commit both together.
 
 ### 5.4 Interface rules
-*   **Colors:** Basic black and white only, following the system light or dark setting, plus an explicit toggle. No accent hues. Distinguish state with weight, borders, inversion and icons, not color.
+*   **Colors:** Basic black and white only, following the system light or dark setting, plus a Light | Dark | Auto control that is available on every screen, including the landing screen, and shows the current choice. No accent hues. Distinguish state with weight, borders, inversion and icons, not color.
 *   **Editing:** One live editor. Block markers convert as you type (`- [ ] ` becomes a checkbox, `# ` a heading). Inline formatting such as `**bold**`, `[[links]]` and `@name` renders when the cursor leaves the line. The markdown on disk is always visible or one keypress away. **X-ray** shows any note as raw markdown.
 *   **Transparency:** After any write, show what changed on disk (the exact before and after lines).
 *   **Non-blocking health:** Vault health lists broken links, duplicates, orphans and unused attachments with one-click fixes. It never blocks work.

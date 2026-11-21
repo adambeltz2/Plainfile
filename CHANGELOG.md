@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.17.0] - 2026-11-21
+
+### Added
+- A **Light | Dark | Auto** control on every screen, including the first screen before a
+  folder is open. It shows the current choice, Auto follows the device setting, and the choice
+  is remembered on this device.
+
+### Changed
+- Replaces the single header button, which was labelled with the mode it would switch to and
+  was missing from the first screen.
+
 ## [0.16.1] - 2026-11-21
 
 ### Fixed
