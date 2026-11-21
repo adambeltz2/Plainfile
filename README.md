@@ -37,6 +37,8 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 
 ## Features
 
+- **People:** everyone in your notes (from @mentions and people fields, joined by person notes), with their open
+  tasks, what you are waiting on, meetings and notes.
 - **Calendar:** month, week and agenda views of tasks and dated notes. Drag a task to another day to change its
   due date in its own file.
 - **Home and the weekly review:** a landing screen (capture, today, where you left off, what needs filing, what

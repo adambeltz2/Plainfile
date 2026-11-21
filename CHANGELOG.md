@@ -4,6 +4,16 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.39.0] - 2026-11-21
+
+### Added
+- **People.** A table of everyone in your notes, from `@mentions`, `people:` and `attendees:` fields and notes of
+  `type: person`: open, waiting, overdue, notes and last seen, sortable. A person's note (its title, file name and
+  `aliases:`) joins spellings such as `@dana`, `@dana-ortiz` and "Dana O" into one person. Each person has a page
+  with their open tasks (tick them there), what you are waiting on from them, meetings and the notes that name them,
+  and a "worth a follow-up" flag after three quiet weeks. Someone without a note gets **Make a person note**, which
+  starts from their name. Nothing is stored; it is a view over your notes.
+
 ## [0.38.0] - 2026-11-21
 
 ### Added
