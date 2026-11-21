@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.29.3] - 2026-11-21
+
+### Added
+- **Storage contract tests** (`test/storage-contract.test.ts`): one suite every storage adapter must pass
+  (exact reads, create refusing to overwrite, guarded writes and removes, hidden folders, deep paths),
+  plus an end-to-end scenario (tick, move, rename, delete) that must leave the same files on every
+  adapter. It runs on the in-memory and on-disk adapters now and is the gate for future cloud adapters.
+
 ## [0.29.2] - 2026-11-21
 
 ### Fixed

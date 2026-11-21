@@ -40,6 +40,23 @@ Nothing here is a promise of order. Remove an item when it ships.
 - `[DEBT]` **A move can change which note a short link means** when two notes share a name and one was chosen because it sat in the same folder; today only full-path links are rewritten in that case. Affects `src/move.ts`.
 - `[FEATURE]` **Ctrl/Cmd+N** for a new note (browsers reserve it; needs an in-app alternative such as Alt+N). Affects `web/main.ts`.
 
+## Cloud storage (Dropbox, OneDrive, Google Drive)
+
+Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.ts`. Suggested order below.
+
+- `[REFACTOR]` **Prepare the interface first:** an opaque version token (`etag`/`rev`) beside `mtime` for guarded
+  writes and removes, `readBinary` for images, and an optional `move` so providers can rename without copying.
+  Affects `src/storage.ts`, every adapter, `src/writeback.ts`, `src/rename.ts`, `src/move.ts`, `src/delete.ts`.
+- `[FEATURE]` **Persistent cache** of the index and note contents in IndexedDB, keyed by version token, so a
+  cloud folder (and a big local one) opens fast and can be read offline. Affects `src/index.ts`, `web/store.ts`.
+- `[FEATURE]` **Dropbox adapter** (OAuth with PKCE from the browser, `rev`-based conflict check, `list_folder` cursors for
+  changes). Best first cloud target. Affects new `src/dropbox-storage.ts`, `web/` sign-in screen.
+- `[FEATURE]` **OneDrive adapter** (Microsoft Graph, MSAL PKCE, path addressing, `eTag` and delta queries). Sign-in
+  expires daily in a static app. Affects new `src/onedrive-storage.ts`.
+- `[FEATURE]` **Google Drive adapter** (ID based, so paths need a map; the `drive.file` scope cannot see an existing
+  folder and the broad scope needs Google's security review). Last. Affects new `src/gdrive-storage.ts`.
+- `[FEATURE]` **Sign-in and token handling UI**, with tokens kept only in this browser. Affects `web/main.ts`.
+
 ## Migration and compatibility
 
 - `[FEATURE]` **Import the first Notebook app's projects.** Notebook kept its data in this
