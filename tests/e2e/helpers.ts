@@ -8,7 +8,7 @@ export function localDate(offsetDays = 0): string {
 }
 
 /** Creates a vault in the browser's origin-private file system and opens it through the real FSA adapter. */
-export async function openVault(page: Page, files: Record<string, string>, open = true): Promise<string> {
+export async function openVault(page: Page, files: Record<string, string>, open = true, screen: 'today' | 'home' = 'today'): Promise<string> {
   const dir = `vault-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
   await page.evaluate(
     async ({ dir, files, open }) => {
@@ -27,6 +27,8 @@ export async function openVault(page: Page, files: Record<string, string>, open 
     },
     { dir, files, open },
   );
+  // The app opens on Home. Most tests are about Today, so land there unless asked not to.
+  if (open && screen === 'today') await goTo(page, 'Today');
   return dir;
 }
 

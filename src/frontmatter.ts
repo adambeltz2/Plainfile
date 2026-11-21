@@ -57,8 +57,15 @@ export function setFrontmatterField(text: string, key: string, value: string | n
   const cr = line.endsWith('\r') ? '\r' : '';
   const m = /^(.*?:\s*)(.*?)(\s+#.*?)?\r?$/.exec(line);
   const quote = m && /^["']/.test(m[2] ?? '') ? (m[2] as string)[0] : '';
-  lines.splice(at, stop - at, `${m ? m[1] : `${key}: `}${quote}${value}${quote}${m?.[3] ?? ''}${cr}`);
+  // `project:` with nothing after it has no space to keep, so one is added.
+  const prefix = m ? (/\s$/.test(m[1] as string) ? (m[1] as string) : `${m[1]} `) : `${key}: `;
+  lines.splice(at, stop - at, `${prefix}${quote}${value}${quote}${m?.[3] ?? ''}${cr}`);
   return lines.join('\n');
+}
+
+/** The `key:` part of a line with a space after the colon, even when the line had none. */
+function spaced(prefix: string | undefined, key: string): string {
+  return prefix === undefined ? `${key}: ` : /\s$/.test(prefix) ? prefix : `${prefix} `;
 }
 
 /** Add an item to a list-valued key such as `tags` or `aliases`. Does nothing if it is already there. */
@@ -79,7 +86,7 @@ export function addFrontmatterListItem(text: string, key: string, item: string):
     const inner = value.slice(1, -1).trim();
     const items = inner ? inner.split(',').map((x) => x.trim()) : [];
     if (has(items)) return text;
-    lines[at] = `${m?.[1] ?? `${key}: `}[${[...items, item].join(', ')}]${m?.[3] ?? ''}${cr}`;
+    lines[at] = `${spaced(m?.[1], key)}[${[...items, item].join(', ')}]${m?.[3] ?? ''}${cr}`;
     return lines.join('\n');
   }
   if (value === '') {
@@ -91,7 +98,7 @@ export function addFrontmatterListItem(text: string, key: string, item: string):
     return lines.join('\n');
   }
   if (has([value])) return text;
-  lines[at] = `${m?.[1] ?? `${key}: `}[${value}, ${item}]${m?.[3] ?? ''}${cr}`;
+  lines[at] = `${spaced(m?.[1], key)}[${value}, ${item}]${m?.[3] ?? ''}${cr}`;
   return lines.join('\n');
 }
 

@@ -613,3 +613,30 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
   .foot { padding-bottom: 8px; }
 }
 @media (max-width: 760px) { .qhint { display: none; } }
+
+/* ---------- home and weekly review ---------- */
+.home { max-width: 1180px; }
+.home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 12px; align-items: start; }
+.home-card { min-width: 0; }
+.home-card h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+.home-card .quick { margin: 0 0 8px; }
+.home-rows li { margin: 0; }
+.home-rows .note-quick { display: flex; justify-content: space-between; gap: 10px; width: 100%; }
+.home-log { margin-top: 8px; }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; height: 96px; margin: 0 0 10px; }
+.wday { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; font-size: 11px; position: relative; }
+.wday i { display: block; width: 100%; background: var(--fg); border-radius: 3px 3px 0 0; min-height: 2px; margin-bottom: 2px; }
+.wday b { font-size: 12px; }
+.wday.today span { font-weight: 700; text-decoration: underline; }
+.home-proj { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 5px 6px; color: inherit; font: inherit; cursor: pointer; }
+.home-proj:hover { background: var(--soft); }
+.home-proj .prog { grid-column: 1 / -1; }
+.rv-list { margin: 0; }
+.rv-item { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.rv-ctl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rv-ctl .inp { max-width: 11rem; }
+.rv-week { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 0 0 14px; }
+.rv-day { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+.rv-day.heavy { border: 2px solid var(--fg); }
+.rv-day ul { margin: 4px 0 0; }
+.review .row-gap { margin-top: 14px; }

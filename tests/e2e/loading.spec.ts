@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { nav } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -127,6 +128,7 @@ test('reopening a folder reads only what changed, using the saved copy', async (
     await w.close();
     await window.__plainfile!.openHandle(vault, 'cached-vault');
   });
+  await nav(page, 'Today').click();
   await expect(page.locator('.stat')).toContainText('from the saved copy');
   expect(await page.evaluate(() => (window as unknown as { __reads: number }).__reads)).toBe(1);
   await expect(page.locator('.task .t', { hasText: /^task 3$/ })).toBeVisible();

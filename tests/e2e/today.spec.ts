@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { localDate, openVault, readFile, writeFileExternally } from './helpers';
+import { localDate, openVault, readFile, writeFileExternally, nav } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -13,6 +13,7 @@ test('landing offers a folder and the sample vault', async ({ page }) => {
 
 test('sample vault shows Today grouped by overdue, today and this week', async ({ page }) => {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Today').click();
   await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
   await expect(page.locator('.grp', { hasText: 'Overdue' })).toContainText('2');
   await expect(page.locator('.grp', { hasText: 'Due today' })).toContainText('2');
@@ -23,6 +24,7 @@ test('sample vault shows Today grouped by overdue, today and this week', async (
 
 test('ticking a task shows exactly what changed on disk and keeps it on screen', async ({ page }) => {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Today').click();
   await page.getByRole('button', { name: 'Mark done: Send logo files' }).click();
   const diff = page.locator('.diff');
   await expect(diff.locator('.del')).toHaveText('−- [ ] Send logo files @dana due:2026-11-23');
@@ -36,6 +38,7 @@ test('ticking a task shows exactly what changed on disk and keeps it on screen',
 
 test('tag filter and All open view', async ({ page }) => {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Today').click();
   await page.getByRole('button', { name: /^All open/ }).click();
   await expect(page.locator('.grp', { hasText: 'No date' })).toHaveCount(0);
   await page.getByRole('button', { name: /^#admin/ }).click();
@@ -60,6 +63,7 @@ test('theme: Light, Dark and Auto work on the landing screen and in the app, and
   await page.reload();
   expect(await bg()).toBe('rgb(0, 0, 0)');
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Today').click();
   await group.getByRole('button', { name: 'Light' }).click();
   expect(await attr()).toBe('light');
   expect(await bg()).toBe('rgb(255, 255, 255)');
@@ -126,6 +130,7 @@ test('real folder: Rescan picks up a new file', async ({ page }) => {
 test('works at phone width without sideways scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Today').click();
   await expect(page.getByText('File estimated tax payment')).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);

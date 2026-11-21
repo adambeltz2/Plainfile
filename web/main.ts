@@ -4,6 +4,8 @@ import * as cloudUi from './cloud';
 import * as explore from './explore';
 import * as guide from './guide';
 import * as health from './health';
+import * as homeScreen from './home';
+import * as reviewScreen from './review';
 import * as hub from './hub';
 import * as newmenu from './newmenu';
 import * as menu from './menu';
@@ -76,6 +78,7 @@ function themeControl(): string {
 /* ---------- screens ---------- */
 
 const NAV: { id: ScreenId; label: string }[] = [
+  { id: 'home', label: 'Home' },
   { id: 'today', label: 'Today' },
   { id: 'projects', label: 'Projects' },
   { id: 'board', label: 'Board' },
@@ -87,6 +90,7 @@ const NAV: { id: ScreenId; label: string }[] = [
 
 async function go(screen: ScreenId): Promise<void> {
   await notes.flush();
+  if (screen === 'review' && state.screen !== 'review') reviewScreen.startReview();
   state.error = '';
   state.screen = screen;
   state.modal = undefined;
@@ -152,7 +156,7 @@ function tabbar(hc: number): string {
   const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${state.screen === id}">${label}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
-      ['board:Board', 'explore:Explore', 'health:Vault health', 'guide:Cheat sheet']
+      ['search:Search', 'board:Board', 'explore:Explore', 'review:Weekly review', 'health:Vault health', 'guide:Cheat sheet']
         .map((x) => {
           const [id, label] = x.split(':') as [ScreenId, string];
           return `<button class="btn" data-nav="${id}" data-more-item>${label}${id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
@@ -162,7 +166,7 @@ function tabbar(hc: number): string {
       (fsaSupported() ? '<button class="btn" data-act="open" data-more-item>Open folder</button>' : '') +
       `${themeControl()}<button class="btn" data-act="more-close">Close</button></div></div>`
     : '';
-  return `<nav class="tabbar" aria-label="Main">${tab('today', 'Today')}${tab('projects', 'Projects')}${tab('notes', 'Notes')}${tab('search', 'Search')}<button class="tab-b" data-act="more-toggle" aria-expanded="${moreOpen}">More${hc ? ' •' : ''}</button></nav>${sheet}`;
+  return `<nav class="tabbar" aria-label="Main">${tab('home', 'Home')}${tab('today', 'Today')}${tab('projects', 'Projects')}${tab('notes', 'Notes')}<button class="tab-b" data-act="more-toggle" aria-expanded="${moreOpen}">More${hc ? ' •' : ''}</button></nav>${sheet}`;
 }
 
 function shell(): string {
@@ -201,6 +205,12 @@ function shell(): string {
     h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside Plainfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
   }
   switch (state.screen) {
+    case 'home':
+      h += homeScreen.html();
+      break;
+    case 'review':
+      h += reviewScreen.html();
+      break;
     case 'projects':
       h += projectScreen.html();
       break;
@@ -396,6 +406,12 @@ app.addEventListener('click', (e) => {
       case 'today':
         await todayScreen.click(target);
         break;
+      case 'home':
+        await homeScreen.click(target);
+        break;
+      case 'review':
+        await reviewScreen.click(target);
+        break;
       case 'projects':
         await projectScreen.click(target);
         break;
@@ -439,6 +455,7 @@ app.addEventListener('input', (e) => {
   if (move.input(e)) return;
   if (state.modal && newmenu.input(e)) return;
   if (state.screen === 'projects' && projectScreen.input(e)) return;
+  if (state.screen === 'review' && reviewScreen.input(e)) return;
   if (todayScreen.input(e)) return;
   if (explore.input(e)) return;
   if (rename.input(e)) return;
@@ -448,6 +465,7 @@ app.addEventListener('input', (e) => {
 
 app.addEventListener('change', (e) => {
   if (state.screen === 'projects' && projectScreen.change(e)) return;
+  if (state.screen === 'review' && reviewScreen.change(e)) return;
   if (rename.change(e)) return;
   notes.change(e);
 });

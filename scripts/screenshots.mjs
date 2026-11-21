@@ -11,13 +11,15 @@ async function session(viewport, scheme, scale = 1) {
   const page = await ctx.newPage();
   await page.goto(BASE);
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
-  await page.locator('.nav').waitFor();
+  await page.locator('.wrap').waitFor();
   return page;
 }
 const nav = (page, name) => page.locator('.nav').getByRole('button', { name }).click();
 const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png` });
 
 let page = await session({ width: 1280, height: 800 }, 'light');
+await shot(page, 'home');
+await nav(page, 'Today');
 await shot(page, 'today');
 await page.locator('#quick-text').fill('Send logos +website-relaunch @dana #launch due:friday');
 await page.locator('#quick-text').blur();

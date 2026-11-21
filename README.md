@@ -18,6 +18,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 
 | | |
 |---|---|
+| **Home**: capture, today, where you left off, filing, waiting, the week | ![Home](docs/screenshots/home.png) |
 | **Today**: everything due or overdue, one-line quick add, a readout of the exact change on disk | ![Today](docs/screenshots/today.png) |
 | **Quick add**: `Send logos +website-relaunch @dana #launch due:friday`, with a live preview | ![Quick add](docs/screenshots/quick-add.png) |
 | **Board**: task files in status columns | ![Board](docs/screenshots/board.png) |
@@ -35,6 +36,9 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 
 ## Features
 
+- **Home and the weekly review:** a landing screen (capture, today, where you left off, what needs filing, what
+  you are waiting on, the week ahead, project progress) and a four-step review that files, reschedules and plans
+  with small guarded edits to your own notes.
 - **Today:** open tasks that are late, due today or due this week, plus Upcoming, Inbox, Waiting on,
   All open, Follow-ups and Projects views. Ticking a box changes one character in the file and shows
   the exact before and after lines.

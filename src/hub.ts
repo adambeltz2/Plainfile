@@ -62,7 +62,7 @@ function headingAbove(n: Note, line: number): string | undefined {
   return found;
 }
 
-function toHubTask(item: TaskItem, note: Note): HubTask {
+export function toHubTask(item: TaskItem, note: Note): HubTask {
   const fm = note.frontmatter;
   let status: Status;
   let phase: string | undefined;

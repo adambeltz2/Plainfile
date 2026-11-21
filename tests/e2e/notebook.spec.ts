@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openVault } from './helpers';
+import { openVault, nav } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -9,6 +9,7 @@ const view = (page: Page, name: RegExp | string) => page.locator('.side').getByR
 
 test('Follow-ups lists every #followup line and opens the note at that line', async ({ page }) => {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Today').click();
   await expect(view(page, /^Follow-ups/)).toContainText('1');
   await view(page, /^Follow-ups/).click();
   await expect(page.locator('.task .t')).toHaveText('Ask Dana to confirm the launch date');
@@ -18,6 +19,7 @@ test('Follow-ups lists every #followup line and opens the note at that line', as
 
 test('Projects shows numbered cards with previews and counts, like the first Notebook app', async ({ page }) => {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Today').click();
   await view(page, /^Projects/).click();
   const cards = page.locator('.pcard');
   await expect(cards).toHaveCount(2);

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { nav } from './helpers';
 
 test('the page links a valid manifest whose icons exist', async ({ page, request }) => {
   await page.goto('/');
@@ -24,6 +25,7 @@ test('a service worker takes over and the app opens with no connection', async (
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Plainfile' })).toBeVisible();
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Today').click();
   await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
   await context.setOffline(false);
 });

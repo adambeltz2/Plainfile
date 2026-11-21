@@ -93,3 +93,11 @@ describe('setProjects', () => {
     expect(setProjects('---\r\ntitle: N\r\n---\r\nB\r\n', ['a', 'A'])).toBe('---\r\ntitle: N\r\nproject: a\r\n---\r\nB\r\n');
   });
 });
+
+describe('a key with nothing after the colon', () => {
+  it('gets a space when it is given a value, for a plain value and for a list', () => {
+    expect(setFrontmatterField('---\nproject:\ntags: []\n---\nB', 'project', 'site')).toBe('---\nproject: site\ntags: []\n---\nB');
+    expect(addFrontmatterListItem('---\ntags:\n---\nB', 'tags', 'a')).toContain('tags:\n  - a');
+    expect(addFrontmatterListItem('---\nproject:x\n---\nB', 'project', 'y')).toBe('---\nproject: [x, y]\n---\nB');
+  });
+});

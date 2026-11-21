@@ -18,7 +18,9 @@ export type PaletteItem =
   | { kind: 'action'; label: string; hint: string; action: NoteAction; path: string };
 
 const SCREENS: [string, string][] = [
+  ['home', 'Home'],
   ['today', 'Today'],
+  ['review', 'Weekly review'],
   ['projects', 'Projects'],
   ['board', 'Board'],
   ['notes', 'Notes'],

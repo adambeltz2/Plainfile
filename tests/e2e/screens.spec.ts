@@ -292,10 +292,11 @@ test.describe('phone navigation', () => {
     await page.getByRole('button', { name: 'Try the sample vault' }).click();
     await expect(page.locator('.nav')).toBeHidden();
     const bar = page.locator('.tabbar');
-    for (const n of ['Today', 'Projects', 'Notes', 'Search', 'More']) await expect(bar.getByRole('button', { name: new RegExp(`^${n}`) })).toBeVisible();
+    for (const n of ['Home', 'Today', 'Projects', 'Notes', 'More']) await expect(bar.getByRole('button', { name: new RegExp(`^${n}`) })).toBeVisible();
     const box = await bar.boundingBox();
     expect(box!.y + box!.height).toBeGreaterThan(795); // pinned to the bottom edge
     // Today: the views panel is folded, and the work starts near the top.
+    await bar.getByRole('button', { name: 'Today' }).click();
     await expect(page.locator('.side-toggle')).toContainText('Views and filters');
     await expect(page.locator('.side [data-view="today"]')).toBeHidden();
     const h = await page.locator('.title', { hasText: 'Today' }).boundingBox();
@@ -306,7 +307,7 @@ test.describe('phone navigation', () => {
     // More holds Board, Explore, Vault health, the cheat sheet, Rescan and the theme.
     await bar.getByRole('button', { name: /^More/ }).click();
     const sheet = page.locator('.more-sheet');
-    for (const n of ['Board', 'Explore', /^Vault health/, 'Cheat sheet', 'Rescan', 'Light', 'Dark', 'Auto']) await expect(sheet.getByRole('button', { name: n })).toBeVisible();
+    for (const n of ['Search', 'Board', 'Explore', 'Weekly review', /^Vault health/, 'Cheat sheet', 'Rescan', 'Light', 'Dark', 'Auto']) await expect(sheet.getByRole('button', { name: n })).toBeVisible();
     await sheet.getByRole('button', { name: 'Board' }).click();
     await expect(page.locator('.more-sheet')).toHaveCount(0);
     await expect(page.locator('.title')).toContainText('Board');
@@ -322,6 +323,7 @@ test.describe('phone navigation', () => {
 
   test('on a wide screen there is no bottom bar and the side panels stay open', async ({ page }) => {
     await page.getByRole('button', { name: 'Try the sample vault' }).click();
+    await nav(page, 'Today').click();
     await expect(page.locator('.tabbar')).toBeHidden();
     await expect(page.locator('.side-toggle')).toBeHidden();
     await expect(page.locator('.side [data-view="today"]')).toBeVisible();

@@ -4,6 +4,26 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.37.0] - 2026-11-21
+
+### Added
+- **Home** is now the first screen: a capture box (the one-line quick add), today's tasks you can tick, where you
+  left off, **Needs filing**, **Waiting on**, the week ahead as a small chart, and project progress, all worked
+  out from your notes.
+- **Weekly review**, in four steps, each a small guarded edit to your own notes:
+  1. **Triage**: give unfiled quick notes and task notes a project and tags (only those two fields change);
+  2. **Slipped**: move overdue tasks to tomorrow, next week or no date, or finish them;
+  3. **Waiting on**: mark what arrived, or check again tomorrow or next week;
+  4. **Plan the week**: see the next seven days (heavy days are marked) and give undated tasks a day.
+  Open it from Home, More on a phone, or Go to… Finishing returns Home with a count of the changes made.
+
+### Changed
+- The phone's bottom bar is Home, Today, Projects, Notes and More (Search, Board, Explore, Weekly review, Vault
+  health and the rest are under More; Search is also under Go to… and Ctrl/Cmd+K).
+
+### Fixed
+- Filing a note whose frontmatter had `project:` with nothing after it wrote `project:site` with no space.
+
 ## [0.36.0] - 2026-11-21
 
 ### Added

@@ -14,7 +14,7 @@ import { browserCache } from './index-cache';
 
 export const SAMPLE_DAY = '2026-11-21';
 
-export type ScreenId = 'today' | 'projects' | 'board' | 'notes' | 'explore' | 'search' | 'health' | 'rename' | 'guide';
+export type ScreenId = 'home' | 'review' | 'today' | 'projects' | 'board' | 'notes' | 'explore' | 'search' | 'health' | 'rename' | 'guide';
 export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | 'followups' | 'projects';
 
 export type Modal =
@@ -35,7 +35,7 @@ export const state = {
   index: undefined as VaultIndex | undefined,
   name: '',
   demo: false,
-  screen: 'today' as ScreenId,
+  screen: 'home' as ScreenId,
   scanMs: 0,
   /** The user dismissed the notice about files that could not be read. */
   skippedHidden: false,
@@ -148,7 +148,7 @@ export async function loadVault(storage: VaultStorage, name: string, demo: boole
     state.name = name;
     state.demo = demo;
     state.scanMs = r.ms;
-    state.screen = 'today';
+    state.screen = 'home';
     state.selected = undefined;
     state.context = undefined;
     state.log = undefined;

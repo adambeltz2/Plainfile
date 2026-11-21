@@ -47,6 +47,12 @@ Nothing here is a promise of order. Remove an item when it ships.
 - `[DEBT]` **A move can change which note a short link means** when two notes share a name and one was chosen because it sat in the same folder; today only full-path links are rewritten in that case. Affects `src/move.ts`.
 - `[FEATURE]` **Ctrl/Cmd+N** for a new note (browsers reserve it; needs an in-app alternative such as Alt+N). Affects `web/main.ts`.
 
+## Home and review
+
+- `[FEATURE]` **Save a review note** when the weekly review finishes (what was filed, moved and finished) as `reviews/<date>.md`. Affects `web/review.ts`.
+- `[FEATURE]` **Choose what Home shows** (hide or reorder cards), saved as a small file in `.plainfile/`. Affects `web/home.ts`.
+- `[FEATURE]` **Review reminders**: a "review due" nudge on Home when the last review was more than a week ago. Affects `web/home.ts`.
+
 ## Phones
 
 - `[FEATURE]` **Insert an image from a file picker** for phones where pasting an image is limited. Affects `web/editor.ts`.
