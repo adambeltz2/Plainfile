@@ -112,9 +112,10 @@ export const BUILT_IN: Template[] = [
     filename: '{{date}} {{title}}',
     prompts: [
       { id: 'title', label: 'Title', default: 'Weekly sync' },
-      { id: 'attendees', label: 'Attendees', default: '' },
+      { id: 'attendees', label: 'People (attendees)', default: '' },
+      { id: 'project', label: 'Project (optional)', default: '' },
     ],
-    fm: 'title: {{title}}\ntype: meeting\ndate: {{date}}\nattendees: [{{attendees}}]\ntags: [meeting]',
+    fm: 'title: {{title}}\ntype: meeting\ndate: {{date}}\nproject: {{project}}\npeople: [{{attendees}}]\ntags: [meeting]',
     body: '\n## Agenda\n- \n\n## Decisions\n\n## Action items\n- [ ] {{cursor}}\n',
     source: 'built-in',
   },

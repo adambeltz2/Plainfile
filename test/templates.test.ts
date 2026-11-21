@@ -17,9 +17,9 @@ async function setup(files: Record<string, string> = {}) {
 
 describe('renderTemplate', () => {
   it('fills prompts and date variables and works out the path', () => {
-    const r = renderTemplate(byName('Meeting'), { title: 'Kickoff', attendees: 'dana, sam' }, TODAY);
+    const r = renderTemplate(byName('Meeting'), { title: 'Kickoff', attendees: 'dana, sam', project: 'site' }, TODAY);
     expect(r.path).toBe('meetings/2026-11-21 Kickoff.md');
-    expect(r.content).toContain('title: Kickoff\ntype: meeting\ndate: 2026-11-21\nattendees: [dana, sam]');
+    expect(r.content).toContain('title: Kickoff\ntype: meeting\ndate: 2026-11-21\nproject: site\npeople: [dana, sam]\ntags: [meeting]');
     expect(r.content).toContain('- [ ] ');
   });
 

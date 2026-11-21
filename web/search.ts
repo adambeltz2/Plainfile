@@ -1,12 +1,26 @@
-import { fmtDate } from '../src/dates';
-import { parseQuery, search, type SearchHit } from '../src/query';
+import { fmtDate, localDateOf } from '../src/dates';
+import { parseQuery, recentNotes, search, type SearchHit } from '../src/query';
 import { openNote } from './notes';
 import { state, today } from './store';
 import { esc, highlight } from './util';
 
 export const searchState = { q: '' };
 
+/** Quick ways in: what changed lately comes first. */
+const QUICK: [string, string][] = [
+  ['Modified today', 'modified:today'],
+  ['Yesterday', 'modified:yesterday'],
+  ['This week', 'modified:week'],
+  ['Created today', 'created:today'],
+];
 const EXAMPLES = ['is:open', 'is:task due:<2026-11-24', 'type:meeting', 'folder:projects', '#launch'];
+
+/** "edited 14:05" for today, otherwise "edited 18 Nov". */
+function editedLabel(mtime: number): string {
+  const day = localDateOf(mtime);
+  if (day === today()) return `edited ${new Date(mtime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  return `edited ${fmtDate(day)}`;
+}
 
 function hitHtml(h: SearchHit, words: string[]): string {
   const chips = h.tags.map((t) => `<span class="chip mono">#${esc(t)}</span>`).join('');
@@ -23,7 +37,7 @@ function hitHtml(h: SearchHit, words: string[]): string {
     `<li class="res"><button class="res-btn" data-open="${esc(h.path)}">` +
     `<span class="rt">${highlight(h.title, words)}</span>` +
     (h.snippet ? `<span class="sn">${highlight(h.snippet, words)}</span>` : '') +
-    `<span class="chips"><span class="chip src mono">${highlight(h.path, words)}</span>${chips}</span></button></li>`
+    `<span class="chips">${h.mtime ? `<span class="chip quiet">${esc(editedLabel(h.mtime))}</span>` : ''}<span class="chip src mono">${highlight(h.path, words)}</span>${chips}</span></button></li>`
   );
 }
 
@@ -31,11 +45,11 @@ function results(): { list: string; count: string; facets: string } {
   const idx = state.index;
   if (!idx) return { list: '', count: '', facets: '' };
   const q = searchState.q.trim();
-  const hits = q ? search(idx, q) : [];
-  const words = parseQuery(q).words;
+  const hits = q ? search(idx, q, today()) : recentNotes(idx);
+  const words = parseQuery(q, today()).words;
   const count = q ? `${hits.length} result${hits.length === 1 ? '' : 's'} in ${idx.notes.size} notes` : '';
   const list = !q
-    ? '<p class="muted">Type to search titles, text, paths and tags. Narrow with operators like <code>tag:launch</code>, <code>folder:projects</code>, <code>type:meeting</code>, <code>is:open</code>, <code>due:&lt;2026-11-30</code> or <code>@dana</code>.</p>'
+    ? `<p class="muted">Type to search titles, text, paths and tags. Narrow with operators like <code>tag:launch</code>, <code>folder:projects</code>, <code>type:meeting</code>, <code>is:open</code>, <code>due:&lt;2026-11-30</code>, <code>modified:today</code> or <code>@dana</code>.</p><h2 class="grp">Recently modified</h2><ul class="plain">${hits.map((h) => hitHtml(h, words)).join('')}</ul>`
     : hits.length
       ? `<ul class="plain">${hits.map((h) => hitHtml(h, words)).join('')}</ul>`
       : '<p class="muted">No matches. Remove an operator or check the spelling.</p>';
@@ -65,6 +79,7 @@ export function html(): string {
     (r.facets || '<p class="muted small" style="margin:0">Folders and tags from your results appear here to narrow them.</p>') +
     '</aside><section class="main"><h2 class="title">Search</h2>' +
     `<div class="sbox"><input id="search-q" type="text" autocomplete="off" spellcheck="false" aria-label="Search every note and task" placeholder="Search notes and tasks" value="${esc(searchState.q)}"></div>` +
+    `<div class="examples" id="search-quick" role="group" aria-label="Find by date"><span class="muted small">When</span>${QUICK.map(([l, v]) => `<button class="chip ex" data-q="${esc(v)}" aria-pressed="${searchState.q.trim() === v}">${esc(l)}</button>`).join('')}</div>` +
     `<div class="examples"><span class="muted small">Try</span>${EXAMPLES.map((e) => `<button class="chip mono ex" data-q="${esc(e)}">${esc(e)}</button>`).join('')}</div>` +
     `<p class="meta" id="search-count">${esc(r.count)}</p><div id="search-results">${r.list}</div></section></div>`
   );
@@ -78,6 +93,7 @@ function update(): void {
   };
   set('search-results', r.list);
   set('search-facets', r.facets || '<p class="muted small" style="margin:0">Folders and tags from your results appear here to narrow them.</p>');
+  document.querySelectorAll<HTMLElement>('#search-quick [data-q]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.q === searchState.q.trim())));
   const c = document.getElementById('search-count');
   if (c) c.textContent = r.count;
 }

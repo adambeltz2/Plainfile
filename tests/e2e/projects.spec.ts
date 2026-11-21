@@ -162,3 +162,37 @@ test.describe('quick add due date', () => {
     await expect(page.locator('#new-task-due')).toHaveValue(localDate(0));
   });
 });
+
+test.describe('default frontmatter', () => {
+  test('a note without frontmatter gets a button that adds a starter block and keeps the text', async ({ page }) => {
+    const dir = await openVault(page, { 'plain.md': '# Plain thing\n\nSome text.\n', 'has.md': '---\ntitle: Has\n---\nBody\n' });
+    await nav(page, 'Notes').click();
+    await page.locator('.note-item', { hasText: /^has$|^Has$/ }).first().click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add default frontmatter' })).toHaveCount(0);
+    await page.locator('.note-item', { hasText: 'Plain thing' }).click();
+    await page.getByRole('button', { name: 'Add default frontmatter' }).click();
+    await expect(page.getByRole('button', { name: 'Add default frontmatter' })).toHaveCount(0);
+    await expect(page.locator('.props')).toContainText('Plain thing');
+    await expect.poll(() => readFile(page, dir, 'plain.md'), { timeout: 4000 }).toBe(`---\ntitle: Plain thing\ncreated: ${TODAY()}\ntags: []\n---\n# Plain thing\n\nSome text.\n`);
+    expect(await readFile(page, dir, 'has.md')).toBe('---\ntitle: Has\n---\nBody\n');
+  });
+});
+
+test.describe('search by date', () => {
+  test('Modified today chips list what changed today, and an empty search shows recent notes', async ({ page }) => {
+    await openVault(page, { 'a.md': '# Alpha\nbody', 'b.md': '# Beta\nbody' });
+    await nav(page, 'Search').click();
+    await expect(page.locator('#search-results')).toContainText('Recently modified');
+    await expect(page.locator('#search-results .res')).toHaveCount(2);
+    await page.getByRole('button', { name: 'Modified today' }).click();
+    await expect(page.locator('#search-q')).toHaveValue('modified:today');
+    await expect(page.locator('#search-count')).toHaveText('2 results in 2 notes');
+    await expect(page.locator('#search-results .res').first()).toContainText('edited');
+    await expect(page.getByRole('button', { name: 'Modified today' })).toHaveAttribute('aria-pressed', 'true');
+    await page.getByRole('button', { name: 'Yesterday' }).click();
+    await expect(page.locator('#search-count')).toHaveText('0 results in 2 notes');
+    await page.locator('#search-q').fill('modified:today beta');
+    await expect(page.locator('#search-results .res')).toHaveCount(1);
+  });
+});

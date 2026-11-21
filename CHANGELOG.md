@@ -4,6 +4,21 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.27.0] - 2026-11-21
+
+### Added
+- **Add default frontmatter.** A note with no frontmatter shows a button in its Properties panel
+  that puts a starter block (title, today as `created:`, empty `tags`) above it. The note's own
+  text is not touched, and its line endings are kept.
+- **Find what changed today.** Search has `modified:` and `created:` (`today`, `yesterday`,
+  `week`, `month`, `3d`, a date, `<date`, `>date`), plus "Modified today", "Yesterday",
+  "This week" and "Created today" chips. Results show when each note was edited, newest first,
+  and an empty search lists recently modified notes.
+
+### Changed
+- **Meeting notes have people and a project.** The Meeting template asks for People and a
+  Project (both with type-ahead) and writes `project:` and `people:` (it used `attendees:`).
+
 ## [0.26.0] - 2026-11-21
 
 ### Changed

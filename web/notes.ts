@@ -2,7 +2,7 @@ import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type De
 import { lineDiff, type LineChange } from '../src/diff';
 import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type Version } from '../src/history';
 import { bestLinkTarget } from '../src/fixes';
-import { frontmatterText, setFrontmatterField } from '../src/frontmatter';
+import { frontmatterText, addDefaultFrontmatter, setFrontmatterField } from '../src/frontmatter';
 import { dirname } from '../src/index';
 import { parseNote } from '../src/parse';
 import { isProjectNote, projectContents } from '../src/projects';
@@ -390,6 +390,10 @@ function propsHtml(): string {
   }
   const fm = n.frontmatter;
   let out = '';
+  if (frontmatterText(text) === null) {
+    out += '<div class="notice small" style="margin:0 0 8px">This note has no frontmatter. Add a starter block with its title, today as the created date, and empty tags. The text of the note is not changed.' +
+      '<div class="row-gap"><button class="btn primary small" data-act="add-frontmatter">Add default frontmatter</button></div></div>';
+  }
   if (n.frontmatterError) out += `<div class="notice err small">The frontmatter has a problem: ${esc(n.frontmatterError)}</div>`;
   const rows: string[] = [];
   const hasStatus = fm.status !== undefined;
@@ -605,6 +609,14 @@ export async function click(target: HTMLElement): Promise<boolean> {
       notes.yaml = !notes.yaml;
       refreshSide();
       return true;
+    case 'add-frontmatter': {
+      const h = notes.handle;
+      if (!h || !notes.path) return true;
+      const note = parseNote(notes.path, h.getText(), { mtime: 0, size: 0 });
+      h.applyText(addDefaultFrontmatter(h.getText(), note.title, today()));
+      refreshSide();
+      return true;
+    }
     case 'add-prop':
       applyProperty(act.dataset.key ?? '', act.dataset.val ?? '');
       return true;

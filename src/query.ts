@@ -1,4 +1,5 @@
 import type { TaskItem, VaultIndex } from './index';
+import { localDateOf, localToday } from './dates';
 import type { Note } from './parse';
 
 export function addDays(iso: string, n: number): string {
@@ -38,11 +39,39 @@ export interface ParsedQuery {
   is: string[];
   who: string[];
   due: { op: '<' | '>' | '='; date: string }[];
+  /** `modified:` and `created:` tests, already worked out against today. `since` means on or after. */
+  modified: DateTest[];
+  created: DateTest[];
+}
+
+export interface DateTest {
+  op: '<' | '>' | '=' | 'since';
+  date: string;
+}
+
+/**
+ * A day word for modified: and created:  today, yesterday, week, month, 3d (the last 3 days), 2w,
+ * a date, or <date and >date. Returns undefined for something it cannot read.
+ */
+export function parseDateTest(v: string, today: string): DateTest | undefined {
+  if (v === 'today') return { op: '=', date: today };
+  if (v === 'yesterday') return { op: '=', date: addDays(today, -1) };
+  if (v === 'week') return { op: 'since', date: addDays(today, -7) };
+  if (v === 'month') return { op: 'since', date: addDays(today, -30) };
+  const rel = /^(\d{1,3})([dw])$/.exec(v);
+  if (rel) return { op: 'since', date: addDays(today, -Number(rel[1]) * (rel[2] === 'w' ? 7 : 1)) };
+  const m = /^([<>]?)(\d{4}-\d{2}-\d{2})$/.exec(v);
+  if (m) return { op: (m[1] || '=') as DateTest['op'], date: m[2]! };
+  return undefined;
+}
+
+function dateOk(day: string | undefined, tests: DateTest[]): boolean {
+  return tests.every((t) => !!day && (t.op === '<' ? day < t.date : t.op === '>' ? day > t.date : t.op === 'since' ? day >= t.date : day === t.date));
 }
 
 /** Words plus operators: tag:x  #x  folder:x  type:x  is:task|note|open|done  due:<date  @name  "a phrase" */
-export function parseQuery(q: string): ParsedQuery {
-  const p: ParsedQuery = { words: [], tags: [], folders: [], types: [], is: [], who: [], due: [] };
+export function parseQuery(q: string, today: string = localToday()): ParsedQuery {
+  const p: ParsedQuery = { words: [], tags: [], folders: [], types: [], is: [], who: [], due: [], modified: [], created: [] };
   for (const tok of q.match(/"[^"]+"|\S+/g) ?? []) {
     const l = tok.toLowerCase();
     if (l.startsWith('tag:')) p.tags.push(l.slice(4));
@@ -50,7 +79,11 @@ export function parseQuery(q: string): ParsedQuery {
     else if (l.startsWith('folder:')) p.folders.push(l.slice(7));
     else if (l.startsWith('type:')) p.types.push(l.slice(5));
     else if (l.startsWith('is:')) p.is.push(l.slice(3));
-    else if (l.startsWith('due:')) {
+    else if (l.startsWith('modified:') || l.startsWith('created:')) {
+      const mod = l.startsWith('modified:');
+      // Something unreadable matches nothing, rather than being ignored and showing everything.
+      (mod ? p.modified : p.created).push(parseDateTest(l.slice(mod ? 9 : 8), today) ?? { op: '=', date: 'invalid' });
+    } else if (l.startsWith('due:')) {
       const v = l.slice(4);
       const op = v[0] === '<' || v[0] === '>' ? (v[0] as '<' | '>') : '=';
       p.due.push({ op, date: op === '=' ? v : v.slice(1) });
@@ -70,13 +103,22 @@ export interface SearchHit {
   due?: string;
   done?: boolean;
   id?: string;
+  /** Notes only: when the file was last changed (ms since 1970). */
+  mtime?: number;
 }
 
 function dueOk(due: string | undefined, p: ParsedQuery): boolean {
   return p.due.every((d) => !!due && (d.op === '<' ? due < d.date : d.op === '>' ? due > d.date : due === d.date));
 }
 
+function noteCreated(n: Note): string | undefined {
+  const c = n.fileTask?.created ?? n.frontmatter.created;
+  const s = c === undefined ? '' : String(c).slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : undefined;
+}
+
 function noteMatches(n: Note, p: ParsedQuery): boolean {
+  if (!dateOk(localDateOf(n.mtime), p.modified) || (p.created.length && !dateOk(noteCreated(n), p.created))) return false;
   if (p.due.length || p.is.some((x) => x === 'task' || x === 'open' || x === 'done')) return false;
   if (p.tags.some((t) => !n.tags.includes(t))) return false;
   if (p.folders.some((f) => !n.path.toLowerCase().startsWith(f))) return false;
@@ -87,6 +129,9 @@ function noteMatches(n: Note, p: ParsedQuery): boolean {
 }
 
 function taskMatches(t: TaskItem, n: Note | undefined, p: ParsedQuery): boolean {
+  // A task has no modified time of its own, so modified: lists notes only.
+  if (p.modified.length) return false;
+  if (p.created.length && !dateOk(t.created, p.created)) return false;
   if (p.is.includes('note')) return false;
   if (p.is.includes('open') && t.done) return false;
   if (p.is.includes('done') && !t.done) return false;
@@ -106,16 +151,26 @@ function snippet(text: string, words: string[]): string {
   return (hit ?? lines.find((l) => l.trim() && !l.startsWith('---')) ?? '').trim().slice(0, 140);
 }
 
-export function search(index: VaultIndex, q: string): SearchHit[] {
-  const p = parseQuery(q);
+export function search(index: VaultIndex, q: string, today: string = localToday()): SearchHit[] {
+  const p = parseQuery(q, today);
   const hits: SearchHit[] = [];
   for (const n of index.notes.values()) {
-    if (noteMatches(n, p)) hits.push({ kind: 'note', path: n.path, title: n.title, snippet: snippet(n.text, p.words), tags: n.tags });
+    if (noteMatches(n, p)) hits.push({ kind: 'note', path: n.path, title: n.title, snippet: snippet(n.text, p.words), tags: n.tags, mtime: n.mtime });
   }
   for (const t of index.tasks()) {
     if (taskMatches(t, index.notes.get(t.path), p)) {
       hits.push({ kind: 'task', path: t.path, title: t.title, line: t.line, tags: t.tags, due: t.due, done: t.done, id: t.id });
     }
   }
+  // Asking about when puts the newest first.
+  if (p.modified.length) hits.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0));
   return hits;
+}
+
+/** The notes changed most recently, for the Search screen before anything is typed. */
+export function recentNotes(index: VaultIndex, limit = 12): SearchHit[] {
+  return [...index.notes.values()]
+    .sort((a, b) => b.mtime - a.mtime || a.path.localeCompare(b.path))
+    .slice(0, limit)
+    .map((n) => ({ kind: 'note' as const, path: n.path, title: n.title, snippet: snippet(n.text, []), tags: n.tags, mtime: n.mtime }));
 }

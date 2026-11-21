@@ -144,13 +144,13 @@ test.describe('in fields', () => {
     await expect(page.locator('.suggest button').first()).toBeVisible();
     await page.locator('.suggest button', { hasText: 'dana' }).click();
     await expect(page.locator('#tpl-attendees')).toHaveValue('dana, ');
-    await expect(page.locator('#tpl-preview')).toContainText('attendees: [dana]');
+    await expect(page.locator('#tpl-preview')).toContainText('people: [dana]');
     await page.locator('#tpl-attendees').pressSequentially('sa');
     await page.locator('.suggest button', { hasText: 'sam' }).click();
-    await expect(page.locator('#tpl-preview')).toContainText('attendees: [dana, sam]');
+    await expect(page.locator('#tpl-preview')).toContainText('people: [dana, sam]');
     await page.getByRole('button', { name: 'Create file' }).click();
     await expect(page.locator('.cm-content')).toBeVisible();
-    expect(await readFile(page, dir, `meetings/${localDate(0)} Weekly sync.md`)).toContain('attendees: [dana, sam]');
+    expect(await readFile(page, dir, `meetings/${localDate(0)} Weekly sync.md`)).toContain('people: [dana, sam]');
   });
 
   test('the dropdown stays on screen on a phone', async ({ page }) => {

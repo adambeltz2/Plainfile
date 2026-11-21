@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addFrontmatterListItem, frontmatterText, setFrontmatterField } from '../src/frontmatter';
+import { addDefaultFrontmatter, addFrontmatterListItem, frontmatterText, setFrontmatterField } from '../src/frontmatter';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { setTaskStatus } from '../src/writeback';
@@ -57,5 +57,23 @@ describe('setTaskStatus', () => {
     expect(r).toMatchObject({ before: 'status: todo', after: 'status: waiting', written: true });
     expect(await store.read('p/tasks/t.md')).toBe(text.replace('todo', 'waiting'));
     expect((await setTaskStatus(store, index, 'p/tasks/t.md:3', 'waiting')).written).toBe(false);
+  });
+});
+
+describe('addDefaultFrontmatter', () => {
+  it('adds a starter block above the note and leaves the note byte for byte', () => {
+    const body = '# Plan\n\nText with [[link]] and - [ ] task\n';
+    const out = addDefaultFrontmatter(body, 'Plan', '2026-11-21');
+    expect(out).toBe(`---\ntitle: Plan\ncreated: 2026-11-21\ntags: []\n---\n${body}`);
+    expect(out.endsWith(body)).toBe(true);
+  });
+  it('uses the note\'s own line endings and quotes a title that needs it', () => {
+    const out = addDefaultFrontmatter('Line one\r\nLine two\r\n', 'Q3: plan', '2026-11-21');
+    expect(out).toBe('---\r\ntitle: "Q3: plan"\r\ncreated: 2026-11-21\r\ntags: []\r\n---\r\nLine one\r\nLine two\r\n');
+  });
+  it('works on an empty note and never touches a note that already has frontmatter', () => {
+    expect(addDefaultFrontmatter('', 'x', '2026-11-21')).toBe('---\ntitle: x\ncreated: 2026-11-21\ntags: []\n---\n');
+    const has = '---\ntitle: Keep\n---\nBody\n';
+    expect(addDefaultFrontmatter(has, 'x', '2026-11-21')).toBe(has);
   });
 });

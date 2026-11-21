@@ -101,3 +101,20 @@ export function frontmatterText(text: string): string | null {
   const fm = fences(lines);
   return fm ? lines.slice(1, fm.end).map(strip).join('\n') : null;
 }
+
+/** A YAML value written plainly when it is safe, and in double quotes when it is not. */
+function yamlScalar(v: string): string {
+  return /^[\w][^:#]*$/.test(v) && !/^(true|false|null|yes|no|~)$/i.test(v) && !/\s$/.test(v) ? v : `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+}
+
+/**
+ * Put a starter frontmatter block (title, created date, empty tags) at the top of a note that has none.
+ * The note below it is left exactly as it was, and the new block uses the note's own line endings.
+ * A note that already has frontmatter is returned unchanged.
+ */
+export function addDefaultFrontmatter(text: string, title: string, created: string): string {
+  if (fences(text.split('\n'))) return text;
+  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const block = ['---', `title: ${yamlScalar(title)}`, `created: ${created}`, 'tags: []', '---'].join(eol) + eol;
+  return block + text;
+}

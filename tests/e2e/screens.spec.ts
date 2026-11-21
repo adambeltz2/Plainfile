@@ -34,8 +34,10 @@ test.describe('quick add and New menu', () => {
     await page.locator('.modal').getByRole('button', { name: /^Meeting/ }).click();
     await page.locator('#tpl-title').fill('Kickoff');
     await page.locator('#tpl-attendees').fill('dana, sam');
+    await page.locator('#tpl-project').fill('site');
+    await expect(page.locator('#tpl-preview')).toContainText('project: site');
     await expect(page.locator('#tpl-path')).toHaveText(`meetings/${localDate(0)} Kickoff.md`);
-    await expect(page.locator('#tpl-preview')).toContainText('attendees: [dana, sam]');
+    await expect(page.locator('#tpl-preview')).toContainText('people: [dana, sam]');
     await page.getByRole('button', { name: 'Create file' }).click();
 
     await expect(page.locator('.cm-content')).toBeVisible();

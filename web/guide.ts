@@ -93,6 +93,8 @@ const OPERATORS: [string, string][] = [
   ['type:meeting', 'Notes of a type. type:task finds tasks'],
   ['is:task  is:note  is:open  is:done', 'Narrow by kind or state'],
   ['due:<2026-12-01   due:>2026-11-20   due:2026-11-24', 'Tasks by due date'],
+  ['modified:today  modified:week  modified:<2026-11-01', 'Notes changed on a day, in the last week, or before a date'],
+  ['created:today  created:2026-11-21', 'Notes and tasks by their created date'],
   ['@dana', 'A person on a task, or a name in the text'],
   ['"exact phrase"', 'Words in that order'],
 ];
