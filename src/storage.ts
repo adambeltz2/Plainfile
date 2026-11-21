@@ -42,6 +42,10 @@ export interface VaultStorage {
   remove(path: string, expectedMtime: number): Promise<void>;
   /** Create a new file and any missing folders. Throws ExistsError if the file is already there. */
   create(path: string, content: string): Promise<FileEntry>;
+  /** A file's bytes, for images and other attachments. */
+  readBinary(path: string): Promise<Uint8Array>;
+  /** Create a new file from bytes (a pasted image, say) and any missing folders. Throws ExistsError if it is already there. */
+  createBinary(path: string, bytes: Uint8Array): Promise<FileEntry>;
   /**
    * Replace a file's content. Must throw ConflictError if the file's current
    * mtime differs from `expectedMtime`, so an edit made elsewhere is never overwritten.

@@ -1,4 +1,4 @@
-import { createFromTemplate, promptDefault, renderTemplate, templateExtras, type Template } from '../src/templates';
+import { createFromTemplate, freePath, promptDefault, renderTemplate, templateExtras, type Template } from '../src/templates';
 import { addDays } from '../src/query';
 import { kindForPrompt } from '../src/vocabulary';
 import { openNote } from './notes';
@@ -50,7 +50,9 @@ function currentTemplate(): Template | undefined {
 
 function preview(t: Template, values: Record<string, string>, extras: Record<string, string>): string {
   const r = renderTemplate(t, { ...(state.index ? templateExtras(state.index) : {}), ...extras, ...values }, today());
-  return `<div class="mono small" id="tpl-path" style="overflow-wrap:anywhere;margin-bottom:6px">${esc(r.path)}</div><pre class="code" id="tpl-preview">${esc(r.content.trimEnd())}</pre>`;
+  const free = state.index ? freePath(state.index.files, r.path) : { path: r.path, taken: false };
+  const warn = free.taken ? `<div class="notice small" id="tpl-taken" style="margin:0 0 6px">A note named <span class="mono">${esc(r.path)}</span> already exists. This one will be saved as <span class="mono">${esc(free.path)}</span> and titled with the same number, so nothing is overwritten.</div>` : '';
+  return `${warn}<div class="mono small" id="tpl-path" style="overflow-wrap:anywhere;margin-bottom:6px">${esc(r.path)}</div><pre class="code" id="tpl-preview">${esc(r.content.trimEnd())}</pre>`;
 }
 
 export function html(): string {

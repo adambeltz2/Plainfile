@@ -184,11 +184,11 @@ export class DropboxStorage implements VaultStorage {
     }
   }
 
-  private async upload(path: string, content: string, mode: unknown): Promise<FileEntry> {
+  private async upload(path: string, content: string | Uint8Array, mode: unknown): Promise<FileEntry> {
     const res = await this.send(`${CONTENT}/files/upload`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/octet-stream', 'Dropbox-API-Arg': headerJson({ path: this.full(path), mode, autorename: false, mute: true }) },
-      body: content,
+      body: content as BodyInit,
     });
     return this.entry(path, (await res.json()) as Meta);
   }
@@ -198,6 +198,25 @@ export class DropboxStorage implements VaultStorage {
       return await this.upload(path, content, 'add');
     } catch (e) {
       if (e instanceof DropboxError && e.summary.startsWith('path/conflict')) throw new ExistsError(path);
+      throw e;
+    }
+  }
+
+  async createBinary(path: string, bytes: Uint8Array): Promise<FileEntry> {
+    try {
+      return await this.upload(path, bytes, 'add');
+    } catch (e) {
+      if (e instanceof DropboxError && e.summary.startsWith('path/conflict')) throw new ExistsError(path);
+      throw e;
+    }
+  }
+
+  async readBinary(path: string): Promise<Uint8Array> {
+    try {
+      const res = await this.send(`${CONTENT}/files/download`, { method: 'POST', headers: { 'Dropbox-API-Arg': headerJson({ path: this.full(path) }) } });
+      return new Uint8Array(await res.arrayBuffer());
+    } catch (e) {
+      if (e instanceof DropboxError && e.summary.startsWith('path/not_found')) throw new NotFoundError(path);
       throw e;
     }
   }

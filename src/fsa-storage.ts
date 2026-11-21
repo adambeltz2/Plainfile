@@ -170,6 +170,27 @@ export class FsaStorage implements VaultStorage {
     return this.stat(path);
   }
 
+  async createBinary(path: string, bytes: Uint8Array): Promise<FileEntry> {
+    const parts = path.split('/');
+    const name = parts.pop() as string;
+    let dir = this.root;
+    for (const p of parts) dir = await dir.getDirectoryHandle(p, { create: true });
+    try {
+      await dir.getFileHandle(name);
+      throw new ExistsError(path);
+    } catch (e) {
+      if (!(e instanceof DOMException && e.name === 'NotFoundError')) throw e;
+    }
+    const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
+    await w.write(bytes as unknown as BufferSource);
+    await w.close();
+    return this.stat(path);
+  }
+
+  async readBinary(path: string): Promise<Uint8Array> {
+    return new Uint8Array(await (await (await this.fileHandle(path)).getFile()).arrayBuffer());
+  }
+
   async stat(path: string): Promise<FileEntry> {
     const f = await (await this.fileHandle(path)).getFile();
     return { path, mtime: f.lastModified, size: f.size };

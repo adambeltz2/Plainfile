@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { noteMenu, openVault, readFile, readFileOrEmpty } from './helpers';
+import { listFiles, noteMenu, openVault, readFile, readFileOrEmpty } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -207,5 +207,54 @@ test.describe('quick note', () => {
     await expect(page.locator('.ed-head .path')).toHaveText(/ 3\.md$|\d{4} \d\.md$|\d{4}\.md$/);
     await nav(page, 'Notes').click();
     await expect(page.locator('#note-list .note-item')).toHaveCount(6); // three quick notes beside the three in the vault
+  });
+});
+
+test.describe('paste an image', () => {
+  const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  async function pasteImage(page: Page): Promise<void> {
+    await page.evaluate(async (b64) => {
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const dt = new DataTransfer();
+      dt.items.add(new File([bytes], 'image.png', { type: 'image/png' }));
+      document.querySelector('.cm-content')!.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+    }, PNG);
+  }
+
+  test('a pasted screenshot is saved in _attachments, linked relative to the note, and shown in the editor', async ({ page }) => {
+    const dir = await openVault(page, { 'projects/site/Note.md': 'Intro text\n' });
+    await nav(page, 'Notes').click();
+    await page.locator('.note-item', { hasText: /^Note$/ }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+End');
+    await pasteImage(page);
+    await expect(page.locator('.cm-img-el')).toBeVisible();
+    expect(await page.locator('.cm-img-el').evaluate((i: HTMLImageElement) => i.naturalWidth)).toBe(1);
+    const files = (await listFiles(page, dir)).filter((f) => f.startsWith('_attachments/'));
+    expect(files).toHaveLength(1);
+    const name = files[0]!.replace('_attachments/', '');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/site/Note.md'), { timeout: 5000 }).toBe(`Intro text\n![](../../_attachments/${name})\n`);
+    // A second paste is a second file, never an overwrite.
+    await pasteImage(page);
+    await expect.poll(async () => (await listFiles(page, dir)).filter((f) => f.startsWith('_attachments/')).length).toBe(2);
+    // The markdown is one keypress away: moving onto the image line shows it.
+    await page.locator('.cm-img-el').first().click();
+    await expect(page.locator('.cm-line', { hasText: '![](../../_attachments/' }).first()).toBeVisible();
+  });
+
+  test('a note that is not editable by paste still ignores text pastes normally', async ({ page }) => {
+    await openVault(page, { 'n.md': 'x' });
+    await nav(page, 'Notes').click();
+    await page.locator('.note-item', { hasText: /^n$/ }).click();
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+End');
+    await page.evaluate(() => {
+      const dt = new DataTransfer();
+      dt.setData('text/plain', ' pasted words');
+      document.querySelector('.cm-content')!.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+    });
+    await expect(page.locator('.cm-content')).toContainText('x pasted words');
+    await expect(page.locator('.cm-img-el')).toHaveCount(0);
   });
 });

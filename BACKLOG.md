@@ -51,7 +51,9 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.ts`. Suggested order below.
 
-- `[REFACTOR]` **Binary reads and an optional `move`** on `VaultStorage` (images; providers can rename without copying). The version token is kept inside each adapter (`mtime` plus the provider revision), so the interface did not need it. Affects `src/storage.ts`, adapters.
+- `[REFACTOR]` **An optional `move`** on `VaultStorage` so providers can rename without copying. Binary reads and creates are done. Affects `src/storage.ts`, adapters.
+- `[FEATURE]` **Insert image from a file picker and resize or caption an image**, for phones where paste of images is limited. Affects `web/editor.ts`.
+- `[DEBT]` **Pasted images are never deleted** with their note; Vault health lists unused attachments for cleanup. Affects `src/health.ts`.
 - `[FEATURE]` **Persistent cache** of the index and note contents in IndexedDB, keyed by version token, so a
   cloud folder (and a big local one) opens fast and can be read offline. Affects `src/index.ts`, `web/store.ts`.
 - `[FEATURE]` **Dropbox: use `list_folder/continue` cursors to pick up only what changed** instead of listing everything on each rescan. Affects `src/dropbox-storage.ts`.

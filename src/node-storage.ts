@@ -62,6 +62,22 @@ export class NodeStorage implements VaultStorage {
     return this.stat(path);
   }
 
+  async createBinary(path: string, bytes: Uint8Array): Promise<FileEntry> {
+    const target = this.abs(path);
+    await fs.mkdir(dirname(target), { recursive: true });
+    try {
+      await fs.writeFile(target, bytes, { flag: 'wx' });
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'EEXIST') throw new ExistsError(path);
+      throw e;
+    }
+    return this.stat(path);
+  }
+
+  async readBinary(path: string): Promise<Uint8Array> {
+    return new Uint8Array(await fs.readFile(this.abs(path)));
+  }
+
   async stat(path: string): Promise<FileEntry> {
     const s = await fs.stat(this.abs(path));
     return { path, mtime: s.mtimeMs, size: s.size };

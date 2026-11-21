@@ -56,6 +56,48 @@ class Bullet extends WidgetType {
   }
 }
 
+/** Where an editor gets an image's bytes from, as a URL it can show. Set per editor by createEditor. */
+const imageLoaders = new WeakMap<EditorView, (rel: string) => Promise<string | undefined>>();
+const IMAGE_LINE = /^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/;
+
+/** An image on a line of its own, shown in place of its markdown until the cursor is on that line. */
+class ImageWidget extends WidgetType {
+  constructor(
+    readonly rel: string,
+    readonly alt: string,
+  ) {
+    super();
+  }
+  eq(o: ImageWidget): boolean {
+    return o.rel === this.rel && o.alt === this.alt;
+  }
+  toDOM(view: EditorView): HTMLElement {
+    const wrap = document.createElement('span');
+    wrap.className = 'cm-img';
+    wrap.textContent = this.alt || 'Loading image…';
+    const load = imageLoaders.get(view);
+    if (/^(https?:|data:)/i.test(this.rel)) this.show(wrap, this.rel);
+    else if (load) {
+      void load(this.rel).then((url) => {
+        if (url) this.show(wrap, url);
+        else wrap.textContent = `Image not found: ${this.rel}`;
+      });
+    }
+    return wrap;
+  }
+  private show(wrap: HTMLElement, url: string): void {
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = this.alt;
+    img.className = 'cm-img-el';
+    img.addEventListener('error', () => (wrap.textContent = `Could not show ${this.rel}`));
+    img.addEventListener('load', () => wrap.replaceChildren(img));
+  }
+  ignoreEvent(): boolean {
+    return false;
+  }
+}
+
 const hide = Decoration.replace({});
 const mark = (cls: string) => Decoration.mark({ class: cls });
 
@@ -158,6 +200,13 @@ function build(view: EditorView): { all: DecorationSet; atomic: DecorationSet } 
       continue;
     }
     const isActive = active.has(n);
+    const image = !isActive ? IMAGE_LINE.exec(text) : null;
+    if (image && line.to > line.from) {
+      const r = Decoration.replace({ widget: new ImageWidget(image[2] ?? '', image[1] ?? '') }).range(line.from, line.to);
+      items.push(r);
+      atomic.push(r);
+      continue;
+    }
     let inlineFrom = 0;
 
     const h = HEAD.exec(text);
@@ -410,7 +459,25 @@ export interface EditorHandle {
   destroy(): void;
 }
 
-export function createEditor(o: { text: string; crlf: boolean; today: () => string; onChange(): void; onSave(): void; suggest?: Suggester }): EditorHandle {
+/** Insert pasted or dropped images at the cursor, each on its own line. The screen saves the file and says how to link it. */
+async function insertImages(view: EditorView, files: File[], save: (f: File) => Promise<string | null>, at?: number): Promise<void> {
+  for (const f of files) {
+    const md = await save(f).catch(() => null);
+    if (!md) continue;
+    const pos = at ?? view.state.selection.main.head;
+    const line = view.state.doc.lineAt(pos);
+    const lead = pos > line.from && line.text.slice(0, pos - line.from).trim() ? '\n' : '';
+    const trail = pos < line.to && line.text.slice(pos - line.from).trim() ? '\n' : '\n';
+    const text = `${lead}${md}${trail}`;
+    view.dispatch({ changes: { from: pos, insert: text }, selection: { anchor: pos + text.length }, userEvent: 'input.paste' });
+    at = undefined;
+  }
+}
+
+const imagesIn = (list: FileList | DataTransferItemList | null | undefined): File[] =>
+  [...((list as FileList | undefined) ?? [])].filter((f): f is File => f instanceof File && f.type.startsWith('image/'));
+
+export function createEditor(o: { text: string; crlf: boolean; today: () => string; onChange(): void; onSave(): void; suggest?: Suggester; pasteImage?: (f: File) => Promise<string | null>; loadImage?: (rel: string) => Promise<string | undefined> }): EditorHandle {
   const mode = new Compartment();
   const host = document.createElement('div');
   host.className = 'editor-host';
@@ -435,6 +502,22 @@ export function createEditor(o: { text: string; crlf: boolean; today: () => stri
       ]),
       markdown(),
       EditorView.lineWrapping,
+      EditorView.domEventHandlers({
+        paste(ev, view) {
+          const files = imagesIn(ev.clipboardData?.files);
+          if (!files.length || !o.pasteImage) return false;
+          ev.preventDefault();
+          void insertImages(view, files, o.pasteImage);
+          return true;
+        },
+        drop(ev, view) {
+          const files = imagesIn(ev.dataTransfer?.files);
+          if (!files.length || !o.pasteImage) return false;
+          ev.preventDefault();
+          void insertImages(view, files, o.pasteImage, view.posAtCoords({ x: ev.clientX, y: ev.clientY }) ?? undefined);
+          return true;
+        },
+      }),
       EditorView.contentAttributes.of({ 'aria-label': 'Note text', spellcheck: 'true' }),
       normalizeMarkers,
       ...(o.suggest
@@ -462,6 +545,7 @@ export function createEditor(o: { text: string; crlf: boolean; today: () => stri
     ],
   });
   const view = new EditorView({ state, parent: host });
+  if (o.loadImage) imageLoaders.set(view, o.loadImage);
   const text = (): string => view.state.doc.sliceString(0, view.state.doc.length, view.state.lineBreak);
 
   return {

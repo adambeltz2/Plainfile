@@ -4,6 +4,20 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.33.0] - 2026-11-21
+
+### Added
+- **Paste or drop an image into a note.** Paste a screenshot (or drop an image file) in the editor: it is
+  saved as `_attachments/pasted-2026-11-21-143512.png`, a link relative to the note (`![](../_attachments/...)`)
+  is typed at the cursor, and the image shows in the note. Move onto its line to see the markdown. A name
+  that is taken gets `-2`, never an overwrite. Works on every storage adapter, Dropbox included.
+- Storage can now read and create binary files (`readBinary`, `createBinary`), covered by the storage contract.
+
+### Changed
+- **The same title twice no longer makes two notes with one title.** A second note named like an existing one is
+  saved as `Gift Shopping 2.md` and its title becomes "Gift Shopping 2". The New dialog says so before you
+  create it. Task notes do the same.
+
 ## [0.32.0] - 2026-11-21
 
 ### Added

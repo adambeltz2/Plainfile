@@ -3,7 +3,7 @@ import { INBOX_FILE, addTask, addTaskNote, cleanTaskText, taskFileName } from '.
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { ConflictError } from '../src/storage';
-import { BUILT_IN, clock, createFromTemplate, loadTemplates, parseTemplateFile, promptDefault, renderTemplate, slug, templateExtras } from '../src/templates';
+import { BUILT_IN, clock, createFromTemplate, freePath, numberTitle, loadTemplates, parseTemplateFile, promptDefault, renderTemplate, slug, templateExtras } from '../src/templates';
 
 const TODAY = '2026-11-21';
 const byName = (n: string) => BUILT_IN.find((t) => t.name === n)!;
@@ -244,5 +244,42 @@ describe('Quick note', () => {
     const b = await createFromTemplate(store, index, t, { time: '10:00', timefile: '1000' }, '2026-11-21');
     expect([a.path, b.path]).toEqual(['inbox/2026-11-21 1000.md', 'inbox/2026-11-21 1000 2.md']);
     expect(renderTemplate(t, {}, '2026-11-21').content).toMatch(/title: "2026-11-21 \d\d:\d\d"/);
+  });
+});
+
+describe('the same title twice', () => {
+  it('numberTitle adds the number to the title and keeps the cursor on the same spot', () => {
+    const c = '---\ntitle: Gift Shopping\ncreated: 2026-11-21\n---\n\nbody\n';
+    const r = numberTitle(c, c.indexOf('body'), 2);
+    expect(r.content).toBe('---\ntitle: "Gift Shopping 2"\ncreated: 2026-11-21\n---\n\nbody\n');
+    expect(r.content.slice(r.cursor)).toBe('body\n');
+    expect(numberTitle('no frontmatter', 3, 2)).toEqual({ content: 'no frontmatter', cursor: 3 });
+    expect(numberTitle('---\ncreated: x\n---\nb', undefined, 2).content).toBe('---\ncreated: x\n---\nb');
+  });
+
+  it('a second note with the same name is saved beside the first with the number in its file name and title', async () => {
+    const t = BUILT_IN.find((x) => x.name === 'Note')!;
+    const store = new MemoryStorage({});
+    const index = new VaultIndex(store);
+    const a = await createFromTemplate(store, index, t, { title: 'Gift Shopping' }, '2026-11-21');
+    const b = await createFromTemplate(store, index, t, { title: 'Gift Shopping' }, '2026-11-21');
+    expect([a.path, b.path]).toEqual(['inbox/Gift Shopping.md', 'inbox/Gift Shopping 2.md']);
+    expect(await store.read(a.path)).toContain('title: Gift Shopping\n');
+    expect(await store.read(b.path)).toContain('title: "Gift Shopping 2"\n');
+    expect(index.notes.get(b.path)?.title).toBe('Gift Shopping 2');
+  });
+
+  it('freePath says what a new note would really be called', () => {
+    expect(freePath(new Set(['inbox/a.md', 'inbox/A 2.md']), 'inbox/a.md')).toEqual({ path: 'inbox/a 3.md', taken: true });
+    expect(freePath(new Set(), 'inbox/a.md')).toEqual({ path: 'inbox/a.md', taken: false });
+  });
+
+  it('a second task note with the same title is numbered in its title as well', async () => {
+    const store = new MemoryStorage({});
+    const index = new VaultIndex(store);
+    const a = await addTaskNote(store, index, { title: 'Call Dana', created: '2026-11-21' });
+    const b = await addTaskNote(store, index, { title: 'Call Dana', created: '2026-11-21' });
+    expect(index.getTask(a.taskId)?.title).toBe('Call Dana');
+    expect(index.getTask(b.taskId)?.title).toBe('Call Dana 2');
   });
 });

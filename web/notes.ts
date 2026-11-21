@@ -4,7 +4,8 @@ import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type 
 import { bestLinkTarget } from '../src/fixes';
 import { frontmatterText, addDefaultFrontmatter, setFrontmatterField, setProjects } from '../src/frontmatter';
 import { localDateOf } from '../src/dates';
-import { dirname } from '../src/index';
+import { saveImage, mimeFor } from '../src/attachments';
+import { dirname, joinPath } from '../src/index';
 import { parseNote, type Note } from '../src/parse';
 import { isProjectNote, listProjects, noteProjects, projectContents } from '../src/projects';
 import { findProject } from '../src/quickline';
@@ -212,7 +213,7 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
     notes.versions = [];
     notes.lastDeleted = undefined;
     notes.confirmDelete = undefined;
-    notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush(), suggest });
+    notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush(), suggest, pasteImage, loadImage });
     rememberLast(path);
   } catch (e) {
     notes.handle?.destroy();
@@ -222,6 +223,52 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
   }
   state.screen = 'notes';
   render();
+}
+
+/** Save a pasted or dropped image beside the notes and return the markdown that shows it. */
+async function pasteImage(file: File): Promise<string | null> {
+  const { storage, index } = state;
+  const path = notes.path;
+  if (!storage || !index || !path) return null;
+  try {
+    setStatus('Saving image…');
+    const saved = await saveImage(storage, index, path, new Uint8Array(await file.arrayBuffer()), file.type, new Date(), file.name);
+    setStatus(`Saved image ${saved.path}`);
+    return saved.markdown;
+  } catch (e) {
+    setStatus(`Could not save the image. ${errorMessage(e)}`);
+    return null;
+  }
+}
+
+const imageUrls = new Map<string, string>();
+onVaultChange(() => {
+  for (const u of imageUrls.values()) URL.revokeObjectURL(u);
+  imageUrls.clear();
+});
+
+/** An image the note refers to, as a URL the editor can show. Kept until the folder changes. */
+async function loadImage(rel: string): Promise<string | undefined> {
+  const { storage, index } = state;
+  const path = notes.path;
+  if (!storage || !index || !path) return undefined;
+  let target: string;
+  try {
+    target = joinPath(dirname(path), decodeURI(rel));
+  } catch {
+    return undefined;
+  }
+  const real = index.files.has(target) ? target : index.resolveEmbed(index.notes.get(path)!, decodeURI(rel));
+  if (!real) return undefined;
+  const hit = imageUrls.get(real);
+  if (hit) return hit;
+  try {
+    const url = URL.createObjectURL(new Blob([(await storage.readBinary(real)) as unknown as BlobPart], { type: mimeFor(real) }));
+    imageUrls.set(real, url);
+    return url;
+  } catch {
+    return undefined;
+  }
 }
 
 /** The type-ahead for the editor: link targets (kept until the notes change) and the names already in use. */

@@ -56,6 +56,8 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 - **Quick note:** one click or Alt+N makes a note titled with the date and time, ready to type; tag it later.
 - **Go to… and quick keys:** Ctrl/Cmd+P finds a note by a few letters, creates one, or runs an action
   ("move kick"). F2 renames, Ctrl/Cmd+Shift+M moves, Ctrl/Cmd+Shift+X toggles X-ray.
+- **Paste images:** paste a screenshot or drop an image into a note; it is saved in `_attachments/`, linked
+  relative to the note and shown inline.
 - **Type-ahead:** `[[` links, `#` tags, `@` people, `due:` days and frontmatter values while you type.
 - **Projects on any note:** add a note to one or more projects from its properties, and it shows on
   each project's dashboard with its tasks.

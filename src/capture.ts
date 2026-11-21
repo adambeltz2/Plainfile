@@ -88,18 +88,22 @@ export async function addTaskNote(storage: VaultStorage, index: VaultIndex, inpu
   const title = input.title.replace(/\s+/g, ' ').trim();
   if (!title) throw new Error('Type something for the task first.');
   const clean = (xs: string[] | undefined, re: RegExp): string[] => [...new Set((xs ?? []).map((x) => x.trim().replace(re, '').replace(/\s+/g, '-')).filter(Boolean))];
-  const fm = [`title: ${yamlText(title)}`, 'status: todo'];
-  if (input.due) fm.push(`due: ${input.due}`);
-  fm.push(`created: ${input.created}`);
-  if (input.project) fm.push(`project: ${yamlText(input.project.name)}`);
-  fm.push(`tags: ${flow(clean(input.tags, /^#/))}`, `people: ${flow(clean(input.people, /^@/))}`);
-  const content = `---\n${fm.join('\n')}\n---\n\n`;
+  const build = (shown: string): string[] => {
+    const fm = [`title: ${yamlText(shown)}`, 'status: todo'];
+    if (input.due) fm.push(`due: ${input.due}`);
+    fm.push(`created: ${input.created}`);
+    if (input.project) fm.push(`project: ${yamlText(input.project.name)}`);
+    fm.push(`tags: ${flow(clean(input.tags, /^#/))}`, `people: ${flow(clean(input.people, /^@/))}`);
+    return fm;
+  };
   const dir = `${input.project?.dir ? `${input.project.dir}/` : ''}tasks`;
   const base = taskFileName(title);
   for (let n = 1; n < 1000; n++) {
     const path = `${dir}/${base}${n > 1 ? ` ${n}` : ''}.md`;
+    // A second task with the same name gets " 2" in its title too, so titles stay unique.
+    const fm = build(n > 1 ? `${title} ${n}` : title);
     try {
-      await storage.create(path, content);
+      await storage.create(path, `---\n${fm.join('\n')}\n---\n\n`);
       await index.refreshFile(path);
       return { path, line: 2, before: '', after: fm[0] as string, written: true, taskId: `${path}:3` };
     } catch (e) {

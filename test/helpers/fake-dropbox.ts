@@ -6,6 +6,7 @@
 interface F {
   display: string;
   content: string;
+  bytes?: Uint8Array;
   rev: number;
   modified: number;
 }
@@ -27,7 +28,7 @@ export class FakeDropbox {
   }
 
   private meta(f: F): Meta {
-    return { '.tag': 'file', name: f.display.split('/').pop() as string, path_lower: f.display.toLowerCase(), path_display: f.display, server_modified: new Date(f.modified).toISOString().replace('.000Z', 'Z'), rev: f.rev.toString(16).padStart(9, '0') + 'abc', size: new TextEncoder().encode(f.content).length };
+    return { '.tag': 'file', name: f.display.split('/').pop() as string, path_lower: f.display.toLowerCase(), path_display: f.display, server_modified: new Date(f.modified).toISOString().replace('.000Z', 'Z'), rev: f.rev.toString(16).padStart(9, '0') + 'abc', size: f.bytes ? f.bytes.length : new TextEncoder().encode(f.content).length };
   }
 
   private json(body: unknown, status = 200): Response {
@@ -38,8 +39,8 @@ export class FakeDropbox {
     return this.json({ error_summary: summary, error: {} }, status);
   }
 
-  private put(path: string, content: string): F {
-    const f = { display: path.replace(/^\//, ''), content, rev: this.seq++, modified: this.clock };
+  private put(path: string, content: string, bytes?: Uint8Array): F {
+    const f: F = { display: path.replace(/^\//, ''), content, bytes, rev: this.seq++, modified: this.clock };
     f.display = '/' + f.display;
     this.files.set(path.toLowerCase(), f);
     return f;
@@ -80,16 +81,17 @@ export class FakeDropbox {
     }
     if (path === '/files/download') {
       const f = this.files.get((arg.path as string).toLowerCase());
-      return f ? new Response(f.content, { status: 200 }) : this.err('path/not_found/..');
+      return f ? new Response((f.bytes ?? f.content) as BodyInit, { status: 200 }) : this.err('path/not_found/..');
     }
     if (path === '/files/upload') {
       const key = (arg.path as string).toLowerCase();
       const cur = this.files.get(key);
-      const content = String(init.body ?? '');
+      const isBytes = init.body instanceof Uint8Array;
+      const content = isBytes ? '' : String(init.body ?? '');
       if (arg.mode === 'add') {
         if (cur) return this.err('path/conflict/file/..');
       } else if (!cur || this.meta(cur).rev !== arg.mode.update) return this.err('path/conflict/file/..');
-      return this.json(this.meta(this.put(arg.path, content)));
+      return this.json(this.meta(this.put(arg.path, content, isBytes ? new Uint8Array(init.body as Uint8Array) : undefined)));
     }
     if (path === '/files/delete_v2') {
       const key = (body.path as string).toLowerCase();

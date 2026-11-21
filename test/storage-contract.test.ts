@@ -112,6 +112,17 @@ for (const { name, make } of ADAPTERS) {
       await expect(s.stat('x.md')).rejects.toBeDefined();
     });
 
+    it('stores and returns bytes exactly, refuses to overwrite, and lists the file with its size', async () => {
+      const s = await make({});
+      const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 255, 128, 10, 13, 0, 1]);
+      const e = await s.createBinary('_attachments/a/pic.png', png);
+      expect(e.size).toBe(png.length);
+      expect([...(await s.readBinary('_attachments/a/pic.png'))]).toEqual([...png]);
+      await expect(s.createBinary('_attachments/a/pic.png', new Uint8Array([1]))).rejects.toBeInstanceOf(ExistsError);
+      expect([...(await s.readBinary('_attachments/a/pic.png'))]).toEqual([...png]);
+      expect((await s.list()).find((f) => f.path === '_attachments/a/pic.png')?.size).toBe(png.length);
+    });
+
     it('lists every visible file with forward slashes, skipping hidden folders, however deep', async () => {
       const deep = 'l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/l11/l12/deep.md';
       const s = await make({ 'top.md': 'a', 'f/n.md': 'b', [deep]: 'c', 'img/p.png': 'x', '.plainfile/h.md': 'hidden', '.git/x': 'hidden' });

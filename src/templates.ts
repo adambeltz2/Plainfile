@@ -304,6 +304,30 @@ export function renderTemplate(t: Template, values: Record<string, string>, toda
   return { path: `${folder ? `${folder}/` : ''}${name}.md`, content, cursor: at >= 0 ? at : undefined };
 }
 
+/** The same note with " 2" (or " 3"...) added to its frontmatter title, and the cursor moved to match. */
+export function numberTitle(content: string, cursor: number | undefined, n: number): { content: string; cursor: number | undefined } {
+  const m = /^(---\r?\n(?:(?!---)[\s\S])*?)(title:[ \t]*)([^\r\n]*)/.exec(content);
+  if (!m) return { content, cursor };
+  const raw = (m[3] ?? '').trim().replace(/^["']|["']$/g, '');
+  if (!raw) return { content, cursor };
+  const next = `title: ${JSON.stringify(`${raw} ${n}`)}`;
+  const start = (m[1] ?? '').length;
+  const end = start + (m[2] ?? '').length + (m[3] ?? '').length;
+  const out = content.slice(0, start) + next + content.slice(end);
+  return { content: out, cursor: cursor === undefined ? undefined : cursor + (out.length - content.length) };
+}
+
+/** The path a new note would really get, and whether that is not the one asked for because the name is taken. */
+export function freePath(files: ReadonlySet<string>, path: string): { path: string; taken: boolean } {
+  const lower = new Set([...files].map((f) => f.toLowerCase()));
+  const base = path.replace(/\.md$/i, '');
+  for (let n = 1; n < 1000; n++) {
+    const p = n === 1 ? path : `${base} ${n}.md`;
+    if (!lower.has(p.toLowerCase())) return { path: p, taken: n > 1 };
+  }
+  return { path, taken: true };
+}
+
 /** Create the file. If the name is taken, " 2", " 3" and so on are added. Nothing is ever overwritten. */
 export async function createFromTemplate(
   storage: VaultStorage,
@@ -316,10 +340,12 @@ export async function createFromTemplate(
   const base = r.path.replace(/\.md$/i, '');
   for (let n = 1; n < 1000; n++) {
     const path = n === 1 ? r.path : `${base} ${n}.md`;
+    // A second note with the same name gets " 2" in its title as well, so no two notes share a title.
+    const same = n === 1 ? { content: r.content, cursor: r.cursor } : numberTitle(r.content, r.cursor, n);
     try {
-      await storage.create(path, r.content);
+      await storage.create(path, same.content);
       await index.refreshFile(path);
-      return { ...r, path };
+      return { ...r, ...same, path };
     } catch (e) {
       if (!(e instanceof ExistsError)) throw e;
     }

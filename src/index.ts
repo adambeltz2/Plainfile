@@ -198,6 +198,12 @@ export class VaultIndex {
 
   /** Re-read one file after we wrote to it. */
   async refreshFile(path: string): Promise<void> {
+    if (!isMarkdown(path)) {
+      // An attachment (an image, say): it is a file, not a note.
+      this.files.add(path);
+      this.rebuild();
+      return;
+    }
     const e = await this.storage.stat(path);
     const text = await this.storage.read(path);
     this.notes.set(path, parseNote(path, text, e));
