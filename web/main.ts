@@ -316,3 +316,8 @@ window.__plainfile = {
 
 requestRender();
 void resumeSaved();
+
+// Installable and available offline. The worker replaces the earlier Notebook app's, at the same address.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => void navigator.serviceWorker.register('sw.js').catch(() => undefined));
+}

@@ -53,8 +53,11 @@ try the sample vault for now. Design mockups are in [`docs/mockups.html`](docs/m
 | Board and Rename screens | `web/board.ts`, `web/rename.ts`, `src/rename.ts` |
 | Templates, quick add, link fixes, frontmatter edits | `src/templates.ts`, `src/capture.ts`, `src/fixes.ts`, `src/frontmatter.ts` |
 
-Next: a small local server as a fallback for browsers that cannot open a folder, and
-making the browser app installable.
+Next: a small local server as a fallback for browsers that cannot open a folder.
+
+**Install it:** in Chrome, Edge or Safari use the install button in the address bar (or
+"Add to Home Screen" on a phone). It then opens in its own window, and the app itself
+opens offline after the first visit.
 
 ## Try it
 

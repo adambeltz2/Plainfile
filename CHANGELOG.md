@@ -4,6 +4,20 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.18.0] - 2026-11-21
+
+### Added
+- **Installable app.** Plainfile has a web manifest, black and white icons (including a
+  maskable one) and a service worker, so Chrome, Edge and Safari offer to install it and it
+  opens in its own window. After the first visit the app also opens with no connection
+  (the shell only: opening a folder still needs the browser's folder permission, and the
+  sample vault works offline).
+- The worker replaces the earlier Notebook app's, which lived at the same address, and
+  deletes the caches Notebook left behind. It is network first, so a new release shows up
+  as soon as there is a connection.
+- Browser tests check the manifest and icons, that the app opens offline, that old caches
+  are cleared, and that Chromium reports no installability errors.
+
 ## [0.17.0] - 2026-11-21
 
 ### Added

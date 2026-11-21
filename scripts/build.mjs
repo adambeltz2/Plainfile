@@ -1,6 +1,6 @@
 // Bundles the web app into dist/ as plain static files. No server, no framework.
 import { build } from 'esbuild';
-import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -32,4 +32,9 @@ await build({
   logLevel: 'info',
 });
 
-for (const f of ['index.html', 'app.css']) copyFileSync(join(root, 'web', f), join(root, 'dist', f));
+for (const f of ['index.html', 'app.css', 'manifest.json']) copyFileSync(join(root, 'web', f), join(root, 'dist', f));
+cpSync(join(root, 'web', 'icons'), join(root, 'dist', 'icons'), { recursive: true });
+
+// The service worker's cache name carries the app version, so each release replaces the old cache.
+const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+writeFileSync(join(root, 'dist', 'sw.js'), readFileSync(join(root, 'web', 'sw.js'), 'utf8').replace('__VERSION__', version));
