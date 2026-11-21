@@ -1,0 +1,143 @@
+import { createFromTemplate, promptDefault, renderTemplate, type Template } from '../src/templates';
+import { openNote } from './notes';
+import { errorMessage, quickAdd, render, state, today } from './store';
+import { esc } from './util';
+
+export function openNew(): void {
+  state.modal = { step: 'menu' };
+  render();
+}
+
+export function openTemplate(name: string): void {
+  const t = state.templates.find((x) => x.name === name);
+  if (!t) return;
+  state.modal = { step: 'template', name, values: Object.fromEntries(t.prompts.map((p) => [p.id, promptDefault(p, today())])), error: '' };
+  render();
+}
+
+export function closeModal(): void {
+  state.modal = undefined;
+  render();
+}
+
+function currentTemplate(): Template | undefined {
+  const m = state.modal;
+  return m?.step === 'template' ? state.templates.find((t) => t.name === m.name) : undefined;
+}
+
+function preview(t: Template, values: Record<string, string>): string {
+  const r = renderTemplate(t, values, today());
+  return `<div class="mono small" id="tpl-path" style="overflow-wrap:anywhere;margin-bottom:6px">${esc(r.path)}</div><pre class="code" id="tpl-preview">${esc(r.content.trimEnd())}</pre>`;
+}
+
+export function html(): string {
+  const m = state.modal;
+  if (!m) return '';
+  let body = '';
+  if (m.step === 'menu') {
+    body =
+      '<h2>New</h2><ul class="plain menu">' +
+      '<li><button class="menu-item" data-new-task><b>Task</b><span>Add a line to your Inbox. Quickest way to capture something.</span></button></li>' +
+      state.templates
+        .map((t) => `<li><button class="menu-item" data-tpl="${esc(t.name)}"><b>${esc(t.name)}</b><span>${esc(t.description || (t.source === 'built-in' ? '' : 'Your template'))}</span></button></li>`)
+        .join('') +
+      '</ul><p class="muted small" style="margin:10px 0 0">Add your own templates as markdown files in <code>.plainfile/templates/</code>.</p>';
+  } else if (m.step === 'task') {
+    body =
+      '<h2>New task</h2><p class="muted small" style="margin:0 0 10px">Added to <code>inbox/Inbox.md</code>. Nothing else in that file changes.</p>' +
+      `<div class="fld"><label for="new-task-text">Task</label><input id="new-task-text" class="inp" type="text" autocomplete="off" value="${esc(m.text)}" placeholder="Call Dana about the logo files"></div>` +
+      `<div class="fld"><label for="new-task-due">Due date (optional)</label><input id="new-task-due" class="inp date" type="date" value="${esc(m.due)}"></div>` +
+      (m.error ? `<div class="notice err small">${esc(m.error)}</div>` : '') +
+      '<div class="row-gap"><button class="btn primary" data-act="create-task">Add task</button><button class="btn" data-act="modal-back">Back</button></div>';
+  } else {
+    const t = currentTemplate();
+    if (!t) return '';
+    const fields = t.prompts.length
+      ? t.prompts
+          .map((p) => `<div class="fld"><label for="tpl-${esc(p.id)}">${esc(p.label)}</label><input id="tpl-${esc(p.id)}" class="inp" data-tpl-field="${esc(p.id)}" type="text" autocomplete="off" value="${esc(m.values[p.id] ?? '')}"></div>`)
+          .join('')
+      : '<p class="muted small">This template has nothing to fill in.</p>';
+    body =
+      `<h2>New ${esc(t.name.toLowerCase())}</h2><div class="tplgrid"><div>${fields}` +
+      (m.error ? `<div class="notice err small">${esc(m.error)}</div>` : '') +
+      '<div class="row-gap"><button class="btn primary" data-act="create-template">Create file</button><button class="btn" data-act="modal-back">Back</button></div></div>' +
+      `<div><div class="grp" style="margin-top:0">Creates</div>${preview(t, m.values)}</div></div>`;
+  }
+  return `<div class="modal-back" data-backdrop><div class="modal" role="dialog" aria-modal="true" aria-label="New">${body}<button class="modal-x btn small" data-act="modal-close" aria-label="Close">Close</button></div></div>`;
+}
+
+export async function click(target: HTMLElement): Promise<boolean> {
+  const m = state.modal;
+  if (!m) return false;
+  if (target.matches('[data-backdrop]')) {
+    closeModal();
+    return true;
+  }
+  if (target.closest('[data-new-task]')) {
+    state.modal = { step: 'task', text: '', due: '', error: '' };
+    render();
+    return true;
+  }
+  const tpl = target.closest<HTMLElement>('[data-tpl]')?.dataset.tpl;
+  if (tpl) {
+    openTemplate(tpl);
+    return true;
+  }
+  const act = target.closest<HTMLElement>('[data-act]')?.dataset.act;
+  if (act === 'modal-close') {
+    closeModal();
+    return true;
+  }
+  if (act === 'modal-back') {
+    openNew();
+    return true;
+  }
+  if (act === 'create-task' && m.step === 'task') {
+    const err = await quickAdd(m.text, m.due);
+    if (err) {
+      m.error = err;
+      render();
+    } else {
+      state.modal = undefined;
+      state.screen = 'today';
+      state.view = 'inbox';
+      render();
+    }
+    return true;
+  }
+  if (act === 'create-template' && m.step === 'template') {
+    const t = currentTemplate();
+    const { storage, index } = state;
+    if (!t || !storage || !index) return true;
+    try {
+      const r = await createFromTemplate(storage, index, t, m.values, today());
+      state.modal = undefined;
+      await openNote(r.path, r.cursor !== undefined ? { offset: r.cursor } : {});
+    } catch (e) {
+      m.error = `Could not create the file. ${errorMessage(e)}`;
+      render();
+    }
+    return true;
+  }
+  return target.closest('.modal') !== null;
+}
+
+export function input(e: Event): boolean {
+  const m = state.modal;
+  const t = e.target as HTMLInputElement;
+  if (!m) return false;
+  if (m.step === 'task') {
+    if (t.id === 'new-task-text') m.text = t.value;
+    else if (t.id === 'new-task-due') m.due = t.value;
+    else return false;
+    return true;
+  }
+  if (m.step === 'template' && t.dataset.tplField) {
+    m.values[t.dataset.tplField] = t.value;
+    const tpl = currentTemplate();
+    const box = document.querySelector('.modal .tplgrid > div:last-child');
+    if (tpl && box) box.innerHTML = `<div class="grp" style="margin-top:0">Creates</div>${preview(tpl, m.values)}`;
+    return true;
+  }
+  return false;
+}

@@ -45,7 +45,7 @@ describe('VaultIndex', () => {
 
   it('spots a rename made outside the app by content hash, leaving old links unresolved until fixed', async () => {
     const { store, index } = await build();
-    store.remove('projects/a/pricing-research.md');
+    store.externalRemove('projects/a/pricing-research.md');
     store.external('projects/a/pricing-analysis.md', '---\ntags: [pricing]\n---\nCompetitors charge $12.');
     const r = await index.scan();
     expect(r.renamed).toEqual([{ from: 'projects/a/pricing-research.md', to: 'projects/a/pricing-analysis.md' }]);
@@ -95,7 +95,7 @@ describe('checkHealth', () => {
   it('reports unresolved links with a suggestion, duplicates and unused attachments', async () => {
     const { index } = await build();
     const r = checkHealth(index);
-    expect(r.unresolved).toEqual([{ from: 'projects/a/kickoff.md', line: 5, target: 'pricing-reserach', suggestion: 'pricing-research' }]);
+    expect(r.unresolved).toEqual([{ from: 'projects/a/kickoff.md', line: 5, target: 'pricing-reserach', kind: 'wiki', suggestion: 'pricing-research', suggestionPath: 'projects/a/pricing-research.md' }]);
     expect(r.duplicates).toEqual([{ name: 'index', paths: ['projects/a/index.md', 'projects/b/index.md'] }]);
     expect(r.unusedAttachments).toEqual(['_attachments/unused.png', '_attachments/used.png']);
   });

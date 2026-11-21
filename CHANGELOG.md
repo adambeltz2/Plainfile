@@ -4,6 +4,33 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.15.0] - 2026-11-21
+
+### Added
+- **Notes screen with the live editor** (CodeMirror 6, pinned). Typing `- [ ] ` becomes a
+  checkbox, `#` a heading and `- ` a bullet as you type; a typed `*` or `+` list marker is
+  saved as `-`. `**bold**`, `[[links]]`, `@people`, `#tags` and due dates render when the
+  cursor leaves the line. X-ray shows the raw markdown. Clicking a `due:` chip opens a quick
+  date picker. Autosave with a modified-time guard, a conflict banner if the file changed
+  elsewhere, and a readout of what changed on disk. CRLF files keep their line endings.
+- **Properties panel** for the open note: status and due date edit one frontmatter line,
+  with a Show YAML toggle, plus the notes that link here.
+- **+ New menu** and **quick add**: add a task to the Inbox from the top of Today, or create
+  a note, task file, meeting, daily journal or person from a template with prompts and a live
+  preview of the file. Your own templates go in `.plainfile/templates/`. A taken name gets a
+  number and is never overwritten.
+- **Search screen**: words plus `tag:`, `folder:`, `type:`, `is:`, `due:` and `@name`,
+  highlighted matches, and facets that narrow the query. Ctrl or Cmd K opens it.
+- **Vault health screen**: broken and ambiguous links with one-click fixes that edit only the
+  link text, duplicate names, orphans, missing images and unused attachments.
+- Today now has Upcoming, Inbox, Waiting on and All open views, a Folders list, and an Open
+  button on every task.
+- Core: `create`, `listDir` and `remove` on every storage adapter, frontmatter editing,
+  `setTaskStatus`, link retargeting, templates and quick add.
+
+### Fixed
+- The quick-add date no longer carries over to the next task.
+
 ## [0.14.0] - 2026-11-21
 
 ### Added

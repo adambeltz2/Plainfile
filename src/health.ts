@@ -1,8 +1,8 @@
 import type { VaultIndex } from './index';
 
 export interface HealthReport {
-  unresolved: { from: string; line: number; target: string; suggestion?: string }[];
-  ambiguous: { from: string; line: number; target: string; candidates: string[] }[];
+  unresolved: { from: string; line: number; target: string; kind: 'wiki' | 'md'; suggestion?: string; suggestionPath?: string }[];
+  ambiguous: { from: string; line: number; target: string; kind: 'wiki' | 'md'; candidates: string[] }[];
   duplicates: { name: string; paths: string[] }[];
   orphans: string[];
   untyped: string[];
@@ -26,15 +26,21 @@ export function levenshtein(a: string, b: string): number {
   return prev[b.length]!;
 }
 
-/** The note name closest to a broken link target, if it is close enough to be a likely typo. */
-export function suggestNote(index: VaultIndex, target: string): string | undefined {
+/** The path of the note closest to a broken link target, if it is close enough to be a likely typo. */
+export function suggestNotePath(index: VaultIndex, target: string): string | undefined {
   const want = (target.split('/').pop() ?? target).replace(/\.md$/i, '').toLowerCase();
-  let best: { name: string; d: number } | undefined;
+  let best: { path: string; d: number } | undefined;
   for (const n of index.notes.values()) {
     const d = levenshtein(want, n.name.toLowerCase());
-    if (d <= Math.max(2, Math.floor(want.length * 0.2)) && (!best || d < best.d)) best = { name: n.name, d };
+    if (d <= Math.max(2, Math.floor(want.length * 0.2)) && (!best || d < best.d)) best = { path: n.path, d };
   }
-  return best?.name;
+  return best?.path;
+}
+
+/** The note name closest to a broken link target, if it is close enough to be a likely typo. */
+export function suggestNote(index: VaultIndex, target: string): string | undefined {
+  const p = suggestNotePath(index, target);
+  return p ? index.notes.get(p)?.name : undefined;
 }
 
 /** Findings only. Nothing here blocks work, and nothing is changed by running it. */
@@ -52,8 +58,18 @@ export function checkHealth(index: VaultIndex): HealthReport {
     for (const l of n.links) {
       const res = index.resolveLink(n, l);
       if (res.path) outgoing++;
-      else if (res.ambiguous) r.ambiguous.push({ from: n.path, line: l.line, target: l.target, candidates: res.ambiguous });
-      else r.unresolved.push({ from: n.path, line: l.line, target: l.target, suggestion: suggestNote(index, l.target) });
+      else if (res.ambiguous) r.ambiguous.push({ from: n.path, line: l.line, target: l.target, kind: l.kind, candidates: res.ambiguous });
+      else {
+        const suggestionPath = suggestNotePath(index, l.target);
+        r.unresolved.push({
+          from: n.path,
+          line: l.line,
+          target: l.target,
+          kind: l.kind,
+          suggestion: suggestionPath ? index.notes.get(suggestionPath)?.name : undefined,
+          suggestionPath,
+        });
+      }
     }
     for (const e of n.embeds) {
       const hit = index.resolveEmbed(n, e.target);

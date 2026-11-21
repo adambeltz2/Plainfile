@@ -16,10 +16,12 @@ Notebook project files, including `#due:` and `#followup` tags, still work here.
 
 ## Status
 
-The core library, a command-line tool and the first browser screen work and are
-tested. The browser app opens a folder directly (Chrome, Edge, Brave or Opera on
-desktop), shows a Today list of every task due or overdue, and lets you tick tasks
-with a readout of exactly what changed in the file. Safari, Firefox and phones can
+The core library, a command-line tool and the browser app work and are tested.
+The browser app opens a folder directly (Chrome, Edge, Brave or Opera on desktop) and has
+five parts: **Today** (every task due or overdue, quick add, tick with a readout of exactly
+what changed in the file), **Notes** (a live editor where `- [ ] ` becomes a checkbox as you
+type, with X-ray, date chips and a properties panel), **Search**, **Vault health**, and a
+**+ New** menu that creates notes and tasks from templates. Safari, Firefox and phones can
 try the sample vault for now. Design mockups are in [`docs/mockups.html`](docs/mockups.html).
 
 ## Principles
@@ -46,10 +48,12 @@ try the sample vault for now. Design mockups are in [`docs/mockups.html`](docs/m
 | Vault health checks | `src/health.ts` |
 | Folder storage and CLI | `src/node-storage.ts`, `src/cli.ts` |
 | Browser folder access (File System Access API) | `src/fsa-storage.ts`, `web/handle-store.ts` |
-| Browser app: Today screen | `web/main.ts`, `web/app.css`, `web/index.html` |
+| Browser app: shell and screens (Today, Notes, Search, Health, New menu) | `web/main.ts`, `web/today.ts`, `web/notes.ts`, `web/search.ts`, `web/health.ts`, `web/newmenu.ts` |
+| Live editor | `web/editor.ts` |
+| Templates, quick add, link fixes, frontmatter edits | `src/templates.ts`, `src/capture.ts`, `src/fixes.ts`, `src/frontmatter.ts` |
 
-Next: the live editor, search, templates, vault health and rename screens, then a
-small local server as a fallback for browsers that cannot open a folder.
+Next: the Board and Rename screens, then a small local server as a fallback for browsers
+that cannot open a folder.
 
 ## Try it
 

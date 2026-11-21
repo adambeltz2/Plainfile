@@ -1,4 +1,4 @@
-import { ConflictError, type FileEntry, type VaultStorage } from './storage';
+import { ConflictError, ExistsError, type FileEntry, type VaultStorage } from './storage';
 
 /** In-memory vault for tests and demos. */
 export class MemoryStorage implements VaultStorage {
@@ -20,12 +20,33 @@ export class MemoryStorage implements VaultStorage {
     this.put(path, text);
   }
 
-  remove(path: string): void {
+  /** Simulates a file deleted outside the app. */
+  externalRemove(path: string): void {
     this.files.delete(path);
   }
 
   async list(): Promise<FileEntry[]> {
-    return [...this.files].map(([path, f]) => ({ path, mtime: f.mtime, size: f.text.length }));
+    return [...this.files]
+      .filter(([path]) => !path.split('/').some((seg) => seg.startsWith('.')))
+      .map(([path, f]) => ({ path, mtime: f.mtime, size: f.text.length }));
+  }
+
+  async listDir(dir: string): Promise<FileEntry[]> {
+    const prefix = dir ? `${dir}/` : '';
+    return [...this.files]
+      .filter(([path]) => path.startsWith(prefix) && !path.slice(prefix.length).includes('/'))
+      .map(([path, f]) => ({ path, mtime: f.mtime, size: f.text.length }));
+  }
+
+  async remove(path: string, expectedMtime: number): Promise<void> {
+    const f = this.files.get(path);
+    if (!f || f.mtime !== expectedMtime) throw new ConflictError(path);
+    this.files.delete(path);
+  }
+
+  async create(path: string, content: string): Promise<FileEntry> {
+    if (this.files.has(path)) throw new ExistsError(path);
+    return this.put(path, content);
   }
 
   async stat(path: string): Promise<FileEntry> {

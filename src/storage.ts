@@ -17,6 +17,12 @@ export interface VaultStorage {
   list(): Promise<FileEntry[]>;
   stat(path: string): Promise<FileEntry>;
   read(path: string): Promise<string>;
+  /** Direct child files of a folder, including hidden ones. Empty if the folder does not exist. */
+  listDir(dir: string): Promise<FileEntry[]>;
+  /** Delete a file. Throws ConflictError if it changed since `expectedMtime`. */
+  remove(path: string, expectedMtime: number): Promise<void>;
+  /** Create a new file and any missing folders. Throws ExistsError if the file is already there. */
+  create(path: string, content: string): Promise<FileEntry>;
   /**
    * Replace a file's content. Must throw ConflictError if the file's current
    * mtime differs from `expectedMtime`, so an edit made elsewhere is never overwritten.
@@ -28,6 +34,13 @@ export class ConflictError extends Error {
   constructor(public path: string) {
     super(`${path} changed on disk since it was read`);
     this.name = 'ConflictError';
+  }
+}
+
+export class ExistsError extends Error {
+  constructor(public path: string) {
+    super(`${path} already exists`);
+    this.name = 'ExistsError';
   }
 }
 

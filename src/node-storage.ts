@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
-import { join, sep } from 'node:path';
-import { ConflictError, type FileEntry, type VaultStorage } from './storage';
+import { dirname, join, sep } from 'node:path';
+import { ConflictError, ExistsError, type FileEntry, type VaultStorage } from './storage';
 
 const SKIP_DIRS = new Set(['node_modules']);
 
@@ -27,6 +27,39 @@ export class NodeStorage implements VaultStorage {
     };
     await walk(this.root, '');
     return out.map((f) => ({ ...f, path: f.path.split(sep).join('/') }));
+  }
+
+  async listDir(dir: string): Promise<FileEntry[]> {
+    try {
+      const out: FileEntry[] = [];
+      for (const e of await fs.readdir(this.abs(dir), { withFileTypes: true })) {
+        if (!e.isFile()) continue;
+        const s = await fs.stat(join(this.abs(dir), e.name));
+        out.push({ path: dir ? `${dir}/${e.name}` : e.name, mtime: s.mtimeMs, size: s.size });
+      }
+      return out;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') return [];
+      throw e;
+    }
+  }
+
+  async remove(path: string, expectedMtime: number): Promise<void> {
+    const current = await fs.stat(this.abs(path));
+    if (current.mtimeMs !== expectedMtime) throw new ConflictError(path);
+    await fs.unlink(this.abs(path));
+  }
+
+  async create(path: string, content: string): Promise<FileEntry> {
+    const target = this.abs(path);
+    await fs.mkdir(dirname(target), { recursive: true });
+    try {
+      await fs.writeFile(target, content, { encoding: 'utf8', flag: 'wx' });
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'EEXIST') throw new ExistsError(path);
+      throw e;
+    }
+    return this.stat(path);
   }
 
   async stat(path: string): Promise<FileEntry> {

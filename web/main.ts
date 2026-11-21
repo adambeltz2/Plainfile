@@ -1,46 +1,26 @@
-import { fmtDate, fmtDateLong, localToday } from '../src/dates';
-import { FsaStorage, fsaSupported } from '../src/fsa-storage';
-import { VaultIndex, type TaskItem } from '../src/index';
-import { MemoryStorage } from '../src/memory-storage';
-import { addDays, todayView } from '../src/query';
-import { ConflictError, type VaultStorage } from '../src/storage';
-import { StaleError, setTaskDone } from '../src/writeback';
-import { hasPermission, loadHandle, saveHandle } from './handle-store';
+import { fsaSupported, FsaStorage } from '../src/fsa-storage';
+import * as health from './health';
+import * as newmenu from './newmenu';
+import * as notes from './notes';
+import * as search from './search';
+import {
+  healthCount,
+  loadContext,
+  loadVault,
+  openFolder,
+  openSample,
+  render as requestRender,
+  reopenSaved,
+  rescan,
+  resumeSaved,
+  setRenderer,
+  state,
+  type ScreenId,
+} from './store';
+import * as todayScreen from './today';
+import { esc } from './util';
 
-const SAMPLE_DAY = '2026-11-21';
 const app = document.getElementById('app') as HTMLElement;
-
-interface Context {
-  path: string;
-  start: number;
-  lines: string[];
-  hi: number;
-}
-type Log = { path: string; line: number; before: string; after: string; written: boolean } | { message: string };
-
-const state = {
-  storage: undefined as VaultStorage | undefined,
-  index: undefined as VaultIndex | undefined,
-  name: '',
-  demo: false,
-  view: 'today' as 'today' | 'all',
-  tag: undefined as string | undefined,
-  selected: undefined as string | undefined,
-  context: undefined as Context | undefined,
-  log: undefined as Log | undefined,
-  scanMs: 0,
-  saved: undefined as FileSystemDirectoryHandle | undefined,
-  savedAllowed: false,
-  busy: '',
-  error: '',
-};
-const justDone = new Set<string>();
-
-function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-const today = (): string => (state.demo ? SAMPLE_DAY : localToday());
 
 /* ---------- theme ---------- */
 
@@ -56,198 +36,27 @@ function toggleTheme(): void {
   } catch {
     /* private window: the choice just lasts for this visit */
   }
-  render();
+  requestRender();
 }
 
-/* ---------- vault ---------- */
+/* ---------- screens ---------- */
 
-async function loadVault(storage: VaultStorage, name: string, demo: boolean): Promise<void> {
-  state.busy = 'Reading your folder…';
-  state.error = '';
-  render();
-  try {
-    const index = new VaultIndex(storage);
-    const r = await index.scan();
-    state.storage = storage;
-    state.index = index;
-    state.name = name;
-    state.demo = demo;
-    state.scanMs = r.ms;
-    state.selected = undefined;
-    state.context = undefined;
-    state.log = undefined;
-    state.tag = undefined;
-    justDone.clear();
-  } catch (e) {
-    state.error = `Could not read that folder. ${e instanceof Error ? e.message : ''}`.trim();
-  }
-  state.busy = '';
-  render();
+const NAV: { id: ScreenId; label: string }[] = [
+  { id: 'today', label: 'Today' },
+  { id: 'notes', label: 'Notes' },
+  { id: 'search', label: 'Search' },
+  { id: 'health', label: 'Vault health' },
+];
+
+async function go(screen: ScreenId): Promise<void> {
+  await notes.flush();
+  state.screen = screen;
+  state.modal = undefined;
+  requestRender();
+  if (screen === 'search') document.getElementById('search-q')?.focus();
 }
 
-async function openFolder(): Promise<void> {
-  try {
-    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
-    await saveHandle(handle);
-    state.saved = handle;
-    await loadVault(new FsaStorage(handle), handle.name, false);
-  } catch (e) {
-    if (!(e instanceof DOMException && e.name === 'AbortError')) {
-      state.error = `Could not open that folder. ${e instanceof Error ? e.message : ''}`.trim();
-      render();
-    }
-  }
-}
-
-async function reopenSaved(): Promise<void> {
-  const h = state.saved;
-  if (!h) return;
-  if (await hasPermission(h, true)) await loadVault(new FsaStorage(h), h.name, false);
-  else {
-    state.error = 'Permission to open that folder was not granted.';
-    render();
-  }
-}
-
-async function rescan(): Promise<boolean> {
-  if (!state.index) return false;
-  const r = await state.index.scan();
-  state.scanMs = r.ms;
-  const changed = r.added.length + r.changed.length + r.removed.length > 0;
-  if (changed && state.selected && !state.index.getTask(state.selected)) {
-    state.selected = undefined;
-    state.context = undefined;
-  }
-  return changed;
-}
-
-/* ---------- tasks ---------- */
-
-function noteTags(t: TaskItem): Set<string> {
-  return new Set([...t.tags, ...(state.index?.notes.get(t.path)?.tags ?? [])]);
-}
-
-function visibleTasks(): TaskItem[] {
-  const all = state.index?.tasks() ?? [];
-  return state.tag ? all.filter((t) => noteTags(t).has(state.tag as string)) : all;
-}
-
-const byDue = (a: TaskItem, b: TaskItem): number =>
-  (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.path.localeCompare(b.path) || a.line - b.line;
-
-interface Group {
-  title: string;
-  late?: boolean;
-  items: TaskItem[];
-}
-
-function groups(): Group[] {
-  const tasks = visibleTasks();
-  const v = todayView(tasks, today(), justDone);
-  const base: Group[] = [
-    { title: 'Overdue', late: true, items: v.overdue },
-    { title: 'Due today', items: v.today },
-    { title: 'This week', items: v.thisWeek },
-  ];
-  if (state.view === 'today') return base.filter((g) => g.items.length);
-  const week = addDays(today(), 7);
-  const open = tasks.filter((t) => !t.done || justDone.has(t.id));
-  base.push({ title: 'Later', items: open.filter((t) => t.due && t.due > week).sort(byDue) });
-  base.push({ title: 'No date', items: open.filter((t) => !t.due).sort(byDue) });
-  return base.filter((g) => g.items.length);
-}
-
-async function loadContext(id: string): Promise<void> {
-  const t = state.index?.getTask(id);
-  if (!t || !state.storage) {
-    state.context = undefined;
-    return;
-  }
-  const text = (await state.storage.read(t.path)).split('\n').map((l) => (l.endsWith('\r') ? l.slice(0, -1) : l));
-  const start = Math.max(1, t.line - 3);
-  const end = Math.min(text.length, t.line + 3);
-  state.context = { path: t.path, start, lines: text.slice(start - 1, end), hi: t.line };
-}
-
-async function select(id: string): Promise<void> {
-  state.selected = id;
-  await loadContext(id);
-  render();
-}
-
-async function toggle(id: string): Promise<void> {
-  const { index, storage } = state;
-  const t = index?.getTask(id);
-  if (!index || !storage || !t) return;
-  try {
-    const r = await setTaskDone(storage, index, id, !t.done);
-    if (!t.done) justDone.add(id);
-    else justDone.delete(id);
-    state.log = r;
-    state.selected = id;
-    await loadContext(id);
-  } catch (e) {
-    if (e instanceof StaleError || e instanceof ConflictError) {
-      await rescan();
-      state.log = { message: 'That file changed on disk, so nothing was written. The list has been refreshed. Try again.' };
-      if (state.selected) await loadContext(state.selected).catch(() => undefined);
-    } else {
-      state.log = { message: `Could not save that change. ${e instanceof Error ? e.message : ''}`.trim() };
-    }
-  }
-  render();
-}
-
-/* ---------- rendering ---------- */
-
-function chips(t: TaskItem): string {
-  const out: string[] = [];
-  if (t.due) {
-    const late = t.due < today() && !t.done;
-    out.push(`<span class="chip${late ? ' late' : ''}">${late ? 'Overdue · ' : ''}${esc(fmtDate(t.due))}</span>`);
-  }
-  if (t.status) out.push(`<span class="chip">${esc(t.status)}</span>`);
-  for (const w of t.who) out.push(`<span class="chip mono">${esc(w)}</span>`);
-  for (const g of t.tags) out.push(`<span class="chip mono">#${esc(g)}</span>`);
-  out.push(`<span class="chip src mono">${esc(t.path.split('/').slice(-2).join('/'))}</span>`);
-  return out.join('');
-}
-
-function taskRow(t: TaskItem): string {
-  const done = t.done;
-  return (
-    `<li class="task${done ? ' done' : ''}${t.id === state.selected ? ' sel' : ''}" data-id="${esc(t.id)}" tabindex="0">` +
-    `<button class="cb" data-toggle="${esc(t.id)}" aria-pressed="${done}" aria-label="${done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${done ? '✓' : ''}</button>` +
-    `<div class="body"><div class="t">${esc(t.title)}</div><div class="chips">${chips(t)}</div></div></li>`
-  );
-}
-
-function renderSource(): string {
-  const c = state.context;
-  let h = '<h2>Source on disk</h2>';
-  if (!c) h += '<p class="muted" style="margin:0">Select a task to see the exact lines in its file. Tick the box and the change shows here.</p>';
-  else {
-    h += `<div class="path">${esc(c.path)}</div><div class="lines">`;
-    c.lines.forEach((l, i) => {
-      const n = c.start + i;
-      h += `<div class="ln${n === c.hi ? ' hi' : ''}"><span class="n">${n}</span><span>${esc(l) || ' '}</span></div>`;
-    });
-    h += '</div>';
-  }
-  const log = state.log;
-  if (log) {
-    if ('message' in log) h += `<div class="diff plain"><div class="cap">Not saved</div>${esc(log.message)}</div>`;
-    else if (!log.written) h += '<div class="diff plain"><div class="cap">What changed on disk</div>Nothing. It was already in that state.</div>';
-    else
-      h +=
-        `<div class="diff"><div class="cap">What changed on disk</div><div class="muted">${esc(log.path)}:${log.line}</div>` +
-        `<div class="del"><span class="sg">−</span><span>${esc(log.before)}</span></div>` +
-        `<div class="add"><span class="sg">+</span><span>${esc(log.after)}</span></div></div>`;
-  }
-  return h;
-}
-
-function renderLanding(): string {
+function landing(): string {
   const supported = fsaSupported();
   let h = '<main class="landing"><h1>Plainfile</h1>';
   h += '<p>One place for the tasks and notes in a folder of plain markdown files. Your files stay yours. Nothing is uploaded.</p>';
@@ -266,132 +75,193 @@ function renderLanding(): string {
       '<div class="notice">Opening a folder needs Chrome, Edge, Brave or Opera on a desktop computer. ' +
       'Other browsers can still try the sample vault. Support for them is planned.</div>';
   }
-  return h + '</main>';
+  return `${h}</main>`;
 }
 
-function renderVault(): string {
-  const { index } = state;
-  if (!index) return '';
-  const gs = groups();
-  const shown = gs.reduce((n, g) => n + g.items.length, 0);
-  const all = visibleTasks();
-  const openCount = all.filter((t) => !t.done).length;
-  const tagCounts = new Map<string, number>();
-  for (const t of all) if (!t.done) for (const g of noteTags(t)) tagCounts.set(g, (tagCounts.get(g) ?? 0) + 1);
-  const tags = [...tagCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 12);
-
-  let h = '<div class="wrap">';
-  h += `<header class="bar"><h1>Plainfile</h1><span class="tag-pill${state.demo ? '' : ' inv'}" title="${esc(state.name)}">${esc(state.name)}</span><span class="grow"></span>`;
-  h += `<button class="btn" data-act="rescan">Rescan</button>`;
-  if (fsaSupported()) h += `<button class="btn" data-act="open">Open folder</button>`;
+function shell(): string {
+  const hc = healthCount();
+  let h = '<div class="wrap"><header class="bar"><h1>Plainfile</h1>';
+  h += `<span class="tag-pill${state.demo ? '' : ' inv'}" title="${esc(state.name)}">${esc(state.name)}</span>`;
+  h += '<nav class="nav" aria-label="Screens">';
+  for (const n of NAV) {
+    h += `<button class="navbtn" data-nav="${n.id}" aria-current="${state.screen === n.id}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
+  }
+  h += '</nav><span class="grow"></span>';
+  h += '<button class="btn primary" data-act="new">+ New</button>';
+  h += '<button class="btn" data-act="rescan">Rescan</button>';
+  if (fsaSupported()) h += '<button class="btn" data-act="open">Open folder</button>';
   h += `<button class="btn" data-act="theme" aria-label="Switch to ${isDark() ? 'light' : 'dark'} mode">${isDark() ? 'Light' : 'Dark'}</button></header>`;
-
-  h += '<div class="frame"><aside class="side"><div><h2>Views</h2><ul>';
-  const tv = todayView(all, today(), justDone);
-  const todayCount = tv.overdue.length + tv.today.length + tv.thisWeek.length;
-  h += `<li><button class="item" data-view="today" aria-current="${state.view === 'today'}">Today <span class="n">${todayCount}</span></button></li>`;
-  h += `<li><button class="item" data-view="all" aria-current="${state.view === 'all'}">All open <span class="n">${openCount}</span></button></li></ul></div>`;
-  if (tags.length) {
-    h += '<div><h2>Tags</h2><ul>';
-    for (const [g, n] of tags) h += `<li><button class="item mono" data-tag="${esc(g)}" aria-current="${state.tag === g}">#${esc(g)} <span class="n">${n}</span></button></li>`;
-    h += '</ul></div>';
+  if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
+  switch (state.screen) {
+    case 'notes':
+      h += notes.html();
+      break;
+    case 'search':
+      h += search.html();
+      break;
+    case 'health':
+      h += health.html();
+      break;
+    default:
+      h += todayScreen.html();
   }
-  h += `<div class="stat">${index.notes.size} notes<br>scanned in ${state.scanMs} ms${state.demo ? '<br>sample date 21 Nov 2026' : ''}</div></aside>`;
-
-  h += '<section class="main">';
-  h += `<h2 class="title">${state.view === 'today' ? 'Today' : 'All open tasks'}</h2>`;
-  h += `<p class="meta">${esc(fmtDateLong(today()))} · ${shown} ${state.view === 'today' ? 'need attention' : 'tasks'}</p>`;
-  if (state.tag) h += `<div class="filter"><span class="chip mono">#${esc(state.tag)}</span><button class="btn" data-act="clear-tag">Clear filter</button></div>`;
-  if (!shown) {
-    h +=
-      '<div class="empty">Nothing is due. Tasks with a due date appear here. Add one to any note, like ' +
-      '<code>- [ ] Call Dana due:2026-11-24</code>.</div>';
-  }
-  for (const g of gs) {
-    h += `<div class="grp${g.late ? ' late' : ''}">${esc(g.title)} <span>${g.items.length}</span></div><ul class="tasks">${g.items.map(taskRow).join('')}</ul>`;
-  }
-  h += '</section>';
-  h += `<aside class="source" aria-live="polite">${renderSource()}</aside></div></div>`;
-  return h;
+  return `${h}</div>`;
 }
 
 function render(): void {
-  const focus = document.activeElement as HTMLElement | null;
-  const key = focus?.dataset.toggle ? `[data-toggle="${CSS.escape(focus.dataset.toggle)}"]` : focus?.dataset.id ? `[data-id="${CSS.escape(focus.dataset.id)}"]` : '';
-  app.innerHTML = state.index && !state.busy ? renderVault() : renderLanding();
-  if (key) app.querySelector<HTMLElement>(key)?.focus();
+  const active = document.activeElement as HTMLInputElement | HTMLElement | null;
+  const focusId = active && active !== document.body ? active.id : '';
+  const key = active?.dataset?.toggle
+    ? `[data-toggle="${CSS.escape(active.dataset.toggle)}"]`
+    : active?.dataset?.id
+      ? `[data-id="${CSS.escape(active.dataset.id)}"]`
+      : '';
+  const selStart = 'selectionStart' in (active ?? {}) ? (active as HTMLInputElement).selectionStart : null;
+  const selEnd = 'selectionEnd' in (active ?? {}) ? (active as HTMLInputElement).selectionEnd : null;
+  const editorFocus = state.screen === 'notes' && notes.hadFocus();
+
+  app.innerHTML = (state.index && !state.busy ? shell() : landing()) + newmenu.html();
+
+  if (state.index && state.screen === 'notes') notes.afterRender(editorFocus);
+  if (focusId && !editorFocus) {
+    const el = document.getElementById(focusId) as HTMLInputElement | null;
+    if (el) {
+      el.focus();
+      try {
+        if (selStart !== null && selEnd !== null) el.setSelectionRange(selStart, selEnd);
+      } catch {
+        /* inputs such as date have no selection */
+      }
+    }
+  } else if (key && !editorFocus) app.querySelector<HTMLElement>(key)?.focus();
+  const modal = app.querySelector<HTMLElement>('.modal');
+  if (modal && !modal.contains(document.activeElement)) modal.querySelector<HTMLElement>('input, button')?.focus();
 }
+
+setRenderer(render);
 
 /* ---------- events ---------- */
 
 app.addEventListener('click', (e) => {
-  const target = e.target as HTMLElement;
-  const tg = target.closest<HTMLElement>('[data-toggle]');
-  if (tg?.dataset.toggle) return void toggle(tg.dataset.toggle);
-  const act = target.closest<HTMLElement>('[data-act]')?.dataset.act;
-  if (act === 'open') return void openFolder();
-  if (act === 'reopen') return void reopenSaved();
-  if (act === 'demo') return void loadVault(new MemoryStorage(__SAMPLE_VAULT__), 'Sample vault', true);
-  if (act === 'theme') return toggleTheme();
-  if (act === 'clear-tag') {
-    state.tag = undefined;
-    return render();
+  void (async () => {
+    const target = e.target as HTMLElement;
+    if (state.modal && (await newmenu.click(target))) return;
+
+    const nav = target.closest<HTMLElement>('[data-nav]')?.dataset.nav as ScreenId | undefined;
+    if (nav) return void go(nav);
+
+    const act = target.closest<HTMLElement>('[data-act]')?.dataset.act;
+    switch (act) {
+      case 'open':
+        return void openFolder();
+      case 'reopen':
+        return void reopenSaved();
+      case 'demo':
+        return void openSample(__SAMPLE_VAULT__);
+      case 'theme':
+        return toggleTheme();
+      case 'new':
+        return newmenu.openNew();
+      case 'new-note':
+        return newmenu.openTemplate('Note');
+      case 'rescan': {
+        await rescan();
+        if (state.selected) await loadContext(state.selected).catch(() => undefined);
+        await notes.checkExternal();
+        return requestRender();
+      }
+    }
+
+    const open = target.closest<HTMLElement>('[data-open]');
+    if (open?.dataset.open) {
+      return void notes.openNote(open.dataset.open, { line: open.dataset.line ? Number(open.dataset.line) : undefined });
+    }
+    const folder = target.closest<HTMLElement>('[data-folder]')?.dataset.folder;
+    if (folder) {
+      notes.notes.filter = `${folder}/`;
+      return void go('notes');
+    }
+
+    switch (state.screen) {
+      case 'today':
+        await todayScreen.click(target);
+        break;
+      case 'notes':
+        await notes.click(target);
+        break;
+      case 'search':
+        await search.click(target);
+        break;
+      case 'health':
+        await health.click(target);
+        break;
+    }
+  })();
+});
+
+app.addEventListener('submit', (e) => {
+  const form = e.target as HTMLElement;
+  if (form.matches('[data-quick]')) {
+    e.preventDefault();
+    void todayScreen.submitQuick();
   }
-  if (act === 'rescan') {
-    return void rescan().then(async () => {
-      if (state.selected) await loadContext(state.selected).catch(() => undefined);
-      render();
-    });
-  }
-  const view = target.closest<HTMLElement>('[data-view]')?.dataset.view;
-  if (view === 'today' || view === 'all') {
-    state.view = view;
-    return render();
-  }
-  const tag = target.closest<HTMLElement>('[data-tag]')?.dataset.tag;
-  if (tag) {
-    state.tag = state.tag === tag ? undefined : tag;
-    return render();
-  }
-  const row = target.closest<HTMLElement>('[data-id]');
-  if (row?.dataset.id) void select(row.dataset.id);
+});
+
+app.addEventListener('input', (e) => {
+  if (state.modal && newmenu.input(e)) return;
+  if (todayScreen.input(e)) return;
+  if (notes.input(e)) return;
+  search.input(e);
+});
+
+app.addEventListener('change', (e) => {
+  notes.change(e);
 });
 
 app.addEventListener('keydown', (e) => {
-  const t = e.target as HTMLElement;
-  if ((e.key === 'Enter' || e.key === ' ') && t.dataset.id && t.classList.contains('task')) {
-    e.preventDefault();
-    void select(t.dataset.id);
+  if (e.key === 'Escape' && state.modal) {
+    newmenu.closeModal();
+    return;
   }
+  if (state.modal && e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+    e.preventDefault();
+    const primary = app.querySelector<HTMLElement>('.modal .btn.primary');
+    primary?.click();
+    return;
+  }
+  if (state.screen === 'today') todayScreen.keydown(e);
 });
 
 // Another editor or a sync tool may have changed files while this tab was in the background.
 window.addEventListener('focus', () => {
   if (!state.index || state.demo || state.busy) return;
-  void rescan().then(async (changed) => {
-    if (!changed) return;
-    if (state.selected) await loadContext(state.selected).catch(() => undefined);
-    render();
-  });
+  void (async () => {
+    const changed = await rescan();
+    await notes.checkExternal();
+    if (changed) {
+      if (state.selected) await loadContext(state.selected).catch(() => undefined);
+      requestRender();
+    }
+  })();
+});
+
+window.addEventListener('beforeunload', (e) => {
+  if (notes.isDirty()) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && state.index) {
+    e.preventDefault();
+    void go('search');
+  }
 });
 
 window.__plainfile = {
   openHandle: (h, name) => loadVault(new FsaStorage(h), name ?? h.name, false),
 };
 
-async function boot(): Promise<void> {
-  render();
-  if (!fsaSupported()) return;
-  const h = await loadHandle();
-  if (!h) return;
-  state.saved = h;
-  // Reopen straight away only if the browser still remembers permission. Otherwise offer a button.
-  if (await hasPermission(h, false)) {
-    state.savedAllowed = true;
-    await loadVault(new FsaStorage(h), h.name, false);
-  } else {
-    render();
-  }
-}
-
-void boot();
+requestRender();
+void resumeSaved();

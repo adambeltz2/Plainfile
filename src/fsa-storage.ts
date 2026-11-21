@@ -1,4 +1,4 @@
-import { ConflictError, type FileEntry, type VaultStorage } from './storage';
+import { ConflictError, ExistsError, type FileEntry, type VaultStorage } from './storage';
 
 /**
  * A vault on a real folder the user picked in the browser, using the File System
@@ -37,6 +37,50 @@ export class FsaStorage implements VaultStorage {
     };
     await walk(this.root, '');
     return out;
+  }
+
+  async listDir(dir: string): Promise<FileEntry[]> {
+    try {
+      let d = this.root;
+      for (const p of dir.split('/').filter(Boolean)) d = await d.getDirectoryHandle(p);
+      const out: FileEntry[] = [];
+      for await (const [name, handle] of d.entries()) {
+        if (handle.kind !== 'file') continue;
+        const f = await (handle as FileSystemFileHandle).getFile();
+        out.push({ path: dir ? `${dir}/${name}` : name, mtime: f.lastModified, size: f.size });
+      }
+      return out;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'NotFoundError') return [];
+      throw e;
+    }
+  }
+
+  async remove(path: string, expectedMtime: number): Promise<void> {
+    const parts = path.split('/');
+    const name = parts.pop() as string;
+    let dir = this.root;
+    for (const p of parts) dir = await dir.getDirectoryHandle(p);
+    const f = await (await dir.getFileHandle(name)).getFile();
+    if (f.lastModified !== expectedMtime) throw new ConflictError(path);
+    await dir.removeEntry(name);
+  }
+
+  async create(path: string, content: string): Promise<FileEntry> {
+    const parts = path.split('/');
+    const name = parts.pop() as string;
+    let dir = this.root;
+    for (const p of parts) dir = await dir.getDirectoryHandle(p, { create: true });
+    try {
+      await dir.getFileHandle(name);
+      throw new ExistsError(path);
+    } catch (e) {
+      if (!(e instanceof DOMException && e.name === 'NotFoundError')) throw e;
+    }
+    const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
+    await w.write(content);
+    await w.close();
+    return this.stat(path);
   }
 
   async stat(path: string): Promise<FileEntry> {

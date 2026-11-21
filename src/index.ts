@@ -57,6 +57,8 @@ function push<K, V>(m: Map<K, V[]>, k: K, v: V): void {
  * so it is always safe to throw away.
  */
 export class VaultIndex {
+  /** Increases every time the index changes, so derived results can be cached. */
+  version = 0;
   notes = new Map<string, Note>();
   /** Every visible file, including attachments. */
   files = new Set<string>();
@@ -132,6 +134,7 @@ export class VaultIndex {
   }
 
   private rebuild(): void {
+    this.version++;
     this.byName.clear();
     this.byTitle.clear();
     this.byAlias.clear();
