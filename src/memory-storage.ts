@@ -1,4 +1,4 @@
-import { ConflictError, ExistsError, type FileEntry, type VaultStorage } from './storage';
+import { ConflictError, ExistsError, type FileEntry, type ListOptions, type VaultStorage } from './storage';
 
 /** In-memory vault for tests and demos. */
 export class MemoryStorage implements VaultStorage {
@@ -25,7 +25,7 @@ export class MemoryStorage implements VaultStorage {
     this.files.delete(path);
   }
 
-  async list(): Promise<FileEntry[]> {
+  async list(_opts?: ListOptions): Promise<FileEntry[]> {
     return [...this.files]
       .filter(([path]) => !path.split('/').some((seg) => seg.startsWith('.')))
       .map(([path, f]) => ({ path, mtime: f.mtime, size: f.text.length }));

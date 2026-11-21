@@ -397,3 +397,15 @@ th { background: var(--soft); font-weight: 600; white-space: nowrap; }
 .chip.qpick:hover { border-color: var(--fg); }
 .chip.qpick[aria-pressed='true'] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .inp.date { min-width: 9.5rem; }
+
+/* ---------- reading a big folder ---------- */
+.notice.loading { display: flex; flex-direction: column; gap: 8px; padding: 14px; }
+progress { width: 100%; height: 12px; appearance: none; -webkit-appearance: none; border: 1px solid var(--fg); border-radius: 6px; background: var(--bg); overflow: hidden; }
+progress::-webkit-progress-bar { background: var(--bg); }
+progress::-webkit-progress-value { background: var(--fg); }
+progress::-moz-progress-bar { background: var(--fg); }
+progress:indeterminate { background: repeating-linear-gradient(90deg, var(--fg) 0 16px, var(--bg) 16px 32px); background-size: 32px 100%; }
+@media (prefers-reduced-motion: no-preference) {
+  progress:indeterminate { animation: pstripe 0.9s linear infinite; }
+  @keyframes pstripe { to { background-position: 32px 0; } }
+}

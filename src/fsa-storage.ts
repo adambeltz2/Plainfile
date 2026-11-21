@@ -1,4 +1,5 @@
-import { ConflictError, ExistsError, type FileEntry, type VaultStorage } from './storage';
+import { mapPool, throwIfAborted } from './pool';
+import { ConflictError, ExistsError, type FileEntry, type ListOptions, type VaultStorage } from './storage';
 
 /**
  * A vault on a real folder the user picked in the browser, using the File System
@@ -21,21 +22,59 @@ export class FsaStorage implements VaultStorage {
     return dir.getFileHandle(name);
   }
 
-  async list(): Promise<FileEntry[]> {
-    const out: FileEntry[] = [];
-    const walk = async (dir: FileSystemDirectoryHandle, prefix: string): Promise<void> => {
-      for await (const [name, handle] of dir.entries()) {
-        if (name.startsWith('.') || name === 'node_modules') continue;
-        const rel = prefix ? `${prefix}/${name}` : name;
-        if (handle.kind === 'directory') {
-          await walk(handle as FileSystemDirectoryHandle, rel);
-        } else {
-          const f = await (handle as FileSystemFileHandle).getFile();
-          out.push({ path: rel, mtime: f.lastModified, size: f.size });
-        }
+  /**
+   * Each folder entry and each file's details is a round trip to the file system, which is slow on a
+   * phone. So folders are walked several at a time, then file details are read several at a time,
+   * with progress reported along the way.
+   */
+  async list(opts: ListOptions = {}): Promise<FileEntry[]> {
+    const { onProgress, signal } = opts;
+    let found = 0;
+    let checked = 0;
+    let last = 0;
+    const report = (force = false): void => {
+      const now = Date.now();
+      if (force || now - last > 80) {
+        last = now;
+        onProgress?.({ found, checked });
       }
     };
-    await walk(this.root, '');
+
+    const files: { rel: string; handle: FileSystemFileHandle }[] = [];
+    const queue: { dir: FileSystemDirectoryHandle; prefix: string }[] = [{ dir: this.root, prefix: '' }];
+    while (queue.length) {
+      throwIfAborted(signal);
+      const batch = queue.splice(0, 8);
+      await Promise.all(
+        batch.map(async ({ dir, prefix }) => {
+          for await (const [name, handle] of dir.entries()) {
+            if (name.startsWith('.') || name === 'node_modules') continue;
+            const rel = prefix ? `${prefix}/${name}` : name;
+            if (handle.kind === 'directory') queue.push({ dir: handle as FileSystemDirectoryHandle, prefix: rel });
+            else {
+              files.push({ rel, handle: handle as FileSystemFileHandle });
+              found++;
+            }
+          }
+          report();
+        }),
+      );
+    }
+    report(true);
+
+    const out: FileEntry[] = [];
+    await mapPool(
+      files,
+      24,
+      async ({ rel, handle }) => {
+        const f = await handle.getFile();
+        out.push({ path: rel, mtime: f.lastModified, size: f.size });
+        checked++;
+        report();
+      },
+      signal,
+    );
+    report(true);
     return out;
   }
 

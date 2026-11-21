@@ -12,9 +12,24 @@ export interface FileEntry {
   size: number;
 }
 
+export interface ListProgress {
+  /** Files seen so far while walking the folders. */
+  found: number;
+  /** Files whose size and modified time have been read. Reaches `found` when the walk is done. */
+  checked: number;
+}
+
+export interface ListOptions {
+  onProgress?: (p: ListProgress) => void;
+  signal?: AbortSignal;
+}
+
 export interface VaultStorage {
-  /** Every visible file in the vault (not just markdown). Hidden folders are skipped. */
-  list(): Promise<FileEntry[]>;
+  /**
+   * Every visible file in the vault (not just markdown). Hidden folders are skipped.
+   * Big folders are slow, so a listing can report progress and be cancelled.
+   */
+  list(opts?: ListOptions): Promise<FileEntry[]>;
   stat(path: string): Promise<FileEntry>;
   read(path: string): Promise<string>;
   /** Direct child files of a folder, including hidden ones. Empty if the folder does not exist. */

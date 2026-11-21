@@ -1,5 +1,6 @@
 import { parseNote, type InlineTask, type LinkRef, type Note } from './parse';
-import { isMarkdown, type FileEntry, type VaultStorage } from './storage';
+import { mapPool, throwIfAborted } from './pool';
+import { isMarkdown, type FileEntry, type ListProgress, type VaultStorage } from './storage';
 
 /** One row in a task list, whether it came from a checkbox line or from a task file. */
 export interface TaskItem {
@@ -21,6 +22,17 @@ export interface TaskItem {
 export interface Resolution {
   path?: string;
   ambiguous?: string[];
+}
+
+/** What a scan is doing, for a progress bar. */
+export type ScanProgress =
+  | ({ phase: 'listing' } & ListProgress)
+  | { phase: 'reading'; done: number; total: number };
+
+export interface ScanOptions {
+  onProgress?: (p: ScanProgress) => void;
+  /** Cancel a scan. The index may be left partly updated, so discard it (a first load does). */
+  signal?: AbortSignal;
 }
 
 export interface ScanResult {
@@ -73,9 +85,11 @@ export class VaultIndex {
 
   constructor(private storage: VaultStorage) {}
 
-  async scan(): Promise<ScanResult> {
+  async scan(opts: ScanOptions = {}): Promise<ScanResult> {
     const t0 = Date.now();
-    const entries = await this.storage.list();
+    const { onProgress, signal } = opts;
+    const entries = await this.storage.list({ signal, onProgress: (p) => onProgress?.({ phase: 'listing', ...p }) });
+    throwIfAborted(signal);
     this.files = new Set(entries.map((e) => e.path));
 
     const removedNotes: Note[] = [];
@@ -97,15 +111,25 @@ export class VaultIndex {
 
     const added: string[] = [];
     const changed: string[] = [];
-    for (let i = 0; i < todo.length; i += 32) {
-      await Promise.all(
-        todo.slice(i, i + 32).map(async (e) => {
-          const text = await this.storage.read(e.path);
-          (this.notes.has(e.path) ? changed : added).push(e.path);
-          this.notes.set(e.path, parseNote(e.path, text, e));
-        }),
-      );
-    }
+    let done = 0;
+    let last = 0;
+    onProgress?.({ phase: 'reading', done, total: todo.length });
+    await mapPool(
+      todo,
+      16,
+      async (e) => {
+        const text = await this.storage.read(e.path);
+        (this.notes.has(e.path) ? changed : added).push(e.path);
+        this.notes.set(e.path, parseNote(e.path, text, e));
+        done++;
+        const now = Date.now();
+        if (onProgress && (done === todo.length || now - last > 80)) {
+          last = now;
+          onProgress({ phase: 'reading', done, total: todo.length });
+        }
+      },
+      signal,
+    );
 
     const renamed: ScanResult['renamed'] = [];
     const gone = [...removedNotes];

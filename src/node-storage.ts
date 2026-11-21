@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
-import { ConflictError, ExistsError, type FileEntry, type VaultStorage } from './storage';
+import { ConflictError, ExistsError, type FileEntry, type ListOptions, type VaultStorage } from './storage';
 
 const SKIP_DIRS = new Set(['node_modules']);
 
@@ -12,7 +12,7 @@ export class NodeStorage implements VaultStorage {
     return join(this.root, ...path.split('/'));
   }
 
-  async list(): Promise<FileEntry[]> {
+  async list(_opts?: ListOptions): Promise<FileEntry[]> {
     const out: FileEntry[] = [];
     const walk = async (dir: string, prefix: string): Promise<void> => {
       for (const e of await fs.readdir(dir, { withFileTypes: true })) {

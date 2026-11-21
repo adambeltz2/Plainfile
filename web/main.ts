@@ -11,8 +11,11 @@ import * as suggest from './suggest';
 import { searchState } from './search';
 import {
   healthCount,
+  cancelLoad,
   lastScanAt,
   loadContext,
+  loading,
+  paintProgress,
   loadVault,
   openFolder,
   openSample,
@@ -101,7 +104,15 @@ function landing(): string {
   const supported = fsaSupported();
   let h = `<div class="theme-corner">${themeControl()}</div><main class="landing"><h1>Plainfile</h1>`;
   h += '<p>One place for the tasks and notes in a folder of plain markdown files. Your files stay yours. Nothing is uploaded.</p>';
-  if (state.busy) h += `<div class="notice">${esc(state.busy)}</div>`;
+  if (state.busy) {
+    h +=
+      `<div class="notice loading" role="status" aria-live="polite"><b>Reading ${esc(loading.name)}…</b>` +
+      '<progress id="load-bar" aria-label="Reading progress"></progress>' +
+      '<div id="load-text" class="small">Looking through the folder…</div><div id="load-time" class="muted small">0 s</div>' +
+      '<p class="muted small" style="margin:6px 0">A big folder can take a minute or more the first time, especially on a phone. Nothing is uploaded and nothing in your folder is changed.</p>' +
+      '<button class="btn" data-act="load-cancel">Cancel</button></div>';
+    return `${h}</main>${footer()}`;
+  }
   if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
   h += '<div class="row">';
   if (supported && state.saved) {
@@ -181,6 +192,7 @@ function render(): void {
 
   app.innerHTML = (state.index && !state.busy ? shell() : landing()) + newmenu.html();
 
+  paintProgress();
   if (state.index && state.screen === 'notes') notes.afterRender(editorFocus);
   if (focusId && !editorFocus) {
     const el = document.getElementById(focusId) as HTMLInputElement | null;
@@ -235,6 +247,8 @@ app.addEventListener('click', (e) => {
         return void openSample(__SAMPLE_VAULT__);
       case 'new':
         return newmenu.openNew();
+      case 'load-cancel':
+        return cancelLoad();
       case 'new-note':
         return newmenu.openTemplate('Note');
       case 'new-task-file':

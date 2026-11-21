@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.25.1] - 2026-11-21
+
+### Fixed
+- **Opening a big folder no longer looks frozen.** The first screen now shows a progress bar
+  with live counts ("Checking files", then "Reading notes: 840 of 3,200"), elapsed seconds and
+  a **Cancel** button. Cancelling returns to the first screen without an error.
+- **Big folders open faster.** Listing and reading files now run in parallel (8 folders, 24
+  file checks and 16 note reads at a time) instead of one file after another.
+
 ## [0.25.0] - 2026-11-21
 
 ### Added

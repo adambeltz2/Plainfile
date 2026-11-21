@@ -80,13 +80,63 @@ export function writeFailure(e: unknown): string | null {
 
 /* ---------- vault ---------- */
 
+/** Where a folder read has got to, shown as a progress bar so a big folder does not look stuck. */
+export const loading = {
+  name: '',
+  phase: 'listing' as 'listing' | 'reading',
+  found: 0,
+  checked: 0,
+  done: 0,
+  total: 0,
+  startedAt: 0,
+  abort: undefined as AbortController | undefined,
+};
+
+const num = (n: number): string => n.toLocaleString();
+
+/** Update the progress bar and text in place, without redrawing the page. */
+export function paintProgress(): void {
+  const bar = document.getElementById('load-bar') as HTMLProgressElement | null;
+  const text = document.getElementById('load-text');
+  const time = document.getElementById('load-time');
+  if (!bar || !text) return;
+  const l = loading;
+  if (l.phase === 'reading' && l.total > 0) {
+    bar.max = l.total;
+    bar.value = l.done;
+    text.textContent = `Reading notes: ${num(l.done)} of ${num(l.total)} (${Math.round((l.done / l.total) * 100)}%)`;
+  } else if (l.phase === 'listing' && l.checked > 0 && l.found > 0) {
+    bar.max = l.found;
+    bar.value = l.checked;
+    text.textContent = `Checking files: ${num(l.checked)} of ${num(l.found)}`;
+  } else {
+    bar.removeAttribute('value');
+    text.textContent = l.found ? `Looking through the folder… ${num(l.found)} files found` : 'Looking through the folder…';
+  }
+  if (time) time.textContent = `${Math.round((Date.now() - l.startedAt) / 1000)} s`;
+}
+
+export function cancelLoad(): void {
+  loading.abort?.abort();
+}
+
 export async function loadVault(storage: VaultStorage, name: string, demo: boolean): Promise<void> {
+  const ctrl = new AbortController();
+  Object.assign(loading, { name, phase: 'listing', found: 0, checked: 0, done: 0, total: 0, startedAt: Date.now(), abort: ctrl });
   state.busy = 'Reading your folder…';
   state.error = '';
   render();
+  const ticker = window.setInterval(paintProgress, 1000);
   try {
     const index = new VaultIndex(storage);
-    const r = await index.scan();
+    const r = await index.scan({
+      signal: ctrl.signal,
+      onProgress: (p) => {
+        if (p.phase === 'listing') Object.assign(loading, { phase: 'listing', found: p.found, checked: p.checked });
+        else Object.assign(loading, { phase: 'reading', done: p.done, total: p.total });
+        paintProgress();
+      },
+    });
     state.templates = await loadTemplates(storage);
     state.storage = storage;
     state.index = index;
@@ -103,7 +153,11 @@ export async function loadVault(storage: VaultStorage, name: string, demo: boole
     justDone.clear();
     for (const fn of vaultChangeHooks) fn();
   } catch (e) {
-    state.error = `Could not read that folder. ${errorMessage(e)}`.trim();
+    // Cancelling is not an error: just go back to where we were.
+    if (!(e instanceof Error && e.name === 'AbortError')) state.error = `Could not read that folder. ${errorMessage(e)}`.trim();
+  } finally {
+    window.clearInterval(ticker);
+    loading.abort = undefined;
   }
   state.busy = '';
   render();
