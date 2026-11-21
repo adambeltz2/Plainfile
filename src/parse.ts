@@ -52,6 +52,10 @@ export interface Note {
   links: LinkRef[];
   embeds: EmbedRef[];
   tasks: InlineTask[];
+  /** Lines tagged #followup that are not checkboxes (the first Notebook app's follow-ups). */
+  followups: { line: number; title: string }[];
+  /** The first plain lines of the body (no headings, tasks or follow-ups), used as a short preview. */
+  preview: string;
   fileTask?: FileTask;
   text: string;
   hash: string;
@@ -88,6 +92,19 @@ export function hashText(s: string): string {
   h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+
+/** A line as plain words: no list marker, images, link syntax, emphasis or code ticks. */
+function plainText(line: string): string {
+  return line
+    .replace(/^\s*(?:[-*+]|\d+[.)])\s+/, '')
+    .replace(/!\[[^\]]*\]\([^)]*\)|!\[\[[^\]]*\]\]/g, '')
+    .replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, '$2')
+    .replace(/\[\[([^\]]*)\]\]/g, '$1')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/(\*\*|__|`)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function maskCode(line: string): string {
@@ -154,6 +171,8 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
   const links: LinkRef[] = [];
   const embeds: EmbedRef[] = [];
   const tasks: InlineTask[] = [];
+  const followups: Note['followups'] = [];
+  const previewLines: string[] = [];
   const headings: Note['headings'] = [];
   let inFence = false;
 
@@ -183,7 +202,8 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
       if (m[1] === '!') embeds.push({ target, line: lineNo });
       else if (/\.md$/i.test(target)) links.push({ kind: 'md', target, line: lineNo });
     }
-    for (const m of masked.matchAll(TAG)) tags.add((m[2] ?? '').toLowerCase());
+    const lineTags = [...masked.matchAll(TAG)].map((m) => (m[2] ?? '').toLowerCase());
+    for (const g of lineTags) tags.add(g);
 
     const t = TASK_LINE.exec(line);
     if (t) {
@@ -200,6 +220,12 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         who: [...rest.matchAll(WHO)].map((x) => `@${(x[2] ?? '').toLowerCase()}`),
         tags: taskTags,
       });
+    } else if (!h && lineTags.includes('followup')) {
+      followups.push({ line: lineNo, title: cleanTitle(line.replace(/^\s*(?:[-*+]|\d+[.)])\s+/, '')) });
+    }
+    if (previewLines.length < 2 && !h && !t && !lineTags.includes('followup')) {
+      const plain = plainText(line);
+      if (plain) previewLines.push(plain);
     }
   }
 
@@ -235,6 +261,8 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
     links,
     embeds,
     tasks,
+    followups,
+    preview: previewLines.join(' ').slice(0, 200),
     fileTask,
     text,
     hash: hashText(text),

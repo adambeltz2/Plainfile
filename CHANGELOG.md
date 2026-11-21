@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.19.0] - 2026-11-21
+
+### Added
+- **Follow-ups view** in Today: every line tagged `#followup`, from every note, with the tag
+  and bullet removed. Open jumps to that line. This is the first Notebook app's Follow-ups rail.
+- **Projects view** in Today: numbered cards like Notebook's dashboard. A project is a note
+  with `active` or `sortOrder` in its frontmatter, or `type: project`. Active projects are
+  numbered 1 to N in sort order, each shows a plain-text preview and its open task and
+  follow-up counts, and inactive ones are kept, dashed and unnumbered, behind a Show button.
+  A folder's `index.md` covers every note in that folder.
+- Core: `listProjects`, `listFollowUps`, follow-up and preview extraction in the parser.
+
 ## [0.18.0] - 2026-11-21
 
 ### Added

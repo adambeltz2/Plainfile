@@ -1,6 +1,8 @@
 ---
 title: Website relaunch
 type: project
+active: true
+sortOrder: 1
 tags: [launch]
 ---
 
@@ -8,3 +10,4 @@ tags: [launch]
 
 - [[kickoff-call]]
 - [[pricing-research|Pricing notes]]
+- Ask Dana to confirm the launch date #followup

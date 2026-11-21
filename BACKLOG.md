@@ -10,10 +10,6 @@ Deferred features, bugs, and debt, per `CLAUDE.md` §4. Tags: `[BUG]`,
   `src/fsa-storage.ts`._
 - `[DEBT]` The app re-renders each screen with `innerHTML`. The editor and inputs are kept
   alive across redraws, but a proper view layer would be cleaner. _Affected: `web/main.ts`._
-- `[FEATURE]` Follow-ups as a saved view over the `#followup` tag, replacing
-  Notebook's Follow-ups rail.
-- `[FEATURE]` Notebook import check: confirm `active` and `sortOrder` frontmatter
-  drive a numbered active-projects list.
 - `[FEATURE]` Local server fallback (mode B) for Safari, Firefox and phones,
   built on `NodeStorage`.
 - `[FEATURE]` Folder rules in `.plainfile/config.md` that give files a type and

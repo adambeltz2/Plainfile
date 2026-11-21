@@ -35,7 +35,7 @@ Plainfile (working name) is the successor to **Notebook**, the single-file app t
 *   **Structure is opt-in.** Levels: plain file, frontmatter, typed (template or folder rule), project or view. Nothing is required. Folder rules and templates add structure without editing foreign files.
 *   **Two kinds of task, one list.** Inline `- [ ]` lines in any note, and one-file-per-task notes (frontmatter `status`, in a `tasks/` folder or with `type: task`). Task ids are `path:line`.
 *   **Links and renames.** Back-links are never stored; they are computed from current links. Links resolve by path, file name, title or `aliases`. Renames made in the app rewrite inbound links with a preview. Renames made outside the app are detected by content hash and offered as a one-click fix. No `id:` is added to files automatically.
-*   **Notebook compatibility.** Notebook project files (`title`, `active`, `sortOrder` frontmatter, `#followup` and `#due:` tags) must keep working. Follow-ups are a saved view over the `#followup` tag, not a separate record.
+*   **Notebook compatibility.** Notebook project files (`title`, `active`, `sortOrder` frontmatter, `#followup` and `#due:` tags) must keep working. Follow-ups (non-checkbox lines tagged `#followup`) and numbered Projects (`active`, `sortOrder`) are views over the notes, not separate records; both are built.
 
 ### 5.3 Technology
 *   **Language:** TypeScript. The core (`src/`) has no browser or Node dependencies except through the `VaultStorage` interface (`src/storage.ts`). Folder access is an adapter: `MemoryStorage` (tests), `NodeStorage` (CLI and local server), and a browser adapter using the File System Access API.

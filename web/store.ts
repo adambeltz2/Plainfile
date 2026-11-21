@@ -12,7 +12,7 @@ import { hasPermission, loadHandle, saveHandle } from './handle-store';
 export const SAMPLE_DAY = '2026-11-21';
 
 export type ScreenId = 'today' | 'board' | 'notes' | 'search' | 'health' | 'rename';
-export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all';
+export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | 'followups' | 'projects';
 
 export type Modal =
   | { step: 'menu' }

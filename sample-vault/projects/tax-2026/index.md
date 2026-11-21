@@ -1,6 +1,8 @@
 ---
 title: Tax 2026
 type: project
+active: true
+sortOrder: 2
 tags: [admin]
 ---
 

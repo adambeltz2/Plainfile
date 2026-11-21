@@ -1,5 +1,6 @@
 import { fmtDate, fmtDateLong } from '../src/dates';
 import { dirname, type TaskItem } from '../src/index';
+import { listFollowUps, listProjects } from '../src/projects';
 import { addDays, todayView } from '../src/query';
 import { setTaskDone } from '../src/writeback';
 import { loadContext, justDone, quickAdd, render, state, today, writeFailure, errorMessage, rescan, type TodayViewId } from './store';
@@ -13,7 +14,11 @@ const VIEWS: { id: TodayViewId; label: string }[] = [
   { id: 'inbox', label: 'Inbox' },
   { id: 'waiting', label: 'Waiting on' },
   { id: 'all', label: 'All open' },
+  { id: 'followups', label: 'Follow-ups' },
+  { id: 'projects', label: 'Projects' },
 ];
+
+let showInactive = false;
 
 function noteTags(t: TaskItem): Set<string> {
   return new Set([...t.tags, ...(state.index?.notes.get(t.path)?.tags ?? [])]);
@@ -68,6 +73,8 @@ function groupsFor(view: TodayViewId, tasks: TaskItem[]): Group[] {
 }
 
 function count(view: TodayViewId, tasks: TaskItem[]): number {
+  if (view === 'followups') return state.index ? listFollowUps(state.index).length : 0;
+  if (view === 'projects') return state.index ? listProjects(state.index).filter((p) => p.active).length : 0;
   return groupsFor(view, tasks.filter((t) => !t.done)).reduce((n, g) => n + g.items.length, 0);
 }
 
@@ -122,6 +129,47 @@ function source(): string {
   return h;
 }
 
+function followupsHtml(): string {
+  const idx = state.index;
+  if (!idx) return '';
+  const list = listFollowUps(idx);
+  let h = `<p class="meta">${list.length} line${list.length === 1 ? '' : 's'} tagged <span class="mono">#followup</span>, from every note</p>`;
+  if (!list.length) {
+    return `${h}<div class="empty">No follow-ups. Add <code>#followup</code> to any line, like <code>- Ask Dana about the logo files #followup</code>, and it shows up here.</div>`;
+  }
+  h += '<ul class="tasks">';
+  for (const f of list) {
+    h +=
+      `<li class="task" tabindex="-1"><div class="body"><div class="t">${esc(f.title)}</div><div class="chips">` +
+      `<button class="chip src mono" data-open="${esc(f.path)}" data-line="${f.line}" aria-label="Open ${esc(f.path)}">${esc(f.from)} · line ${f.line}</button></div></div></li>`;
+  }
+  return `${h}</ul>`;
+}
+
+function projectsHtml(): string {
+  const idx = state.index;
+  if (!idx) return '';
+  const all = listProjects(idx);
+  const active = all.filter((p) => p.active);
+  const inactive = all.filter((p) => !p.active);
+  const card = (p: (typeof all)[number]): string =>
+    `<li class="pcard${p.active ? '' : ' off'}"><button class="pbtn" data-open="${esc(p.path)}">` +
+    `<span class="pnum" aria-hidden="true">${p.number ?? '–'}</span>` +
+    `<span class="ptitle">${esc(p.title)}</span><span class="pprev">${esc(p.preview) || '&nbsp;'}</span>` +
+    `<span class="chips">${p.openTasks ? `<span class="chip">${p.openTasks} task${p.openTasks === 1 ? '' : 's'}</span>` : ''}` +
+    `${p.followups ? `<span class="chip">${p.followups} follow-up${p.followups === 1 ? '' : 's'}</span>` : ''}</span></button></li>`;
+  let h = `<p class="meta">${active.length} active project${active.length === 1 ? '' : 's'}, numbered in sort order</p>`;
+  if (!all.length) {
+    return `${h}<div class="empty">No projects yet. A project is a note with <code>active: true</code> or <code>sortOrder: 1</code> in its frontmatter, or <code>type: project</code>. Active projects are numbered in sort order. A folder's <code>index.md</code> covers every note in that folder.</div>`;
+  }
+  h += `<ul class="pgrid">${active.map(card).join('')}</ul>`;
+  if (inactive.length) {
+    h += `<div class="row-gap"><button class="btn" data-act="toggle-inactive" aria-expanded="${showInactive}">${showInactive ? 'Hide' : 'Show'} ${inactive.length} inactive project${inactive.length === 1 ? '' : 's'}</button></div>`;
+    if (showInactive) h += `<ul class="pgrid">${inactive.map(card).join('')}</ul>`;
+  }
+  return h;
+}
+
 export function html(): string {
   const idx = state.index;
   if (!idx) return '';
@@ -165,16 +213,20 @@ export function html(): string {
     `<button class="btn primary" type="submit">Add</button></form>`;
   if (quick.error) h += `<div class="notice err small">${esc(quick.error)}</div>`;
   h += `<h2 class="title">${esc(label)}</h2>`;
-  h += `<p class="meta">${esc(fmtDateLong(today()))} · ${shown} ${state.view === 'today' ? 'need attention' : shown === 1 ? 'task' : 'tasks'}</p>`;
-  if (state.tag) h += `<div class="filter"><span class="chip mono">#${esc(state.tag)}</span><button class="btn small" data-act="clear-tag">Clear filter</button></div>`;
-  if (!shown) {
-    h +=
-      state.view === 'today'
-        ? '<div class="empty">Nothing is due. Tasks with a due date appear here. Add one above, or in any note, like <code>- [ ] Call Dana due:2026-11-24</code>.</div>'
-        : '<div class="empty">No tasks here yet.</div>';
-  }
-  for (const g of gs) {
-    h += `<div class="grp${g.late ? ' late' : ''}">${esc(g.title)} <span>${g.items.length}</span></div><ul class="tasks">${g.items.map(row).join('')}</ul>`;
+  if (state.view === 'followups') h += followupsHtml();
+  else if (state.view === 'projects') h += projectsHtml();
+  else {
+    h += `<p class="meta">${esc(fmtDateLong(today()))} · ${shown} ${state.view === 'today' ? 'need attention' : shown === 1 ? 'task' : 'tasks'}</p>`;
+    if (state.tag) h += `<div class="filter"><span class="chip mono">#${esc(state.tag)}</span><button class="btn small" data-act="clear-tag">Clear filter</button></div>`;
+    if (!shown) {
+      h +=
+        state.view === 'today'
+          ? '<div class="empty">Nothing is due. Tasks with a due date appear here. Add one above, or in any note, like <code>- [ ] Call Dana due:2026-11-24</code>.</div>'
+          : '<div class="empty">No tasks here yet.</div>';
+    }
+    for (const g of gs) {
+      h += `<div class="grp${g.late ? ' late' : ''}">${esc(g.title)} <span>${g.items.length}</span></div><ul class="tasks">${g.items.map(row).join('')}</ul>`;
+    }
   }
   h += `</section><aside class="source" aria-live="polite">${source()}</aside></div>`;
   return h;
@@ -232,6 +284,11 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   const act = target.closest<HTMLElement>('[data-act]')?.dataset.act;
+  if (act === 'toggle-inactive') {
+    showInactive = !showInactive;
+    render();
+    return true;
+  }
   if (act === 'clear-tag') {
     state.tag = undefined;
     render();

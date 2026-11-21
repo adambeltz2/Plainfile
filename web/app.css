@@ -271,3 +271,14 @@ code { font-family: var(--mono); font-size: 0.92em; }
 .check input { margin-top: 4px; }
 .notice.ok { border-color: var(--fg); background: var(--soft); margin-top: 12px; }
 .diff.plain-box { border-color: var(--line); }
+
+/* ---------- projects ---------- */
+.pgrid { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 12px; }
+.pcard { border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.pcard:hover { border-color: var(--fg); }
+.pcard.off { opacity: 0.7; border-style: dashed; }
+.pbtn { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; width: 100%; text-align: left; background: none; border: 0; padding: 12px; cursor: pointer; align-items: baseline; }
+.pnum { grid-row: 1 / span 2; font-size: 28px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.ptitle { font-weight: 700; overflow-wrap: anywhere; }
+.pprev { color: var(--mute); font-size: 13px; overflow-wrap: anywhere; grid-column: 2; }
+.pbtn .chips { grid-column: 1 / -1; margin-top: 6px; }
