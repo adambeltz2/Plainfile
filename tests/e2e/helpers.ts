@@ -107,3 +107,28 @@ export async function noteMenu(page: Page, label: string | RegExp): Promise<void
 export async function readFileOrEmpty(page: Page, dir: string, path: string): Promise<string> {
   return readFile(page, dir, path).catch(() => '');
 }
+
+/** Go to a screen by name at any width: the header tabs on a wide screen, the bottom bar (or its More sheet) on a phone. */
+export async function goTo(page: Page, name: RegExp | string): Promise<void> {
+  const top = page.locator('.nav').getByRole('button', { name });
+  if (await top.isVisible()) return top.click();
+  if (!(await page.locator('.tabbar').count())) {
+    // A note is open on a phone: the bar is out of the way, and All notes brings it back.
+    const back = page.getByRole('button', { name: 'All notes' });
+    if (await back.isVisible()) await back.click();
+  }
+  const tab = page.locator('.tabbar').getByRole('button', { name });
+  if (await tab.count()) return tab.first().click();
+  await page.locator('.tabbar').getByRole('button', { name: /^More/ }).click();
+  await page.locator('.more-sheet').getByRole('button', { name }).click();
+}
+
+/** `nav(page, 'Notes').click()` for every spec: works on a wide screen and on a phone. */
+export const nav = (page: Page, name: RegExp | string): { click: () => Promise<void> } => ({ click: () => goTo(page, name) });
+
+/** A note in the Notes list. On a phone the list is folded under "All notes", so open it first. */
+export async function noteItem(page: Page, hasText: string | RegExp): Promise<import('@playwright/test').Locator> {
+  const t = page.locator('.side-toggle');
+  if ((await t.isVisible()) && (await t.getAttribute('aria-expanded')) === 'false') await t.click();
+  return page.locator('.note-item', { hasText });
+}

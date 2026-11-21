@@ -1,11 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { localDate, openVault, readFile, readFileOrEmpty } from './helpers';
+import { localDate, openVault, readFile, readFileOrEmpty, nav } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const nav = (page: Page, name: RegExp | string) => page.locator('.nav').getByRole('button', { name });
 const VAULT = {
   'people/dana.md': '---\ntitle: Dana Ortiz\ntype: person\naliases: [Dana]\n---\nBrand lead.\n',
   'projects/site/index.md': '---\ntitle: Website relaunch\ntype: project\nactive: true\n---\n',

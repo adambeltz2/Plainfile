@@ -1,11 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { localDate, openVault, readFile, writeFileExternally, readFileOrEmpty } from './helpers';
+import { localDate, openVault, readFile, writeFileExternally, readFileOrEmpty, nav, noteItem } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const nav = (page: Page, name: RegExp | string) => page.locator('.nav').getByRole('button', { name });
 async function openNoteInEditor(page: Page, title: string): Promise<void> {
   await nav(page, 'Notes').click();
   await page.locator('.note-item', { hasText: title }).click();
@@ -230,16 +229,17 @@ test('on a phone the note list gives way to the open note, with an All notes but
   await page.setViewportSize({ width: 390, height: 800 });
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
   await nav(page, 'Notes').click();
-  await expect(page.locator('#note-list')).toBeVisible();
-  await page.locator('.note-item', { hasText: 'Kickoff call with Dana' }).click();
+  await expect(page.locator('#note-list')).toBeHidden(); // folded under "All notes"
+  await (await noteItem(page, 'Kickoff call with Dana')).click();
   await expect(page.locator('.cm-content')).toBeVisible();
   await expect(page.locator('#note-list')).toBeHidden();
   // The buttons stay on one line each.
   const xray = await page.getByRole('button', { name: 'X-ray' }).boundingBox();
   expect(xray!.height).toBeLessThan(50);
   await page.getByRole('button', { name: 'All notes' }).click();
-  await expect(page.locator('#note-list')).toBeVisible();
   await expect(page.locator('.cm-content')).toHaveCount(0);
+  await page.locator('.side-toggle').click();
+  await expect(page.locator('#note-list')).toBeVisible();
 });
 
 test('on a wide screen the list and the note sit side by side and there is no All notes button', async ({ page }) => {
@@ -284,4 +284,46 @@ test('a second note with the same title says so before creating, and is numbered
   await expect(page.locator('.ed-head .title')).toHaveText('Gift Shopping 2');
   expect(await readFile(page, dir, 'inbox/Gift Shopping.md')).toContain('title: Gift Shopping\n');
   expect(await readFile(page, dir, 'inbox/Gift Shopping 2.md')).toContain('title: "Gift Shopping 2"\n');
+});
+
+test.describe('phone navigation', () => {
+  test('a bottom tab bar holds the daily screens, More holds the rest, and side panels fold away', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.getByRole('button', { name: 'Try the sample vault' }).click();
+    await expect(page.locator('.nav')).toBeHidden();
+    const bar = page.locator('.tabbar');
+    for (const n of ['Today', 'Projects', 'Notes', 'Search', 'More']) await expect(bar.getByRole('button', { name: new RegExp(`^${n}`) })).toBeVisible();
+    const box = await bar.boundingBox();
+    expect(box!.y + box!.height).toBeGreaterThan(795); // pinned to the bottom edge
+    // Today: the views panel is folded, and the work starts near the top.
+    await expect(page.locator('.side-toggle')).toContainText('Views and filters');
+    await expect(page.locator('.side [data-view="today"]')).toBeHidden();
+    const h = await page.locator('.title', { hasText: 'Today' }).boundingBox();
+    expect(h!.y).toBeLessThan(400);
+    await page.locator('.side-toggle').click();
+    await expect(page.locator('.side [data-view="inbox"]')).toBeVisible();
+    await page.locator('.side [data-view="inbox"]').click();
+    // More holds Board, Explore, Vault health, the cheat sheet, Rescan and the theme.
+    await bar.getByRole('button', { name: /^More/ }).click();
+    const sheet = page.locator('.more-sheet');
+    for (const n of ['Board', 'Explore', /^Vault health/, 'Cheat sheet', 'Rescan', 'Light', 'Dark', 'Auto']) await expect(sheet.getByRole('button', { name: n })).toBeVisible();
+    await sheet.getByRole('button', { name: 'Board' }).click();
+    await expect(page.locator('.more-sheet')).toHaveCount(0);
+    await expect(page.locator('.title')).toContainText('Board');
+    // Opening a note hides the bar so the keyboard has room, and All notes brings it back.
+    await bar.getByRole('button', { name: 'Notes' }).click();
+    await page.locator('.side-toggle').click();
+    await page.locator('.note-item', { hasText: 'Kickoff call with Dana' }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    await expect(page.locator('.tabbar')).toHaveCount(0);
+    await page.getByRole('button', { name: 'All notes' }).click();
+    await expect(page.locator('.tabbar')).toBeVisible();
+  });
+
+  test('on a wide screen there is no bottom bar and the side panels stay open', async ({ page }) => {
+    await page.getByRole('button', { name: 'Try the sample vault' }).click();
+    await expect(page.locator('.tabbar')).toBeHidden();
+    await expect(page.locator('.side-toggle')).toBeHidden();
+    await expect(page.locator('.side [data-view="today"]')).toBeVisible();
+  });
 });

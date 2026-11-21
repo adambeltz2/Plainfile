@@ -1,11 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { listFiles, openVault, readFile, writeFileExternally, noteMenu } from './helpers';
+import { listFiles, openVault, readFile, writeFileExternally, noteMenu, nav, noteItem } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const nav = (page: Page, name: RegExp | string) => page.locator('.nav').getByRole('button', { name });
 const VAULT = {
   'notes/kickoff.md': '---\ntitle: Kickoff\n---\n- [ ] Send files\nBody text\n',
   'index.md': 'See [[kickoff]] for details.\n',
@@ -14,7 +13,7 @@ const VAULT = {
 
 async function open(page: Page, title: string): Promise<void> {
   await nav(page, 'Notes').click();
-  await page.locator('.note-item', { hasText: title }).click();
+  await (await noteItem(page, title)).click();
   await expect(page.locator('.cm-content')).toBeVisible();
 }
 const trashFiles = async (page: Page, dir: string) => (await listFiles(page, dir)).filter((f) => f.startsWith('.plainfile/trash/'));

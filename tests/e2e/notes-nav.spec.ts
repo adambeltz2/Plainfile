@@ -1,11 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { listFiles, noteMenu, openVault, readFile, readFileOrEmpty } from './helpers';
+import { listFiles, noteMenu, openVault, readFile, readFileOrEmpty, nav, noteItem } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const nav = (page: Page, name: RegExp | string) => page.locator('.nav').getByRole('button', { name });
 const VAULT = {
   'inbox/Kickoff.md': '---\ntitle: Kickoff\n---\nSee [r](../ref/Other.md) and [[Other]] and [[ref/Other]].\n',
   'ref/Other.md': '# Other\nback: [k](../inbox/Kickoff.md) and [[inbox/Kickoff]] and [[Kickoff]]\n',
@@ -169,7 +168,7 @@ test.describe('right-click or long-press a note', () => {
     await page.setViewportSize({ width: 390, height: 800 });
     await openVault(page, VAULT);
     await nav(page, 'Notes').click();
-    await page.locator('.note-item', { hasText: /^Kickoff$/ }).click({ button: 'right' });
+    await (await noteItem(page, /^Kickoff$/)).click({ button: 'right' });
     const box = await page.locator('.ctx').boundingBox();
     expect(box!.x).toBeGreaterThanOrEqual(0);
     expect(box!.x + box!.width).toBeLessThanOrEqual(390);

@@ -1,11 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openVault, noteMenu } from './helpers';
+import { openVault, noteMenu, nav } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const nav = (page: Page, name: RegExp | string) => page.locator('.nav').getByRole('button', { name });
 
 async function sample(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
@@ -127,6 +126,7 @@ test.describe('explore', () => {
   test('fits a phone without sideways scrolling', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await sample(page);
+    await page.locator('.side-toggle').click();
     await page.locator('#explore-list').getByRole('button', { name: /^Website relaunch/ }).click();
     await page.getByRole('button', { name: '2 hops' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);

@@ -142,6 +142,29 @@ function landing(): string {
   return `${h}</main>${footer()}`;
 }
 
+/** The phone's More sheet and which side panels are open, so a redraw does not close them. */
+let moreOpen = false;
+const sideOpen = new Set<string>();
+const SIDE_LABEL: Record<string, string> = { today: 'Views and filters', notes: 'All notes', board: 'Projects', search: 'Narrow by folder or tag', explore: 'Most connected notes' };
+
+/** The bottom tab bar for phones: the screens used all day, with the rest under More. */
+function tabbar(hc: number): string {
+  const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${state.screen === id}">${label}</button>`;
+  const sheet = moreOpen
+    ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
+      ['board:Board', 'explore:Explore', 'health:Vault health', 'guide:Cheat sheet']
+        .map((x) => {
+          const [id, label] = x.split(':') as [ScreenId, string];
+          return `<button class="btn" data-nav="${id}" data-more-item>${label}${id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
+        })
+        .join('') +
+      '<button class="btn" data-act="rescan" data-more-item>Rescan</button>' +
+      (fsaSupported() ? '<button class="btn" data-act="open" data-more-item>Open folder</button>' : '') +
+      `${themeControl()}<button class="btn" data-act="more-close">Close</button></div></div>`
+    : '';
+  return `<nav class="tabbar" aria-label="Main">${tab('today', 'Today')}${tab('projects', 'Projects')}${tab('notes', 'Notes')}${tab('search', 'Search')}<button class="tab-b" data-act="more-toggle" aria-expanded="${moreOpen}">More${hc ? ' •' : ''}</button></nav>${sheet}`;
+}
+
 function shell(): string {
   const hc = healthCount();
   const focusing = state.screen === 'notes' && notes.notes.focus && !!notes.notes.path;
@@ -158,8 +181,8 @@ function shell(): string {
     '<button class="btn" data-act="rescan">Rescan</button>' +
     (fsaSupported() ? '<button class="btn" data-act="open">Open folder</button>' : '') +
     `<button class="btn" data-nav="guide" aria-label="Syntax cheat sheet" title="Syntax cheat sheet" aria-current="${state.screen === 'guide'}">?</button>${themeControl()}`;
-  // On a phone the less-used buttons and the theme choice sit behind one ⋯ button, so the screen is for the work.
-  h += `<span class="hdr-wide">${rest}</span><details class="hdr-more"><summary class="btn" aria-label="More: rescan, open folder, help and theme">⋯</summary><div class="hdr-more-box">${rest}</div></details></header>`;
+  // On a phone these live in the More sheet of the bottom bar, so the header is only the name, Go to… and + New.
+  h += `<span class="hdr-wide">${rest}</span></header>`;
   if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
   if (state.index && state.index.notes.size === 0) {
     const s = state.index.summary();
@@ -205,7 +228,30 @@ function shell(): string {
     default:
       h += todayScreen.html();
   }
-  return `${h}${footer()}</div>`;
+  const hideBar = state.screen === 'notes' && !!notes.notes.path;
+  return `${h}${footer()}${hideBar ? '' : tabbar(healthCount())}</div>`;
+}
+
+/**
+ * On a phone a screen's side panel (views, folders, the note list) would push the work below the fold.
+ * Each gets a button that opens it, and a side panel with nothing to say (no change to show) is left out.
+ */
+function foldSidePanels(): void {
+  const key = state.screen;
+  const side = app.querySelector<HTMLElement>('.frame > .side');
+  if (side && SIDE_LABEL[key] && !side.querySelector('[data-side-toggle]')) {
+    const open = sideOpen.has(key);
+    side.classList.toggle('open', open);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'side-toggle btn';
+    b.dataset.sideToggle = key;
+    b.setAttribute('aria-expanded', String(open));
+    b.textContent = `${SIDE_LABEL[key]} ${open ? '▴' : '▾'}`;
+    side.prepend(b);
+  }
+  const src = app.querySelector<HTMLElement>('.frame > .source');
+  if (src && key === 'today') src.classList.toggle('empty-source', !src.querySelector('.diff'));
 }
 
 function render(): void {
@@ -224,6 +270,7 @@ function render(): void {
   app.innerHTML = (state.index && !state.busy ? shell() : landing()) + newmenu.html() + move.html() + menu.html() + palette.html();
 
   paintProgress();
+  foldSidePanels();
   if (state.index && state.screen === 'notes') notes.afterRender(editorFocus);
   if (focusId && !editorFocus) {
     const el = document.getElementById(focusId) as HTMLInputElement | null;
@@ -270,8 +317,20 @@ app.addEventListener('click', (e) => {
     const theme = target.closest<HTMLElement>('[data-theme-set]')?.dataset.themeSet as ThemeSetting | undefined;
     if (theme) return setTheme(theme);
 
+    if (target.closest('.more-sheet') && target.closest('[data-more-item]')) moreOpen = false;
+    if (target.closest('[data-note]')) sideOpen.delete('notes'); // choosing a note folds the list again
+    const toggle = target.closest<HTMLElement>('[data-side-toggle]')?.dataset.sideToggle;
+    if (toggle) {
+      if (sideOpen.has(toggle)) sideOpen.delete(toggle);
+      else sideOpen.add(toggle);
+      return requestRender();
+    }
     const nav = target.closest<HTMLElement>('[data-nav]')?.dataset.nav as ScreenId | undefined;
-    if (nav) return void go(nav);
+    if (nav) {
+      moreOpen = false;
+      sideOpen.clear();
+      return void go(nav);
+    }
 
     const act = target.closest<HTMLElement>('[data-act]')?.dataset.act;
     switch (act) {
@@ -283,6 +342,12 @@ app.addEventListener('click', (e) => {
         return void openSample(__SAMPLE_VAULT__);
       case 'new':
         return newmenu.openNew();
+      case 'more-toggle':
+        moreOpen = !moreOpen;
+        return requestRender();
+      case 'more-close':
+        moreOpen = false;
+        return requestRender();
       case 'palette-open':
         return palette.openPalette();
       case 'skipped-hide':

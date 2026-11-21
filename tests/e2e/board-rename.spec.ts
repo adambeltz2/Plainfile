@@ -1,11 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { addFileExternally, listFiles, openVault, readFile, removeFileExternally, noteMenu } from './helpers';
+import { addFileExternally, listFiles, openVault, readFile, removeFileExternally, noteMenu, nav, noteItem } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const nav = (page: Page, name: RegExp | string) => page.locator('.nav').getByRole('button', { name });
 const task = (title: string, status: string, project = 'site') => `---\ntitle: ${title}\nstatus: ${status}\nproject: ${project}\ndue: 2026-12-01\n---\nBody of ${title}.\n`;
 
 test.describe('board', () => {
@@ -62,7 +61,7 @@ test.describe('rename', () => {
   async function startRename(page: Page): Promise<string> {
     const dir = await openVault(page, VAULT);
     await nav(page, 'Notes').click();
-    await page.locator('.note-item', { hasText: 'Pricing research' }).click();
+    await (await noteItem(page, 'Pricing research')).click();
     await noteMenu(page, /^Rename/);
     return dir;
   }
@@ -139,7 +138,7 @@ test('Board and Rename fit a phone', async ({ page }) => {
   await nav(page, 'Board').click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   await nav(page, 'Notes').click();
-  await page.locator('.note-item', { hasText: 'Pricing research' }).click();
+  await (await noteItem(page, 'Pricing research')).click();
   await noteMenu(page, /^Rename/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });

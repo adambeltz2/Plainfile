@@ -49,8 +49,8 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 ## Phones
 
-- `[FEATURE]` **A phone pass over Today, Notes, Board and Search** like the one done for the project hub: fold secondary controls into drawers, keep the work on the first screen. Affects `web/today.ts`, `web/notes.ts`, `web/board.ts`, `web/search.ts`.
-- `[FEATURE]` **A bottom tab bar on phones** for the main screens (Today, Projects, Notes, Search) with the rest under More. Affects `web/main.ts`.
+- `[FEATURE]` **Insert an image from a file picker** for phones where pasting an image is limited. Affects `web/editor.ts`.
+- `[DEBT]` **Phone check on real devices** (Android Chrome, iPhone Safari with Dropbox): safe-area insets, keyboard behaviour with the bottom bar, long-press menus. Affects `web/app.css`.
 
 ## Project hub
 

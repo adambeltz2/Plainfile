@@ -1,12 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { localDate, openVault, readFile, readFileOrEmpty } from './helpers';
+import { localDate, openVault, readFile, readFileOrEmpty, nav } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
 const TODAY = () => localDate(0);
-const nav = (page: Page, name: RegExp | string) => page.locator('.nav').getByRole('button', { name });
 
 async function newProject(page: Page, name: string, goal = ''): Promise<void> {
   await page.getByRole('button', { name: '+ New' }).click();
@@ -132,6 +131,7 @@ test.describe('new project', () => {
     await openVault(page, { 'a.md': '# A\n' });
     await newProject(page, 'Kitchen Remodel');
     await nav(page, 'Today').click();
+    await page.locator('.side-toggle').click();
     await page.locator('.side').getByRole('button', { name: /^Projects/ }).click();
     await page.locator('.pcard').getByRole('button', { name: '+ Task' }).click();
     await expect(page.locator('.modal')).toBeVisible();
@@ -524,7 +524,7 @@ test.describe('portfolio table', () => {
     await expect(page.locator('.hub-tools')).not.toHaveAttribute('open', '');
     await expect(page.locator('.hub-status-d')).not.toHaveAttribute('open', '');
     await expect(page.locator('.selbox').first()).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Rescan' })).toBeHidden(); // behind the ⋯ button
+    await expect(page.getByRole('button', { name: 'Rescan' })).toBeHidden(); // behind the More tab
     await page.locator('.hub-tools > summary').click();
     await page.locator('#hub-group').selectOption('person');
     await expect(page.locator('.hub-tools')).toHaveAttribute('open', ''); // stays open while you work in it
@@ -532,9 +532,10 @@ test.describe('portfolio table', () => {
     await expect(page.locator('.selbox').first()).toBeVisible();
     await page.getByRole('button', { name: 'Stop selecting' }).click();
     await expect(page.locator('.selbox').first()).toBeHidden();
-    await page.locator('.hdr-more > summary').click();
-    await expect(page.locator('.hdr-more').getByRole('button', { name: 'Rescan' })).toBeVisible();
-    await expect(page.locator('.hdr-more').getByRole('button', { name: 'Dark' })).toBeVisible();
+    await page.locator('.tabbar').getByRole('button', { name: /^More/ }).click();
+    await expect(page.locator('.more-sheet').getByRole('button', { name: 'Rescan' })).toBeVisible();
+    await expect(page.locator('.more-sheet').getByRole('button', { name: 'Dark' })).toBeVisible();
+    await page.locator('.more-sheet').getByRole('button', { name: 'Close' }).click();
     await page.locator('.hub-status-d > summary').click();
     await expect(page.locator('.hub-status')).toContainText('Progress');
   });

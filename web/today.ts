@@ -10,7 +10,7 @@ export const quick = { text: '', error: '' };
 
 /** One line under the box saying how the typed text will be filed: where it goes, who, what tags, which day. */
 export function quickPreview(line: string): string {
-  if (!line.trim()) return 'One line is enough: <code>Email Sam +Project @sam #tag due:tomorrow</code>. It becomes a task note, shown in your Inbox (or filed in the project), dated today.';
+  if (!line.trim()) return '<span class="qhint">One line is enough: <code>Email Sam +Project @sam #tag due:tomorrow</code>. It becomes a task note, shown in your Inbox (or filed in the project), dated today.</span>';
   const { parsed, project, error } = planQuickLine(line);
   if (error) return `<span class="err-text">${esc(error)}</span>`;
   const bits = [`Task note "${esc(parsed.title || parsed.text)}" in <b>${esc(project ? project.title : 'Inbox')}</b>`];

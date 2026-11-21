@@ -1,15 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
-import { listFiles, openVault, readFile, readFileOrEmpty } from './helpers';
+import { listFiles, openVault, readFile, readFileOrEmpty, nav, noteItem } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const nav = (page: Page, name: RegExp | string) => page.locator('.nav').getByRole('button', { name });
 
 async function open(page: Page, title: string): Promise<void> {
   await nav(page, 'Notes').click();
-  await page.locator('.note-item', { hasText: title }).click();
+  await (await noteItem(page, title)).click();
   await expect(page.locator('.cm-content')).toBeVisible();
 }
 async function typeAtEnd(page: Page, text: string): Promise<void> {

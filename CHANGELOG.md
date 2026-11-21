@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.35.0] - 2026-11-21
+
+### Changed
+- **Phone navigation.** On a phone there is now a **bottom tab bar** (Today, Projects, Notes, Search, More). More
+  holds Board, Explore, Vault health, the cheat sheet, Rescan, Open folder and the Light/Dark/Auto choice. The
+  header is just the name, Go to… and + New. The bar steps aside while a note is open so the keyboard has room.
+- **Side panels fold away on a phone** (Today's views, folders and tags; the Notes list; Board's projects; Search's
+  filters; Explore's list) behind one button, so the work starts at the top of the screen. The note list folds again
+  once you choose a note. Today's "what changed on disk" panel only shows when there is something to show, and the
+  quick add hint is hidden.
+  Wide screens are unchanged.
+
 ## [0.34.1] - 2026-11-21
 
 ### Changed
