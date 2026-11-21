@@ -120,8 +120,12 @@ export function html(): string {
     ? `<ul class="plain">${[...new Set(back.map((b) => b.from))].map((f) => `<li class="mono small" style="overflow-wrap:anywhere">${esc(f)}</li>`).join('')}</ul>`
     : '<p class="muted small" style="margin:0">Nothing links here.</p>';
   h += '</div></aside><section class="main"><h2 class="title">Rename a note</h2>';
-  h += `<div class="ed-bar"><div class="seg" role="group" aria-label="Rename scenario"><button data-rn-mode="in" aria-pressed="${rn.mode === 'in'}">Rename in Plainfile</button>` +
-    `<button data-rn-mode="out" aria-pressed="${rn.mode === 'out'}">Renamed outside${state.renames.length ? ` <span class="badge">${state.renames.length}</span>` : ''}</button></div></div>`;
+  // "Renamed outside" is only for fixing links after a file was renamed in another app. It shows up when one is found.
+  if (state.renames.length || rn.mode === 'out') {
+    h += `<div class="ed-bar"><div class="seg" role="group" aria-label="Rename scenario"><button data-rn-mode="in" aria-pressed="${rn.mode === 'in'}">Rename in Plainfile</button>` +
+      `<button data-rn-mode="out" aria-pressed="${rn.mode === 'out'}">Renamed outside${state.renames.length ? ` <span class="badge">${state.renames.length}</span>` : ''}</button></div></div>`;
+    if (rn.mode === 'out') h += '<p class="muted small" style="margin:6px 0 0">A file was renamed in another app (Finder, Dropbox, an editor). Plainfile noticed, and can fix the links that now point nowhere.</p>';
+  }
   if (rn.mode === 'in') {
     if (rn.result) {
       h += `<div id="rn-preview">${previewHtml()}</div>`;

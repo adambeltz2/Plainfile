@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.41.1] - 2026-11-21
+
+### Changed
+- **Rename no longer shows a confusing "Renamed outside" tab.** That choice is only for repairing links after a file
+  was renamed in another app, and Plainfile offers it by itself (the banner, with a count) when it notices one.
+  Otherwise the Rename screen is just the rename.
+
 ## [0.41.0] - 2026-11-21
 
 ### Added
