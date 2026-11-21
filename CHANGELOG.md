@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.31.1] - 2026-11-21
+
+### Fixed
+- **Tab finishes the highlighted suggestion** in the editor, for links, tags, people, projects and dates, as it
+  already did in the form fields. With no list open, Tab behaves as before.
+
 ## [0.31.0] - 2026-11-21
 
 ### Changed

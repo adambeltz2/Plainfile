@@ -1,6 +1,6 @@
 import { defaultKeymap, history, historyKeymap, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { parseDueWord } from '../src/quickline';
-import { autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
+import { acceptCompletion, autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
 import { markdown } from '@codemirror/lang-markdown';
 import { Compartment, EditorState, Transaction, type Range } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, WidgetType, keymap, tooltips, type DecorationSet, type ViewUpdate } from '@codemirror/view';
@@ -421,6 +421,8 @@ export function createEditor(o: { text: string; crlf: boolean; today: () => stri
       EditorState.lineSeparator.of(o.crlf ? '\r\n' : '\n'),
       history(),
       keymap.of([
+        // Tab finishes the highlighted suggestion. With no list open it is left alone, so Tab still moves focus on.
+        { key: 'Tab', run: acceptCompletion },
         {
           key: 'Mod-s',
           run: () => {

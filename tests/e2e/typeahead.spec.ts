@@ -118,6 +118,27 @@ test.describe('in the editor', () => {
   });
 });
 
+test.describe('Tab finishes a suggestion', () => {
+  test('in the editor Tab accepts the highlighted suggestion, for links, tags and dates', async ({ page }) => {
+    const dir = await openVault(page, VAULT);
+    await open(page, 'draft');
+    await typeAtEnd(page, '\n[[Pri');
+    await expect(options(page)).toHaveCount(1);
+    await settle(page);
+    await page.keyboard.press('Tab');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'draft.md'), { timeout: 5000 }).toBe('Draft\n[[pricing-research]]');
+    await page.keyboard.type('\n#la');
+    await expect(options(page).first()).toContainText('launch');
+    await settle(page);
+    await page.keyboard.press('Tab');
+    await page.keyboard.type(' due:to');
+    await expect(options(page).first()).toContainText('today');
+    await settle(page);
+    await page.keyboard.press('Tab');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'draft.md'), { timeout: 5000 }).toBe(`Draft\n[[pricing-research]]\n#launch due:${localDate(0)}`);
+  });
+});
+
 test.describe('dates', () => {
   test('due: in a note offers day words and writes the real date', async ({ page }) => {
     const dir = await openVault(page, VAULT);
