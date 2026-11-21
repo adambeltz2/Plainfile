@@ -518,6 +518,7 @@ test.describe('portfolio table', () => {
     await nav(page, 'Projects').click();
     await page.locator('.pcard .pbtn').click();
     await expect(page.locator('.hubwrap')).toBeVisible();
+    await expect(page.locator('.hub-content .task').first()).toBeVisible();
     const first = await page.locator('.hub-content .task').first().boundingBox();
     expect(first!.y).toBeLessThan(700); // tasks are visible without scrolling past a wall of controls
     await expect(page.locator('.pstats')).toBeHidden();
