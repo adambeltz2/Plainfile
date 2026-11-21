@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plainfile: Notes landing and actions (ideas)</title>
+<style>
+:root{--bg:#fff;--fg:#000;--mute:#666;--line:#ccc;--soft:#f3f3f3}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#fff;--mute:#9a9a9a;--line:#333;--soft:#161616}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif;padding:20px 16px 60px;max-width:1180px;margin:auto}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:36px 0 4px}h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
+p{margin:4px 0 10px;max-width:72ch}.mute{color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-top:12px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px}
+.win{border:2px solid var(--fg);border-radius:10px;overflow:hidden;background:var(--bg);font-size:13px}
+.bar{display:flex;gap:6px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.btn{border:1px solid var(--fg);border-radius:6px;padding:2px 8px;font-size:12px;background:var(--bg)}.btn.p{background:var(--fg);color:var(--bg)}
+.chip{border:1px solid var(--line);border-radius:99px;padding:0 8px;font-size:11px}
+.row{display:flex;gap:8px;padding:5px 8px;border-bottom:1px solid var(--line);align-items:center}.row b{flex:1;font-weight:600}.row.sel{background:var(--fg);color:var(--bg)}
+.cols{display:grid;grid-template-columns:150px 1fr}.cols>div:first-child{border-right:1px solid var(--line);padding:6px 8px;background:var(--soft)}
+.in{border:1px solid var(--fg);border-radius:6px;padding:4px 8px;margin:8px;color:var(--mute)}
+.menu{border:1px solid var(--fg);border-radius:8px;padding:4px;width:210px;background:var(--bg);box-shadow:4px 4px 0 var(--fg);margin:8px}
+.menu div{padding:3px 8px;display:flex;justify-content:space-between}.menu hr{border:0;border-top:1px solid var(--line);margin:3px 0}.menu .k{color:var(--mute);font-family:ui-monospace,monospace;font-size:11px}
+.menu .on{background:var(--fg);color:var(--bg);border-radius:4px}.menu .on .k{color:var(--bg)}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}kbd{border:1px solid var(--fg);border-radius:4px;padding:0 5px;font:12px ui-monospace,monospace}
+.pill{display:inline-block;border:1px solid var(--fg);border-radius:99px;padding:0 10px;font-size:12px;margin-right:4px}.rec{border:2px solid var(--fg);border-radius:8px;padding:2px 10px;font-size:12px;font-weight:700}
+.phone{max-width:300px}.ed{padding:10px;min-height:110px;font-family:ui-monospace,monospace;font-size:12px}
+</style></head><body>
+<h1>Notes: landing and actions</h1>
+<p class="mute">Ideas only, nothing here is built yet. Black and white, like the app. Pick what you like and I will build it.</p>
+
+<h2>1. How the Notes screen opens</h2>
+<p>Today the Notes screen opens on an empty "choose a note" message. Three ways to do better:</p>
+<div class="grid">
+<div class="card"><h3>A. Jump back in <span class="rec">recommended</span></h3>
+<p>Opens straight into the note you were last editing. The left list starts with Recent and Pinned. A new user sees a friendly home instead.</p>
+<div class="win"><div class="bar"><span class="in" style="margin:0;flex:1">Find or create a note (Ctrl+P)</span><span class="btn p">+ New</span></div>
+<div class="cols"><div><h3>Pinned</h3><div>Weekly review</div><div>Inbox</div><h3 style="margin-top:8px">Recent</h3><div><b>Kickoff call</b></div><div>Pricing research</div><div>2026-11-21</div><h3 style="margin-top:8px">Folders ▸</h3></div>
+<div><div class="bar"><b>Kickoff call</b><span class="chip">projects/website</span><span style="flex:1"></span><span class="btn">Undo</span><span class="btn">Focus</span><span class="btn">⋯</span></div><div class="ed">---<br>title: Kickoff call<br>---<br>## Decisions<br>- [ ] Send logo files</div></div></div></div></div>
+
+<div class="card"><h3>B. Notes home (a dashboard for notes)</h3>
+<p>No note open: a landing page with search, what changed today, pinned notes and folders. Good for people who browse more than they write.</p>
+<div class="win"><div class="in">Search notes or type a new title…</div>
+<div class="row"><b>Modified today</b><span class="chip">3</span></div><div class="row"><span>Kickoff call</span><span class="chip">2:14 pm</span></div><div class="row"><span>Pricing research</span><span class="chip">9:40 am</span></div>
+<div class="row"><b>Pinned</b></div><div class="row"><span>Weekly review</span></div>
+<div class="row"><b>Folders</b></div><div class="row"><span>▸ projects (14)</span><span>▸ journal (60)</span><span>▸ people (8)</span></div></div></div>
+
+<div class="card"><h3>C. File-manager view</h3>
+<p>A folder tree on the left, notes of the chosen folder in the middle, the note on the right. Best for large, well-organised folders and for moving things around. On a phone it becomes breadcrumbs: projects › website › note.</p>
+<div class="win"><div class="cols" style="grid-template-columns:110px 130px 1fr"><div>▾ projects<br>&nbsp;&nbsp;▾ website<br>&nbsp;&nbsp;▸ tax-2026<br>▸ journal<br>▸ people<br>inbox</div><div style="border-right:1px solid var(--line);padding:6px 8px"><div class="row sel">Kickoff call</div><div class="row">Pricing research</div><div class="row">index</div></div><div class="ed">The open note…</div></div></div></div>
+</div>
+
+<h2>2. Common actions: where they live</h2>
+<p>Today the header holds eight buttons (Undo, Redo, Focus, X-ray, Explore, Rename, Delete, plus status), which is crowded on a phone. Idea: keep the three you use while typing, and fold the rest into one menu.</p>
+<div class="grid">
+<div class="card"><h3>The ⋯ menu</h3>
+<div class="win"><div class="bar"><b>Kickoff call</b><span style="flex:1"></span><span class="btn">↶</span><span class="btn">↷</span><span class="btn">Focus</span><span class="btn p">⋯</span></div>
+<div class="menu"><div>X-ray <span class="k">Ctrl+Shift+X</span></div><div>Explore related <span class="k">Ctrl+Shift+E</span></div><div>History <span class="k"></span></div><hr><div class="on">Move to… <span class="k">Ctrl+Shift+M</span></div><div>Rename <span class="k">F2</span></div><div>Duplicate <span class="k"></span></div><div>Pin to top <span class="k"></span></div><div>Copy link <span class="k"></span></div><hr><div>Add default frontmatter <span class="k"></span></div><div>Delete… <span class="k">Ctrl+Shift+⌫</span></div></div></div></div>
+
+<div class="card"><h3>Right-click or long-press a note in the list</h3>
+<p>The same actions without opening the note first. This is how you tidy many notes quickly.</p>
+<div class="win"><div class="row"><span>Pricing research</span></div><div class="row sel"><span>Kickoff call</span></div><div class="row"><span>index</span></div>
+<div class="menu" style="margin-left:60px;margin-top:-20px;position:relative"><div>Open</div><div>Open in focus mode</div><hr><div class="on">Move to…</div><div>Rename</div><div>Duplicate</div><div>Pin</div><hr><div>Delete…</div></div></div></div>
+
+<div class="card"><h3>Command palette (Ctrl+K or Ctrl+P)</h3>
+<p>One box for everything: type a note name to open it, a title to create it, or a verb. Works the same on every screen.</p>
+<div class="win"><div class="in" style="color:var(--fg)">move kick▌</div>
+<div class="row sel"><b>Move “Kickoff call” to a folder…</b><span class="k">Enter</span></div><div class="row"><b>Open: Kickoff call</b></div><div class="row"><b>New note “move kick”</b></div><div class="row"><b>Go to Search</b></div></div></div>
+</div>
+
+<h2>3. Move a note to another folder (not built yet)</h2>
+<p><b>Answer:</b> not yet. Rename keeps a note in its current folder, and the Backlog lists "move" as a next item. Here is how it would work. It reuses the same safe pipeline as Rename: a preview first, links rewritten, one undo.</p>
+<div class="grid">
+<div class="card"><h3>Move dialog</h3>
+<div class="win" style="padding:8px"><b>Move “Kickoff call”</b>
+<div class="in" style="margin:8px 0;color:var(--fg)">projects/we▌</div>
+<div class="row sel"><span>projects/website-relaunch</span><span class="chip">14 notes</span></div><div class="row"><span>projects/web-archive</span></div><div class="row"><span>+ New folder “projects/we…”</span></div>
+<div class="mute" style="margin:8px 0 4px">Preview</div>
+<div class="row"><span>projects/website-relaunch/kickoff-call.md</span></div>
+<div class="row"><span>3 links in 2 notes keep working (name is unique, nothing to rewrite)</span></div>
+<div class="row"><span>tasks inside it move with it</span></div>
+<div style="padding:8px 0"><span class="btn p">Move</span> <span class="btn">Cancel</span> <span class="mute">Undo is offered afterwards</span></div></div></div>
+<div class="card"><h3>Other ways to move</h3>
+<ul><li><b>Drag</b> a note onto a folder in the tree (option C).</li><li><b>Pick a project</b>: “Move into project…” also sets <code>project:</code> so it shows on the dashboard.</li><li><b>Many at once</b>: tick several notes in the list, then Move.</li><li>Safe like everything else: refused if the file changed on disk, and it never overwrites a note that is already there.</li></ul></div>
+</div>
+
+<h2>4. Quick keys</h2>
+<table><tr><th>Key</th><th>Does</th><th>Today</th></tr>
+<tr><td><kbd>Ctrl/Cmd</kbd>+<kbd>K</kbd></td><td>Search / command palette</td><td>Search only</td></tr>
+<tr><td><kbd>Ctrl/Cmd</kbd>+<kbd>P</kbd></td><td>Open or create a note by name</td><td>New</td></tr>
+<tr><td><kbd>Ctrl/Cmd</kbd>+<kbd>N</kbd></td><td>New note</td><td>New</td></tr>
+<tr><td><kbd>Ctrl/Cmd</kbd>+<kbd>S</kbd></td><td>Save now</td><td>Built</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Close menu or leave focus mode</td><td>Built</td></tr>
+<tr><td><kbd>F2</kbd></td><td>Rename</td><td>New</td></tr>
+<tr><td><kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd></td><td>Move to…</td><td>New</td></tr>
+<tr><td><kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd></td><td>X-ray</td><td>New</td></tr>
+<tr><td><kbd>?</kbd></td><td>Show all keys</td><td>New (a key sheet next to the cheat sheet)</td></tr></table>
+
+<h2>5. On a phone</h2>
+<div class="grid"><div class="card phone"><div class="win"><div class="bar"><span class="btn">‹ Notes</span><b style="flex:1">Kickoff call</b><span class="btn p">⋯</span></div><div class="ed">## Decisions<br>- [ ] Send logo…</div><div class="bar" style="border-top:1px solid var(--line);border-bottom:0"><span class="btn">- [ ]</span><span class="btn">[[</span><span class="btn">#</span><span class="btn">@</span><span class="btn">↶</span></div></div>
+<p class="mute">The ⋯ menu is the only header action. A thin bar above the keyboard holds the typing helpers (checkbox, link, tag, person, undo). Long-press a note in the list for its menu. There are no keys, so the menu and the palette matter most.</p></div></div>
+
+<h2>My recommendation</h2>
+<p><span class="pill">A</span> Jump back in as the landing, with Recent and Pinned.
+<span class="pill">⋯ menu</span> plus right-click for actions, <span class="pill">Ctrl+P</span> palette, and <span class="pill">Move to…</span> built on the Rename pipeline with a preview. Option C (folder tree) as an optional toggle in the list for large folders. Tell me what to change, or say “build it”.</p>
+</body></html>
