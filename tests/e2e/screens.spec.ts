@@ -141,6 +141,17 @@ test.describe('live editor', () => {
     expect(await readFile(page, dir, 'n.md')).toBe('Changed by a sync tool');
   });
 
+  test('the text cursor is visible in dark mode and in light mode', async ({ page }) => {
+    for (const [scheme, rgb] of [['dark', 'rgb(255, 255, 255)'], ['light', 'rgb(0, 0, 0)']] as const) {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto('/');
+      await openVault(page, { 'n.md': 'Some text' });
+      await openNoteInEditor(page, 'n');
+      await page.locator('.cm-content').click();
+      expect(await page.locator('.cm-content').evaluate((el) => getComputedStyle(el).caretColor), scheme).toBe(rgb);
+    }
+  });
+
   test('CRLF files keep their line endings', async ({ page }) => {
     const dir = await openVault(page, { 'n.md': 'One\r\n- [ ] Two\r\n' });
     await openNoteInEditor(page, 'n');

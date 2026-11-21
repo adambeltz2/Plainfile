@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.16.1] - 2026-11-21
+
+### Fixed
+- The text cursor in the editor was black on black in dark mode, so it could not be seen.
+  It now follows the theme in both modes, and a test checks it.
+
 ## [0.16.0] - 2026-11-21
 
 ### Added

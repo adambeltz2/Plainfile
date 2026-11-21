@@ -170,7 +170,9 @@ code { font-family: var(--mono); font-size: 0.92em; }
 .editor-host .cm-editor { border: 1px solid var(--line); border-radius: 6px; min-height: 340px; background: var(--bg); color: var(--fg); }
 .editor-host .cm-editor.cm-focused { outline: 2px solid var(--fg); outline-offset: 1px; }
 .editor-host .cm-scroller { font-family: var(--sans); line-height: 1.65; }
-.cm-content { padding: 10px 4px; caret-color: var(--fg); }
+.cm-content { padding: 10px 4px; }
+/* CodeMirror sets its own caret color with a more specific rule, so match its specificity. */
+.editor-host .cm-editor .cm-content, .editor-host .cm-editor .cm-content.cm-xray { caret-color: var(--fg); }
 .cm-line { padding: 0 10px; }
 .cm-cursor, .cm-dropCursor { border-left-color: var(--fg) !important; }
 .cm-selectionBackground, .cm-focused .cm-selectionBackground, ::selection { background: var(--line) !important; }
