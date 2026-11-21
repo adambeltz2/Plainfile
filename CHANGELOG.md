@@ -4,6 +4,25 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.30.0] - 2026-11-21
+
+### Added
+- **Dropbox.** Connect Dropbox on the first screen and open a vault from it, in any browser, including
+  iPhone, Safari and Firefox. Optionally pick a folder (such as `/Notes`). Sign-in is OAuth with PKCE,
+  straight from the page, with no server and no secret. Tokens are kept only in this browser; Sign out
+  forgets them. Notes, tasks, move, rename, delete, trash and history all work, and every write is
+  checked against Dropbox's own revision so another device's edit is never overwritten.
+- `DropboxStorage` and the sign-in code pass the same storage contract as the other adapters, with a
+  fake Dropbox in the tests (pagination, token refresh, rate limits, accents in names, same-second
+  edits, folder isolation) and browser tests for the whole sign-in and edit flow.
+- Setup: create an app at dropbox.com/developers/apps (Scoped access; permissions
+  `files.metadata.read/write` and `files.content.read/write`), add the page address as a Redirect URI, and
+  paste the app key into Plainfile, or set the `DROPBOX_APP_KEY` repository variable so the key is built in.
+
+### Known limits
+- A cloud folder reads every note on first open, which is slow for thousands of notes. A saved index
+  cache is next on the backlog.
+
 ## [0.29.3] - 2026-11-21
 
 ### Added

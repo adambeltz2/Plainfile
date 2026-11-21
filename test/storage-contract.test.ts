@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { VaultIndex } from '../src/index';
+import { DropboxStorage } from '../src/dropbox-storage';
 import { MemoryStorage } from '../src/memory-storage';
 import { applyMove, planMove } from '../src/move';
 import { NodeStorage } from '../src/node-storage';
@@ -10,6 +11,7 @@ import { planDelete, deleteNote } from '../src/delete';
 import { applyRename, planRename } from '../src/rename';
 import { ConflictError, ExistsError, type VaultStorage } from '../src/storage';
 import { setTaskDone } from '../src/writeback';
+import { FakeDropbox } from './helpers/fake-dropbox';
 
 /**
  * The storage contract. Every adapter (in memory, a folder on disk, the browser's folder access, and
@@ -34,6 +36,25 @@ const ADAPTERS: Adapter[] = [
       const root = await mkdtemp(join(tmpdir(), 'plainfile-contract-'));
       dirs.push(root);
       const s = new NodeStorage(root);
+      for (const [p, t] of Object.entries(files)) await s.create(p, t);
+      return s;
+    },
+  },
+  {
+    name: 'DropboxStorage (the whole Dropbox)',
+    make: async (files) => {
+      const fake = new FakeDropbox();
+      const s = new DropboxStorage({ getToken: async () => 'good', fetch: fake.fetch });
+      for (const [p, t] of Object.entries(files)) await s.create(p, t);
+      return s;
+    },
+  },
+  {
+    name: 'DropboxStorage (a folder inside Dropbox)',
+    make: async (files) => {
+      const fake = new FakeDropbox();
+      fake.seed({ 'Other/keep.md': 'not in the vault', 'Vault2/x.md': 'neither' });
+      const s = new DropboxStorage({ getToken: async () => 'good', root: '/Notes/Vault', fetch: fake.fetch });
       for (const [p, t] of Object.entries(files)) await s.create(p, t);
       return s;
     },

@@ -1,5 +1,6 @@
 import { fsaSupported, FsaStorage } from '../src/fsa-storage';
 import * as board from './board';
+import * as cloudUi from './cloud';
 import * as explore from './explore';
 import * as guide from './guide';
 import * as health from './health';
@@ -130,11 +131,12 @@ function landing(): string {
   } else if (supported) {
     h += '<button class="btn primary" data-act="open">Open a folder</button>';
   }
-  h += `<button class="btn${supported ? '' : ' primary'}" data-act="demo">Try the sample vault</button></div>`;
+  h += `<button class="btn" data-act="demo">Try the sample vault</button></div>`;
+  h += cloudUi.html();
   if (!supported) {
     h +=
-      '<div class="notice">Opening a folder needs Chrome, Edge, Brave or Opera on a desktop computer. ' +
-      'Other browsers can still try the sample vault. Support for them is planned.</div>';
+      '<div class="notice">Opening a local folder needs Chrome, Edge, Brave or Opera on a desktop computer or an Android phone. ' +
+      'In other browsers, connect Dropbox above, or try the sample vault.</div>';
   }
   return `${h}</main>${footer()}`;
 }
@@ -241,6 +243,7 @@ setRenderer(render);
 app.addEventListener('click', (e) => {
   void (async () => {
     const target = e.target as HTMLElement;
+    if (!state.index && (await cloudUi.click(target))) return;
     if (await palette.click(target)) return;
     if (await move.click(target)) return;
     if (await menu.click(target)) return;
@@ -355,6 +358,7 @@ app.addEventListener('submit', (e) => {
 
 app.addEventListener('input', (e) => {
   suggest.onInput(e);
+  if (!state.index && cloudUi.input(e)) return;
   if (palette.input(e)) return;
   if (move.input(e)) return;
   if (state.modal && newmenu.input(e)) return;
@@ -493,7 +497,10 @@ window.__plainfile = {
 };
 
 requestRender();
-void resumeSaved();
+void (async () => {
+  if (await cloudUi.finishConnect()) return;
+  await resumeSaved();
+})();
 
 // Installable and available offline. The worker replaces the earlier Notebook app's, at the same address.
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

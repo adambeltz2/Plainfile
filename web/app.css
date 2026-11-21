@@ -463,3 +463,8 @@ progress:indeterminate { background: repeating-linear-gradient(90deg, var(--fg) 
 .home-list .note-quick { display: flex; justify-content: space-between; gap: 12px; width: 100%; }
 .note-quick { font-weight: 400; }
 kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12px var(--mono); }
+
+/* ---------- cloud storage on the first screen ---------- */
+.cloud { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; max-width: 34rem; }
+.cloud h2 { margin: 0 0 6px; font-size: 16px; }
+.cloud ol { margin: 6px 0 0; padding-left: 18px; }

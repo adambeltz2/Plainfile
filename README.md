@@ -62,10 +62,12 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
   It never blocks your work.
 - **Big folders:** a progress bar with counts and a Cancel button while a large folder is read.
   Files that cannot be read are skipped and listed, so one bad file never blocks the folder.
+- **Dropbox:** open a vault stored in Dropbox from any browser. Files go only between your browser and
+  Dropbox, sign-in uses PKCE with no server, and writes are checked against Dropbox revisions.
 - **Install it:** works as an app on desktop and phone, and opens offline after the first visit.
 
-Opening a folder directly needs Chrome, Edge, Brave or Opera on desktop. Safari, Firefox and phones
-can try the sample vault for now. The app has no server and no accounts, and nothing leaves your
+Opening a local folder needs Chrome, Edge, Brave or Opera (desktop or Android). In any other browser,
+including Safari and iPhone, **connect Dropbox** instead (see below), or try the sample vault. The app has no server and no accounts, and nothing leaves your
 device.
 
 The previous app, Notebook, is preserved at commit
@@ -99,6 +101,7 @@ Design mockups are in [`docs/mockups.html`](docs/mockups.html).
 | Browser app: shell and screens (Today, Projects, Notes, Search, Health, New menu) | `web/main.ts`, `web/today.ts`, `web/project.ts`, `web/notes.ts`, `web/search.ts`, `web/health.ts`, `web/newmenu.ts` |
 | Live editor | `web/editor.ts` |
 | Board and Rename screens | `web/board.ts`, `web/rename.ts`, `src/rename.ts` |
+| Dropbox storage and sign-in | `src/dropbox-storage.ts`, `src/dropbox-auth.ts`, `web/cloud.ts` |
 | Move and duplicate notes | `src/move.ts`, `web/move.ts`, `web/menu.ts`, `web/palette.ts` |
 | Templates, quick add and its one-line parser, link fixes, frontmatter edits | `src/templates.ts`, `src/capture.ts`, `src/quickline.ts`, `src/fixes.ts`, `src/frontmatter.ts` |
 | Projects and the project dashboard | `src/projects.ts` |
@@ -124,6 +127,19 @@ npm run plainfile -- search "is:open tag:launch" --vault sample-vault
 
 Commands: `today`, `tasks`, `search`, `backlinks`, `check`, `scan`, `done`, `undo`.
 Task ids are `path:line`, as printed by `today` and `tasks`.
+
+## Connecting Dropbox
+
+1. At [dropbox.com/developers/apps](https://www.dropbox.com/developers/apps) create an app: **Scoped access**,
+   then **App folder** (safest) or **Full Dropbox**.
+2. On the **Permissions** tab tick `files.metadata.read`, `files.metadata.write`, `files.content.read`
+   and `files.content.write`, and submit.
+3. On **Settings**, add the address of the page that serves Plainfile under **Redirect URIs**
+   (for example `https://adambeltz2.github.io/Simple-Productivity/`).
+4. In Plainfile choose **Connect Dropbox**, paste the app key, and optionally a folder such as `/Notes`.
+
+To build the key in for everyone who uses your copy, set the `DROPBOX_APP_KEY` repository variable
+(Settings, Secrets and variables, Actions, Variables). An app key is not a secret.
 
 ## Task formats
 

@@ -44,18 +44,15 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.ts`. Suggested order below.
 
-- `[REFACTOR]` **Prepare the interface first:** an opaque version token (`etag`/`rev`) beside `mtime` for guarded
-  writes and removes, `readBinary` for images, and an optional `move` so providers can rename without copying.
-  Affects `src/storage.ts`, every adapter, `src/writeback.ts`, `src/rename.ts`, `src/move.ts`, `src/delete.ts`.
+- `[REFACTOR]` **Binary reads and an optional `move`** on `VaultStorage` (images; providers can rename without copying). The version token is kept inside each adapter (`mtime` plus the provider revision), so the interface did not need it. Affects `src/storage.ts`, adapters.
 - `[FEATURE]` **Persistent cache** of the index and note contents in IndexedDB, keyed by version token, so a
   cloud folder (and a big local one) opens fast and can be read offline. Affects `src/index.ts`, `web/store.ts`.
-- `[FEATURE]` **Dropbox adapter** (OAuth with PKCE from the browser, `rev`-based conflict check, `list_folder` cursors for
-  changes). Best first cloud target. Affects new `src/dropbox-storage.ts`, `web/` sign-in screen.
+- `[FEATURE]` **Dropbox: use `list_folder/continue` cursors to pick up only what changed** instead of listing everything on each rescan. Affects `src/dropbox-storage.ts`.
 - `[FEATURE]` **OneDrive adapter** (Microsoft Graph, MSAL PKCE, path addressing, `eTag` and delta queries). Sign-in
   expires daily in a static app. Affects new `src/onedrive-storage.ts`.
 - `[FEATURE]` **Google Drive adapter** (ID based, so paths need a map; the `drive.file` scope cannot see an existing
   folder and the broad scope needs Google's security review). Last. Affects new `src/gdrive-storage.ts`.
-- `[FEATURE]` **Sign-in and token handling UI**, with tokens kept only in this browser. Affects `web/main.ts`.
+- `[FEATURE]` **A provider picker** on the first screen once a second cloud provider exists. Affects `web/cloud.ts`.
 
 ## Migration and compatibility
 
