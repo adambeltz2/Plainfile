@@ -27,6 +27,10 @@ Nothing here is a promise of order. Remove an item when it ships.
   checks. Give each screen a `handles(target)` so ordering stops mattering (a `data-project`
   clash with the Board already cost a failed test).
 
+- `[BUG]` **Sample vault shows "Thu 1 Jan" as last change** on the project dashboard and in search, because
+  the in-memory demo storage uses tiny fake modified times. Give `MemoryStorage` real times for the demo. Affects `src/memory-storage.ts`, `web/store.ts`.
+- `[DEBT]` **Sample project has no `## Goal`**, so the dashboard summary shows a raw preview. Affects `sample-vault/projects/website-relaunch/index.md`.
+
 ## Migration and compatibility
 
 - `[FEATURE]` **Import the first Notebook app's projects.** Notebook kept its data in this

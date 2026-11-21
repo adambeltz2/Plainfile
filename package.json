@@ -1,6 +1,6 @@
 {
   "name": "plainfile",
-  "version": "0.28.0",
+  "version": "0.28.1",
   "private": true,
   "description": "A productivity hub over a plain folder of markdown files.",
   "type": "module",
@@ -10,6 +10,7 @@
     "plainfile": "tsx src/cli.ts",
     "build": "node scripts/build.mjs",
     "serve": "node scripts/serve.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
     "test:e2e": "playwright test --trace off"
   },
   "dependencies": {

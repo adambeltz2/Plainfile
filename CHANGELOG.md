@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.28.1] - 2026-11-21
+
+### Added
+- README rewritten with screenshots of each screen, a feature list and the new module table.
+  `npm run screenshots` regenerates the images from the sample vault.
+- `test/readme.test.ts` fails if a header screen is missing from the README or a screenshot it
+  references is missing, and `CLAUDE.md` now requires README and screenshot updates with UI changes.
+
 ## [0.28.0] - 2026-11-21
 
 ### Added
