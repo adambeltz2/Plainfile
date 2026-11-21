@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { VaultIndex } from '../src/index';
 import { DropboxStorage } from '../src/dropbox-storage';
+import { addTaskNote } from '../src/capture';
 import { MemoryStorage } from '../src/memory-storage';
 import { applyMove, planMove } from '../src/move';
 import { NodeStorage } from '../src/node-storage';
@@ -157,6 +158,11 @@ for (const { name, make } of ADAPTERS) {
       expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @dana due:2026-11-23');
       expect(await s.read('ref/Other.md')).toBe(FILES['ref/Other.md']);
 
+      const made = await addTaskNote(s, index, { title: 'Contract task', due: '2026-11-30', created: '2026-11-21' });
+      expect(await s.read(made.path)).toBe('---\ntitle: Contract task\nstatus: todo\ndue: 2026-11-30\ncreated: 2026-11-21\ntags: []\npeople: []\n---\n\n');
+      await setTaskDone(s, index, made.taskId, true);
+      expect((await s.read(made.path)).split('\n')[2]).toBe('status: done');
+
       const mv = planMove(index, 'inbox/Kickoff.md', 'projects/site');
       await applyMove(s, index, mv, new Set(mv.inbound.map((e) => e.id)));
       expect(await s.read('ref/Other.md')).toBe('# Other\nback to [[projects/site/Kickoff]]\n');
@@ -164,11 +170,11 @@ for (const { name, make } of ADAPTERS) {
 
       const rn = planRename(index, 'ref/Other.md', 'Renamed');
       await applyRename(s, index, rn, { include: new Set(rn.edits.map((e) => e.id)), keepAlias: false });
-      expect(Object.keys(await tree(s)).sort()).toEqual(['plain.md', 'projects/site/Kickoff.md', 'ref/Renamed.md']);
+      expect(Object.keys(await tree(s)).sort()).toEqual(['plain.md', 'projects/site/Kickoff.md', 'ref/Renamed.md', 'tasks/Contract task.md']);
 
       const del = planDelete(index, 'plain.md', '2026-11-21T00-00-00');
       await deleteNote(s, index, del, { trash: true });
-      expect(Object.keys(await tree(s)).sort()).toEqual(['projects/site/Kickoff.md', 'ref/Renamed.md']);
+      expect(Object.keys(await tree(s)).sort()).toEqual(['projects/site/Kickoff.md', 'ref/Renamed.md', 'tasks/Contract task.md']);
       expect((await s.listDir('.plainfile/trash')).length).toBe(1);
     });
   });

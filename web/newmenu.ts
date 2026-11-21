@@ -2,7 +2,9 @@ import { createFromTemplate, promptDefault, renderTemplate, templateExtras, type
 import { addDays } from '../src/query';
 import { kindForPrompt } from '../src/vocabulary';
 import { openNote } from './notes';
-import { errorMessage, quickAdd, render, state, today } from './store';
+import { listProjects } from '../src/projects';
+import { findProject } from '../src/quickline';
+import { errorMessage, quickAddTask, render, state, today, words } from './store';
 import { esc } from './util';
 
 export function openNew(): void {
@@ -43,7 +45,7 @@ export function html(): string {
   if (m.step === 'menu') {
     body =
       '<h2>New</h2><ul class="plain menu">' +
-      '<li><button class="menu-item" data-new-task><b>Task</b><span>Add a line to your Inbox. Quickest way to capture something.</span></button></li>' +
+      '<li><button class="menu-item" data-new-task><b>Task</b><span>A task with its own note. It shows in Today, the Board and your Inbox.</span></button></li>' +
       state.templates
         .filter((t) => !t.hidden)
         .map((t) => `<li><button class="menu-item" data-tpl="${esc(t.name)}"><b>${esc(t.name)}</b><span>${esc(t.description || (t.source === 'built-in' ? '' : 'Your template'))}</span></button></li>`)
@@ -51,10 +53,11 @@ export function html(): string {
       '</ul><p class="muted small" style="margin:10px 0 0">Add your own templates as markdown files in <code>.plainfile/templates/</code>.</p>';
   } else if (m.step === 'task') {
     body =
-      '<h2>New task</h2><p class="muted small" style="margin:0 0 10px">Added to <code>inbox/Inbox.md</code> with today as its created date. Nothing else in that file changes.</p>' +
+      '<h2>New task</h2><p class="muted small" style="margin:0 0 10px">Made as its own note in <code>tasks/</code> (or the project\'s <code>tasks/</code> folder), dated today. It also shows in your Inbox until it is filed in a project. You can type the same thing on one line in the box on Today.</p>' +
       `<div class="fld"><label for="new-task-text">Task</label><input id="new-task-text" class="inp" type="text" autocomplete="off" value="${esc(m.text)}" placeholder="Call Dana about the logo files"></div>` +
       `<div class="fld"><label for="new-task-due">Due date (optional)</label><div class="qdue"><input id="new-task-due" class="inp date" type="date" value="${esc(m.due)}"><span class="qpicks">${[['Today', 0], ['Tomorrow', 1], ['Next week', 7]].map(([l, n]) => `<button type="button" class="chip qpick" data-mdue="${addDays(today(), n as number)}" aria-pressed="${m.due === addDays(today(), n as number)}">${l}</button>`).join('')}</span></div></div>` +
       `<div class="fld"><label for="new-task-people">People (optional)</label><input id="new-task-people" class="inp" type="text" autocomplete="off" data-suggest="people" placeholder="@dana @sam" value="${esc(m.people)}"></div>` +
+      `<div class="fld"><label for="new-task-project">Project (optional)</label><input id="new-task-project" class="inp" type="text" autocomplete="off" data-suggest="projects" placeholder="website-relaunch" value="${esc(m.project)}"></div>` +
       `<div class="fld"><label for="new-task-tags">Tags (optional)</label><input id="new-task-tags" class="inp" type="text" autocomplete="off" data-suggest="tags" placeholder="#launch #home" value="${esc(m.tags)}"></div>` +
       (m.error ? `<div class="notice err small">${esc(m.error)}</div>` : '') +
       `<div class="row-gap"><button class="btn primary" data-act="create-task"${m.busy ? ' disabled' : ''}>${m.busy ? 'Adding…' : 'Add task'}</button><button class="btn" data-act="modal-back"${m.busy ? ' disabled' : ''}>Back</button></div>`;
@@ -86,7 +89,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   if (target.closest('[data-new-task]')) {
-    state.modal = { step: 'task', text: '', due: '', tags: '', people: '', error: '' };
+    state.modal = { step: 'task', text: '', due: '', tags: '', people: '', project: '', error: '' };
     render();
     return true;
   }
@@ -116,7 +119,9 @@ export async function click(target: HTMLElement): Promise<boolean> {
     m.error = '';
     render();
     await paint();
-    const err = await quickAdd(m.text, m.due, m.tags, m.people);
+    const wanted = m.project.trim();
+    const project = wanted && state.index ? findProject(listProjects(state.index), wanted.replace(/^\+/, '')) : undefined;
+    const err = wanted && !project ? `No project called "${wanted}".` : await quickAddTask({ title: m.text, due: m.due, tags: words(m.tags), people: words(m.people), project });
     if (err) {
       m.busy = false;
       m.error = err;
@@ -159,6 +164,7 @@ export function input(e: Event): boolean {
     if (t.id === 'new-task-text') m.text = t.value;
     else if (t.id === 'new-task-due') m.due = t.value;
     else if (t.id === 'new-task-people') m.people = t.value;
+    else if (t.id === 'new-task-project') m.project = t.value;
     else if (t.id === 'new-task-tags') m.tags = t.value;
     else return false;
     return true;

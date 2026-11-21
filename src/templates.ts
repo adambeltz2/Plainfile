@@ -56,6 +56,7 @@ export const BUILT_IN: Template[] = [
   },
   {
     name: 'Task',
+    hidden: true,
     description: 'One file per task, with status and due date. Shows up in Today.',
     folder: 'tasks',
     filename: '{{title}}',

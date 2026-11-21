@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDefaultFrontmatter, addFrontmatterListItem, frontmatterText, setFrontmatterField } from '../src/frontmatter';
+import { addDefaultFrontmatter, setProjects, addFrontmatterListItem, frontmatterText, setFrontmatterField } from '../src/frontmatter';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { setTaskStatus } from '../src/writeback';
@@ -75,5 +75,21 @@ describe('addDefaultFrontmatter', () => {
     expect(addDefaultFrontmatter('', 'x', '2026-11-21')).toBe('---\ntitle: x\ncreated: 2026-11-21\ntags: []\n---\n');
     const has = '---\ntitle: Keep\n---\nBody\n';
     expect(addDefaultFrontmatter(has, 'x', '2026-11-21')).toBe(has);
+  });
+});
+
+describe('setProjects', () => {
+  it('writes one project as a plain value, several as a list, and none by removing the key', () => {
+    const base = '---\ntitle: N\ntags: [a]\n---\nBody\n';
+    const one = setProjects(base, ['site']);
+    expect(one).toBe('---\ntitle: N\ntags: [a]\nproject: site\n---\nBody\n');
+    const two = setProjects(one, ['site', 'Kitchen Remodel']);
+    expect(two).toBe('---\ntitle: N\ntags: [a]\nproject: [site, Kitchen Remodel]\n---\nBody\n');
+    expect(setProjects(two, ['site'])).toBe(one);
+    expect(setProjects(one, [])).toBe(base);
+  });
+  it('creates frontmatter for a note that has none, keeps CRLF, and ignores repeats', () => {
+    expect(setProjects('Body\n', ['site'])).toBe('---\nproject: site\n---\nBody\n');
+    expect(setProjects('---\r\ntitle: N\r\n---\r\nB\r\n', ['a', 'A'])).toBe('---\r\ntitle: N\r\nproject: a\r\n---\r\nB\r\n');
   });
 });

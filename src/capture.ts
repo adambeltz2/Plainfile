@@ -58,3 +58,53 @@ export async function addTask(
   const line = old === '' ? 1 : old.replace(/\r?\n$/, '').split('\n').length + 1;
   return { path, line, before: '', after: task, written: true };
 }
+
+/** A file name for a task note: the title, without characters file systems refuse, and not too long. */
+export function taskFileName(title: string): string {
+  const clean = title.replace(/[\\/:?*"<>|#\[\]^]/g, '-').replace(/\s+/g, ' ').replace(/^[.\s-]+|[\s.-]+$/g, '').slice(0, 80).trim();
+  return clean || 'Task';
+}
+
+const yamlText = (v: string): string => (/^[\w][^:#]*$/.test(v) && !/^(true|false|null|yes|no|~)$/i.test(v) && !/\s$/.test(v) ? v : `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+const flow = (xs: string[]): string => `[${xs.map((x) => (/^[\w][\w./-]*$/.test(x) ? x : `"${x.replace(/"/g, '\\"')}"`)).join(', ')}]`;
+
+export interface TaskNoteInput {
+  title: string;
+  due?: string;
+  created: string;
+  tags?: string[];
+  people?: string[];
+  /** The project name written as `project:`, and the folder whose `tasks/` folder the note goes in. */
+  project?: { name: string; dir: string };
+}
+
+/**
+ * Create a task as its own note: `tasks/<title>.md` (or the project's `tasks/` folder) with `status`, `due`,
+ * `created`, `project`, `tags` and `people` in its frontmatter. It shows in Today by its due date, on the
+ * Board by its status, and in the Inbox view while it is not filed in a project. The result points at the
+ * `title:` line, and the task's id is its `status:` line.
+ */
+export async function addTaskNote(storage: VaultStorage, index: VaultIndex, input: TaskNoteInput): Promise<ChangeResult & { taskId: string }> {
+  const title = input.title.replace(/\s+/g, ' ').trim();
+  if (!title) throw new Error('Type something for the task first.');
+  const clean = (xs: string[] | undefined, re: RegExp): string[] => [...new Set((xs ?? []).map((x) => x.trim().replace(re, '').replace(/\s+/g, '-')).filter(Boolean))];
+  const fm = [`title: ${yamlText(title)}`, 'status: todo'];
+  if (input.due) fm.push(`due: ${input.due}`);
+  fm.push(`created: ${input.created}`);
+  if (input.project) fm.push(`project: ${yamlText(input.project.name)}`);
+  fm.push(`tags: ${flow(clean(input.tags, /^#/))}`, `people: ${flow(clean(input.people, /^@/))}`);
+  const content = `---\n${fm.join('\n')}\n---\n\n`;
+  const dir = `${input.project?.dir ? `${input.project.dir}/` : ''}tasks`;
+  const base = taskFileName(title);
+  for (let n = 1; n < 1000; n++) {
+    const path = `${dir}/${base}${n > 1 ? ` ${n}` : ''}.md`;
+    try {
+      await storage.create(path, content);
+      await index.refreshFile(path);
+      return { path, line: 2, before: '', after: fm[0] as string, written: true, taskId: `${path}:3` };
+    } catch (e) {
+      if (!(e instanceof ExistsError)) throw e;
+    }
+  }
+  throw new Error('Could not find a free name for that task.');
+}

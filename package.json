@@ -1,6 +1,6 @@
 {
   "name": "plainfile",
-  "version": "0.30.2",
+  "version": "0.31.0",
   "private": true,
   "description": "A productivity hub over a plain folder of markdown files.",
   "type": "module",

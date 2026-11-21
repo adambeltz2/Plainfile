@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { localDate, openVault, readFile } from './helpers';
+import { localDate, openVault, readFile, readFileOrEmpty } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -42,7 +42,7 @@ test.describe('in the editor', () => {
     await expect(options(page)).toHaveCount(1);
     await settle(page);
     await page.keyboard.press('Enter');
-    await expect.poll(() => readFile(page, dir, 'draft.md'), { timeout: 5000 }).toBe('Draft\n[[pricing-research]]');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'draft.md'), { timeout: 5000 }).toBe('Draft\n[[pricing-research]]');
   });
 
   test('a note\'s alias is offered too, and links to a nested note use the shortest name', async ({ page }) => {
@@ -67,7 +67,7 @@ test.describe('in the editor', () => {
     await expect(options(page).filter({ hasText: 'dana' })).toBeVisible();
     await settle(page);
     await page.keyboard.press('Enter');
-    await expect.poll(() => readFile(page, dir, 'draft.md'), { timeout: 5000 }).toBe('Draft\n#launch @sam @dana');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'draft.md'), { timeout: 5000 }).toBe('Draft\n#launch @sam @dana');
   });
 
   test('frontmatter values are offered: project, type, status and tags', async ({ page }) => {
@@ -93,7 +93,7 @@ test.describe('in the editor', () => {
     await expect(options(page).filter({ hasText: 'launch' })).toBeVisible();
     await settle(page);
     await page.keyboard.press('Enter');
-    await expect.poll(() => readFile(page, dir, 'fm.md'), { timeout: 5000 }).toBe('---\ntitle: X\nproject: site\ntype: project\nstatus: waiting\ntags: [launch\n---\nbody');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'fm.md'), { timeout: 5000 }).toBe('---\ntitle: X\nproject: site\ntype: project\nstatus: waiting\ntags: [launch\n---\nbody');
   });
 
   test('suggestions do not appear where they would get in the way', async ({ page }) => {
@@ -115,6 +115,39 @@ test.describe('in the editor', () => {
     await expect(page.locator('.wrap.focus')).toHaveCount(1);
     await page.keyboard.press('Escape');
     await expect(page.locator('.wrap.focus')).toHaveCount(0);
+  });
+});
+
+test.describe('dates', () => {
+  test('due: in a note offers day words and writes the real date', async ({ page }) => {
+    const dir = await openVault(page, VAULT);
+    await open(page, 'draft');
+    await typeAtEnd(page, '\n- [ ] Buy milk due:to');
+    await expect(options(page)).toHaveText([/today/, /tomorrow/]);
+    await expect(options(page).first()).toContainText(localDate(0));
+    await settle(page);
+    await page.keyboard.press('ArrowDown'); // today is first; down once is tomorrow
+    await page.keyboard.press('Enter');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'draft.md'), { timeout: 5000 }).toBe(`Draft\n- [ ] Buy milk due:${localDate(1)}`);
+  });
+
+  test('due: in the frontmatter offers them too, and the one-line quick add offers the day word', async ({ page }) => {
+    await openVault(page, VAULT);
+    await open(page, 'X');
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+Home');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('End');
+    await page.keyboard.type('\ndue: tom');
+    await expect(options(page)).toHaveText([/tomorrow/]);
+    await page.keyboard.press('Escape');
+    await nav(page, 'Today').click();
+    const box = page.locator('#quick-text');
+    await box.click();
+    await box.pressSequentially('Pay rent due:tom');
+    await expect(page.locator('.suggest button')).toHaveText(['tomorrow']);
+    await page.locator('.suggest button').click();
+    await expect(box).toHaveValue('Pay rent due:tomorrow ');
   });
 });
 
@@ -141,8 +174,8 @@ test.describe('in fields', () => {
     await box.press('Backspace');
     // With nothing highlighted, Enter submits as before.
     await box.press('Enter');
-    await expect(page.locator('.diff .add')).toContainText('- [ ] Call @sam #launch');
-    expect(await readFile(page, dir, 'inbox/Inbox.md')).toContain(`- [ ] Call @sam #launch created:${localDate(0)}`);
+    await expect(page.locator('.diff .add')).toContainText('title: Call');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Call.md')).toBe(`---\ntitle: Call\nstatus: todo\ncreated: ${localDate(0)}\ntags: [launch]\npeople: [sam]\n---\n\n`);
   });
 
   test('template fields suggest too, joined with commas, for example attendees', async ({ page }) => {

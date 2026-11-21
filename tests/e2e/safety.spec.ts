@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { listFiles, openVault, readFile } from './helpers';
+import { listFiles, openVault, readFile, readFileOrEmpty } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -34,7 +34,7 @@ test.describe('saving and undo', () => {
     await open(page, 'n');
     await typeAtEnd(page, ' quick');
     await page.keyboard.press('Control+s');
-    await expect.poll(() => readFile(page, dir, 'n.md'), { timeout: 600 }).toBe('Start quick');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'n.md'), { timeout: 600 }).toBe('Start quick');
   });
 
   test('Undo and Redo buttons work without a keyboard shortcut, and are disabled when there is nothing to do', async ({ page }) => {

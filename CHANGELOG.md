@@ -4,6 +4,26 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.31.0] - 2026-11-21
+
+### Changed
+- **One Task, always its own note.** The New menu has a single **Task** (it had two). Every task you
+  create, from New > Task or the one-line box on Today, is a note in `tasks/` (or the project's `tasks/`
+  folder with `project:`), with `status`, `due`, `created`, `tags` and `people`. The title is just the words:
+  `Call Dana @dana #launch due:friday` becomes the note "Call Dana". The **Inbox** view lists these notes
+  (until they are filed in a project) as well as lines in `inbox/`. After adding, the new task is shown in
+  Today if it is due within the week, otherwise in the Inbox.
+- The New > Task form has a Project field with type-ahead.
+
+### Added
+- **Type-ahead for dates.** After `due:` in a note (inline or in the frontmatter) the editor offers today,
+  tomorrow, next-week, weekdays, 2w and 3d, and writes the real date. The one-line box on Today offers the
+  day words after `due:` too.
+- **Tag a note with projects.** The properties panel has a Projects row: add the note to one or more
+  projects (type-ahead, existing projects only) and remove it with ×. One project is written
+  `project: site`, several `project: [site, kitchen]`. The project dashboard lists the note and its tasks.
+  The project chip opens that dashboard.
+
 ## [0.30.2] - 2026-11-21
 
 ### Changed

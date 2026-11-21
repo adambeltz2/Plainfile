@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { noteMenu, openVault, readFile } from './helpers';
+import { noteMenu, openVault, readFile, readFileOrEmpty } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -56,11 +56,11 @@ test.describe('the ⋯ More menu', () => {
     await expect(page.locator('.ed-head .path')).toHaveText('inbox/Kickoff copy.md');
     expect(await readFile(page, dir, 'inbox/Kickoff copy.md')).toBe(VAULT['inbox/Kickoff.md'].replace('title: Kickoff', 'title: "Kickoff copy"'));
     await noteMenu(page, 'Pin to top');
-    await expect.poll(() => readFile(page, dir, 'inbox/Kickoff copy.md'), { timeout: 4000 }).toContain('pinned: true');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'inbox/Kickoff copy.md'), { timeout: 4000 }).toContain('pinned: true');
     await expect(page.locator('#note-list .folder', { hasText: 'Pinned' })).toBeVisible();
     await expect(page.locator('#note-list .note-quick').first()).toHaveAttribute('data-note', 'inbox/Kickoff copy.md');
     await noteMenu(page, 'Unpin');
-    await expect.poll(() => readFile(page, dir, 'inbox/Kickoff copy.md'), { timeout: 4000 }).not.toContain('pinned');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'inbox/Kickoff copy.md'), { timeout: 4000 }).not.toContain('pinned');
   });
 });
 

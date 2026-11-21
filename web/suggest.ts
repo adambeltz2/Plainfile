@@ -18,6 +18,8 @@ interface Open {
   sep: string;
 }
 
+const DUE_WORDS = ['today', 'tomorrow', 'next-week', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
 let popup: HTMLDivElement | undefined;
 let cur: Open | undefined;
 let quiet = false;
@@ -68,6 +70,14 @@ export function show(input: HTMLInputElement): void {
   const { start, end, token } = tokenAt(input);
   let prefix = /^[#@]/.exec(token)?.[0] ?? '';
   let word = token;
+  if (kind === 'line' && /^due:/i.test(token)) {
+    // Day words for the one-line quick add. The line parser reads them, so the word itself is written.
+    const typed = token.slice(4).toLowerCase();
+    const items = DUE_WORDS.filter((w) => w.startsWith(typed) && w !== typed);
+    if (!items.length) return close();
+    cur = { input, items, active: -1, start, end, prefix: 'due:', sep: ' ' };
+    return draw();
+  }
   if (kind === 'line') {
     // A whole sentence: only the word being typed matters, and its first character says what it is.
     const lead = token[0];

@@ -353,6 +353,9 @@ app.addEventListener('submit', (e) => {
   if (form.matches('[data-quick]')) {
     e.preventDefault();
     void todayScreen.submitQuick();
+  } else if (form.matches('[data-proj-add]')) {
+    e.preventDefault();
+    notes.addProject();
   }
 });
 
@@ -481,7 +484,7 @@ palette.setRunner(async (item) => {
     case 'screen':
       return go(item.screen as ScreenId);
     case 'new-task':
-      state.modal = { step: 'task', text: '', due: '', tags: '', people: '', error: '' };
+      state.modal = { step: 'task', text: '', due: '', tags: '', people: '', project: '', error: '' };
       return requestRender();
     default:
       return;

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { localDate, openVault, readFile, writeFileExternally } from './helpers';
+import { localDate, openVault, readFile, writeFileExternally, readFileOrEmpty } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -13,19 +13,21 @@ async function openNoteInEditor(page: Page, title: string): Promise<void> {
 }
 
 test.describe('quick add and New menu', () => {
-  test('quick add creates the Inbox and appends without touching what is there', async ({ page }) => {
+  test('quick add makes each task its own note, shows it in the Inbox, and touches nothing else', async ({ page }) => {
     const today = localDate(0);
     const dir = await openVault(page, { 'a.md': '# A\n' });
     await page.locator('#quick-text').fill('Call Dana due:today');
     await page.locator('#quick-text').press('Enter');
-    await expect(page.locator('.diff .add')).toHaveText(`+- [ ] Call Dana due:${today} created:${today}`);
-    expect(await readFile(page, dir, 'inbox/Inbox.md')).toBe(`# Inbox\n\n- [ ] Call Dana due:${today} created:${today}\n`);
+    await expect(page.locator('.diff .add')).toHaveText('+title: Call Dana');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Call Dana.md')).toBe(`---\ntitle: Call Dana\nstatus: todo\ndue: ${today}\ncreated: ${today}\ntags: []\npeople: []\n---\n\n`);
     await expect(page.locator('.task .t', { hasText: 'Call Dana' })).toBeVisible();
 
     await page.locator('#quick-text').fill('Second one');
     await page.locator('#quick-text').press('Enter');
-    await expect(page.locator('.diff .add')).toHaveText(`+- [ ] Second one created:${today}`);
-    expect(await readFile(page, dir, 'inbox/Inbox.md')).toBe(`# Inbox\n\n- [ ] Call Dana due:${today} created:${today}\n- [ ] Second one created:${today}\n`);
+    await expect(page.locator('.side [data-view="inbox"]')).toContainText('2');
+    await expect(page.locator('.task .t', { hasText: 'Second one' })).toBeVisible(); // no date, so it lands in the Inbox view
+    await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Second one.md')).toContain(`status: todo\ncreated: ${today}\n`);
+    expect(await readFile(page, dir, 'a.md')).toBe('# A\n');
   });
 
   test('+ New from a template shows a live preview, creates the file, and opens it in the editor', async ({ page }) => {

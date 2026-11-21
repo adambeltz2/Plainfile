@@ -1,8 +1,8 @@
-import { addTask } from '../src/capture';
+import { addTaskNote } from '../src/capture';
 import { localToday } from '../src/dates';
 import { FsaStorage, fsaSupported } from '../src/fsa-storage';
 import { checkHealth, type HealthReport } from '../src/health';
-import { VaultIndex } from '../src/index';
+import { dirname, VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { listProjects, type Project } from '../src/projects';
 import { findProject, parseQuickLine, type QuickLine } from '../src/quickline';
@@ -18,7 +18,7 @@ export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | '
 
 export type Modal =
   | { step: 'menu' }
-  | { step: 'task'; text: string; due: string; tags: string; people: string; error: string; busy?: boolean }
+  | { step: 'task'; text: string; due: string; tags: string; people: string; project: string; error: string; busy?: boolean }
   | { step: 'template'; name: string; values: Record<string, string>; extras: Record<string, string>; error: string; busy?: boolean };
 
 export interface Context {
@@ -255,13 +255,21 @@ export function words(s: string): string[] {
   return s.split(/[\s,]+/).map((x) => x.replace(/^[#@]/, '')).filter(Boolean);
 }
 
-export async function quickAdd(text: string, due: string, tags = '', people = ''): Promise<string | null> {
+/** The name a project goes by in `project:`, and the folder its task notes are filed in. */
+export function projectRef(p: Project): { name: string; dir: string } {
+  const dir = dirname(p.path);
+  const file = (p.path.split('/').pop() ?? p.path).replace(/\.md$/i, '');
+  return { name: file.toLowerCase() === 'index' && dir ? (dir.split('/').pop() as string) : file, dir };
+}
+
+/** Create a task as its own note (it also shows in the Inbox view). Returns an error message, or null on success. */
+export async function quickAddTask(input: { title: string; due?: string; tags?: string[]; people?: string[]; project?: Project }): Promise<string | null> {
   const { storage, index } = state;
   if (!storage || !index) return 'Open a folder first.';
   try {
-    const r: ChangeResult = await addTask(storage, index, { text, due: due || undefined, created: today(), tags: words(tags), people: words(people) });
+    const r = await addTaskNote(storage, index, { title: input.title, due: input.due || undefined, created: today(), tags: input.tags, people: input.people, project: input.project ? projectRef(input.project) : undefined });
     state.log = r;
-    state.selected = `${r.path}:${r.line}`;
+    state.selected = r.taskId;
     state.context = undefined;
     return null;
   } catch (e) {
@@ -281,21 +289,13 @@ export function planQuickLine(line: string): { parsed: QuickLine; project?: Proj
   return { parsed, project };
 }
 
-/** Add one typed line such as "Call Dana +Website @dana due:friday". Returns an error message, or null on success. */
+/** Add one typed line such as "Call Dana +Website @dana due:friday" as a task note. Returns an error message, or null on success. */
 export async function quickAddLine(line: string): Promise<string | null> {
-  const { storage, index } = state;
-  if (!storage || !index) return 'Open a folder first.';
+  if (!state.storage || !state.index) return 'Open a folder first.';
   const plan = planQuickLine(line);
   if (plan.error) return plan.error;
-  try {
-    const r: ChangeResult = await addTask(storage, index, { text: plan.parsed.text, created: today() }, plan.project?.path);
-    state.log = r;
-    state.selected = `${r.path}:${r.line}`;
-    state.context = undefined;
-    return null;
-  } catch (e) {
-    return writeFailure(e) ?? errorMessage(e);
-  }
+  const { parsed, project } = plan;
+  return quickAddTask({ title: parsed.title || parsed.text, due: parsed.due, tags: parsed.tags, people: parsed.people, project });
 }
 
 export async function loadContext(id: string): Promise<void> {

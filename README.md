@@ -37,9 +37,11 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 - **Today:** open tasks that are late, due today or due this week, plus Upcoming, Inbox, Waiting on,
   All open, Follow-ups and Projects views. Ticking a box changes one character in the file and shows
   the exact before and after lines.
+- **Every task is its own note** (`tasks/<title>.md`, or inside its project), so it has room for details,
+  and it shows in Today, the Board and your Inbox.
 - **One-line quick add:** `Call Dana +Website @dana #launch due:tomorrow`. Natural dates (`today`,
   `tomorrow`, `mon`, `next-week`, `+3d`), a preview before you save, and type-ahead for people, tags
-  and projects. Every task gets a created date.
+  and projects, and `due:` day words. Every task gets a created date.
 - **Projects:** a dashboard per project with progress, overdue count, open tasks you can tick,
   notes, follow-ups, people and tags. A project is a folder with an `index.md`; notes elsewhere
   belong to it when their `project:` names it. Notebook projects (`active`, `sortOrder`) still work.
@@ -53,7 +55,9 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
   right-click or long-press menu in the list.
 - **Go to… and quick keys:** Ctrl/Cmd+P finds a note by a few letters, creates one, or runs an action
   ("move kick"). F2 renames, Ctrl/Cmd+Shift+M moves, Ctrl/Cmd+Shift+X toggles X-ray.
-- **Type-ahead:** `[[` links, `#` tags, `@` people and frontmatter values while you type.
+- **Type-ahead:** `[[` links, `#` tags, `@` people, `due:` days and frontmatter values while you type.
+- **Projects on any note:** add a note to one or more projects from its properties, and it shows on
+  each project's dashboard with its tasks.
 - **Search:** words plus `tag:`, `folder:`, `type:`, `is:open`, `due:`, `@person`, `modified:` and
   `created:`, with "Modified today" chips and a recent-notes list.
 - **Explore:** related notes (shared tags, links, project, similar text) and a graph.

@@ -102,3 +102,8 @@ export async function noteMenu(page: Page, label: string | RegExp): Promise<void
   await page.locator('.ed-actions').getByRole('button', { name: /More/ }).click();
   await page.locator('.ctx').getByRole('menuitem', { name: label }).click();
 }
+
+/** Like readFile, but an empty string while the file does not exist yet, so a poll can wait for it. */
+export async function readFileOrEmpty(page: Page, dir: string, path: string): Promise<string> {
+  return readFile(page, dir, path).catch(() => '');
+}

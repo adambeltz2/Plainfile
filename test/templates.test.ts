@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { INBOX_FILE, addTask, cleanTaskText } from '../src/capture';
+import { INBOX_FILE, addTask, addTaskNote, cleanTaskText, taskFileName } from '../src/capture';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { ConflictError } from '../src/storage';
@@ -184,5 +184,43 @@ describe('quick add details', () => {
   it('leaves out anything not given', async () => {
     const { store, index } = await setup();
     expect((await addTask(store, index, { text: 'Plain', created: TODAY })).after).toBe('- [ ] Plain created:2026-11-21');
+  });
+});
+
+
+describe('addTaskNote', () => {
+  async function setup(files: Record<string, string> = {}) {
+    const store = new MemoryStorage(files);
+    const index = new VaultIndex(store);
+    await index.scan();
+    return { store, index };
+  }
+
+  it('makes the task its own note with status, dates, people and tags, and indexes it as a task', async () => {
+    const { store, index } = await setup();
+    const r = await addTaskNote(store, index, { title: 'Call Dana', due: '2026-11-24', created: '2026-11-21', tags: ['#launch'], people: ['@dana', 'sam'] });
+    expect(r.path).toBe('tasks/Call Dana.md');
+    expect(await store.read(r.path)).toBe('---\ntitle: Call Dana\nstatus: todo\ndue: 2026-11-24\ncreated: 2026-11-21\ntags: [launch]\npeople: [dana, sam]\n---\n\n');
+    const t = index.getTask(r.taskId)!;
+    expect(t).toMatchObject({ kind: 'file', title: 'Call Dana', due: '2026-11-24', done: false, status: 'todo' });
+    expect(t.who).toEqual(expect.arrayContaining(['@dana']));
+  });
+
+  it('files a project task in the project folder with project:, leaves out an empty due, and never overwrites', async () => {
+    const { store, index } = await setup();
+    const input = { title: 'Order: cabinets?', created: '2026-11-21', project: { name: 'kitchen-remodel', dir: 'projects/kitchen-remodel' } };
+    const a = await addTaskNote(store, index, input);
+    const b = await addTaskNote(store, index, input);
+    expect([a.path, b.path]).toEqual(['projects/kitchen-remodel/tasks/Order- cabinets.md', 'projects/kitchen-remodel/tasks/Order- cabinets 2.md']);
+    expect(await store.read(a.path)).toBe('---\ntitle: "Order: cabinets?"\nstatus: todo\ncreated: 2026-11-21\nproject: kitchen-remodel\ntags: []\npeople: []\n---\n\n');
+    expect(index.getTask(a.taskId)?.title).toBe('Order: cabinets?');
+  });
+
+  it('needs a title, and file names are made safe', async () => {
+    const { store, index } = await setup();
+    await expect(addTaskNote(store, index, { title: '   ', created: '2026-11-21' })).rejects.toThrow('Type something');
+    expect(taskFileName('a/b:c*d?')).toBe('a-b-c-d');
+    expect(taskFileName('...')).toBe('Task');
+    expect(taskFileName('x'.repeat(200))).toHaveLength(80);
   });
 });

@@ -6,6 +6,8 @@ import { addDays } from './query';
 export interface QuickLine {
   /** The task text, with the due date written as an ISO date and the `+Project` word removed. */
   text: string;
+  /** Just the words: no `@people`, `#tags`, `due:` or `+Project`. This is a task note's title. */
+  title: string;
   due?: string;
   project?: string;
   people: string[];
@@ -36,12 +38,14 @@ export function parseDueWord(word: string, today: string): string | undefined {
 
 /** Pull `+Project`, `due:word`, `@people` and `#tags` out of one line. Everything else is the task text. */
 export function parseQuickLine(line: string, today: string): QuickLine {
-  const out: QuickLine = { text: '', people: [], tags: [] };
+  const out: QuickLine = { text: '', title: '', people: [], tags: [] };
   const kept: string[] = [];
+  const words: string[] = [];
   for (const tok of line.trim().split(/\s+/)) {
     if (!tok) continue;
     const due = /^due:(.*)$/i.exec(tok);
     if (due) {
+      // the date is not part of the title
       const iso = parseDueWord(due[1] ?? '', today);
       if (iso) {
         out.due = iso;
@@ -61,9 +65,11 @@ export function parseQuickLine(line: string, today: string): QuickLine {
     if (who) out.people.push(who[1]!.replace(/[.-]+$/, ''));
     const tag = /^#([A-Za-z][\w/-]*)/.exec(tok);
     if (tag) out.tags.push(tag[1]!);
+    if (!who && !tag) words.push(tok);
     kept.push(tok);
   }
   out.text = kept.join(' ');
+  out.title = words.join(' ');
   return out;
 }
 

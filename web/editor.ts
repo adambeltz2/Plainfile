@@ -1,4 +1,5 @@
 import { defaultKeymap, history, historyKeymap, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
+import { parseDueWord } from '../src/quickline';
 import { autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
 import { markdown } from '@codemirror/lang-markdown';
 import { Compartment, EditorState, Transaction, type Range } from '@codemirror/state';
@@ -324,7 +325,21 @@ function applyLink(insert: string) {
 const SCALAR_KEYS: Record<string, SuggestKind> = { project: 'projects', type: 'types', status: 'statuses' };
 const LIST_KEYS: Record<string, SuggestKind> = { tags: 'tags', people: 'people', attendees: 'people' };
 
-function suggestSource(s: Suggester): CompletionSource {
+const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+/** Day words offered after `due:`. Choosing one writes the real date, so the file never holds a word. */
+function dueOptions(today: string): { label: string; detail: string; apply: string; type: string }[] {
+  const fmt = (iso: string): string => `${WEEKDAYS[new Date(`${iso}T00:00:00Z`).getUTCDay()]?.slice(0, 3)} ${iso}`;
+  const words = ['today', 'tomorrow', 'next-week', ...WEEKDAYS.slice(1), 'sunday', '2w', '3d'];
+  const out: { label: string; detail: string; apply: string; type: string }[] = [];
+  for (const w of words) {
+    const iso = parseDueWord(w, today);
+    if (iso) out.push({ label: w, detail: fmt(iso), apply: iso, type: 'keyword' });
+  }
+  return out;
+}
+
+function suggestSource(s: Suggester, today: () => string): CompletionSource {
   const options = (kind: SuggestKind) => s.names(kind).map((n) => ({ label: n, type: 'keyword' }));
   return (ctx: CompletionContext): CompletionResult | null => {
     const doc = ctx.state.doc;
@@ -349,6 +364,8 @@ function suggestSource(s: Suggester): CompletionSource {
           validFor: /^[^\]|#]*$/,
         };
       }
+      const due = /(?:^|[\s(])#?due:([A-Za-z0-9+-]*)$/i.exec(before);
+      if (due) return { from: ctx.pos - (due[1] ?? '').length, options: dueOptions(today()), validFor: /^[A-Za-z0-9+-]*$/ };
       const tag = /(?:^|[\s(])#([\p{L}\p{N}_/-]*)$/u.exec(before);
       if (tag) return { from: ctx.pos - (tag[1] ?? '').length, options: options('tags'), validFor: /^[\p{L}\p{N}_/-]*$/u };
       const who = /(?:^|[\s(])@([\p{L}\p{N}_-]*)$/u.exec(before);
@@ -360,6 +377,7 @@ function suggestSource(s: Suggester): CompletionSource {
     if (!m) return null;
     const key = (m[1] ?? '').toLowerCase();
     const rest = m[2] ?? '';
+    if (key === 'due' && !rest.includes('[')) return { from: ctx.pos - rest.length, options: dueOptions(today()), validFor: /^[A-Za-z0-9+-]*$/ };
     const scalar = SCALAR_KEYS[key];
     if (scalar && !rest.includes('[')) return { from: ctx.pos - rest.length, options: options(scalar), validFor: /^[^\s,\]]*$/ };
     const list = LIST_KEYS[key];
@@ -419,7 +437,7 @@ export function createEditor(o: { text: string; crlf: boolean; today: () => stri
       normalizeMarkers,
       ...(o.suggest
         ? [
-            autocompletion({ override: [suggestSource(o.suggest)], icons: false, maxRenderedOptions: 40 }),
+            autocompletion({ override: [suggestSource(o.suggest, o.today)], icons: false, maxRenderedOptions: 40 }),
             // Draw the list over the page, so a small editor or a phone screen does not clip it.
             tooltips({ parent: document.body, position: 'fixed' }),
           ]

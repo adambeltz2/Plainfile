@@ -10,10 +10,10 @@ export const quick = { text: '', error: '' };
 
 /** One line under the box saying how the typed text will be filed: where it goes, who, what tags, which day. */
 export function quickPreview(line: string): string {
-  if (!line.trim()) return 'One line is enough: <code>Email Sam +Project @sam #tag due:tomorrow</code>. It goes to your Inbox (or the project), dated today.';
+  if (!line.trim()) return 'One line is enough: <code>Email Sam +Project @sam #tag due:tomorrow</code>. It becomes a task note, shown in your Inbox (or filed in the project), dated today.';
   const { parsed, project, error } = planQuickLine(line);
   if (error) return `<span class="err-text">${esc(error)}</span>`;
-  const bits = [`Goes to <b>${esc(project ? project.title : 'Inbox')}</b>`];
+  const bits = [`Task note "${esc(parsed.title || parsed.text)}" in <b>${esc(project ? project.title : 'Inbox')}</b>`];
   if (parsed.due) bits.push(`due <b>${esc(fmtDate(parsed.due))}</b>`);
   if (parsed.people.length) bits.push(`with ${parsed.people.map((p) => `<b>@${esc(p)}</b>`).join(' ')}`);
   if (parsed.tags.length) bits.push(`tagged ${parsed.tags.map((x) => `<b>#${esc(x)}</b>`).join(' ')}`);
@@ -51,6 +51,9 @@ interface Group {
   items: TaskItem[];
 }
 
+/** The Inbox: lines in inbox/ and task notes that are not filed in a project (tasks/ at the top level). */
+const inInbox = (t: TaskItem): boolean => t.path.startsWith('inbox/') || (t.kind === 'file' && /^tasks\//.test(t.path));
+
 function groupsFor(view: TodayViewId, tasks: TaskItem[]): Group[] {
   const d = today();
   const week = addDays(d, 7);
@@ -73,7 +76,7 @@ function groupsFor(view: TodayViewId, tasks: TaskItem[]): Group[] {
       ];
       break;
     case 'inbox':
-      gs = [{ title: 'Inbox', items: open.filter((t) => t.path.startsWith('inbox/')).sort(byDue) }];
+      gs = [{ title: 'Inbox', items: open.filter(inInbox).sort(byDue) }];
       break;
     case 'waiting':
       gs = [{ title: 'Waiting on', items: open.filter((t) => t.status === 'waiting' || t.tags.includes('waiting')).sort(byDue) }];
@@ -221,11 +224,13 @@ async function select(id: string): Promise<void> {
 }
 
 export async function submitQuick(): Promise<void> {
+  const due = planQuickLine(quick.text).parsed.due;
   const err = await quickAddLine(quick.text);
   quick.error = err ?? '';
   if (!err) {
     quick.text = '';
-    state.view = state.view === 'today' || state.view === 'all' || state.view === 'inbox' ? state.view : 'inbox';
+    // Show the new task: in Today if it is due within the week, otherwise in the Inbox.
+    state.view = due && due <= addDays(today(), 7) ? 'today' : state.view === 'all' ? 'all' : 'inbox';
     if (state.selected) await loadContext(state.selected).catch(() => undefined);
   }
   render();

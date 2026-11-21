@@ -178,3 +178,10 @@ export function projectDashboard(index: VaultIndex, path: string, today: string,
     lastChange: covered.reduce((m, n) => Math.max(m, n.mtime), 0),
   };
 }
+
+/** The projects a note says it belongs to: `project: site` or `project: [site, kitchen]`. */
+export function noteProjects(n: Note): string[] {
+  const v = n.frontmatter.project;
+  const list = Array.isArray(v) ? v : v === undefined || v === null || v === '' ? [] : [v];
+  return list.map((x) => String(x).trim()).filter(Boolean);
+}

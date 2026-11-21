@@ -22,6 +22,7 @@ describe('parseQuickLine', () => {
   it('reads the user examples', () => {
     expect(parseQuickLine('Here is a task @Adam due:today', TODAY)).toEqual({
       text: 'Here is a task @Adam due:2026-11-21',
+      title: 'Here is a task',
       due: '2026-11-21',
       people: ['Adam'],
       tags: [],
@@ -41,6 +42,9 @@ describe('parseQuickLine', () => {
   });
   it('does not treat +3d style words as projects', () => {
     expect(parseQuickLine('Buy milk +3d', TODAY).project).toBeUndefined();
+  });
+  it('gives a clean title without people, tags, due or project', () => {
+    expect(parseQuickLine('Send logos +site @Adam #launch due:friday now', TODAY).title).toBe('Send logos now');
   });
 });
 

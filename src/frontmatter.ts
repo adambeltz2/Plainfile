@@ -118,3 +118,15 @@ export function addDefaultFrontmatter(text: string, title: string, created: stri
   const block = ['---', `title: ${yamlScalar(title)}`, `created: ${created}`, 'tags: []', '---'].join(eol) + eol;
   return block + text;
 }
+
+
+/**
+ * Write the `project:` value for a list of project names: removed when empty, `project: site` for one,
+ * and `project: [site, kitchen]` for several. Nothing else in the file changes.
+ */
+export function setProjects(text: string, names: string[]): string {
+  const unique = names.filter((n, i) => names.findIndex((m) => m.toLowerCase() === n.toLowerCase()) === i);
+  if (!unique.length) return setFrontmatterField(text, 'project', null);
+  const q = (n: string): string => (/^[\w][\w ./-]*$/.test(n) && !/\s$/.test(n) ? n : `"${n.replace(/"/g, '\\"')}"`);
+  return setFrontmatterField(text, 'project', unique.length === 1 ? q(unique[0] as string) : `[${unique.map(q).join(', ')}]`);
+}

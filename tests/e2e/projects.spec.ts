@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { localDate, openVault, readFile } from './helpers';
+import { localDate, openVault, readFile, readFileOrEmpty } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -26,9 +26,8 @@ test.describe('one-line quick add', () => {
     await expect(page.locator('#quick-preview')).toContainText('@Adam');
     await expect(page.locator('#quick-preview')).toContainText('#launch');
     await page.locator('#quick-text').press('Enter');
-    const line = `- [ ] Here is a task @Adam #launch due:${localDate(1)} created:${TODAY()}`;
-    await expect(page.locator('.diff .add')).toHaveText(`+${line}`);
-    expect(await readFile(page, dir, 'inbox/Inbox.md')).toBe(`# Inbox\n\n${line}\n`);
+    await expect(page.locator('.diff .add')).toHaveText('+title: Here is a task');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Here is a task.md')).toBe(`---\ntitle: Here is a task\nstatus: todo\ndue: ${localDate(1)}\ncreated: ${TODAY()}\ntags: [launch]\npeople: [Adam]\n---\n\n`);
     const row = page.locator('.task', { hasText: 'Here is a task' });
     await expect(row).toContainText(/@adam/i);
     await expect(row).toContainText('added');
@@ -41,7 +40,8 @@ test.describe('one-line quick add', () => {
     await expect(page.locator('#quick-preview')).toContainText('Website relaunch');
     await page.locator('#quick-text').press('Enter');
     await expect(page.locator('.diff .add')).toContainText('Send logos');
-    expect(await readFile(page, dir, 'projects/site/index.md')).toBe(`---\ntitle: Website relaunch\nactive: true\n---\nGoal.\n- [ ] Send logos @Adam due:${TODAY()} created:${TODAY()}\n`);
+    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/site/tasks/Send logos.md')).toBe(`---\ntitle: Send logos\nstatus: todo\ndue: ${TODAY()}\ncreated: ${TODAY()}\nproject: site\ntags: []\npeople: [Adam]\n---\n\n`);
+    expect(await readFile(page, dir, 'projects/site/index.md')).toBe('---\ntitle: Website relaunch\nactive: true\n---\nGoal.\n');
     await page.locator('#quick-text').fill('Nope +ghost');
     await expect(page.locator('#quick-preview')).toContainText('No project called "ghost"');
     await page.locator('#quick-text').press('Enter');
@@ -50,16 +50,15 @@ test.describe('one-line quick add', () => {
     await expect(page.locator('#quick-preview')).toContainText('Could not read "due:someday"');
   });
 
-  test('a task file from the Task template starts with a created date and empty tags and people', async ({ page }) => {
+  test('the New menu has one Task, which makes its own note with a created date and empty tags and people', async ({ page }) => {
     const dir = await openVault(page, { 'a.md': '# A\n' });
     await page.getByRole('button', { name: '+ New' }).click();
-    await page.locator('.modal').getByRole('button', { name: /^Task\b(?! file)/ }).filter({ hasText: 'One file per task' }).click();
-    await page.locator('#tpl-title').fill('Write launch email');
-    await expect(page.locator('#tpl-preview')).toContainText(`created: ${TODAY()}\ntags: []\npeople: []`);
-    await page.getByRole('button', { name: 'Create file' }).click();
-    await expect(page.locator('.cm-content')).toBeVisible();
-    const text = await readFile(page, dir, 'tasks/Write launch email.md');
-    expect(text).toContain(`status: todo\ndue: ${localDate(7)}\ncreated: ${TODAY()}\ntags: []\npeople: []`);
+    await expect(page.locator('.modal').getByRole('button', { name: /^Task/ })).toHaveCount(1);
+    await page.locator('.modal').getByRole('button', { name: /^Task/ }).click();
+    await page.locator('#new-task-text').fill('Write launch email');
+    await page.getByRole('button', { name: 'Add task' }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Write launch email.md')).toBe(`---\ntitle: Write launch email\nstatus: todo\ncreated: ${TODAY()}\ntags: []\npeople: []\n---\n\n`);
+    await expect(page.locator('.task', { hasText: 'Write launch email' })).toBeVisible(); // in the Inbox view
   });
 });
 
@@ -149,15 +148,15 @@ test.describe('quick add due date', () => {
     await page.locator('#quick-text').fill('Pay invoice due:+3d');
     await page.locator('#quick-text').press('Enter');
     const d = new Date(); d.setDate(d.getDate() + 3);
-    await expect(page.locator('.diff .add')).toContainText('due:');
-    expect(await readFile(page, dir, 'inbox/Inbox.md')).toContain(`- [ ] Pay invoice due:${localDate(3)} created:${localDate(0)}`);
+    await expect(page.locator('.diff .add')).toContainText('title: Pay invoice');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Pay invoice.md')).toContain(`due: ${localDate(3)}\ncreated: ${localDate(0)}`);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
 
   test('the New task form has the same picks', async ({ page }) => {
     await openVault(page, { 'a.md': '# A\n' });
     await page.getByRole('button', { name: '+ New' }).click();
-    await page.locator('.modal').getByRole('button', { name: /^Task\b/ }).filter({ hasText: 'Add a line to your Inbox' }).click();
+    await page.locator('.modal').getByRole('button', { name: /^Task\b/ }).filter({ hasText: 'A task with its own note' }).click();
     await page.locator('.modal').getByRole('button', { name: 'Today' }).click();
     await expect(page.locator('#new-task-due')).toHaveValue(localDate(0));
   });
@@ -174,7 +173,7 @@ test.describe('default frontmatter', () => {
     await page.getByRole('button', { name: 'Add default frontmatter' }).click();
     await expect(page.getByRole('button', { name: 'Add default frontmatter' })).toHaveCount(0);
     await expect(page.locator('.props')).toContainText('Plain thing');
-    await expect.poll(() => readFile(page, dir, 'plain.md'), { timeout: 4000 }).toBe(`---\ntitle: Plain thing\ncreated: ${TODAY()}\ntags: []\n---\n# Plain thing\n\nSome text.\n`);
+    await expect.poll(() => readFileOrEmpty(page, dir, 'plain.md'), { timeout: 4000 }).toBe(`---\ntitle: Plain thing\ncreated: ${TODAY()}\ntags: []\n---\n# Plain thing\n\nSome text.\n`);
     expect(await readFile(page, dir, 'has.md')).toBe('---\ntitle: Has\n---\nBody\n');
   });
 });
@@ -251,5 +250,50 @@ test.describe('project dashboard', () => {
     await page.locator('.pcard .pbtn').click();
     await expect(page.locator('.title')).toHaveText('Website relaunch');
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  });
+});
+
+test.describe('tagging a note with projects', () => {
+  const FILES = {
+    'projects/site/index.md': '---\ntitle: Website relaunch\nactive: true\n---\nGoal.\n',
+    'projects/kitchen/index.md': '---\ntitle: Kitchen\nactive: true\n---\nQuote.\n',
+    'ideas/Brand.md': '---\ntitle: Brand ideas\n---\nLogo thoughts\n- [ ] Pick fonts due:2999-01-01\n',
+  };
+
+  test('add a note to one or more projects from its properties, see it on each dashboard, and remove it', async ({ page }) => {
+    const dir = await openVault(page, FILES);
+    await nav(page, 'Notes').click();
+    await page.locator('.note-item', { hasText: /^Brand ideas$/ }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+
+    await page.locator('#prop-project').fill('site');
+    await page.locator('#prop-project').press('Enter');
+    await expect(page.locator('.projchip', { hasText: 'site' })).toBeVisible();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'ideas/Brand.md'), { timeout: 5000 }).toContain('project: site\n');
+    await page.locator('#prop-project').fill('kitchen');
+    await page.locator('#prop-project').press('Enter');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'ideas/Brand.md'), { timeout: 5000 }).toContain('project: [site, kitchen]\n');
+    await page.locator('#prop-project').fill('ghost');
+    await page.locator('#prop-project').press('Enter');
+    await expect(page.locator('#note-status')).toContainText('No project called');
+
+    await nav(page, 'Projects').click();
+    await page.locator('.pcard', { hasText: 'Kitchen' }).locator('.pbtn').click();
+    await expect(page.locator('.psec', { hasText: 'Notes' }).first()).toContainText('Brand ideas');
+    await expect(page.locator('.psec', { hasText: 'Open tasks' })).toContainText('Pick fonts');
+
+    await nav(page, 'Notes').click();
+    await page.locator('.projchip', { hasText: 'kitchen' }).getByRole('button', { name: /Remove from kitchen/ }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'ideas/Brand.md'), { timeout: 5000 }).toContain('project: site\n');
+    await page.locator('.projchip', { hasText: 'site' }).getByRole('button', { name: /Remove from site/ }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'ideas/Brand.md'), { timeout: 5000 }).toBe('---\ntitle: Brand ideas\n---\nLogo thoughts\n- [ ] Pick fonts due:2999-01-01\n');
+  });
+
+  test('the project chip opens that project’s dashboard', async ({ page }) => {
+    await openVault(page, { ...FILES, 'ideas/Brand.md': '---\ntitle: Brand ideas\nproject: site\n---\nx\n' });
+    await nav(page, 'Notes').click();
+    await page.locator('.note-item', { hasText: /^Brand ideas$/ }).click();
+    await page.locator('.projchip').getByRole('button', { name: 'site' }).first().click();
+    await expect(page.locator('.title')).toHaveText('Website relaunch');
   });
 });

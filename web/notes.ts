@@ -2,17 +2,18 @@ import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type De
 import { lineDiff, type LineChange } from '../src/diff';
 import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type Version } from '../src/history';
 import { bestLinkTarget } from '../src/fixes';
-import { frontmatterText, addDefaultFrontmatter, setFrontmatterField } from '../src/frontmatter';
+import { frontmatterText, addDefaultFrontmatter, setFrontmatterField, setProjects } from '../src/frontmatter';
 import { localDateOf } from '../src/dates';
 import { dirname } from '../src/index';
 import { parseNote, type Note } from '../src/parse';
-import { isProjectNote, projectContents } from '../src/projects';
+import { isProjectNote, listProjects, noteProjects, projectContents } from '../src/projects';
+import { findProject } from '../src/quickline';
 import { addDays } from '../src/query';
 import { linkTargets, suggestionsFor, type LinkTarget } from '../src/vocabulary';
 import { ConflictError } from '../src/storage';
 import { createEditor, type EditorHandle } from './editor';
 import { MOD } from './keys';
-import { errorMessage, onVaultChange, render, state, today } from './store';
+import { errorMessage, onVaultChange, projectRef, render, state, today } from './store';
 import { esc } from './util';
 
 interface At {
@@ -481,10 +482,20 @@ function propsHtml(): string {
     rows.push(`<dt><label for="prop-due">due</label></dt><dd><input id="prop-due" class="inp" type="date" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(d) ? d : '')}"></dd>`);
   }
   for (const [k, v] of Object.entries(fm)) {
-    if (k === 'status' || k === 'due') continue;
+    if (k === 'status' || k === 'due' || k === 'project') continue;
     const val = Array.isArray(v) ? v.map((x) => `<span class="chip mono">${esc(String(x))}</span>`).join(' ') : esc(String(v));
     rows.push(`<dt>${esc(k)}</dt><dd>${val}</dd>`);
   }
+  const mine = noteProjects(n);
+  const known = state.index ? listProjects(state.index) : [];
+  rows.push(
+    `<dt>projects</dt><dd class="projrow">${mine
+      .map((name) => {
+        const p = state.index ? findProject(known, name) : undefined;
+        return `<span class="chip projchip">${p ? `<button class="plain-btn" data-open-project="${esc(p.path)}" title="Open the project dashboard">${esc(name)}</button>` : `<span title="No project with this name yet">${esc(name)}</span>`}<button class="plain-btn x" data-act="project-remove" data-name="${esc(name)}" aria-label="Remove from ${esc(name)}">×</button></span>`;
+      })
+      .join('')}<form data-proj-add class="projadd"><input id="prop-project" class="inp" type="text" autocomplete="off" data-suggest="projects" placeholder="${mine.length ? '+ Another project' : '+ Add to a project'}" aria-label="Add to a project"><button class="btn small" type="submit">Add</button></form></dd>`,
+  );
   out += rows.length ? `<dl class="props">${rows.join('')}</dl>` : '<p class="muted small" style="margin:0 0 6px">No properties yet.</p>';
   const add: string[] = [];
   if (!hasStatus) add.push('<button class="btn small" data-act="add-prop" data-key="status" data-val="todo">+ Status</button>');
@@ -701,6 +712,14 @@ export async function click(target: HTMLElement): Promise<boolean> {
       refreshSide();
       return true;
     }
+    case 'project-remove': {
+      const h = notes.handle;
+      if (!h || !notes.path) return true;
+      const now = noteProjects(parseNote(notes.path, h.getText(), { mtime: 0, size: 0 }));
+      h.applyText(setProjects(h.getText(), now.filter((x) => x.toLowerCase() !== (act.dataset.name ?? '').toLowerCase())));
+      refreshSide();
+      return true;
+    }
     case 'add-prop':
       applyProperty(act.dataset.key ?? '', act.dataset.val ?? '');
       return true;
@@ -837,4 +856,24 @@ export function change(e: Event): boolean {
     return true;
   }
   return false;
+}
+
+/** The "Add to a project" form in the properties panel. The name must be a project that exists. */
+export function addProject(): void {
+  const h = notes.handle;
+  const input = document.getElementById('prop-project') as HTMLInputElement | null;
+  if (!h || !notes.path || !input || !state.index) return;
+  const typed = input.value.trim().replace(/^\+/, '');
+  if (!typed) return;
+  const project = findProject(listProjects(state.index), typed);
+  if (!project) {
+    notes.status = `No project called “${typed}”. Make one from + New.`;
+    setStatus(notes.status);
+    return;
+  }
+  const name = projectRef(project).name;
+  const now = noteProjects(parseNote(notes.path, h.getText(), { mtime: 0, size: 0 }));
+  if (!now.some((x) => x.toLowerCase() === name.toLowerCase())) h.applyText(setProjects(h.getText(), [...now, name]));
+  refreshSide();
+  document.getElementById('prop-project')?.focus();
 }
