@@ -25,7 +25,7 @@ Act as a senior software engineer and technical investigator. Optimize for corre
 ## 5. Product, Technology Stack & Environment Rules
 
 ### 5.1 What this project is
-Plainfile (working name) is the successor to **Notebook**, the single-file app that previously lived in this repository. The last Notebook release is preserved at the git tag `notebook-v0.12.1`. Plainfile is a local-first productivity hub over a **plain folder of markdown files**: tasks, notes, tags, links and projects all live in ordinary `.md` files with frontmatter. The folder is the whole repository and is portable to any editor or sync tool. The app is a layer on top, never a second source of truth.
+Plainfile (working name) is the successor to **Notebook**, the single-file app that previously lived in this repository. The last Notebook release is preserved at the commit `76ac8ba`. Plainfile is a local-first productivity hub over a **plain folder of markdown files**: tasks, notes, tags, links and projects all live in ordinary `.md` files with frontmatter. The folder is the whole repository and is portable to any editor or sync tool. The app is a layer on top, never a second source of truth.
 
 ### 5.2 Data principles (load-bearing, do not break)
 *   **Files are the source of truth.** The index is a cache that is always rebuilt from the files. It is never backed up, and it is always safe to delete.

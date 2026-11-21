@@ -8,7 +8,7 @@ deploy-intended change, together with an entry here.
 
 Rewrite. Notebook, the single-file app that lived in this repository up to
 0.12.1, is replaced by Plainfile. The last Notebook release is preserved at the
-git tag `notebook-v0.12.1`.
+commit `76ac8ba`.
 
 ### Added
 - Core library: storage interface, parser, incremental index, link resolution
@@ -25,4 +25,4 @@ git tag `notebook-v0.12.1`.
 
 ### Removed
 - The Notebook app (`index.html`, service worker, manifest, Dropbox sync,
-  Playwright tests). See the `notebook-v0.12.1` tag.
+  Playwright tests). See commit `76ac8ba`.

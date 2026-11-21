@@ -10,8 +10,8 @@ gives you one place to see everything. Nothing is stored anywhere else, so the
 folder is the whole repository and works with any editor or sync tool.
 
 The previous app, Notebook (a single-page dashboard that kept projects in browser
-storage), is preserved at the git tag
-[`notebook-v0.12.1`](https://github.com/adambeltz2/Simple-Productivity/tree/notebook-v0.12.1).
+storage), is preserved at the commit
+[`76ac8ba`](https://github.com/adambeltz2/Simple-Productivity/tree/76ac8bab2b96dbd24463fea5f825702dc1c3a441).
 Notebook project files, including `#due:` and `#followup` tags, still work here.
 
 ## Status
