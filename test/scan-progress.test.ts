@@ -71,3 +71,57 @@ describe('mapPool', () => {
     await mapPool([], 4, async () => undefined);
   });
 });
+
+describe('files that cannot be read', () => {
+  it('are skipped and listed, and the rest of the folder still opens', async () => {
+    const store = vault(10);
+    const realRead = store.read.bind(store);
+    store.read = async (path: string) => {
+      if (path === 'n/note-4.md') throw new TypeError("Failed to execute 'getFileHandle': Name is not allowed.");
+      return realRead(path);
+    };
+    const realList = store.list.bind(store);
+    store.list = async (opts) => {
+      opts?.onSkip?.('locked-folder', 'Permission denied');
+      return realList(opts);
+    };
+    const index = new VaultIndex(store);
+    const r = await index.scan();
+    expect(index.notes.size).toBe(9);
+    expect(index.notes.has('n/note-4.md')).toBe(false);
+    expect(r.added).toHaveLength(9);
+    expect(index.skipped).toEqual([
+      { path: 'locked-folder', reason: 'Permission denied' },
+      { path: 'n/note-4.md', reason: "Failed to execute 'getFileHandle': Name is not allowed." },
+    ]);
+  });
+
+  it('are tried again on the next scan and forgotten once they read', async () => {
+    const store = vault(3);
+    const realRead = store.read.bind(store);
+    let broken = true;
+    store.read = async (path: string) => {
+      if (broken && path === 'n/note-1.md') throw new Error('nope');
+      return realRead(path);
+    };
+    const index = new VaultIndex(store);
+    await index.scan();
+    expect(index.skipped.map((s) => s.path)).toEqual(['n/note-1.md']);
+    broken = false;
+    await index.scan();
+    expect(index.skipped).toEqual([]);
+    expect(index.notes.size).toBe(3);
+  });
+
+  it('still stops when cancelled, rather than treating that as a bad file', async () => {
+    const ctrl = new AbortController();
+    const store = vault(50);
+    const realRead = store.read.bind(store);
+    let n = 0;
+    store.read = async (p: string) => {
+      if (++n === 5) ctrl.abort();
+      return realRead(p);
+    };
+    await expect(new VaultIndex(store).scan({ signal: ctrl.signal })).rejects.toMatchObject({ name: 'AbortError' });
+  });
+});

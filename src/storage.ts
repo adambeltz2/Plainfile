@@ -20,6 +20,8 @@ export interface ListProgress {
 }
 
 export interface ListOptions {
+  /** Called for a file or folder that could not be looked at (a name the system refuses, no permission). It is left out. */
+  onSkip?: (path: string, reason: string) => void;
   onProgress?: (p: ListProgress) => void;
   signal?: AbortSignal;
 }

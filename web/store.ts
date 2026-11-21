@@ -36,6 +36,8 @@ export const state = {
   demo: false,
   screen: 'today' as ScreenId,
   scanMs: 0,
+  /** The user dismissed the notice about files that could not be read. */
+  skippedHidden: false,
   saved: undefined as FileSystemDirectoryHandle | undefined,
   busy: '',
   error: '',
@@ -152,6 +154,7 @@ export async function loadVault(storage: VaultStorage, name: string, demo: boole
     state.tag = undefined;
     state.modal = undefined;
     state.renames = [];
+    state.skippedHidden = false;
     justDone.clear();
     for (const fn of vaultChangeHooks) fn();
   } catch (e) {

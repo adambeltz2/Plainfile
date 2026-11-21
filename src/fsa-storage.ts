@@ -14,12 +14,21 @@ import { ConflictError, ExistsError, type FileEntry, type ListOptions, type Vaul
 export class FsaStorage implements VaultStorage {
   constructor(public readonly root: FileSystemDirectoryHandle) {}
 
+  /** Handles seen while listing. Some names (on Android, for example) are refused by getFileHandle but still open from the handle the listing gave us. */
+  private seen = new Map<string, FileSystemFileHandle>();
+
   private async fileHandle(path: string): Promise<FileSystemFileHandle> {
     const parts = path.split('/');
     const name = parts.pop() as string;
-    let dir = this.root;
-    for (const p of parts) dir = await dir.getDirectoryHandle(p);
-    return dir.getFileHandle(name);
+    try {
+      let dir = this.root;
+      for (const p of parts) dir = await dir.getDirectoryHandle(p);
+      return await dir.getFileHandle(name);
+    } catch (e) {
+      const h = this.seen.get(path);
+      if (h && e instanceof TypeError) return h;
+      throw e;
+    }
   }
 
   /**
@@ -28,7 +37,9 @@ export class FsaStorage implements VaultStorage {
    * with progress reported along the way.
    */
   async list(opts: ListOptions = {}): Promise<FileEntry[]> {
-    const { onProgress, signal } = opts;
+    const { onProgress, signal, onSkip } = opts;
+    const why = (e: unknown): string => (e instanceof Error ? e.message : String(e));
+    this.seen.clear();
     let found = 0;
     let checked = 0;
     let last = 0;
@@ -47,14 +58,20 @@ export class FsaStorage implements VaultStorage {
       const batch = queue.splice(0, 8);
       await Promise.all(
         batch.map(async ({ dir, prefix }) => {
-          for await (const [name, handle] of dir.entries()) {
-            if (name.startsWith('.') || name === 'node_modules') continue;
-            const rel = prefix ? `${prefix}/${name}` : name;
-            if (handle.kind === 'directory') queue.push({ dir: handle as FileSystemDirectoryHandle, prefix: rel });
-            else {
-              files.push({ rel, handle: handle as FileSystemFileHandle });
-              found++;
+          try {
+            for await (const [name, handle] of dir.entries()) {
+              if (name.startsWith('.') || name === 'node_modules') continue;
+              const rel = prefix ? `${prefix}/${name}` : name;
+              if (handle.kind === 'directory') queue.push({ dir: handle as FileSystemDirectoryHandle, prefix: rel });
+              else {
+                files.push({ rel, handle: handle as FileSystemFileHandle });
+                this.seen.set(rel, handle as FileSystemFileHandle);
+                found++;
+              }
             }
+          } catch (e) {
+            // A folder we are not allowed to open is skipped, not fatal.
+            onSkip?.(prefix || '(top folder)', why(e));
           }
           report();
         }),
@@ -67,8 +84,13 @@ export class FsaStorage implements VaultStorage {
       files,
       24,
       async ({ rel, handle }) => {
-        const f = await handle.getFile();
-        out.push({ path: rel, mtime: f.lastModified, size: f.size });
+        try {
+          const f = await handle.getFile();
+          out.push({ path: rel, mtime: f.lastModified, size: f.size });
+        } catch (e) {
+          this.seen.delete(rel);
+          onSkip?.(rel, why(e));
+        }
         checked++;
         report();
       },

@@ -147,6 +147,12 @@ function shell(): string {
   if (fsaSupported()) h += '<button class="btn" data-act="open">Open folder</button>';
   h += `<button class="btn" data-nav="guide" aria-label="Syntax cheat sheet" title="Syntax cheat sheet" aria-current="${state.screen === 'guide'}">?</button>${themeControl()}</header>`;
   if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
+  const skipped = state.index?.skipped ?? [];
+  if (skipped.length && !state.skippedHidden) {
+    h += `<div class="notice small" role="status"><b>${skipped.length} file${skipped.length === 1 ? '' : 's'} could not be read and ${skipped.length === 1 ? 'was' : 'were'} skipped.</b> The rest of your folder opened normally. ` +
+      `<details><summary>Show ${skipped.length === 1 ? 'it' : 'them'}</summary><ul class="plain mono small">${skipped.slice(0, 50).map((s) => `<li>${esc(s.path)} <span class="muted">${esc(s.reason)}</span></li>`).join('')}${skipped.length > 50 ? `<li>and ${skipped.length - 50} more</li>` : ''}</ul></details> ` +
+      '<button class="btn small" data-act="skipped-hide">Dismiss</button></div>';
+  }
   if (state.renames.length && state.screen !== 'rename') {
     const r = state.renames[0]!;
     h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside Plainfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
@@ -252,6 +258,9 @@ app.addEventListener('click', (e) => {
         return void openSample(__SAMPLE_VAULT__);
       case 'new':
         return newmenu.openNew();
+      case 'skipped-hide':
+        state.skippedHidden = true;
+        return requestRender();
       case 'load-cancel':
         return cancelLoad();
       case 'new-note':

@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.28.2] - 2026-11-21
+
+### Fixed
+- **One unreadable file no longer stops a folder from opening.** A file or folder the browser
+  refuses (for example "Name is not allowed" on Android, or no permission) is skipped, and a
+  notice lists what was skipped, with Dismiss. Files are tried again on every rescan. Files whose
+  names `getFileHandle` rejects are now opened through the handle the folder listing gave us.
+
 ## [0.28.1] - 2026-11-21
 
 ### Added

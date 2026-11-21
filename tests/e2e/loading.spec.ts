@@ -38,3 +38,29 @@ test('Cancel stops reading and returns to the first screen without an error', as
   await expect(page.locator('.notice.err')).toHaveCount(0);
   await expect(page.locator('#load-bar')).toHaveCount(0);
 });
+
+test('files the browser refuses to read are skipped and listed, and the folder still opens', async ({ page }) => {
+  await page.evaluate(async () => {
+    const real = FileSystemFileHandle.prototype.getFile;
+    FileSystemFileHandle.prototype.getFile = function (this: FileSystemFileHandle) {
+      if (this.name === 'bad.md') return Promise.reject(new TypeError("Failed to execute 'getFileHandle': Name is not allowed."));
+      return real.call(this);
+    };
+    const root = await navigator.storage.getDirectory();
+    const vault = await root.getDirectoryHandle(`skip-${Date.now()}`, { create: true });
+    for (const [name, text] of [['good.md', '# Good\n- [ ] A task due:2026-01-01'], ['bad.md', '# Bad']] as const) {
+      const w = await (await vault.getFileHandle(name, { create: true })).createWritable();
+      await w.write(text);
+      await w.close();
+    }
+    await window.__plainfile!.openHandle(vault, 'skippy');
+  });
+  await expect(page.locator('.nav')).toBeVisible();
+  const notice = page.locator('.notice', { hasText: 'could not be read' });
+  await expect(notice).toContainText('1 file could not be read and was skipped');
+  await notice.locator('summary').click();
+  await expect(notice).toContainText('bad.md');
+  await expect(page.locator('.task', { hasText: 'A task' })).toBeVisible();
+  await notice.getByRole('button', { name: 'Dismiss' }).click();
+  await expect(page.locator('.notice', { hasText: 'could not be read' })).toHaveCount(0);
+});

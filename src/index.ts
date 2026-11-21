@@ -45,6 +45,12 @@ export interface ScanResult {
   ms: number;
 }
 
+/** A file left out of the index because it could not be read. The rest of the folder still opens. */
+export interface SkippedFile {
+  path: string;
+  reason: string;
+}
+
 export function dirname(path: string): string {
   const i = path.lastIndexOf('/');
   return i < 0 ? '' : path.slice(0, i);
@@ -85,12 +91,26 @@ export class VaultIndex {
 
   constructor(private storage: VaultStorage) {}
 
+  /** Files and folders that could not be read, from the latest scan. Skipped, never fatal. */
+  get skipped(): SkippedFile[] {
+    return [...this.listSkipped, ...[...this.readSkipped].map(([path, reason]) => ({ path, reason }))].sort((a, b) => a.path.localeCompare(b.path));
+  }
+  private listSkipped: SkippedFile[] = [];
+  private readSkipped = new Map<string, string>();
+
   async scan(opts: ScanOptions = {}): Promise<ScanResult> {
     const t0 = Date.now();
     const { onProgress, signal } = opts;
-    const entries = await this.storage.list({ signal, onProgress: (p) => onProgress?.({ phase: 'listing', ...p }) });
+    const listSkipped: SkippedFile[] = [];
+    const entries = await this.storage.list({
+      signal,
+      onProgress: (p) => onProgress?.({ phase: 'listing', ...p }),
+      onSkip: (path, reason) => listSkipped.push({ path, reason }),
+    });
+    this.listSkipped = listSkipped;
     throwIfAborted(signal);
     this.files = new Set(entries.map((e) => e.path));
+    for (const p of [...this.readSkipped.keys()]) if (!this.files.has(p)) this.readSkipped.delete(p);
 
     const removedNotes: Note[] = [];
     for (const [p, n] of [...this.notes]) {
@@ -118,9 +138,17 @@ export class VaultIndex {
       todo,
       16,
       async (e) => {
-        const text = await this.storage.read(e.path);
-        (this.notes.has(e.path) ? changed : added).push(e.path);
-        this.notes.set(e.path, parseNote(e.path, text, e));
+        try {
+          const text = await this.storage.read(e.path);
+          (this.notes.has(e.path) ? changed : added).push(e.path);
+          this.notes.set(e.path, parseNote(e.path, text, e));
+          this.readSkipped.delete(e.path);
+        } catch (err) {
+          // A file we cannot read is left out (and listed), so one bad file never blocks the folder.
+          if (err instanceof Error && err.name === 'AbortError') throw err;
+          this.readSkipped.set(e.path, err instanceof Error ? err.message : String(err));
+          this.notes.delete(e.path);
+        }
         done++;
         const now = Date.now();
         if (onProgress && (done === todo.length || now - last > 80)) {

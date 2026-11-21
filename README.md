@@ -51,6 +51,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 - **Vault health:** broken links, duplicates, orphans and unused attachments, with one-click fixes.
   It never blocks your work.
 - **Big folders:** a progress bar with counts and a Cancel button while a large folder is read.
+  Files that cannot be read are skipped and listed, so one bad file never blocks the folder.
 - **Install it:** works as an app on desktop and phone, and opens offline after the first visit.
 
 Opening a folder directly needs Chrome, Edge, Brave or Opera on desktop. Safari, Firefox and phones
