@@ -37,7 +37,14 @@ function store(s: Saved | undefined): void {
   }
 }
 
-const builtInKey = (): string => (typeof __DROPBOX_APP_KEY__ === 'string' ? __DROPBOX_APP_KEY__ : '');
+/**
+ * The app key everyone signs in with by default. A Dropbox app key is public by design (it is sent to the
+ * browser and shown in every sign-in address), and sign-in uses PKCE, so there is no secret to protect.
+ * A copy of Plainfile can use its own app by setting DROPBOX_APP_KEY at build time, or by pasting a key
+ * under "Use my own Dropbox app".
+ */
+const DEFAULT_APP_KEY = 'vfcwmj0eu2kdiud';
+const builtInKey = (): string => (typeof __DROPBOX_APP_KEY__ === 'string' && __DROPBOX_APP_KEY__ ? __DROPBOX_APP_KEY__ : DEFAULT_APP_KEY);
 const redirectUri = (): string => location.origin + location.pathname;
 const rootLabel = (r: string): string => (r ? `/${r.replace(/^\/+|\/+$/g, '')}` : 'whole Dropbox or app folder');
 
@@ -50,26 +57,22 @@ export function html(): string {
   } else if (!cloud.open) {
     h += '<p class="muted small" style="margin:0 0 8px">Works in any browser, including iPhone and Safari. Files stay in your Dropbox.</p><button class="btn" data-act="dropbox-form">Connect Dropbox</button>';
   } else {
-    const key = builtInKey();
     h +=
-      (key
-        ? ''
-        : '<div class="fld"><label for="db-key">Dropbox app key</label><input id="db-key" class="inp" autocomplete="off" spellcheck="false" placeholder="from your app at dropbox.com/developers/apps" value="' + esc(cloud.appKey) + '"></div>') +
       `<div class="fld"><label for="db-root">Folder (optional)</label><input id="db-root" class="inp" autocomplete="off" spellcheck="false" placeholder="/Notes, or leave empty" value="${esc(cloud.root)}"></div>` +
       `<div class="row"><button class="btn primary" data-act="dropbox-connect"${cloud.busy ? ' disabled' : ''}>${cloud.busy ? 'Going to Dropbox…' : 'Connect'}</button><button class="btn" data-act="dropbox-cancel">Cancel</button></div>` +
-      (key
-        ? ''
-        : `<details style="margin-top:8px"><summary class="small">How to get an app key</summary><ol class="small"><li>Open <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">dropbox.com/developers/apps</a> and choose <b>Create app</b>, <b>Scoped access</b>, then <b>App folder</b> (safest) or <b>Full Dropbox</b>.</li>` +
-          '<li>On the <b>Permissions</b> tab tick <code>files.metadata.read</code>, <code>files.metadata.write</code>, <code>files.content.read</code> and <code>files.content.write</code>, then Submit.</li>' +
-          `<li>On <b>Settings</b>, add this under <b>Redirect URIs</b>: <code>${esc(redirectUri())}</code></li><li>Copy the <b>App key</b> into the box above.</li></ol></details>`);
+      `<details style="margin-top:8px"${cloud.appKey ? ' open' : ''}><summary class="small">Use my own Dropbox app</summary><p class="small muted" style="margin:6px 0">Optional. Plainfile signs in with its own Dropbox app unless you give a key here.</p>` +
+      `<div class="fld"><label for="db-key">Dropbox app key</label><input id="db-key" class="inp" autocomplete="off" spellcheck="false" placeholder="from your app at dropbox.com/developers/apps" value="${esc(cloud.appKey)}"></div>` +
+      `<ol class="small"><li>Open <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">dropbox.com/developers/apps</a> and choose <b>Create app</b>, <b>Scoped access</b>, then <b>App folder</b> or <b>Full Dropbox</b>.</li>` +
+      '<li>On <b>Permissions</b> tick <code>files.metadata.read</code>, <code>files.metadata.write</code>, <code>files.content.read</code> and <code>files.content.write</code>, then Submit.</li>' +
+      `<li>On <b>Settings</b>, add this under <b>Redirect URIs</b>: <code>${esc(redirectUri())}</code></li></ol></details>`;
   }
   return `${h}</div>`;
 }
 
 export async function startConnect(): Promise<void> {
-  const appKey = (builtInKey() || cloud.appKey).trim();
+  const appKey = (cloud.appKey.trim() || builtInKey()).trim();
   if (!appKey) {
-    state.error = 'Paste your Dropbox app key first.';
+    state.error = 'There is no Dropbox app key. Paste one under "Use my own Dropbox app".';
     return render();
   }
   cloud.busy = true;

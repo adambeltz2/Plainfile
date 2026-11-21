@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.30.1] - 2026-11-21
+
+### Changed
+- Dropbox sign-in works out of the box: Plainfile's own Dropbox app key is the default (it is public by
+  design). "Use my own Dropbox app" lets a private copy use its own key.
+
 ## [0.30.0] - 2026-11-21
 
 ### Added

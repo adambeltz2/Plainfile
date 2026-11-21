@@ -65,5 +65,5 @@ Plainfile (working name) is the successor to **Notebook**, the single-file app t
 ## 6. Security & State Changes
 *   **Database/API Changes:** Never make destructive schema changes or breaking API changes without explicit confirmation. Check migrations, callers, and compatibility first.
 *   **Version Control:** Do not overwrite unrelated user changes. Keep changes focused and atomic. When asked, output exact commit commands (e.g., `git commit -m "..."`) without explanations.
-*   **Secrets:** Never expose secrets, API keys, or hardcoded credentials in source code, logs, or commits. Treat security as a first-class concern.
+*   **Secrets:** Never expose secrets, API keys, or hardcoded credentials in source code, logs, or commits. Treat security as a first-class concern. The one exception is the Dropbox **app key** in `web/cloud.ts`: it is public by design (OAuth with PKCE has no client secret), so it may live in the code. Access and refresh tokens, and any app *secret*, never may.
 *   **User data:** Never modify files in a user's vault except through the guarded write path. Sample data lives in `sample-vault/`; tests must not write outside memory or a temp copy.

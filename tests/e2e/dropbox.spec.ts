@@ -37,7 +37,7 @@ test('connect Dropbox, open a folder from it, tick a task, and the file changes 
   const { tokenBodies } = await fakeDropbox(page, fake);
 
   await page.getByRole('button', { name: 'Connect Dropbox' }).click();
-  await expect(page.locator('.cloud summary')).toContainText('How to get an app key');
+  await page.locator('.cloud summary').click();
   await page.locator('#db-key').fill('TESTKEY');
   await page.locator('#db-root').fill('/Notes');
   await page.getByRole('button', { name: 'Connect', exact: true }).click();
@@ -62,11 +62,11 @@ test('connect Dropbox, open a folder from it, tick a task, and the file changes 
 test('a later visit offers to open Dropbox again without signing in, and Sign out forgets it', async ({ page }) => {
   const fake = new FakeDropbox();
   fake.seed({ 'Hello.md': '# Hello\n- [ ] Task one due:2026-11-21\n' });
-  await fakeDropbox(page, fake);
+  const { tokenBodies } = await fakeDropbox(page, fake);
   await page.getByRole('button', { name: 'Connect Dropbox' }).click();
-  await page.locator('#db-key').fill('TESTKEY');
-  await page.getByRole('button', { name: 'Connect', exact: true }).click();
+  await page.getByRole('button', { name: 'Connect', exact: true }).click(); // no key typed: the built-in app
   await expect(page.locator('.nav')).toBeVisible();
+  expect(tokenBodies.map((b) => new URLSearchParams(b).get('client_id'))).toEqual(['vfcwmj0eu2kdiud']);
 
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Open Dropbox' })).toBeVisible();
@@ -82,6 +82,7 @@ test('a later visit offers to open Dropbox again without signing in, and Sign ou
 test('a refused or mismatched sign-in says so and changes nothing', async ({ page }) => {
   await fakeDropbox(page, new FakeDropbox());
   await page.getByRole('button', { name: 'Connect Dropbox' }).click();
+  await page.locator('.cloud summary').click();
   await page.locator('#db-key').fill('DENY');
   await page.getByRole('button', { name: 'Connect', exact: true }).click();
   await expect(page.locator('.notice.err')).toContainText('not completed');

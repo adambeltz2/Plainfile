@@ -130,16 +130,19 @@ Task ids are `path:line`, as printed by `today` and `tasks`.
 
 ## Connecting Dropbox
 
+Choose **Connect Dropbox** on the first screen, optionally type a folder such as `/Notes`, and sign in.
+Plainfile uses its own Dropbox app by default. The app key in `web/cloud.ts` is public by design: sign-in
+uses PKCE, so there is no secret.
+
+To use your own Dropbox app instead (for a private copy, or if the shared app reaches its user limit):
+
 1. At [dropbox.com/developers/apps](https://www.dropbox.com/developers/apps) create an app: **Scoped access**,
    then **App folder** (safest) or **Full Dropbox**.
 2. On the **Permissions** tab tick `files.metadata.read`, `files.metadata.write`, `files.content.read`
    and `files.content.write`, and submit.
-3. On **Settings**, add the address of the page that serves Plainfile under **Redirect URIs**
-   (for example `https://adambeltz2.github.io/Simple-Productivity/`).
-4. In Plainfile choose **Connect Dropbox**, paste the app key, and optionally a folder such as `/Notes`.
-
-To build the key in for everyone who uses your copy, set the `DROPBOX_APP_KEY` repository variable
-(Settings, Secrets and variables, Actions, Variables). An app key is not a secret.
+3. On **Settings**, add the address of the page that serves Plainfile under **Redirect URIs**.
+4. Paste the app key under **Use my own Dropbox app**, or set the `DROPBOX_APP_KEY` repository variable
+   to build it in.
 
 ## Task formats
 
