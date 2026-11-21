@@ -161,9 +161,14 @@ export function slug(s: string): string {
 }
 
 /** Values the app fills in itself, which a template can use without asking: {{sortOrder}} is the next project number. */
+const extrasCache = new WeakMap<VaultIndex, { version: number; extras: Record<string, string> }>();
 export function templateExtras(index: VaultIndex): Record<string, string> {
+  const hit = extrasCache.get(index);
+  if (hit?.version === index.version) return hit.extras;
   const orders = listProjects(index).map((p) => p.sortOrder ?? 0);
-  return { sortOrder: String((orders.length ? Math.max(...orders) : 0) + 1) };
+  const extras = { sortOrder: String((orders.length ? Math.max(...orders) : 0) + 1) };
+  extrasCache.set(index, { version: index.version, extras });
+  return extras;
 }
 
 /** Replace {{date}}, {{date+Nd}} and prompt values. {{cursor}} is left for the caller. */

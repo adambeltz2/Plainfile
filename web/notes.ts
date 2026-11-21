@@ -45,6 +45,8 @@ export const notes = {
   /** Focus mode: the editor alone, centred, with everything else hidden. */
   focus: false,
   wantFocus: false,
+  /** How many notes the list shows. A huge folder would otherwise mean thousands of buttons. */
+  listLimit: 300,
 };
 
 const STATUSES = ['todo', 'doing', 'waiting', 'done'];
@@ -210,15 +212,22 @@ function listHtml(): string {
     .filter((n) => !q || n.path.toLowerCase().includes(q) || n.title.toLowerCase().includes(q))
     .sort((a, b) => a.path.localeCompare(b.path));
   if (!all.length) return '<p class="muted small">No notes match.</p>';
+  let shown = all.slice(0, notes.listLimit);
+  // Always keep the open note in the list, even if it sorts beyond the limit.
+  const open = notes.path ? all.find((x) => x.path === notes.path) : undefined;
+  if (open && !shown.includes(open)) shown = [...shown, open];
   let h = '';
   let folder: string | undefined;
-  for (const n of all) {
+  for (const n of shown) {
     const d = dirname(n.path);
     if (d !== folder) {
       folder = d;
       h += `<div class="folder mono">${esc(d ? `${d}/` : '(top level)')}</div>`;
     }
     h += `<button class="item note-item" data-note="${esc(n.path)}" aria-current="${n.path === notes.path}"><span>${esc(n.title)}</span></button>`;
+  }
+  if (all.length > notes.listLimit) {
+    h += `<p class="muted small" style="margin:10px 0 4px">Showing ${Math.min(notes.listLimit, all.length)} of ${all.length} notes. Type in the filter to narrow them.</p><button class="btn small" data-act="notes-more">Show 300 more</button>`;
   }
   return h;
 }
@@ -582,6 +591,12 @@ export async function click(target: HTMLElement): Promise<boolean> {
     case 'add-prop':
       applyProperty(act.dataset.key ?? '', act.dataset.val ?? '');
       return true;
+    case 'notes-more': {
+      notes.listLimit += 300;
+      const list = document.getElementById('note-list');
+      if (list) list.innerHTML = listHtml();
+      return true;
+    }
     case 'note-undo':
       notes.handle?.undo();
       updateHistoryButtons();
@@ -690,6 +705,7 @@ export function input(e: Event): boolean {
   const t = e.target as HTMLElement;
   if (t.id === 'note-filter') {
     notes.filter = (t as HTMLInputElement).value;
+    notes.listLimit = 300;
     const list = document.getElementById('note-list');
     if (list) list.innerHTML = listHtml();
     return true;

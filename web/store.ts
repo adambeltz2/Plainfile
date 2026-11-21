@@ -16,8 +16,8 @@ export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | '
 
 export type Modal =
   | { step: 'menu' }
-  | { step: 'task'; text: string; due: string; tags: string; people: string; error: string }
-  | { step: 'template'; name: string; values: Record<string, string>; extras: Record<string, string>; error: string };
+  | { step: 'task'; text: string; due: string; tags: string; people: string; error: string; busy?: boolean }
+  | { step: 'template'; name: string; values: Record<string, string>; extras: Record<string, string>; error: string; busy?: boolean };
 
 export interface Context {
   path: string;
@@ -138,8 +138,12 @@ export function openSample(sample: Record<string, string>): Promise<void> {
 }
 
 /** Re-read the folder. Returns true if anything changed. */
+/** When the folder was last read, so returning to the tab does not re-read a big folder every time. */
+export let lastScanAt = 0;
+
 export async function rescan(): Promise<boolean> {
   if (!state.index) return false;
+  lastScanAt = Date.now();
   const r = await state.index.scan();
   state.scanMs = r.ms;
   for (const p of r.renamed) if (!state.renames.some((x) => x.from === p.from && x.to === p.to)) state.renames.push(p);
@@ -164,12 +168,19 @@ export async function resumeSaved(): Promise<void> {
 
 /* ---------- derived ---------- */
 
-let healthCache: { version: number; report: HealthReport } | undefined;
-export function getHealth(): HealthReport | undefined {
+let healthCache: { version: number; withSuggestions: boolean; report: HealthReport } | undefined;
+/**
+ * The vault health report, cached until the index changes. The navigation badge only needs counts,
+ * so by default the "did you mean" suggestions are left out; the Health screen asks for them.
+ */
+export function getHealth(withSuggestions = false): HealthReport | undefined {
   const index = state.index;
   if (!index) return undefined;
-  if (healthCache?.version !== index.version) healthCache = { version: index.version, report: checkHealth(index) };
-  return healthCache.report;
+  const c = healthCache;
+  if (!c || c.version !== index.version || (withSuggestions && !c.withSuggestions)) {
+    healthCache = { version: index.version, withSuggestions, report: checkHealth(index, { suggestions: withSuggestions }) };
+  }
+  return healthCache?.report;
 }
 
 export function healthCount(): number {

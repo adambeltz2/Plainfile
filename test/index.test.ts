@@ -100,3 +100,40 @@ describe('checkHealth', () => {
     expect(r.unusedAttachments).toEqual(['_attachments/unused.png', '_attachments/used.png']);
   });
 });
+
+import { levenshtein } from '../src/health';
+describe('health performance helpers', () => {
+  it('bounded edit distance gives up early but agrees when the answer is within the bound', () => {
+    expect(levenshtein('kitten', 'sitting')).toBe(3);
+    expect(levenshtein('kitten', 'sitting', 3)).toBe(3);
+    expect(levenshtein('kitten', 'sitting', 2)).toBe(3); // max + 1: too far
+    expect(levenshtein('a', 'abcdef', 2)).toBe(3);
+    expect(levenshtein('same', 'same', 0)).toBe(0);
+  });
+
+  it('a quick health count leaves out the suggestions but finds the same problems', async () => {
+    const { index } = await build();
+    const quick = checkHealth(index, { suggestions: false });
+    const full = checkHealth(index);
+    expect(quick.unresolved.map((u) => u.target)).toEqual(full.unresolved.map((u) => u.target));
+    expect(quick.unresolved[0]!.suggestion).toBeUndefined();
+    expect(full.unresolved[0]!.suggestion).toBe('pricing-research');
+    expect(quick.duplicates).toEqual(full.duplicates);
+    expect(quick.orphans).toEqual(full.orphans);
+  });
+});
+
+describe('performance budget', () => {
+  it('a quick health count on 3000 notes with broken links is fast, because it skips spelling suggestions', async () => {
+    const files: Record<string, string> = {};
+    for (let i = 0; i < 3000; i++) files[`n/note-${i}.md`] = `Links [[note-${(i + 1) % 3000}]] and [[missing-${i % 50}]] and [[note-${(i * 7) % 3000}]].`;
+    const store = new MemoryStorage(files);
+    const index = new VaultIndex(store);
+    await index.scan();
+    const t0 = performance.now();
+    const quick = checkHealth(index, { suggestions: false });
+    const ms = performance.now() - t0;
+    expect(quick.unresolved.length).toBe(3000);
+    expect(ms).toBeLessThan(1500); // typically tens of milliseconds; the old version with suggestions took many seconds
+  });
+});

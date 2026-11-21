@@ -10,6 +10,7 @@ import * as search from './search';
 import { searchState } from './search';
 import {
   healthCount,
+  lastScanAt,
   loadContext,
   loadVault,
   openFolder,
@@ -341,6 +342,7 @@ app.addEventListener('keydown', (e) => {
 // Another editor or a sync tool may have changed files while this tab was in the background.
 window.addEventListener('focus', () => {
   if (!state.index || state.demo || state.busy) return;
+  if (Date.now() - lastScanAt < 30_000) return; // reading a big folder is slow on a phone; the Rescan button is always there
   void (async () => {
     const changed = await rescan();
     await notes.checkExternal();

@@ -19,7 +19,7 @@ function openBtn(path: string, line?: number, label = 'Open'): string {
 }
 
 function sections(): Section[] {
-  const r = getHealth();
+  const r = getHealth(true);
   const idx = state.index;
   if (!r || !idx) return [];
   const item = (main: string, sub: string, acts: string): string =>
@@ -90,7 +90,7 @@ function sections(): Section[] {
 
 export function html(): string {
   const secs = sections();
-  const r = getHealth();
+  const r = getHealth(true);
   if (!secs.length || !r) return '';
   const total = secs.reduce((n, s) => n + s.count, 0);
   const cur = secs.find((s) => s.id === healthState.cat) ?? secs[0]!;

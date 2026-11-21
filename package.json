@@ -1,6 +1,6 @@
 {
   "name": "plainfile",
-  "version": "0.24.0",
+  "version": "0.24.1",
   "private": true,
   "description": "A productivity hub over a plain folder of markdown files.",
   "type": "module",
@@ -13,6 +13,7 @@
     "test:e2e": "playwright test --trace off"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "6.20.4",
     "@codemirror/commands": "6.11.1",
     "@codemirror/lang-markdown": "6.5.2",
     "@codemirror/language": "6.13.1",

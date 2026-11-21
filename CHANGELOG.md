@@ -4,6 +4,30 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.24.1] - 2026-11-21
+
+### Fixed
+- **Lag when pressing Create file** (and after anything that changes the notes). The Vault
+  health badge recomputed a "did you mean…?" spelling suggestion for every broken link by
+  comparing it with every note, each time the index changed. The badge only needs a count, so
+  suggestions are now worked out only when the Vault health screen is open, and the comparison
+  skips notes whose names are too different in length and stops as soon as a match is too far.
+  In a 2,000-note folder on a 4x slower CPU, creating a note went from about 1.2 s to 0.4 s.
+- The Create file and Add task buttons now change to "Creating…" the moment you tap them and
+  ignore a second tap, so a slow folder gives feedback instead of looking frozen and a double
+  tap cannot make two files.
+- Returning to the tab no longer re-reads a big folder if it was read in the last 30 seconds.
+  The Rescan button always works.
+- The Notes list shows at most 300 notes at a time, with a Show more button and the open note
+  always included, instead of thousands of buttons.
+- The next project number in the New Project form is worked out once per change, not on every
+  keystroke.
+
+### Added
+- `scripts/perf.mjs`: builds a large synthetic folder, slows the CPU, and prints how long Create
+  takes and where the time goes. Run with `NO_MINIFY=1 npm run build` first to keep function
+  names.
+
 ## [0.24.0] - 2026-11-21
 
 ### Added

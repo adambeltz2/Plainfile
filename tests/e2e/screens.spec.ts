@@ -246,3 +246,20 @@ test('on a wide screen the list and the note sit side by side and there is no Al
   await expect(page.locator('#note-list')).toBeVisible();
   await expect(page.getByRole('button', { name: 'All notes' })).toBeHidden();
 });
+
+test('a very large folder shows a capped note list with a Show more button, and the filter still finds everything', async ({ page }) => {
+  const files: Record<string, string> = {};
+  for (let i = 0; i < 650; i++) files[`bulk/note-${String(i).padStart(4, '0')}.md`] = `Note number ${i}\n`;
+  await openVault(page, files);
+  await nav(page, 'Notes').click();
+  await expect(page.locator('.note-item')).toHaveCount(300);
+  await expect(page.locator('#note-list')).toContainText('Showing 300 of 650 notes');
+  await page.getByRole('button', { name: 'Show 300 more' }).click();
+  await expect(page.locator('.note-item')).toHaveCount(600);
+  await page.locator('#note-filter').fill('0649');
+  await expect(page.locator('.note-item')).toHaveCount(1);
+  // The open note stays in the list even when it sorts beyond the limit.
+  await page.locator('#note-filter').fill('');
+  await page.locator('.note-item').first().click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+});

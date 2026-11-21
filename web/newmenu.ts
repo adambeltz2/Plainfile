@@ -16,6 +16,9 @@ export function openTemplate(name: string, extras: Record<string, string> = {}):
   render();
 }
 
+/** Let the browser draw what has just changed before slow work starts. */
+const paint = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+
 export function closeModal(): void {
   state.modal = undefined;
   render();
@@ -52,7 +55,7 @@ export function html(): string {
       `<div class="fld"><label for="new-task-people">People (optional)</label><input id="new-task-people" class="inp" type="text" autocomplete="off" placeholder="@dana @sam" value="${esc(m.people)}"></div>` +
       `<div class="fld"><label for="new-task-tags">Tags (optional)</label><input id="new-task-tags" class="inp" type="text" autocomplete="off" placeholder="#launch #home" value="${esc(m.tags)}"></div>` +
       (m.error ? `<div class="notice err small">${esc(m.error)}</div>` : '') +
-      '<div class="row-gap"><button class="btn primary" data-act="create-task">Add task</button><button class="btn" data-act="modal-back">Back</button></div>';
+      `<div class="row-gap"><button class="btn primary" data-act="create-task"${m.busy ? ' disabled' : ''}>${m.busy ? 'Adding…' : 'Add task'}</button><button class="btn" data-act="modal-back"${m.busy ? ' disabled' : ''}>Back</button></div>`;
   } else {
     const t = currentTemplate();
     if (!t) return '';
@@ -64,7 +67,7 @@ export function html(): string {
     body =
       `<h2>New ${esc(t.name.toLowerCase())}</h2><div class="tplgrid"><div>${fields}` +
       (m.error ? `<div class="notice err small">${esc(m.error)}</div>` : '') +
-      '<div class="row-gap"><button class="btn primary" data-act="create-template">Create file</button><button class="btn" data-act="modal-back">Back</button></div></div>' +
+      `<div class="row-gap"><button class="btn primary" data-act="create-template"${m.busy ? ' disabled' : ''}>${m.busy ? 'Creating…' : 'Create file'}</button><button class="btn" data-act="modal-back"${m.busy ? ' disabled' : ''}>Back</button></div></div>` +
       `<div><div class="grp" style="margin-top:0">Creates</div>${preview(t, m.values, m.extras)}</div></div>`;
   }
   return `<div class="modal-back" data-backdrop><div class="modal" role="dialog" aria-modal="true" aria-label="New">${body}<button class="modal-x btn small" data-act="modal-close" aria-label="Close">Close</button></div></div>`;
@@ -97,8 +100,14 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   if (act === 'create-task' && m.step === 'task') {
+    if (m.busy) return true;
+    m.busy = true;
+    m.error = '';
+    render();
+    await paint();
     const err = await quickAdd(m.text, m.due, m.tags, m.people);
     if (err) {
+      m.busy = false;
       m.error = err;
       render();
     } else {
@@ -112,12 +121,17 @@ export async function click(target: HTMLElement): Promise<boolean> {
   if (act === 'create-template' && m.step === 'template') {
     const t = currentTemplate();
     const { storage, index } = state;
-    if (!t || !storage || !index) return true;
+    if (!t || !storage || !index || m.busy) return true;
+    m.busy = true;
+    m.error = '';
+    render();
+    await paint();
     try {
       const r = await createFromTemplate(storage, index, t, { ...m.extras, ...m.values }, today());
       state.modal = undefined;
       await openNote(r.path, r.cursor !== undefined ? { offset: r.cursor } : {});
     } catch (e) {
+      m.busy = false;
       m.error = `Could not create the file. ${errorMessage(e)}`;
       render();
     }

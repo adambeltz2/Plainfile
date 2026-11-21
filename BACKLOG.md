@@ -301,6 +301,14 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 ## Quality and delivery
 
+- `[DEBT]` Today computes the day groups once for every view count in the sidebar. Compute them once
+  per render. _Affected: `web/today.ts`._
+- `[DEBT]` `VaultIndex.rebuild()` recomputes every link on each single-file change. Update only
+  what changed. At 6,000 notes this and garbage collection dominate. _Affected: `src/index.ts`._
+- `[DEBT]` Opening a 6,000-note folder reads every file (about 4.5 s on a fast machine, much slower
+  on a phone). Persist the index and only read files whose modified time changed. _Affected:
+  `src/index.ts`, `src/fsa-storage.ts`._
+- `[FEATURE]` Show a progress bar while a big folder is first read. _Affected: `web/main.ts`._
 - `[DEBT]` Load CodeMirror only when Notes opens, to shrink the first download (about 650 KB now).
   _Affected: `web/main.ts`, `scripts/build.mjs`._
 - `[DEBT]` Do not publish source maps to Pages. _Affected: `.github/workflows/deploy-pages.yml`._
