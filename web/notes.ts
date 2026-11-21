@@ -298,7 +298,7 @@ export function html(): string {
     const n = idx.notes.get(notes.path);
     main =
       `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(n?.title ?? notes.path)}</h2><div class="mono muted small path">${esc(notes.path)}</div></div>` +
-      `<div class="ed-actions"><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button><button class="btn" data-act="rename-note">Rename</button>` +
+      `<div class="ed-actions"><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button><button class="btn" data-act="explore-note">Explore</button><button class="btn" data-act="rename-note">Rename</button>` +
       `<span id="note-status" class="status" role="status">${esc(notes.status)}</span></div></div>` +
       `<div id="note-banner">${bannerHtml()}</div><div id="editor-slot" class="editor-slot"></div>`;
   }

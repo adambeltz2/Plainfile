@@ -1,5 +1,6 @@
 import { fsaSupported, FsaStorage } from '../src/fsa-storage';
 import * as board from './board';
+import * as explore from './explore';
 import * as guide from './guide';
 import * as health from './health';
 import * as newmenu from './newmenu';
@@ -67,6 +68,7 @@ const NAV: { id: ScreenId; label: string }[] = [
   { id: 'today', label: 'Today' },
   { id: 'board', label: 'Board' },
   { id: 'notes', label: 'Notes' },
+  { id: 'explore', label: 'Explore' },
   { id: 'search', label: 'Search' },
   { id: 'health', label: 'Vault health' },
 ];
@@ -139,6 +141,9 @@ function shell(): string {
     case 'guide':
       h += guide.html();
       break;
+    case 'explore':
+      h += explore.html();
+      break;
     case 'rename':
       h += rename.html();
       break;
@@ -198,6 +203,7 @@ app.addEventListener('click', (e) => {
 
     const cp = target.closest<HTMLElement>('[data-copy]');
     if (cp) return void guide.copy(cp);
+    if (state.screen === 'explore' && (await explore.click(target))) return;
     const sc = target.closest<HTMLElement>('[data-scroll]')?.dataset.scroll;
     if (sc) return guide.scrollTo(sc);
     const sq = target.closest<HTMLElement>('[data-search-q]')?.dataset.searchQ;
@@ -235,6 +241,8 @@ app.addEventListener('click', (e) => {
         const projectName = n.name.toLowerCase() === 'index' && dir ? (dir.split('/').pop() as string) : n.name;
         return newmenu.openTemplate(act === 'proj-task' ? 'Project task' : 'Project note', { projectDir: dir, projectName });
       }
+      case 'explore-note':
+        return void (notes.notes.path && explore.focus(notes.notes.path));
       case 'rename-note':
         return void rename.openRename(notes.notes.path);
       case 'review-renames':
@@ -291,6 +299,7 @@ app.addEventListener('submit', (e) => {
 app.addEventListener('input', (e) => {
   if (state.modal && newmenu.input(e)) return;
   if (todayScreen.input(e)) return;
+  if (explore.input(e)) return;
   if (rename.input(e)) return;
   if (notes.input(e)) return;
   search.input(e);
@@ -318,6 +327,7 @@ app.addEventListener('keydown', (e) => {
     return;
   }
   if (state.screen === 'today') todayScreen.keydown(e);
+  if (state.screen === 'explore') explore.keydown(e);
 });
 
 // Another editor or a sync tool may have changed files while this tab was in the background.

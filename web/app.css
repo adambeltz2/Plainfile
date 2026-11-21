@@ -315,3 +315,30 @@ th { background: var(--soft); font-weight: 600; white-space: nowrap; }
 .chip.quiet { color: var(--mute); border-style: dotted; }
 .pacts { display: flex; gap: 6px; padding: 0 12px 10px; }
 .pcard { display: flex; flex-direction: column; }
+
+/* ---------- explore ---------- */
+.graph-wrap { border: 1px solid var(--line); border-radius: 8px; padding: 6px; margin-top: 4px; background: var(--bg); overflow: hidden; }
+.graph { display: block; width: 100%; height: auto; max-height: 560px; }
+.ge { stroke: var(--fg); stroke-width: 1.4; }
+.ge.rel { stroke: var(--mute); stroke-dasharray: 5 5; }
+.gn { cursor: pointer; outline: none; }
+.gn circle { fill: var(--bg); stroke: var(--fg); stroke-width: 2; }
+.gn.focus circle { fill: var(--fg); }
+.gn.rel circle { stroke-dasharray: 3 3; stroke: var(--mute); }
+.gn text { fill: var(--fg); font-size: 13px; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.gn .hit { fill: transparent; stroke: none; }
+.gn:hover circle, .gn:focus-visible circle { stroke-width: 4; }
+.gn:focus-visible text { font-weight: 700; }
+.legend { margin: 6px 2px 0; }
+.legend .key { display: inline-block; width: 22px; vertical-align: middle; border-top: 2px solid var(--fg); }
+.legend .key.dash { border-top: 2px dashed var(--mute); }
+.xgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 28px; margin-top: 12px; }
+.xgrid > div { min-width: 0; }
+.xgrid .xwide { grid-column: 1 / -1; }
+.xgrid h3 { font-size: 14px; margin: 14px 0 4px; }
+.xrow { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.xrow:last-child { border-bottom: 0; }
+.xmain { min-width: 0; }
+.xtitle { font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.xtitle:hover { text-decoration: underline; }
+@media (max-width: 960px) { .xgrid { grid-template-columns: minmax(0, 1fr); } }

@@ -216,14 +216,11 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 ## Linking and exploring
 
-- `[FEATURE]` **Explorer screen**: pick a note and see its links in and out, notes related by tags,
-  by similar text and by place, notes that mention it without linking, and a neighbourhood graph.
-  Core is in progress in `src/related.ts`. _Affected: new `web/explore.ts`._
 - `[FEATURE]` **Word cloud** of the words in a note, a project, a tag or the whole vault, with a
   stopword list you can edit, and a click to search. The tag cloud already ships in the cheat sheet.
   _Affected: new `src/wordcloud.ts`, `web/explore.ts`._
 - `[FEATURE]` Whole-vault graph with filters by tag and folder, orphans highlighted, and a path
-  between two notes. _Affected: `src/related.ts`, `web/explore.ts`._
+  between two notes. The neighbourhood graph is built. _Affected: `src/related.ts`, `web/explore.ts`._
 - `[FEATURE]` One-click "Link it" on an unlinked mention, wrapping that text in `[[ ]]` as a guarded
   edit. _Affected: `src/fixes.ts`, `web/explore.ts`._
 - `[FEATURE]` Related notes in the editor's side panel, and tag suggestions from similar notes.

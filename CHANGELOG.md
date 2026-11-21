@@ -4,6 +4,22 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.22.0] - 2026-11-21
+
+### Added
+- **Explore screen**, for finding related content. Pick a note (start from the most connected
+  ones, search by title, or press Explore on any note) and see:
+  - a **graph** of its neighbourhood: solid lines are real links, dashed lines are notes related
+    by tags or words but not linked. Click any note to move the focus there, and Back to return.
+    1 hop or 2 hops. Large tap targets for phones, and it works from the keyboard.
+  - **Links to** and **Linked from**, each with the line the link sits on.
+  - **Related, not linked**: notes sharing its tags, similar text (with the shared words as the
+    reason), or the same folder or project, leaving out notes already linked.
+  - Notes that **mention this one by name without linking**, and notes **this one mentions
+    without linking**, with the match highlighted.
+  - Links that go nowhere, and the open tasks in the note.
+- Core: `src/related.ts` (links, related by tags, text, place, mentions, hubs, graph and layout).
+
 ## [0.21.0] - 2026-11-21
 
 ### Added
