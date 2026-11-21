@@ -698,3 +698,14 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .plain-table td { padding: 4px 6px; border-bottom: 1px solid var(--line); }
 .plain-table td:last-child { text-align: right; }
 .fbar { display: grid; grid-template-columns: minmax(5rem, 1fr) 2fr auto; gap: 8px; align-items: center; padding: 3px 0; }
+.home-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.home-date { margin: 0; white-space: nowrap; font-weight: 600; }
+.home-quick { display: flex; flex: 1 1 380px; gap: 8px; margin: 0; }
+.home-quick .inp { flex: 1; min-width: 0; }
+.home-stats { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 10px 0 0; max-width: 520px; }
+.home-grid { margin-top: 10px; }
+@media (max-width: 700px) { .home-date { width: 100%; } .home-quick { flex-basis: 100%; } }
+.home-stats { height: 72px; align-items: end; }
+.home-stats { height: 56px; max-width: none; grid-template-columns: repeat(7, 56px) 1fr; }
+.home-links { display: flex; gap: 6px; flex-wrap: wrap; align-self: center; justify-content: flex-end; }
+@media (max-width: 700px) { .home-stats { grid-template-columns: repeat(7, 1fr); height: auto; } .home-stats .wday { height: 56px; } .home-links { grid-column: 1 / -1; justify-content: flex-start; } }

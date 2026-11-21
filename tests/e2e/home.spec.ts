@@ -18,8 +18,8 @@ const VAULT: Record<string, string> = {
 test.describe('Home', () => {
   test('is the first screen and shows capture, today, where you left off, filing, waiting, the week and projects', async ({ page }) => {
     await openVault(page, VAULT, true, 'home');
-    await expect(page.locator('.title')).toHaveText('Home');
-    for (const h of ['Capture', 'Today', 'Pick up where you left off', 'Needs filing', 'Waiting on', 'This week', 'Projects']) await expect(page.locator('.home-card h3', { hasText: h })).toBeVisible();
+    await expect(page.locator('.home')).toBeVisible();
+    for (const h of ['Today', 'Needs filing', 'Waiting on', 'Projects']) await expect(page.locator('.home-card h3', { hasText: h })).toBeVisible();
     await expect(card(page, 'Needs filing').locator('.chip.late')).toHaveText('4'); // the quick note and three task notes with no project
     await expect(card(page, 'Waiting on')).toContainText('Waiting one');
     await expect(card(page, 'Waiting on')).toContainText('@pat');
@@ -33,7 +33,7 @@ test.describe('Home', () => {
     await page.locator('#quick-text').fill('Send the brief due:today');
     await page.locator('#quick-text').press('Enter');
     await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Send the brief.md')).toContain(`due: ${TODAY}`);
-    await expect(page.locator('.title')).toHaveText('Home'); // stays on Home
+    await expect(page.locator('.home')).toBeVisible(); // stays on Home
     await expect(card(page, 'Today')).toContainText('Send the brief');
     await page.getByRole('button', { name: /Mark done: Due today/ }).click();
     await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Due today.md')).toContain('status: done');
@@ -87,7 +87,7 @@ test.describe('Weekly review', () => {
     expect(await readFile(page, dir, 'tasks/Due today.md')).toBe(VAULT['tasks/Due today.md']); // nothing else was touched
     await expect(page.locator('#rv-count')).toContainText('5 changes');
     await page.getByRole('button', { name: 'Finish' }).click();
-    await expect(page.locator('.title')).toHaveText('Home');
+    await expect(page.locator('.home')).toBeVisible();
     await expect(page.locator('.home .notice.ok')).toContainText('Weekly review done. 5 changes made.');
     await page.getByRole('button', { name: 'Dismiss' }).click();
     await expect(page.locator('.home .notice.ok')).toHaveCount(0);

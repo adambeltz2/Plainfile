@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.42.0] - 2026-11-21
+
+### Added
+- **Recent screen.** Every note by when it last changed, newest first, grouped (Today, Yesterday, Earlier this week,
+  then by month), with a filter box and Show more. It replaces Home's "Pick up where you left off" card, which only
+  showed four notes. Home keeps a Recent button.
+
+### Changed
+- **Home is tighter.** No "Home" heading; the date and a one-line quick add (with Quick note) sit at the top, then the
+  week bars and the projects, with Today and the rest below.
+
 ## [0.41.1] - 2026-11-21
 
 ### Changed

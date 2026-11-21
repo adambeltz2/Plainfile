@@ -93,7 +93,7 @@ export function undated(index: VaultIndex): HubTask[] {
   return allTasks(index).filter((t) => t.status !== 'done' && !t.due);
 }
 
-/** Where you left off: the notes changed most recently, leaving out task notes and the generated inbox file. */
+/** (Home no longer shows this; the Recent screen lists every note.) Where you left off: the notes changed most recently, leaving out task notes and the generated inbox file. */
 export function pickUp(index: VaultIndex, limit = 5): Note[] {
   return [...index.notes.values()]
     .filter((n) => !isTaskNote(n))

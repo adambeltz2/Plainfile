@@ -1,6 +1,6 @@
 import { fmtDate, fmtDateLong } from '../src/dates';
 import { portfolio } from '../src/hub';
-import { pickUp, triage, waitingOn, weekAhead } from '../src/home';
+import { triage, waitingOn, weekAhead } from '../src/home';
 import { todayView } from '../src/query';
 import { justDone, render, state, today } from './store';
 import { logHtml, row, toggleTask } from './tasks';
@@ -30,13 +30,19 @@ export function html(): string {
   const card = (title: string, body: string, extra = ''): string => `<section class="card home-card"><h3>${esc(title)}${extra}</h3>${body}</section>`;
   const list = (items: string[]): string => `<ul class="plain home-rows">${items.map((x) => `<li>${x}</li>`).join('')}</ul>`;
 
-  let h = `<div class="home"><h2 class="title">Home</h2><p class="meta">${esc(fmtDateLong(t))}</p>`;
+  let h = `<div class="home"><div class="home-top"><span class="meta home-date">${esc(fmtDateLong(t))}</span>` +
+    `<form class="quick home-quick" data-quick><label class="sr" for="quick-text">Add a task</label><input id="quick-text" class="inp" type="text" autocomplete="off" data-suggest="line" placeholder="Quick add: Call Dana +Website @dana #launch due:friday" value="${esc(quick.text)}"><button class="btn primary" type="submit">Add</button><button class="btn" type="button" data-quick-note>Quick note</button></form></div>` +
+    `<div id="quick-preview" class="qprev small muted" aria-live="polite">${quickPreview(quick.text)}</div>`;
+  if (quick.error) h += `<div class="notice err small">${esc(quick.error)}</div>`;
+  if (logHtml()) h += `<div class="home-log">${logHtml()}</div>`;
   if (notice.text) h += `<div class="notice ok" role="status">${esc(notice.text)} <button class="btn small" data-home-dismiss>Dismiss</button></div>`;
+  h += `<div class="home-stats" role="img" aria-label="Open tasks due each day for the next seven days">${week.map((d) => `<div class="wday${d.date === t ? ' today' : ''}"><i style="height:${Math.round((d.open / peak) * 100)}%"></i><b>${d.open}</b><span>${esc(fmtDate(d.date).slice(0, 3))}</span></div>`).join('')}<div class="home-links"><button class="btn small" data-nav="review">Weekly review</button><button class="btn small" data-nav="today">Upcoming</button><button class="btn small" data-nav="recent">Recent</button></div></div>`;
   h += '<div class="home-grid">';
   h += card(
-    'Capture',
-    `<form class="quick" data-quick><label class="sr" for="quick-text">Add a task</label><input id="quick-text" class="inp" type="text" autocomplete="off" data-suggest="line" placeholder="Call Dana +Website @dana #launch due:friday" value="${esc(quick.text)}"><button class="btn primary" type="submit">Add</button><div id="quick-preview" class="qprev small muted" aria-live="polite">${quickPreview(quick.text)}</div></form>` +
-      `${quick.error ? `<div class="notice err small">${esc(quick.error)}</div>` : ''}<div class="row-gap"><button class="btn" data-quick-note>Quick note</button></div>${logHtml() ? `<div class="home-log">${logHtml()}</div>` : ''}`,
+    'Projects',
+    rows.length
+      ? rows.map((r) => `<button class="home-proj" data-open-project="${esc(r.project.path)}"><span>${r.project.number ?? '–'} ${esc(r.project.title)}</span><span class="small muted">${r.open} open${r.overdue ? ` · ${r.overdue} late` : ''}</span><span class="prog"><i style="width:${r.total ? Math.round((r.done / r.total) * 100) : 0}%"></i></span></button>`).join('')
+      : '<p class="muted small" style="margin:0">No projects yet. Make one from + New.</p>',
   );
   h += card(
     'Today',
@@ -45,8 +51,6 @@ export function html(): string {
       : '<p class="muted small" style="margin:0 0 6px">Nothing is due or late. Enjoy it, or look at the week below.</p><button class="btn small" data-nav="today">Open Today</button>',
     ` <span class="n">${due.length}</span>`,
   );
-  const recent = pickUp(idx, 5);
-  h += card('Pick up where you left off', recent.length ? list(recent.map((n) => `<button class="item note-quick" data-open="${esc(n.path)}"><span>${esc(n.title)}</span><span class="muted mono small">${esc(fmtDate(new Date(n.mtime).toISOString().slice(0, 10)))}</span></button>`)) : '<p class="muted small">No notes yet. Try a quick note.</p>');
   h += card(
     'Needs filing',
     unfiled.length
@@ -59,17 +63,6 @@ export function html(): string {
     waiting.length
       ? list(waiting.slice(0, 4).map((w) => `<button class="item note-quick" data-open="${esc(w.task.item.path)}" data-line="${w.task.item.line}"><span>${esc(w.task.item.title)}</span><span class="muted small">${w.task.people.length ? `@${esc(w.task.people[0] ?? '')} · ` : ''}${w.days !== undefined ? `${w.days} d` : ''}</span></button>`))
       : '<p class="muted small" style="margin:0">You are not waiting on anything.</p>',
-  );
-  h += card(
-    'This week',
-    `<div class="week" role="img" aria-label="Open tasks due each day for the next seven days">${week.map((d) => `<div class="wday${d.date === t ? ' today' : ''}"><i style="height:${Math.round((d.open / peak) * 100)}%"></i><b>${d.open}</b><span>${esc(fmtDate(d.date).slice(0, 3))}</span></div>`).join('')}</div>` +
-      '<div class="row-gap"><button class="btn small" data-nav="review">Weekly review</button><button class="btn small" data-nav="today">Upcoming</button></div>',
-  );
-  h += card(
-    'Projects',
-    rows.length
-      ? rows.map((r) => `<button class="home-proj" data-open-project="${esc(r.project.path)}"><span>${r.project.number ?? '–'} ${esc(r.project.title)}</span><span class="small muted">${r.open} open${r.overdue ? ` · ${r.overdue} late` : ''}</span><span class="prog"><i style="width:${r.total ? Math.round((r.done / r.total) * 100) : 0}%"></i></span></button>`).join('')
-      : '<p class="muted small" style="margin:0">No projects yet. Make one from + New.</p>',
   );
   return `${h}</div></div>`;
 }

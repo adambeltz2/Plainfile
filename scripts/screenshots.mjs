@@ -55,6 +55,8 @@ await page.keyboard.press('Escape');
 await nav(page, 'Search');
 await page.getByRole('button', { name: 'Modified today' }).click();
 await shot(page, 'search');
+await nav(page, 'Recent');
+await shot(page, 'recent');
 await nav(page, 'Insight');
 await shot(page, 'insight');
 await nav(page, 'Explore');

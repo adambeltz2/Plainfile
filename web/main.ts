@@ -13,6 +13,7 @@ import * as newmenu from './newmenu';
 import * as menu from './menu';
 import * as move from './move';
 import * as insightScreen from './insight';
+import * as recentScreen from './recent';
 import * as notes from './notes';
 import * as peopleScreen from './people';
 import * as palette from './palette';
@@ -89,6 +90,7 @@ const NAV: { id: ScreenId; label: string }[] = [
   { id: 'people', label: 'People' },
   { id: 'board', label: 'Board' },
   { id: 'notes', label: 'Notes' },
+  { id: 'recent', label: 'Recent' },
   { id: 'explore', label: 'Explore' },
   { id: 'search', label: 'Search' },
   { id: 'insight', label: 'Insight' },
@@ -163,7 +165,7 @@ function tabbar(hc: number): string {
   const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${state.screen === id}">${label}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
-      ['search:Search', 'calendar:Calendar', 'people:People', 'board:Board', 'explore:Explore', 'review:Weekly review', 'insight:Insight', 'health:Vault health', 'guide:Cheat sheet']
+      ['recent:Recent', 'search:Search', 'calendar:Calendar', 'people:People', 'board:Board', 'explore:Explore', 'review:Weekly review', 'insight:Insight', 'health:Vault health', 'guide:Cheat sheet']
         .map((x) => {
           const [id, label] = x.split(':') as [ScreenId, string];
           return `<button class="btn" data-nav="${id}" data-more-item>${label}${id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
@@ -212,6 +214,9 @@ function shell(): string {
     h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside Plainfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
   }
   switch (state.screen) {
+    case 'recent':
+      h += recentScreen.html();
+      break;
     case 'insight':
       h += insightScreen.html();
       break;
@@ -427,6 +432,9 @@ app.addEventListener('click', (e) => {
       case 'today':
         await todayScreen.click(target);
         break;
+      case 'recent':
+        recentScreen.click(target);
+        break;
       case 'insight':
         await insightScreen.click(target);
         break;
@@ -485,6 +493,7 @@ app.addEventListener('input', (e) => {
   suggest.onInput(e);
   if (!state.index && cloudUi.input(e)) return;
   if (palette.input(e)) return;
+  if (state.screen === 'recent' && recentScreen.input(e)) return;
   if (move.input(e)) return;
   if (state.modal && newmenu.input(e)) return;
   if (state.screen === 'projects' && projectScreen.input(e)) return;
