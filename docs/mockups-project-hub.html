@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plainfile: Project hub (ideas)</title>
+<style>
+:root{--bg:#fff;--fg:#000;--mute:#666;--line:#ccc;--soft:#f3f3f3}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#fff;--mute:#9a9a9a;--line:#333;--soft:#161616}}
+*{box-sizing:border-box}body{margin:auto;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif;padding:20px 16px 60px;max-width:1240px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:36px 0 4px}h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
+p{margin:4px 0 10px;max-width:74ch}.mute{color:var(--mute)}.small{font-size:12px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px}
+.win{border:2px solid var(--fg);border-radius:10px;overflow:hidden;background:var(--bg);font-size:12.5px}
+.bar{display:flex;gap:6px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.btn{border:1px solid var(--fg);border-radius:6px;padding:1px 8px;font-size:12px;background:var(--bg)}.btn.p{background:var(--fg);color:var(--bg)}
+.chip{border:1px solid var(--line);border-radius:99px;padding:0 8px;font-size:11px;white-space:nowrap}.chip.late{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line)}.tabs span{padding:5px 12px;border-bottom:3px solid transparent}.tabs .on{border-bottom-color:var(--fg);font-weight:700}
+.hub{display:grid;grid-template-columns:150px minmax(0,1fr) 230px}.hub>div{padding:8px;min-width:0}.hub>div+div{border-left:1px solid var(--line)}
+.rail div{padding:3px 6px;border-radius:5px}.rail .on{background:var(--fg);color:var(--bg)}
+.row{display:flex;gap:8px;align-items:center;padding:4px 6px;border-bottom:1px solid var(--line)}.row b{flex:1;font-weight:600}.row .cb{width:13px;height:13px;border:1.5px solid var(--fg);border-radius:3px;flex:none}
+.grp{display:flex;justify-content:space-between;padding:5px 6px;background:var(--soft);font-weight:700;margin-top:6px}
+.prog{height:8px;border:1px solid var(--fg);border-radius:5px;overflow:hidden}.prog i{display:block;height:100%;background:var(--fg)}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.col{border:1px solid var(--line);border-radius:6px;padding:4px;min-height:90px}.col .row{border:1px solid var(--line);border-radius:5px;margin:3px 0}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left}th{font-size:11px;text-transform:uppercase;color:var(--mute)}
+.tl{display:grid;grid-template-columns:110px repeat(8,1fr);gap:0}.tl>div{border-bottom:1px solid var(--line);padding:3px 4px;min-height:22px}.tl .h{font-size:10px;color:var(--mute)}.tl .bar2{background:var(--fg);border-radius:4px;height:10px;margin-top:5px}
+.sel{background:var(--soft)}.pill{display:inline-block;border:1px solid var(--fg);border-radius:99px;padding:0 10px;font-size:12px;margin-right:4px}.rec{border:2px solid var(--fg);border-radius:8px;padding:2px 10px;font-size:12px;font-weight:700}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px}
+.spark{display:flex;gap:2px;align-items:flex-end;height:32px}.spark i{flex:1;background:var(--fg);min-height:2px}
+</style></head><body>
+<h1>Project hub: ideas for hundreds of tasks</h1>
+<p class="mute">Today the project page is one list in the left two-thirds, with the right side empty. With hundreds of tasks it needs a way to slice them, act on many at once, and show where the project stands at a glance. Ideas only, nothing here is built. Black and white like the app.</p>
+
+<h2>1. The hub layout (wide screen) <span class="rec">recommended</span></h2>
+<p>Three zones. A <b>project rail</b> to switch projects without going back. A <b>main area with tabs</b> (Tasks, Board, Timeline, Notes). A <b>status column</b> that is always visible: progress, who has what, what is next.</p>
+<div class="win"><div class="hub">
+<div class="rail"><h3>Projects</h3><div class="on">1 Website relaunch</div><div>2 Kitchen remodel</div><div>3 Taxes 2026</div><div class="mute">Inactive (2)</div><h3 style="margin-top:10px">Saved views</h3><div>My open tasks</div><div>Due this week</div><div>Waiting on</div></div>
+<div><div class="bar" style="padding:0 0 6px"><b style="font-size:16px">Website relaunch</b><span class="chip">Active</span><span style="flex:1"></span><span class="btn p">+ Task</span><span class="btn">+ Note</span><span class="btn">+ Meeting</span></div>
+<div class="tabs"><span class="on">Tasks 148</span><span>Board</span><span>Timeline</span><span>Notes 23</span><span>Activity</span></div>
+<div class="bar" style="padding:6px 0"><span class="btn">Group: Due ▾</span><span class="btn">Sort: Date ▾</span><span class="chip">@dana ×</span><span class="chip">#launch ×</span><span class="chip">open ×</span><span class="btn">+ Filter</span><span style="flex:1"></span><span class="mute">filter within project…</span></div>
+<div class="grp"><span>Overdue</span><span>6</span></div>
+<div class="row"><span class="cb"></span><b>Send logo files</b><span class="chip late">Overdue · 19 Nov</span><span class="chip">@dana</span><span class="chip">Phase 1</span></div>
+<div class="row"><span class="cb"></span><b>Confirm hosting plan</b><span class="chip late">Overdue · 20 Nov</span><span class="chip">@sam</span></div>
+<div class="grp"><span>This week</span><span>14</span></div>
+<div class="row"><span class="cb"></span><b>Write pricing copy</b><span class="chip">Tue 24 Nov</span><span class="chip">@dana</span><span class="chip">Phase 2</span></div>
+<div class="grp"><span>Later (82) · No date (31) · Done (15)</span><span>▸ collapsed</span></div></div>
+<div><h3>Progress</h3><div class="prog"><i style="width:34%"></i></div><p class="small mute" style="margin:4px 0 8px">51 of 148 done (34%)</p>
+<h3>Phases</h3><div class="small">Phase 1 <b>9/12</b></div><div class="prog"><i style="width:75%"></i></div><div class="small" style="margin-top:4px">Phase 2 <b>20/60</b></div><div class="prog"><i style="width:33%"></i></div><div class="small" style="margin-top:4px">Phase 3 <b>0/30</b></div><div class="prog"><i style="width:0"></i></div>
+<h3 style="margin-top:10px">Who has what</h3><div class="small">@dana 41 · @sam 28 · @pat 19 · nobody 22</div>
+<h3 style="margin-top:10px">Next up</h3><div class="small">1. Send logo files (late)<br>2. Confirm hosting plan (late)<br>3. Write pricing copy (Tue)</div>
+<h3 style="margin-top:10px">Done per week</h3><div class="spark"><i style="height:30%"></i><i style="height:45%"></i><i style="height:80%"></i><i style="height:60%"></i><i style="height:100%"></i><i style="height:40%"></i></div></div>
+</div></div>
+
+<h2>2. Making hundreds of tasks manageable</h2>
+<div class="two">
+<div class="card"><h3>Group by anything</h3><p>One control chooses how the list is grouped: <b>due bucket</b> (the default), <b>status</b>, <b>person</b>, <b>tag</b>, <b>phase</b> or <b>note it lives in</b>. Groups collapse, show a count and a mini progress bar, and remember their state. Long groups show the first 25 and a "show 25 more", so the page stays fast on a phone.</p></div>
+<div class="card"><h3>Phases without new structure</h3><p>A phase is just a heading in the project note (<code>## Phase 1</code>) for tasks written under it, or a <code>phase:</code> value on a task note. Nothing to set up first. The hub reads them and shows progress per phase, which is the project's real shape.</p></div>
+<div class="card"><h3>Filter chips and saved views</h3><p>Type to filter inside the project, click a person, tag, status or date to add a chip. Save the combination as a named view ("My open tasks", "Waiting on") that appears in the rail for every project. A saved view is a small file in <code>.plainfile/views/</code>, so it syncs with the folder.</p></div>
+<div class="card"><h3>Act on many at once</h3><p>Tick rows (or press <kbd>x</kbd>), and a bar appears: <b>Set due…</b>, <b>Status…</b>, <b>Assign @…</b>, <b>Tag…</b>, <b>Move to project…</b>, <b>Done</b>. Every change is previewed as the exact lines that will change, written with the same guarded writes, with one Undo.</p></div>
+<div class="card"><h3>Edit in place</h3><p>Click a due chip for the date picker, the status chip to change it, a name to reassign. No need to open the note. Keys: <kbd>j</kbd>/<kbd>k</kbd> move, <kbd>x</kbd> select, <kbd>d</kbd> due, <kbd>s</kbd> status, <kbd>Enter</kbd> open.</p></div>
+<div class="card"><h3>Always-visible status column</h3><p>The empty right side becomes the project's dashboard: progress, phases, who has what, what is next, and a small done-per-week chart. It stays while you scroll, so you never lose the overview.</p></div>
+</div>
+
+<h2>3. Other tabs: the same tasks, seen differently</h2>
+<div class="two">
+<div class="card"><h3>Board</h3><p>The project's task notes in status columns (todo, doing, waiting, done), drag to change status. Filters are shared with the Tasks tab.</p>
+<div class="cols"><div class="col"><h3>Todo 61</h3><div class="row"><b>Pick fonts</b></div><div class="row"><b>Logo files</b></div></div><div class="col"><h3>Doing 8</h3><div class="row"><b>Copy</b></div></div><div class="col"><h3>Waiting 4</h3><div class="row"><b>Legal</b></div></div><div class="col"><h3>Done 51</h3><div class="row"><b>Domain</b></div></div></div></div>
+<div class="card"><h3>Timeline</h3><p>Tasks with due dates laid out by week, grouped by phase, so a crunch week is obvious. Click a bar to open it, drag to move the date.</p>
+<div class="tl"><div class="h"></div><div class="h">Nov 16</div><div class="h">Nov 23</div><div class="h">Nov 30</div><div class="h">Dec 7</div><div class="h">Dec 14</div><div class="h">Dec 21</div><div class="h">Dec 28</div><div class="h">Jan 4</div>
+<div>Phase 1</div><div><div class="bar2"></div></div><div><div class="bar2"></div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+<div>Phase 2</div><div></div><div><div class="bar2"></div></div><div><div class="bar2"></div></div><div><div class="bar2"></div></div><div></div><div></div><div></div><div></div>
+<div>Phase 3</div><div></div><div></div><div></div><div></div><div><div class="bar2"></div></div><div><div class="bar2"></div></div><div></div><div></div></div></div>
+<div class="card"><h3>Notes and Activity</h3><p><b>Notes</b>: the project's notes, meetings and decisions, newest first, with their tags. <b>Activity</b>: what changed lately (tasks ticked, notes edited), taken from file times, so it needs no log.</p></div>
+</div>
+
+<h2>4. All projects: a portfolio table</h2>
+<p>The Projects screen gets a table view beside the cards, sortable, for when you have many projects.</p>
+<div class="win"><div class="bar"><b>Projects</b><span class="btn">Cards</span><span class="btn p">Table</span></div><table><tr><th>#</th><th>Project</th><th>Progress</th><th>Open</th><th>Overdue</th><th>Next due</th><th>Last change</th></tr>
+<tr><td>1</td><td><b>Website relaunch</b></td><td><div class="prog" style="width:90px"><i style="width:34%"></i></div></td><td>97</td><td><span class="chip late">6</span></td><td>Tue 24 Nov</td><td>today</td></tr>
+<tr><td>2</td><td><b>Kitchen remodel</b></td><td><div class="prog" style="width:90px"><i style="width:70%"></i></div></td><td>12</td><td>0</td><td>Fri 27 Nov</td><td>3 days ago</td></tr>
+<tr><td>3</td><td><b>Taxes 2026</b></td><td><div class="prog" style="width:90px"><i style="width:10%"></i></div></td><td>9</td><td><span class="chip late">2</span></td><td>Sat 21 Nov</td><td>last week</td></tr></table></div>
+
+<h2>5. On a phone</h2>
+<div class="card" style="max-width:320px"><div class="win"><div class="bar"><b>Website relaunch</b><span style="flex:1"></span><span class="btn p">+</span></div>
+<div class="bar"><div class="prog" style="width:110px"><i style="width:34%"></i></div><span class="small">51/148 · 6 overdue</span></div>
+<div class="tabs"><span class="on">Tasks</span><span>Board</span><span>Notes</span><span>More</span></div>
+<div class="bar"><span class="btn">Group: Due ▾</span><span class="btn">Filter</span></div>
+<div class="grp"><span>Overdue</span><span>6</span></div><div class="row"><span class="cb"></span><b>Send logo files</b></div><div class="row"><span class="cb"></span><b>Confirm hosting</b></div><div class="grp"><span>This week</span><span>14 ▸</span></div></div>
+<p class="small mute">The status column folds into a summary line on top. Project rail becomes a project picker. Long press a task for its actions and to start selecting.</p></div>
+
+<h2>Build order I would suggest</h2>
+<p><span class="pill">1</span> Tabs, group-by control, collapsing groups with counts, filter chips, and "show more" paging (fast with hundreds of tasks).<br>
+<span class="pill">2</span> The always-visible status column (progress, phases from headings, who has what, next up) and the project rail.<br>
+<span class="pill">3</span> Edit in place plus multi-select with bulk actions and Undo.<br>
+<span class="pill">4</span> Board and Timeline tabs, saved views, and the portfolio table.<br>
+Tell me which of these you like, or "build 1 and 2" and I will start.</p>
+</body></html>
