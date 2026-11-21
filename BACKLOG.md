@@ -3,13 +3,17 @@
 Deferred features, bugs, and debt, per `CLAUDE.md` §4. Tags: `[BUG]`,
 `[FEATURE]`, `[REFACTOR]`, `[DEBT]`.
 
-- `[FEATURE]` Browser storage adapter using the File System Access API (mode A):
-  open a folder, remember the handle, re-request permission per session, rescan
-  on tab focus because there is no reliable file watcher. _Affected: new
+- `[FEATURE]` Web UI screens still to build: Board, Note, Search, Templates, Vault
+  health and Rename, following `docs/mockups.html` in black and white. Today is done.
+- `[FEATURE]` "Forget this folder" control, using `forgetHandle` in
+  `web/handle-store.ts`. _Affected: `web/main.ts`._
+- `[FEATURE]` Create a task from the Today screen, writing a new line or file
+  through the guarded write path. _Affected: `src/writeback.ts`, `web/main.ts`._
+- `[DEBT]` The File System Access API has no compare-and-swap, so a very small window
+  remains between the modified-time check and the write closing. _Affected:
   `src/fsa-storage.ts`._
-- `[FEATURE]` Web UI: Today, Board, Note, Search, Templates, Vault health and
-  Rename screens, following `docs/mockups.html` in black and white.
-- `[FEATURE]` Live editor (CodeMirror 6): block markers convert as you type,
+- `[DEBT]` The UI re-renders the whole page with `innerHTML` on each change. Fine for
+  this screen, but the editor will need a proper view layer. _Affected: `web/main.ts`._- `[FEATURE]` Live editor (CodeMirror 6): block markers convert as you type,
   inline formatting renders on leaving the line, X-ray toggle, chips for dates,
   people and tags, properties panel.
 - `[FEATURE]` Templates stored in `.plainfile/templates/` with a `plainfile:`

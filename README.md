@@ -16,8 +16,11 @@ Notebook project files, including `#due:` and `#followup` tags, still work here.
 
 ## Status
 
-The core library and a command-line tool work and are tested. The browser
-interface is not built yet. Design mockups are in [`docs/mockups.html`](docs/mockups.html).
+The core library, a command-line tool and the first browser screen work and are
+tested. The browser app opens a folder directly (Chrome, Edge, Brave or Opera on
+desktop), shows a Today list of every task due or overdue, and lets you tick tasks
+with a readout of exactly what changed in the file. Safari, Firefox and phones can
+try the sample vault for now. Design mockups are in [`docs/mockups.html`](docs/mockups.html).
 
 ## Principles
 
@@ -42,15 +45,19 @@ interface is not built yet. Design mockups are in [`docs/mockups.html`](docs/moc
 | Safe checkbox and status write-back | `src/writeback.ts` |
 | Vault health checks | `src/health.ts` |
 | Folder storage and CLI | `src/node-storage.ts`, `src/cli.ts` |
+| Browser folder access (File System Access API) | `src/fsa-storage.ts`, `web/handle-store.ts` |
+| Browser app: Today screen | `web/main.ts`, `web/app.css`, `web/index.html` |
 
-Next: the browser interface, opening a folder with the File System Access API
-first, with a small local server only as a fallback for browsers that cannot.
+Next: the live editor, search, templates, vault health and rename screens, then a
+small local server as a fallback for browsers that cannot open a folder.
 
 ## Try it
 
 ```bash
 npm install
-npm test
+npm run build && npm run serve   # then open http://127.0.0.1:4173
+npm test                         # unit tests
+npm run test:e2e                 # browser tests, including a real folder
 npm run plainfile -- today --vault sample-vault --today 2026-11-21
 npm run plainfile -- check --vault sample-vault
 npm run plainfile -- search "is:open tag:launch" --vault sample-vault

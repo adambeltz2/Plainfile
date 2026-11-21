@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { fmtDate, localToday } from './dates';
 import { checkHealth } from './health';
 import { VaultIndex, type TaskItem } from './index';
 import { NodeStorage } from './node-storage';
@@ -15,18 +16,6 @@ const USAGE = `plainfile <command> [--vault <folder>] [--today YYYY-MM-DD]
   scan             What changed since the folder was last read
   done <id>        Tick a task. The id is path:line, as printed by today and tasks
   undo <id>        Untick a task`;
-
-function localToday(): string {
-  const d = new Date();
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-
-function fmtDate(iso: string): string {
-  return new Date(`${iso}T00:00:00Z`)
-    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
-    .replace(',', '');
-}
 
 function row(t: TaskItem): string {
   const meta = [t.due ? `due ${fmtDate(t.due)}` : '', ...t.who, ...t.tags.map((x) => `#${x}`)].filter(Boolean).join('  ');

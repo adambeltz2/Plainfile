@@ -34,8 +34,14 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
+      - name: Unit tests
         run: npm test
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: npm run test:e2e
 
   build:
     needs: test
@@ -45,16 +51,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Until the web interface exists, Pages serves a short status page.
-      - name: Assemble site
-        run: |
-          mkdir -p _site
-          cp site/index.html _site/index.html
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist
 
   deploy:
     needs: build

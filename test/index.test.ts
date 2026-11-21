@@ -70,6 +70,16 @@ describe('todayView', () => {
   });
 });
 
+describe('todayView keep', () => {
+  it('keeps listed done tasks visible so a ticked task does not vanish', async () => {
+    const { index } = await build();
+    const tasks = index.tasks().map((t) => (t.title === 'Write copy' ? { ...t, done: true } : t));
+    expect(todayView(tasks, '2026-11-23').thisWeek).toEqual([]);
+    const id = tasks.find((t) => t.title === 'Write copy')!.id;
+    expect(todayView(tasks, '2026-11-23', new Set([id])).thisWeek.map((t) => t.title)).toEqual(['Write copy']);
+  });
+});
+
 describe('search', () => {
   it('combines words and operators across notes and tasks', async () => {
     const { index } = await build();

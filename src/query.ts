@@ -15,9 +15,13 @@ export interface TodayView {
   thisWeek: TaskItem[];
 }
 
-/** The Today list: open tasks that are late, due today, or due in the next 7 days. */
-export function todayView(tasks: TaskItem[], today: string): TodayView {
-  const open = tasks.filter((t) => !t.done && t.due);
+/**
+ * The Today list: open tasks that are late, due today, or due in the next 7 days.
+ * `keep` lists task ids to show even though they are done, so a task you just ticked
+ * stays on screen (struck through) instead of vanishing under your cursor.
+ */
+export function todayView(tasks: TaskItem[], today: string, keep?: ReadonlySet<string>): TodayView {
+  const open = tasks.filter((t) => (!t.done || keep?.has(t.id)) && t.due);
   const week = addDays(today, 7);
   return {
     overdue: open.filter((t) => t.due! < today).sort(byDue),
