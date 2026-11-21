@@ -3,7 +3,7 @@ import { INBOX_FILE, addTask, addTaskNote, cleanTaskText, taskFileName } from '.
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { ConflictError } from '../src/storage';
-import { BUILT_IN, createFromTemplate, loadTemplates, parseTemplateFile, promptDefault, renderTemplate, slug, templateExtras } from '../src/templates';
+import { BUILT_IN, clock, createFromTemplate, loadTemplates, parseTemplateFile, promptDefault, renderTemplate, slug, templateExtras } from '../src/templates';
 
 const TODAY = '2026-11-21';
 const byName = (n: string) => BUILT_IN.find((t) => t.name === n)!;
@@ -81,7 +81,7 @@ describe('template files', () => {
     const own = file.replace('Weekly review', 'Meeting');
     const { store } = await setup({ '.plainfile/templates/review.md': file, '.plainfile/templates/meeting.md': own });
     const all = await loadTemplates(store);
-    expect(all.map((t) => t.name)).toEqual(['Note', 'Task', 'Project', 'Project task', 'Project note', 'Daily journal', 'Person', 'Weekly review', 'Meeting']);
+    expect(all.map((t) => t.name)).toEqual(['Note', 'Task', 'Project', 'Project task', 'Project note', 'Quick note', 'Daily journal', 'Person', 'Weekly review', 'Meeting']);
     expect(all.find((t) => t.name === 'Meeting')!.source).toBe('.plainfile/templates/meeting.md');
   });
 });
@@ -222,5 +222,27 @@ describe('addTaskNote', () => {
     expect(taskFileName('a/b:c*d?')).toBe('a-b-c-d');
     expect(taskFileName('...')).toBe('Task');
     expect(taskFileName('x'.repeat(200))).toHaveLength(80);
+  });
+});
+
+describe('Quick note', () => {
+  it('is titled with the date and time, has a ready header, and puts the cursor in the body', () => {
+    const t = BUILT_IN.find((x) => x.name === 'Quick note')!;
+    expect(t.prompts).toEqual([]);
+    const r = renderTemplate(t, { time: '14:35', timefile: '1435' }, '2026-11-21');
+    expect(r.path).toBe('inbox/2026-11-21 1435.md');
+    expect(r.content).toBe('---\ntitle: "2026-11-21 14:35"\ncreated: 2026-11-21\nproject:\ntags: []\npeople: []\n---\n\n\n');
+    expect(r.cursor).toBe(r.content.length - 1);
+    expect(clock(new Date(2026, 10, 21, 9, 5))).toBe('09:05');
+    expect(clock(new Date(2026, 10, 21, 9, 5), true)).toBe('0905');
+  });
+  it('uses the real time when none is given, and never overwrites a note made in the same minute', async () => {
+    const t = BUILT_IN.find((x) => x.name === 'Quick note')!;
+    const store = new MemoryStorage({});
+    const index = new VaultIndex(store);
+    const a = await createFromTemplate(store, index, t, { time: '10:00', timefile: '1000' }, '2026-11-21');
+    const b = await createFromTemplate(store, index, t, { time: '10:00', timefile: '1000' }, '2026-11-21');
+    expect([a.path, b.path]).toEqual(['inbox/2026-11-21 1000.md', 'inbox/2026-11-21 1000 2.md']);
+    expect(renderTemplate(t, {}, '2026-11-21').content).toMatch(/title: "2026-11-21 \d\d:\d\d"/);
   });
 });

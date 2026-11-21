@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.32.0] - 2026-11-21
+
+### Added
+- **Quick note.** One click (Notes screen, the New menu, the Go to palette, or **Alt+N**) makes a note in
+  `inbox/` titled with the date and time (`2026-11-21 14:35`), with a ready header (`created`, `project`,
+  `tags`, `people`) and the cursor in the body, so you can start typing at once and tag it later. Two made
+  in the same minute never collide. The built-in template can be replaced by your own `Quick note`.
+- Template variables `{{time}}` (14:35) and `{{timefile}}` (1435), for any template.
+- Under the hood for the coming project hub: tolerant field reading and tidy fixes (`src/fields.ts`) and
+  the hub's grouping, filtering and summary code (`src/hub.ts`), with tests.
+
 ## [0.31.1] - 2026-11-21
 
 ### Fixed

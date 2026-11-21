@@ -273,7 +273,7 @@ function homeHtml(): string {
   const list = (ns: Note[]): string => `<ul class="plain home-list">${ns.map((n) => `<li>${noteBtn(n.path, n.title, 'item note-quick', `<span class="muted mono small">${esc(dirname(n.path) || '(top level)')}</span>`)}</li>`).join('')}</ul>`;
   let h =
     '<div class="notes-home"><h2 class="title">Notes</h2><p class="meta">Notes are plain markdown files. Press <kbd>' + MOD + 'P</kbd> to jump to any note by name, or right-click a note for its actions.</p>' +
-    '<div class="row-gap" style="margin:0 0 8px"><button class="btn primary" data-act="new-note">+ New note</button><button class="btn" data-act="palette-open">Go to a note…</button></div>';
+    '<div class="row-gap" style="margin:0 0 8px"><button class="btn primary" data-quick-note>Quick note</button><button class="btn" data-act="new-note">+ New note</button><button class="btn" data-act="palette-open">Go to a note…</button></div>';
   if (pinned.length) h += `<h3 class="grp">Pinned</h3>${list(pinned)}`;
   h += `<h3 class="grp">Modified today <span>${changed.length}</span></h3>` + (changed.length ? list(changed) : '<p class="muted small">Nothing changed today yet.</p>');
   const rest = byTime.filter((n) => !changed.includes(n)).slice(0, 6);
@@ -639,7 +639,7 @@ export function html(): string {
   return (
     `<div class="frame notes${notes.path ? ' has-note' : ''}">` +
     `<aside class="side"><div class="side-head"><input id="note-filter" class="inp" type="text" placeholder="Filter notes" aria-label="Filter notes" value="${esc(notes.filter)}">` +
-    '<button class="btn primary" data-act="new-note">+ New note</button></div>' +
+    '<button class="btn primary" data-act="new-note">+ New note</button><button class="btn" data-quick-note title="Titled with the date and time, ready to type (Alt+N)">Quick note</button></div>' +
     `<div id="note-list" class="note-list">${listHtml()}</div><div id="note-trash">${trashHtml()}</div></aside>` +
     `<section class="main editor-main">${main}</section>` +
     `<aside class="source" id="note-side">${sideHtml()}</aside></div>`

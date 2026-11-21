@@ -244,6 +244,7 @@ app.addEventListener('click', (e) => {
   void (async () => {
     const target = e.target as HTMLElement;
     if (!state.index && (await cloudUi.click(target))) return;
+    if (target.closest('[data-quick-note]') && state.index && !state.modal) return newmenu.quickNote();
     if (await palette.click(target)) return;
     if (await move.click(target)) return;
     if (await menu.click(target)) return;
@@ -459,6 +460,9 @@ document.addEventListener('keydown', (e) => {
   } else if (mod && e.shiftKey && path && (k === 'm' || k === 'x' || k === 'e')) {
     e.preventDefault();
     void menu.run(k === 'm' ? 'move' : k === 'x' ? 'xray' : 'explore', path);
+  } else if (e.altKey && !mod && e.code === 'KeyN') {
+    e.preventDefault();
+    void newmenu.quickNote();
   } else if (e.key === 'F2' && path) {
     e.preventDefault();
     void menu.run('rename', path);
@@ -483,6 +487,8 @@ palette.setRunner(async (item) => {
     }
     case 'screen':
       return go(item.screen as ScreenId);
+    case 'quick-note':
+      return newmenu.quickNote();
     case 'new-task':
       state.modal = { step: 'task', text: '', due: '', tags: '', people: '', project: '', error: '' };
       return requestRender();

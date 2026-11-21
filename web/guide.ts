@@ -91,6 +91,7 @@ const SHORTCUTS: [string, string][] = [
   ['Ctrl/Cmd + P', 'Go to a note by a few letters, make a new one, or run an action. Try "move kick" to move the note whose name matches'],
   ['Ctrl/Cmd + K', 'Search'],
   ['Ctrl/Cmd + S', 'Save the open note now (it also saves by itself)'],
+  ['Alt + N', 'Quick note: titled with the date and time, ready to type'],
   ['F2', 'Rename the open note'],
   ['Ctrl/Cmd + Shift + M', 'Move the open note to another folder'],
   ['Ctrl/Cmd + Shift + X', 'Toggle X-ray'],

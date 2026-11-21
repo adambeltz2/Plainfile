@@ -14,6 +14,7 @@ export type PaletteItem =
   | { kind: 'create'; label: string; hint: string; title: string }
   | { kind: 'screen'; label: string; hint: string; screen: string }
   | { kind: 'new-task'; label: string; hint: string }
+  | { kind: 'quick-note'; label: string; hint: string }
   | { kind: 'action'; label: string; hint: string; action: NoteAction; path: string };
 
 const SCREENS: [string, string][] = [
@@ -84,6 +85,7 @@ export function items(): PaletteItem[] {
     for (const [a, l] of acts) if (l.toLowerCase().includes(q) || a.includes(q)) out.push({ kind: 'action', action: a, path: cur, label: l, hint: KEYS[a] ?? t });
   }
   for (const n of matchNotes(q, q ? 8 : 6)) out.push({ kind: 'note', label: n.title, hint: n.path, path: n.path });
+  if (!q || 'quick note'.includes(q) || (q.length > 1 && 'quick note'.startsWith(q))) out.push({ kind: 'quick-note', label: 'Quick note', hint: 'Alt+N' });
   if (!q || 'new task'.includes(q) || 'task'.includes(q)) out.push({ kind: 'new-task', label: 'New task…', hint: 'Quick add' });
   for (const [id, name] of SCREENS) if (!q || `go to ${name}`.toLowerCase().includes(q)) out.push({ kind: 'screen', screen: id, label: `Go to ${name}`, hint: '' });
   const made = raw && !idx.notes.has(raw) && ![...idx.notes.values()].some((n) => n.title.toLowerCase() === q);

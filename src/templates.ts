@@ -107,6 +107,16 @@ export const BUILT_IN: Template[] = [
     source: 'built-in',
   },
   {
+    name: 'Quick note',
+    description: 'Titled with the date and time, ready to type. Tag and file it later.',
+    folder: 'inbox',
+    filename: '{{date}} {{timefile}}',
+    prompts: [],
+    fm: 'title: "{{date}} {{time}}"\ncreated: {{date}}\nproject:\ntags: []\npeople: []',
+    body: '\n{{cursor}}\n',
+    source: 'built-in',
+  },
+  {
     name: 'Meeting',
     description: 'Agenda, decisions and action items.',
     folder: 'meetings',
@@ -146,7 +156,13 @@ export const BUILT_IN: Template[] = [
 ];
 
 const VAR = /\{\{\s*(\w+)(?:\+(\d+)d)?(?:\|(\w+))?\s*\}\}/g;
-const BUILT_IN_VARS = new Set(['date', 'cursor', 'sortOrder', 'projectDir', 'projectName']);
+const BUILT_IN_VARS = new Set(['date', 'time', 'timefile', 'cursor', 'sortOrder', 'projectDir', 'projectName']);
+
+const two = (n: number): string => String(n).padStart(2, '0');
+/** The time now as 14:35, or 1435 where a file name cannot hold a colon. */
+export function clock(d: Date = new Date(), forFile = false): string {
+  return forFile ? `${two(d.getHours())}${two(d.getMinutes())}` : `${two(d.getHours())}:${two(d.getMinutes())}`;
+}
 
 export function addDays(iso: string, n: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -178,6 +194,8 @@ function expand(s: string, values: Record<string, string>, today: string): strin
   return s.replace(VAR, (m, name: string, plus?: string, mod?: string) => {
     if (name === 'date') return plus ? addDays(today, Number(plus)) : today;
     if (name === 'cursor') return m;
+    if (name === 'time') return values.time ?? clock();
+    if (name === 'timefile') return values.timefile ?? clock(new Date(), true);
     const v = values[name] ?? '';
     return mod === 'slug' ? slug(v) : v;
   });

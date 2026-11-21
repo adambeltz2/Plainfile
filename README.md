@@ -53,6 +53,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 - **Move, duplicate, pin:** move a note to another folder with a preview of the links it fixes and an
   Undo, duplicate it, or pin it to the top. They live in a **⋯ More** menu on the note and in a
   right-click or long-press menu in the list.
+- **Quick note:** one click or Alt+N makes a note titled with the date and time, ready to type; tag it later.
 - **Go to… and quick keys:** Ctrl/Cmd+P finds a note by a few letters, creates one, or runs an action
   ("move kick"). F2 renames, Ctrl/Cmd+Shift+M moves, Ctrl/Cmd+Shift+X toggles X-ray.
 - **Type-ahead:** `[[` links, `#` tags, `@` people, `due:` days and frontmatter values while you type.

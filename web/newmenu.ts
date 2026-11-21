@@ -7,6 +7,21 @@ import { findProject } from '../src/quickline';
 import { errorMessage, quickAddTask, render, state, today, words } from './store';
 import { esc } from './util';
 
+/** Make a note titled with the date and time and open it with the cursor ready to type. No questions asked. */
+export async function quickNote(): Promise<void> {
+  const { storage, index } = state;
+  const t = state.templates.find((x) => x.name === 'Quick note');
+  if (!storage || !index || !t) return;
+  state.modal = undefined;
+  try {
+    const r = await createFromTemplate(storage, index, t, {}, today());
+    await openNote(r.path, r.cursor !== undefined ? { offset: r.cursor } : {});
+  } catch (e) {
+    state.error = `Could not make the note. ${errorMessage(e)}`;
+    render();
+  }
+}
+
 export function openNew(): void {
   state.modal = { step: 'menu' };
   render();
@@ -45,9 +60,10 @@ export function html(): string {
   if (m.step === 'menu') {
     body =
       '<h2>New</h2><ul class="plain menu">' +
+      `<li><button class="menu-item" data-quick-note><b>Quick note</b><span>Titled with the date and time, ready to type. Tag it later. Alt+N</span></button></li>` +
       '<li><button class="menu-item" data-new-task><b>Task</b><span>A task with its own note. It shows in Today, the Board and your Inbox.</span></button></li>' +
       state.templates
-        .filter((t) => !t.hidden)
+        .filter((t) => !t.hidden && t.name !== 'Quick note')
         .map((t) => `<li><button class="menu-item" data-tpl="${esc(t.name)}"><b>${esc(t.name)}</b><span>${esc(t.description || (t.source === 'built-in' ? '' : 'Your template'))}</span></button></li>`)
         .join('') +
       '</ul><p class="muted small" style="margin:10px 0 0">Add your own templates as markdown files in <code>.plainfile/templates/</code>.</p>';
@@ -86,6 +102,10 @@ export async function click(target: HTMLElement): Promise<boolean> {
   if (!m) return false;
   if (target.matches('[data-backdrop]')) {
     closeModal();
+    return true;
+  }
+  if (target.closest('[data-quick-note]')) {
+    await quickNote();
     return true;
   }
   if (target.closest('[data-new-task]')) {

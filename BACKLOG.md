@@ -31,6 +31,13 @@ Nothing here is a promise of order. Remove an item when it ships.
   the in-memory demo storage uses tiny fake modified times. Give `MemoryStorage` real times for the demo. Affects `src/memory-storage.ts`, `web/store.ts`.
 - `[DEBT]` **Sample project has no `## Goal`**, so the dashboard summary shows a raw preview. Affects `sample-vault/projects/website-relaunch/index.md`.
 
+## Sharing and export
+
+- `[FEATURE]` **Copy as formatted text** (⋯ More, Ctrl/Cmd+Shift+C): puts rich HTML and plain text on the clipboard so it pastes into Word, Google Docs and email with headings, lists, tables and links intact. A "clean" default drops frontmatter, turns `[[links]]` into plain words, `- [ ]` into ☐/☑ and hides `#tags`, `@people` and `due:` markers. Affects new `src/render.ts`, `web/menu.ts`.
+- `[FEATURE]` **Download as .docx, .html or PDF** (PDF through a clean print stylesheet). The .docx is written without a dependency (a small zip writer). Affects new `src/docx.ts`, `web/menu.ts`.
+- `[FEATURE]` **Project report**: one document from a project (goal, progress, open tasks by phase, selected notes) for sharing status. Affects `web/project.ts`, `src/render.ts`.
+- `[FEATURE]` **Export presets** (Clean, Keep tags, Raw markdown) remembered per vault. Affects `web/menu.ts`.
+
 ## Move and organise
 
 - `[FEATURE]` **Folder tree in the Notes list**, with drag a note onto a folder to move it. Affects `web/notes.ts`, `web/move.ts`.

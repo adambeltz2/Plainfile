@@ -53,6 +53,12 @@ function scope(index: VaultIndex, n: Note): Note[] {
   return [...out.values()];
 }
 
+/** The notes a project covers: its folder, and notes elsewhere whose `project:` names it. */
+export function projectNotes(index: VaultIndex, path: string): Note[] {
+  const me = index.notes.get(path);
+  return me ? scope(index, me) : [];
+}
+
 export function listProjects(index: VaultIndex): Project[] {
   const out: Project[] = [];
   for (const n of index.notes.values()) {

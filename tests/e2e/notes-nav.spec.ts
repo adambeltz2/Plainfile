@@ -176,3 +176,36 @@ test.describe('right-click or long-press a note', () => {
     expect(box!.y + box!.height).toBeLessThanOrEqual(800);
   });
 });
+
+test.describe('quick note', () => {
+  test('one click makes a note titled with the date and time and puts the cursor in the body', async ({ page }) => {
+    const dir = await openVault(page, VAULT);
+    await nav(page, 'Notes').click();
+    await page.locator('.notes-home').getByRole('button', { name: 'Quick note' }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    const path = (await page.locator('.ed-head .path').textContent()) ?? '';
+    expect(path).toMatch(/^inbox\/\d{4}-\d{2}-\d{2} \d{4}\.md$/);
+    await page.keyboard.type('Called Dana about the launch');
+    const stamp = path.replace('inbox/', '').replace('.md', '');
+    await expect.poll(() => readFileOrEmpty(page, dir, path), { timeout: 5000 }).toMatch(
+      new RegExp(`^---\\ntitle: "${stamp.slice(0, 10)} \\d\\d:\\d\\d"\\ncreated: ${stamp.slice(0, 10)}\\nproject:\\ntags: \\[\\]\\npeople: \\[\\]\\n---\\n\\nCalled Dana about the launch\\n$`),
+    );
+    await expect(page.locator('.ed-head .title')).toContainText(stamp.slice(0, 10));
+  });
+
+  test('is also in the New menu, the Go to palette and on Alt+N, and two in a minute do not collide', async ({ page }) => {
+    await openVault(page, VAULT);
+    await page.getByRole('button', { name: '+ New' }).click();
+    await page.locator('.modal').getByRole('button', { name: /^Quick note/ }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    const first = await page.locator('.ed-head .path').textContent();
+    await page.keyboard.press('Alt+n');
+    await expect(page.locator('.ed-head .path')).not.toHaveText(first ?? '');
+    await page.keyboard.press('Control+p');
+    await page.keyboard.type('quick');
+    await page.locator('.pal-item', { hasText: 'Quick note' }).click();
+    await expect(page.locator('.ed-head .path')).toHaveText(/ 3\.md$|\d{4} \d\.md$|\d{4}\.md$/);
+    await nav(page, 'Notes').click();
+    await expect(page.locator('#note-list .note-item')).toHaveCount(6); // three quick notes beside the three in the vault
+  });
+});
