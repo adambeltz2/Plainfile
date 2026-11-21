@@ -464,6 +464,7 @@ test.describe('project hub', () => {
     await page.getByRole('button', { name: 'Tag', exact: true }).click();
     await expect(page.locator('.hub-preview')).toContainText('10 notes will change');
     await page.getByRole('button', { name: 'Apply' }).click();
+    await expect(page.locator('.hub-content .notice.ok')).toContainText('changed 10 notes'); // wait for every write to finish
     await expect.poll(() => readFileOrEmpty(page, dir, 'projects/big/tasks/Task 003.md')).toContain('tags: [misc, batch]');
     await page.locator('#hub-q').fill('Task 001');
     await page.getByRole('button', { name: 'Select all shown' }).click();
