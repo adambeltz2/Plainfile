@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.30.2] - 2026-11-21
+
+### Changed
+- The README now links to the live app near the top.
+
 ## [0.30.1] - 2026-11-21
 
 ### Changed

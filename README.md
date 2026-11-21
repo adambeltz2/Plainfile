@@ -4,6 +4,9 @@
 
 <a href="https://www.buymeacoffee.com/adambeltz" target="_blank" rel="noopener noreferrer"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy me a coffee" height="36" /></a>
 
+**Live app: <https://adambeltz2.github.io/Simple-Productivity/>** (open it in Chrome, Edge or Brave to use a
+local folder, or connect Dropbox in any browser, including iPhone).
+
 A productivity hub over a plain folder of markdown files. Tasks, notes, tags and
 links live in ordinary `.md` files with frontmatter. The app reads them and
 gives you one place to see everything. Nothing is stored anywhere else, so the
