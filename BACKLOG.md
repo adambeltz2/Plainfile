@@ -13,7 +13,8 @@ Deferred features, bugs, and debt, per `CLAUDE.md` §4. Tags: `[BUG]`,
   remains between the modified-time check and the write closing. _Affected:
   `src/fsa-storage.ts`._
 - `[DEBT]` The UI re-renders the whole page with `innerHTML` on each change. Fine for
-  this screen, but the editor will need a proper view layer. _Affected: `web/main.ts`._- `[FEATURE]` Live editor (CodeMirror 6): block markers convert as you type,
+  this screen, but the editor will need a proper view layer. _Affected: `web/main.ts`._
+- `[FEATURE]` Live editor (CodeMirror 6): block markers convert as you type,
   inline formatting renders on leaving the line, X-ray toggle, chips for dates,
   people and tags, properties panel.
 - `[FEATURE]` Templates stored in `.plainfile/templates/` with a `plainfile:`
