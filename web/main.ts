@@ -75,6 +75,7 @@ const NAV: { id: ScreenId; label: string }[] = [
 
 async function go(screen: ScreenId): Promise<void> {
   await notes.flush();
+  state.error = '';
   state.screen = screen;
   state.modal = undefined;
   requestRender();

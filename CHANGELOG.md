@@ -4,6 +4,27 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.23.0] - 2026-11-21
+
+### Added
+- **Delete a note from disk.** A Delete button in Notes opens a confirmation that says which
+  notes link to it, how many open tasks go with it, and when it is a project's note.
+  - **Move to trash** (the default) keeps a copy in `.plainfile/trash/`, with its original path
+    in the file name, and shows an **Undo** button that puts it back exactly.
+  - **Delete permanently** is a separate choice with a second confirmation and no undo.
+  - A **Trash** list in the Notes sidebar restores any deleted note later, or deletes it forever
+    after a second click. A restore never overwrites a note that has taken its place.
+  - Like every other write, it is guarded: if the note changed on disk after the app last showed
+    it, nothing is deleted.
+  - Notes that linked to the deleted note are left as they are; Vault health lists the links
+    that now point nowhere.
+
+### Changed
+- On a phone, Notes shows the note list or the open note, not both stacked, with an **All notes**
+  button to go back, and the note's buttons stay on one line.
+- The delete guard compares with the modified time the app last showed you, not the time of the
+  click.
+
 ## [0.22.0] - 2026-11-21
 
 ### Added

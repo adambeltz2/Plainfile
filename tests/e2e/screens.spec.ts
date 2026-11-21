@@ -222,3 +222,27 @@ test('every screen fits a phone without sideways scrolling', async ({ page }) =>
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test('on a phone the note list gives way to the open note, with an All notes button back', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Notes').click();
+  await expect(page.locator('#note-list')).toBeVisible();
+  await page.locator('.note-item', { hasText: 'Kickoff call with Dana' }).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  await expect(page.locator('#note-list')).toBeHidden();
+  // The buttons stay on one line each.
+  const xray = await page.getByRole('button', { name: 'X-ray' }).boundingBox();
+  expect(xray!.height).toBeLessThan(50);
+  await page.getByRole('button', { name: 'All notes' }).click();
+  await expect(page.locator('#note-list')).toBeVisible();
+  await expect(page.locator('.cm-content')).toHaveCount(0);
+});
+
+test('on a wide screen the list and the note sit side by side and there is no All notes button', async ({ page }) => {
+  await page.getByRole('button', { name: 'Try the sample vault' }).click();
+  await nav(page, 'Notes').click();
+  await page.locator('.note-item', { hasText: 'Kickoff call with Dana' }).click();
+  await expect(page.locator('#note-list')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'All notes' })).toBeHidden();
+});

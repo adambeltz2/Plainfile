@@ -1,3 +1,4 @@
+import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type DeletePlan, type TrashItem } from '../src/delete';
 import { lineDiff, type LineChange } from '../src/diff';
 import { frontmatterText, setFrontmatterField } from '../src/frontmatter';
 import { dirname } from '../src/index';
@@ -30,6 +31,12 @@ export const notes = {
   yaml: false,
   filter: '',
   pending: {} as At,
+  /** The delete confirmation that is showing: move to trash, or the second step for permanent. */
+  confirmDelete: undefined as undefined | 'trash' | 'permanent',
+  lastDeleted: undefined as undefined | { title: string; path: string; trashPath?: string },
+  trash: [] as TrashItem[],
+  trashOpen: false,
+  purgeArm: undefined as string | undefined,
 };
 
 const STATUSES = ['todo', 'doing', 'waiting', 'done'];
@@ -151,6 +158,8 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
     notes.yaml = false;
     notes.status = 'Saved';
     notes.pending = at;
+    notes.lastDeleted = undefined;
+    notes.confirmDelete = undefined;
     notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush() });
   } catch (e) {
     notes.handle?.destroy();
@@ -191,7 +200,108 @@ function listHtml(): string {
   return h;
 }
 
+const stamp = (): string => new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+
+function deleteConfirmHtml(): string {
+  const idx = state.index;
+  const path = notes.path;
+  if (!idx || !path) return '';
+  let plan: DeletePlan;
+  try {
+    plan = planDelete(idx, path, stamp());
+  } catch {
+    return '';
+  }
+  const from = [...new Set(plan.linkedFrom.map((l) => l.path))];
+  let h = `<div class="notice err" role="alertdialog" aria-label="Delete note"><b>Delete “${esc(plan.title)}”?</b><ul class="small" style="margin:6px 0 0;padding-left:18px">`;
+  h += from.length
+    ? `<li>${from.length} note${from.length === 1 ? ' links' : 's link'} here. Those links will point nowhere until you fix them in Vault health: <span class="mono">${from.slice(0, 3).map(esc).join(', ')}${from.length > 3 ? ` and ${from.length - 3} more` : ''}</span></li>`
+    : '<li>No other note links here.</li>';
+  if (plan.openTasks) h += `<li>${plan.openTasks} open task${plan.openTasks === 1 ? '' : 's'} in it will leave Today.</li>`;
+  if (plan.isProjectIndex) h += '<li>This is a project note, so the project card goes away. The other files in the folder stay.</li>';
+  h += '</ul>';
+  if (notes.confirmDelete === 'permanent') {
+    h +=
+      '<p class="small" style="margin:8px 0 0"><b>This removes the file from your folder for good. There is no undo.</b></p>' +
+      '<div class="row-gap"><button class="btn primary" data-act="delete-perm-yes">Yes, delete permanently</button><button class="btn" data-act="delete-cancel">Cancel</button></div>';
+  } else {
+    h +=
+      '<div class="row-gap"><button class="btn primary" data-act="delete-trash">Move to trash</button><button class="btn" data-act="delete-perm">Delete permanently…</button><button class="btn" data-act="delete-cancel">Cancel</button></div>' +
+      '<p class="muted small" style="margin:6px 0 0">Moving to trash keeps a copy in <span class="mono">.plainfile/trash/</span> that you can restore.</p>';
+  }
+  return `${h}</div>`;
+}
+
+function trashHtml(): string {
+  const items = notes.trash;
+  if (!items.length) return '';
+  let h = `<div class="trash"><button class="link small" data-act="trash-toggle" aria-expanded="${notes.trashOpen}">Trash (${items.length})</button>`;
+  if (notes.trashOpen) {
+    h += `<ul class="plain small">${items
+      .map(
+        (i) =>
+          `<li class="trow"><span class="mono" title="${esc(i.originalPath)}">${esc(i.originalPath)}</span><span class="acts">` +
+          `<button class="btn small" data-act="trash-restore" data-trash="${esc(i.trashPath)}">Restore</button>` +
+          `<button class="btn small" data-act="trash-purge" data-trash="${esc(i.trashPath)}">${notes.purgeArm === i.trashPath ? 'Really delete?' : 'Delete forever'}</button></span></li>`,
+      )
+      .join('')}</ul>`;
+  }
+  return `${h}</div>`;
+}
+
+export async function refreshTrash(): Promise<void> {
+  const s = state.storage;
+  notes.trash = s ? await listTrash(s).catch(() => []) : [];
+  const el = document.getElementById('note-trash');
+  if (el) el.innerHTML = trashHtml();
+}
+
+async function doDelete(trash: boolean): Promise<void> {
+  const { storage, index } = state;
+  const path = notes.path;
+  if (!storage || !index || !path) return;
+  window.clearTimeout(notes.timer);
+  try {
+    const plan = planDelete(index, path, stamp());
+    const r = await deleteNote(storage, index, plan, { trash });
+    notes.handle?.destroy();
+    notes.handle = undefined;
+    notes.path = undefined;
+    notes.confirmDelete = undefined;
+    notes.lastDeleted = { title: plan.title, path, trashPath: r.trashedTo };
+    if (state.selected && !index.getTask(state.selected)) {
+      state.selected = undefined;
+      state.context = undefined;
+    }
+    await refreshTrash();
+  } catch (e) {
+    notes.confirmDelete = undefined;
+    state.error =
+      e instanceof ConflictError
+        ? 'That note changed on disk, so it was not deleted. Reload it and try again.'
+        : `Could not delete ${path}. ${errorMessage(e)}`;
+  }
+  render();
+}
+
+async function restoreFromTrash(trashPath: string): Promise<void> {
+  const { storage, index } = state;
+  if (!storage || !index) return;
+  const item = (await listTrash(storage)).find((i) => i.trashPath === trashPath);
+  if (!item) return;
+  try {
+    const restored = await restoreNote(storage, index, item);
+    notes.lastDeleted = undefined;
+    await refreshTrash();
+    await openNote(restored);
+  } catch (e) {
+    state.error = `Could not restore ${item.originalPath}. ${errorMessage(e)}`;
+    render();
+  }
+}
+
 function bannerHtml(): string {
+  if (notes.confirmDelete && notes.path) return deleteConfirmHtml();
   if (notes.missing) return '<div class="notice err">This file was deleted or moved outside the app. Your edits here are not saved.</div>';
   if (notes.conflict) {
     return (
@@ -292,21 +402,24 @@ export function html(): string {
   let main: string;
   if (!notes.path) {
     main =
+      (notes.lastDeleted
+        ? `<div class="notice ok" role="status">Deleted “${esc(notes.lastDeleted.title)}”. ${notes.lastDeleted.trashPath ? 'It is in the trash. <button class="btn small" data-act="undo-delete">Undo</button>' : 'It was removed permanently.'}</div>`
+        : '') +
       '<div class="empty">Choose a note on the left, or make a new one. Notes are plain markdown files. ' +
       'Type <code>- [ ] </code> for a checkbox, <code>#</code> for a heading, and press X-ray to see the raw text.</div>';
   } else {
     const n = idx.notes.get(notes.path);
     main =
       `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(n?.title ?? notes.path)}</h2><div class="mono muted small path">${esc(notes.path)}</div></div>` +
-      `<div class="ed-actions"><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button><button class="btn" data-act="explore-note">Explore</button><button class="btn" data-act="rename-note">Rename</button>` +
+      `<div class="ed-actions"><button class="btn only-narrow" data-act="note-close">All notes</button><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button><button class="btn" data-act="explore-note">Explore</button><button class="btn" data-act="rename-note">Rename</button><button class="btn" data-act="delete-note">Delete</button>` +
       `<span id="note-status" class="status" role="status">${esc(notes.status)}</span></div></div>` +
       `<div id="note-banner">${bannerHtml()}</div><div id="editor-slot" class="editor-slot"></div>`;
   }
   return (
-    '<div class="frame notes">' +
+    `<div class="frame notes${notes.path ? ' has-note' : ''}">` +
     `<aside class="side"><div class="side-head"><input id="note-filter" class="inp" type="text" placeholder="Filter notes" aria-label="Filter notes" value="${esc(notes.filter)}">` +
     '<button class="btn primary" data-act="new-note">+ New note</button></div>' +
-    `<div id="note-list" class="note-list">${listHtml()}</div></aside>` +
+    `<div id="note-list" class="note-list">${listHtml()}</div><div id="note-trash">${trashHtml()}</div></aside>` +
     `<section class="main editor-main">${main}</section>` +
     `<aside class="source" id="note-side">${sideHtml()}</aside></div>`
   );
@@ -314,6 +427,7 @@ export function html(): string {
 
 /** Call after the screen's HTML is in the page: puts the live editor into its slot. */
 export function afterRender(refocus: boolean): void {
+  void refreshTrash();
   const slot = document.getElementById('editor-slot');
   const h = notes.handle;
   if (!slot || !h) return;
@@ -360,6 +474,58 @@ export async function click(target: HTMLElement): Promise<boolean> {
     case 'add-prop':
       applyProperty(act.dataset.key ?? '', act.dataset.val ?? '');
       return true;
+    case 'note-close':
+      await flush();
+      window.clearTimeout(notes.timer);
+      notes.handle?.destroy();
+      notes.handle = undefined;
+      notes.path = undefined;
+      notes.confirmDelete = undefined;
+      render();
+      return true;
+    case 'delete-note':
+      await flush();
+      notes.confirmDelete = 'trash';
+      refreshBanner();
+      return true;
+    case 'delete-cancel':
+      notes.confirmDelete = undefined;
+      refreshBanner();
+      return true;
+    case 'delete-perm':
+      notes.confirmDelete = 'permanent';
+      refreshBanner();
+      return true;
+    case 'delete-trash':
+      await doDelete(true);
+      return true;
+    case 'delete-perm-yes':
+      await doDelete(false);
+      return true;
+    case 'undo-delete':
+      if (notes.lastDeleted?.trashPath) await restoreFromTrash(notes.lastDeleted.trashPath);
+      return true;
+    case 'trash-toggle':
+      notes.trashOpen = !notes.trashOpen;
+      notes.purgeArm = undefined;
+      await refreshTrash();
+      return true;
+    case 'trash-restore':
+      await restoreFromTrash(act.dataset.trash ?? '');
+      return true;
+    case 'trash-purge': {
+      const tp = act.dataset.trash ?? '';
+      if (notes.purgeArm !== tp) {
+        notes.purgeArm = tp;
+        await refreshTrash();
+        return true;
+      }
+      const item = state.storage ? (await listTrash(state.storage)).find((i) => i.trashPath === tp) : undefined;
+      if (item && state.storage) await purgeTrashItem(state.storage, item).catch((e) => (state.error = `Could not delete it. ${errorMessage(e)}`));
+      notes.purgeArm = undefined;
+      await refreshTrash();
+      return true;
+    }
     case 'note-reload': {
       const p = notes.path;
       window.clearTimeout(notes.timer);

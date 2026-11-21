@@ -342,3 +342,18 @@ th { background: var(--soft); font-weight: 600; white-space: nowrap; }
 .xtitle { font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
 .xtitle:hover { text-decoration: underline; }
 @media (max-width: 960px) { .xgrid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- trash ---------- */
+.trash { margin-top: 14px; padding-top: 8px; border-top: 1px solid var(--line); }
+.trash .link { color: var(--mute); }
+.trow { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 4px 0; flex-wrap: wrap; }
+.trow > span:first-child { overflow-wrap: anywhere; min-width: 0; }
+
+/* ---------- notes on a phone: the list or the note, not both stacked ---------- */
+.only-narrow { display: none; }
+.ed-actions { flex-wrap: wrap; }
+.ed-actions .btn { white-space: nowrap; }
+@media (max-width: 960px) {
+  .only-narrow { display: inline-block; }
+  .frame.notes.has-note > .side { display: none; }
+}

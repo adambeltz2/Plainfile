@@ -184,8 +184,16 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 ## Files and folders
 
-- `[FEATURE]` **Delete, move and duplicate a note**, and create a folder, with every link updated
-  and deletes going to `.plainfile/trash/` first. _Affected: `src/rename.ts`, `web/notes.ts`._
+- `[FEATURE]` **Move and duplicate a note**, and create a folder, with every link updated.
+  Delete and the trash are built. _Affected: `src/rename.ts`, `web/notes.ts`._
+- `[FEATURE]` Delete from Explore, Board and Today as well, and delete several notes at once.
+  _Affected: `web/explore.ts`, `web/board.ts`, `web/today.ts`._
+- `[FEATURE]` Empty the trash, and clear items older than 30 days automatically. _Affected:
+  `src/delete.ts`, `web/notes.ts`._
+- `[FEATURE]` Delete a task from Today (removing its line or its file). _Affected:
+  `src/writeback.ts`, `web/today.ts`._
+- `[FEATURE]` Delete an attachment, and offer to delete unused ones from Vault health. Needs binary
+  storage. _Affected: `src/delete.ts`, `web/health.ts`._
 - `[FEATURE]` Rename from the Notes list, and rename or move a whole folder with every note and
   link inside it. _Affected: `web/notes.ts`, `src/rename.ts`._
 - `[FEATURE]` Archive a note or project into an `archive/` folder. _Affected: `src/rename.ts`._
