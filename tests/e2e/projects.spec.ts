@@ -196,3 +196,60 @@ test.describe('search by date', () => {
     await expect(page.locator('#search-results .res')).toHaveCount(1);
   });
 });
+
+test.describe('project dashboard', () => {
+  const FILES = {
+    'projects/site/index.md': '---\ntitle: Website relaunch\ntype: project\nactive: true\ncreated: 2026-11-01\n---\n## Goal\nLaunch by Dec 8\n\n- [ ] Pick a host @sam due:2026-01-05\n- [x] Buy domain @dana\n- Ask legal about terms #followup\n',
+    'projects/site/tasks/Write copy.md': '---\ntitle: Write copy\nstatus: todo\ndue: 2999-01-01\ntags: [launch]\n---\n',
+    'meetings/Kickoff.md': '---\ntitle: Kickoff\nproject: Website relaunch\npeople: [dana]\n---\nNotes\n',
+    'other.md': '- [ ] Unrelated task',
+  };
+
+  test('shows open tasks, notes, people and follow-ups in one place, and ticking writes one character', async ({ page }) => {
+    const dir = await openVault(page, FILES);
+    await nav(page, 'Projects').click();
+    await expect(page.locator('.pcard .ptitle')).toHaveText('Website relaunch');
+    await page.locator('.pcard .pbtn').click();
+    await expect(page.locator('.title')).toHaveText('Website relaunch');
+    await expect(page.locator('.psummary')).toHaveText('Launch by Dec 8');
+    await expect(page.locator('.pstat').nth(0)).toContainText('2'); // open
+    await expect(page.locator('.pstat').nth(1)).toContainText('1'); // overdue
+    await expect(page.locator('.pprog')).toContainText('1 of 3 tasks done');
+    await expect(page.locator('.grp.late')).toContainText('Overdue');
+    await expect(page.locator('.psec', { hasText: 'Open tasks' })).toContainText('Pick a host');
+    await expect(page.locator('.psec', { hasText: 'Open tasks' })).toContainText('Write copy');
+    await expect(page.locator('.psec', { hasText: 'Open tasks' })).not.toContainText('Unrelated');
+    await expect(page.locator('.psec', { hasText: 'Notes' }).first()).toContainText('Kickoff');
+    await expect(page.locator('.psec', { hasText: 'Follow-ups' })).toContainText('Ask legal about terms');
+    await expect(page.locator('.psec', { hasText: 'People' })).toContainText('@dana');
+    await page.getByRole('button', { name: /Mark done: Pick a host/ }).click();
+    await expect(page.locator('.plog .diff .add')).toContainText('- [x] Pick a host');
+    expect(await readFile(page, dir, 'projects/site/index.md')).toContain('- [x] Pick a host @sam due:2026-01-05');
+    await expect(page.locator('.task.done', { hasText: 'Pick a host' })).toBeVisible();
+    await page.getByRole('button', { name: '← All projects' }).click();
+    await expect(page.locator('.pcard')).toBeVisible();
+  });
+
+  test('+ Task and + Meeting start from this project, and the Today cards link to the dashboard', async ({ page }) => {
+    await openVault(page, FILES);
+    await nav(page, 'Today').click();
+    await page.locator('.side [data-view="projects"]').click();
+    await page.locator('.pcard').getByRole('button', { name: 'Dashboard' }).click();
+    await expect(page.locator('.title')).toHaveText('Website relaunch');
+    await page.getByRole('button', { name: '+ Meeting' }).click();
+    await expect(page.locator('#tpl-project')).toHaveValue('site');
+    await expect(page.locator('#tpl-preview')).toContainText('project: site');
+    await page.locator('.modal').getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: '+ Task' }).click();
+    await expect(page.locator('#tpl-path')).toContainText('projects/site/tasks/');
+  });
+
+  test('fits a phone without sideways scrolling', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await openVault(page, FILES);
+    await nav(page, 'Projects').click();
+    await page.locator('.pcard .pbtn').click();
+    await expect(page.locator('.title')).toHaveText('Website relaunch');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  });
+});

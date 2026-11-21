@@ -414,3 +414,21 @@ progress:indeterminate { background: repeating-linear-gradient(90deg, var(--fg) 
 .qprev { flex-basis: 100%; min-height: 1.3em; }
 .qprev code { font-family: var(--mono); }
 .err-text { font-weight: 700; text-decoration: underline; }
+
+/* ---------- project dashboard ---------- */
+.psummary { margin: 4px 0 12px; font-size: 15px; max-width: 70ch; }
+.pstats { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+.pstat { border: 1px solid var(--line); border-radius: 8px; padding: 6px 14px; min-width: 76px; display: flex; flex-direction: column; align-items: center; }
+.pstat b { font-size: 22px; line-height: 1.2; }
+.pstat span { font-size: 12px; color: var(--mute); }
+.pstat.late { border: 2px solid var(--fg); }
+.pstat.late b { text-decoration: underline; }
+.pprog { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; }
+.pprog progress { max-width: 280px; }
+.pcols { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .pcols { grid-template-columns: minmax(0, 1fr); } }
+.psec { margin: 0 0 18px; }
+.psec h3 { margin: 0 0 6px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; }
+.psec h3 .n { font-weight: 400; color: var(--mute); }
+.pnotes .res-btn { width: 100%; }
+.plog { margin-top: 8px; max-width: 70ch; }

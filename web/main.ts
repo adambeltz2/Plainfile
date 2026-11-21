@@ -5,6 +5,7 @@ import * as guide from './guide';
 import * as health from './health';
 import * as newmenu from './newmenu';
 import * as notes from './notes';
+import * as projectScreen from './project';
 import * as rename from './rename';
 import * as search from './search';
 import * as suggest from './suggest';
@@ -71,6 +72,7 @@ function themeControl(): string {
 
 const NAV: { id: ScreenId; label: string }[] = [
   { id: 'today', label: 'Today' },
+  { id: 'projects', label: 'Projects' },
   { id: 'board', label: 'Board' },
   { id: 'notes', label: 'Notes' },
   { id: 'explore', label: 'Explore' },
@@ -150,6 +152,9 @@ function shell(): string {
     h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside Plainfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
   }
   switch (state.screen) {
+    case 'projects':
+      h += projectScreen.html();
+      break;
     case 'board':
       h += board.html();
       break;
@@ -218,6 +223,8 @@ app.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     if (state.modal && (await newmenu.click(target))) return;
 
+    const pj = target.closest<HTMLElement>('[data-open-project]')?.dataset.openProject;
+    if (pj) return projectScreen.openProject(pj);
     const cp = target.closest<HTMLElement>('[data-copy]');
     if (cp) return void guide.copy(cp);
     if (state.screen === 'explore' && (await explore.click(target))) return;
@@ -287,6 +294,9 @@ app.addEventListener('click', (e) => {
     switch (state.screen) {
       case 'today':
         await todayScreen.click(target);
+        break;
+      case 'projects':
+        await projectScreen.click(target);
         break;
       case 'board':
         await board.click(target);

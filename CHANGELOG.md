@@ -4,6 +4,21 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.28.0] - 2026-11-21
+
+### Added
+- **Project dashboard.** A new **Projects** screen shows every project as a card. Opening one
+  gives a page with: the goal, counts (open, overdue, done, notes, follow-ups), a progress bar,
+  open tasks grouped Overdue / Coming up / No date (tick them in place; the exact change on disk
+  is shown), the project's notes newest first, follow-ups, and the people and tags involved
+  (click to search). **+ Task**, **+ Note**, **+ Meeting** and **Open note** start from the
+  project. A project covers its folder and any note elsewhere whose `project:` names it, such as
+  a meeting. Today's project cards and a project note's side panel link to the dashboard.
+
+### Changed
+- Internal: task rows, ticking and the "what changed on disk" readout now live in one module
+  (`web/tasks.ts`) shared by Today and the dashboard.
+
 ## [0.27.0] - 2026-11-21
 
 ### Added

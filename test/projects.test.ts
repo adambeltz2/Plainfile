@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { parseNote } from '../src/parse';
-import { listFollowUps, listProjects, projectContents } from '../src/projects';
+import { listFollowUps, listProjects, projectContents, projectDashboard } from '../src/projects';
 
 const parse = (text: string) => parseNote('a.md', text, { mtime: 1, size: 0 });
 
@@ -81,5 +81,36 @@ describe('projectContents', () => {
     const c = projectContents(index, 'site/index.md');
     expect(c.notes.map((n) => n.path)).toEqual(['site/notes.md', 'site/tasks/a.md', 'site/tasks/b.md']);
     expect(c.tasks.map((t) => t.title).sort()).toEqual(['A', 'Home task', 'Note task']);
+  });
+});
+
+describe('projectDashboard', () => {
+  const FILES = {
+    'projects/site/index.md': '---\ntitle: Website relaunch\ntype: project\nactive: true\ncreated: 2026-11-01\n---\n## Goal\nLaunch the new site by Dec 8\n\n- [ ] Pick a host @sam due:2026-11-20\n- [x] Buy domain @dana\n- Ask legal about terms #followup\n',
+    'projects/site/tasks/Write copy.md': '---\ntitle: Write copy\nstatus: todo\ndue: 2026-11-25\ntags: [launch]\n---\n',
+    'projects/site/notes.md': '# Notes\n#launch',
+    'meetings/2026-11-17 Kickoff.md': '---\ntitle: Kickoff\nproject: Website relaunch\npeople: [dana, sam]\n---\n- [ ] Send logos @dana\n',
+    'elsewhere.md': '---\nproject: other\n---\nNo.',
+  };
+  it('gathers open tasks, notes, people, tags and follow-ups from the folder and from notes that name the project', async () => {
+    const index = await setup(FILES);
+    const d = projectDashboard(index, 'projects/site/index.md', '2026-11-21')!;
+    expect(d.title).toBe('Website relaunch');
+    expect(d.summary).toBe('Launch the new site by Dec 8');
+    expect(d.created).toBe('2026-11-01');
+    expect(d.open.map((t) => t.title)).toEqual(['Pick a host', 'Write copy', 'Send logos']);
+    expect(d.overdue).toBe(1);
+    expect(d.done).toBe(1);
+    expect(d.total).toBe(4);
+    expect(d.notes.map((n) => n.path).sort()).toEqual(['meetings/2026-11-17 Kickoff.md', 'projects/site/notes.md']);
+    expect(d.followups.map((f) => f.title)).toEqual(['Ask legal about terms']);
+    expect(d.people.map((p) => p.name)).toContain('dana');
+    expect(d.people.find((p) => p.name === 'dana')!.count).toBe(3);
+    expect(d.tags.map((t) => t.tag)).toContain('launch');
+  });
+  it('lists no tasks or notes from other projects, and returns nothing for a missing note', async () => {
+    const index = await setup(FILES);
+    expect(projectDashboard(index, 'elsewhere.md', '2026-11-21')!.total).toBe(0);
+    expect(projectDashboard(index, 'nope.md', '2026-11-21')).toBeUndefined();
   });
 });

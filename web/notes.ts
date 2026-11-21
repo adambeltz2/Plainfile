@@ -507,7 +507,7 @@ function sideHtml(): string {
   const me = idx.notes.get(notes.path);
   if (me && isProjectNote(me)) {
     const c = projectContents(idx, notes.path);
-    h += '<h2 style="margin-top:16px">In this project</h2>';
+    h += `<h2 style="margin-top:16px">In this project <button class="btn small" data-open-project="${esc(notes.path)}">Dashboard</button></h2>`;
     h += `<div class="row-gap" style="margin-top:0"><button class="btn small" data-act="proj-task" data-path="${esc(notes.path)}">+ Task</button><button class="btn small" data-act="proj-note" data-path="${esc(notes.path)}">+ Note</button></div>`;
     h += `<p class="muted small" style="margin:8px 0 4px">${c.tasks.length} open task${c.tasks.length === 1 ? '' : 's'}, ${c.notes.length} note${c.notes.length === 1 ? '' : 's'}</p>`;
     if (c.tasks.length) {
