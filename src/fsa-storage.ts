@@ -17,16 +17,32 @@ export class FsaStorage implements VaultStorage {
   /** Handles seen while listing. Some names (on Android, for example) are refused by getFileHandle but still open from the handle the listing gave us. */
   private seen = new Map<string, FileSystemFileHandle>();
 
-  private async fileHandle(path: string): Promise<FileSystemFileHandle> {
+  private seenDirs = new Map<string, FileSystemDirectoryHandle>();
+
+  private refused = (e: unknown): boolean => e instanceof TypeError || (e instanceof DOMException && e.name === 'NotFoundError');
+
+  /** The folder that holds `path`. Walks by name, and falls back to the handle the listing gave us when a name is refused. */
+  private async parentDir(path: string): Promise<FileSystemDirectoryHandle> {
     const parts = path.split('/');
-    const name = parts.pop() as string;
+    parts.pop();
     try {
       let dir = this.root;
       for (const p of parts) dir = await dir.getDirectoryHandle(p);
-      return await dir.getFileHandle(name);
+      return dir;
+    } catch (e) {
+      const h = this.seenDirs.get(parts.join('/'));
+      if (h && this.refused(e)) return h;
+      throw e;
+    }
+  }
+
+  private async fileHandle(path: string): Promise<FileSystemFileHandle> {
+    const name = path.split('/').pop() as string;
+    try {
+      return await (await this.parentDir(path)).getFileHandle(name);
     } catch (e) {
       const h = this.seen.get(path);
-      if (h && e instanceof TypeError) return h;
+      if (h && this.refused(e)) return h;
       throw e;
     }
   }
@@ -41,6 +57,8 @@ export class FsaStorage implements VaultStorage {
     let hidden = 0;
     const why = (e: unknown): string => (e instanceof Error ? e.message : String(e));
     this.seen.clear();
+    this.seenDirs.clear();
+    this.seenDirs.set('', this.root);
     let found = 0;
     let checked = 0;
     let last = 0;
@@ -66,7 +84,10 @@ export class FsaStorage implements VaultStorage {
                 continue;
               }
               const rel = prefix ? `${prefix}/${name}` : name;
-              if (handle.kind === 'directory') queue.push({ dir: handle as FileSystemDirectoryHandle, prefix: rel });
+              if (handle.kind === 'directory') {
+                this.seenDirs.set(rel, handle as FileSystemDirectoryHandle);
+                queue.push({ dir: handle as FileSystemDirectoryHandle, prefix: rel });
+              }
               else {
                 files.push({ rel, handle: handle as FileSystemFileHandle });
                 this.seen.set(rel, handle as FileSystemFileHandle);
@@ -123,13 +144,13 @@ export class FsaStorage implements VaultStorage {
   }
 
   async remove(path: string, expectedMtime: number): Promise<void> {
-    const parts = path.split('/');
-    const name = parts.pop() as string;
-    let dir = this.root;
-    for (const p of parts) dir = await dir.getDirectoryHandle(p);
-    const f = await (await dir.getFileHandle(name)).getFile();
+    const handle = await this.fileHandle(path);
+    const f = await handle.getFile();
     if (f.lastModified !== expectedMtime) throw new ConflictError(path);
-    await dir.removeEntry(name);
+    // Remove by the name the file system itself gave the file, which can differ from the typed path
+    // (for example in how an accented letter is written).
+    await (await this.parentDir(path)).removeEntry(handle.name);
+    this.seen.delete(path);
   }
 
   async create(path: string, content: string): Promise<FileEntry> {

@@ -38,6 +38,8 @@ export const notes = {
   pending: {} as At,
   /** The delete confirmation that is showing: move to trash, or the second step for permanent. */
   confirmDelete: undefined as undefined | 'trash' | 'permanent',
+  /** A delete is in progress, so the buttons say so and cannot be pressed twice. */
+  deleting: false,
   lastDeleted: undefined as undefined | { title: string; path: string; trashPath?: string },
   trash: [] as TrashItem[],
   trashOpen: false,
@@ -338,10 +340,10 @@ function deleteConfirmHtml(): string {
   if (notes.confirmDelete === 'permanent') {
     h +=
       '<p class="small" style="margin:8px 0 0"><b>This removes the file from your folder for good. There is no undo.</b></p>' +
-      '<div class="row-gap"><button class="btn primary" data-act="delete-perm-yes">Yes, delete permanently</button><button class="btn" data-act="delete-cancel">Cancel</button></div>';
+      `<div class="row-gap"><button class="btn primary" data-act="delete-perm-yes"${notes.deleting ? ' disabled' : ''}>${notes.deleting ? 'Deleting…' : 'Yes, delete permanently'}</button><button class="btn" data-act="delete-cancel"${notes.deleting ? ' disabled' : ''}>Cancel</button></div>`;
   } else {
     h +=
-      '<div class="row-gap"><button class="btn primary" data-act="delete-trash">Move to trash</button><button class="btn" data-act="delete-perm">Delete permanently…</button><button class="btn" data-act="delete-cancel">Cancel</button></div>' +
+      `<div class="row-gap"><button class="btn primary" data-act="delete-trash"${notes.deleting ? ' disabled' : ''}>${notes.deleting ? 'Moving to trash…' : 'Move to trash'}</button><button class="btn" data-act="delete-perm"${notes.deleting ? ' disabled' : ''}>Delete permanently…</button><button class="btn" data-act="delete-cancel"${notes.deleting ? ' disabled' : ''}>Cancel</button></div>` +
       '<p class="muted small" style="margin:6px 0 0">Moving to trash keeps a copy in <span class="mono">.plainfile/trash/</span> that you can restore.</p>';
   }
   return `${h}</div>`;
@@ -374,8 +376,11 @@ export async function refreshTrash(): Promise<void> {
 async function doDelete(trash: boolean): Promise<void> {
   const { storage, index } = state;
   const path = notes.path;
-  if (!storage || !index || !path) return;
+  if (!storage || !index || !path || notes.deleting) return;
   window.clearTimeout(notes.timer);
+  notes.deleting = true;
+  refreshBanner();
+  await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))); // let "Moving to trash…" show before the slow part
   try {
     const plan = planDelete(index, path, stamp());
     const r = await deleteNote(storage, index, plan, { trash });
@@ -395,6 +400,8 @@ async function doDelete(trash: boolean): Promise<void> {
       e instanceof ConflictError
         ? 'That note changed on disk, so it was not deleted. Reload it and try again.'
         : `Could not delete ${path}. ${errorMessage(e)}`;
+  } finally {
+    notes.deleting = false;
   }
   render();
 }

@@ -123,3 +123,25 @@ test('the delete confirmation fits a phone', async ({ page }) => {
   await expect(page.locator('#note-banner')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
+
+test('a file the browser lists but will not look up by name can still be opened and moved to the trash', async ({ page }) => {
+  // On some Android folders getFileHandle("name") says NotFound for a file that is plainly in the listing.
+  const dir = await openVault(page, { 'Inbox/2026-11-14/index 3.md': '---\ntitle: Odd one\n---\nBody\n', 'other.md': 'x' }, false);
+  await page.evaluate(async (dir) => {
+    const proto = FileSystemDirectoryHandle.prototype;
+    const real = proto.getFileHandle;
+    proto.getFileHandle = function (this: FileSystemDirectoryHandle, name: string, opts?: FileSystemGetFileOptions) {
+      if (name === 'index 3.md' && !opts?.create) return Promise.reject(new DOMException('not found', 'NotFoundError'));
+      return real.call(this, name, opts);
+    };
+    const root = await navigator.storage.getDirectory();
+    await window.__plainfile!.openHandle(await root.getDirectoryHandle(dir), 'odd');
+  }, dir);
+  await open(page, 'Odd one');
+  await noteMenu(page, /^Delete/);
+  await page.getByRole('button', { name: 'Move to trash' }).click();
+  await expect(page.locator('.notice.ok')).toContainText('Deleted “Odd one”');
+  await expect(page.locator('.notice.err')).toHaveCount(0);
+  expect((await listFiles(page, dir)).filter((f) => f.startsWith('Inbox/'))).toEqual([]);
+  expect(await trashFiles(page, dir)).toHaveLength(1);
+});

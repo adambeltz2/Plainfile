@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.29.2] - 2026-11-21
+
+### Fixed
+- **Deleting (and opening) a file the phone lists but will not look up by name.** Some Android folders
+  say "A requested file or directory could not be found" for a name that is plainly in the folder. Delete,
+  open, and every write now fall back to the exact handle the folder listing gave, and removal uses the
+  file's own stored name. Folders get the same fallback.
+- **Delete shows it is working.** The buttons change to "Moving to trash…" and cannot be pressed twice.
+
 ## [0.29.1] - 2026-11-21
 
 ### Added

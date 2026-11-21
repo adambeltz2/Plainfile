@@ -8,10 +8,10 @@ export function localDate(offsetDays = 0): string {
 }
 
 /** Creates a vault in the browser's origin-private file system and opens it through the real FSA adapter. */
-export async function openVault(page: Page, files: Record<string, string>): Promise<string> {
+export async function openVault(page: Page, files: Record<string, string>, open = true): Promise<string> {
   const dir = `vault-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
   await page.evaluate(
-    async ({ dir, files }) => {
+    async ({ dir, files, open }) => {
       const root = await navigator.storage.getDirectory();
       const vault = await root.getDirectoryHandle(dir, { create: true });
       for (const [path, text] of Object.entries(files)) {
@@ -23,9 +23,9 @@ export async function openVault(page: Page, files: Record<string, string>): Prom
         await w.write(text);
         await w.close();
       }
-      await window.__plainfile!.openHandle(vault, 'test-vault');
+      if (open) await window.__plainfile!.openHandle(vault, 'test-vault');
     },
-    { dir, files },
+    { dir, files, open },
   );
   return dir;
 }
