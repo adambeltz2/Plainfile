@@ -110,28 +110,28 @@ test.describe('in the editor', () => {
 });
 
 test.describe('in fields', () => {
-  test('quick add offers existing people and tags, skips ones already chosen, and Enter still adds the task', async ({ page }) => {
+  test('the one-line quick add offers people, tags and projects by their first character, and Enter still adds the task', async ({ page }) => {
     const dir = await openVault(page, VAULT);
-    await page.locator('#quick-text').fill('Call');
-    await page.locator('#quick-people').click();
-    await expect(page.locator('.suggest button')).toHaveText(['dana', 'sam']);
-    await page.locator('#quick-people').pressSequentially('sa');
+    const box = page.locator('#quick-text');
+    await box.click();
+    await box.pressSequentially('Call ');
+    await expect(page.locator('.suggest')).toHaveCount(0);
+    await box.pressSequentially('@sa');
     await expect(page.locator('.suggest button')).toHaveText(['sam']);
     await page.locator('.suggest button', { hasText: 'sam' }).click();
-    await expect(page.locator('#quick-people')).toHaveValue('sam ');
-    await page.locator('#quick-people').pressSequentially('d');
-    await expect(page.locator('.suggest button')).toHaveText(['dana']); // sam is already in the field
-    await page.keyboard.press('Escape');
-    await expect(page.locator('.suggest')).toHaveCount(0);
-    await page.locator('#quick-people').press('Backspace'); // remove the stray d
-    await page.keyboard.press('Escape');
-
-    await page.locator('#quick-tags').pressSequentially('la');
+    await expect(box).toHaveValue('Call @sam ');
+    await box.pressSequentially('#la');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    await expect(page.locator('#quick-tags')).toHaveValue('launch ');
-    // With nothing highlighted, Enter submits the form as before.
-    await page.locator('#quick-text').press('Enter');
+    await expect(box).toHaveValue('Call @sam #launch ');
+    await box.pressSequentially('+si');
+    await expect(page.locator('.suggest button')).toHaveText(['site']);
+    await page.keyboard.press('Escape');
+    await box.press('Backspace');
+    await box.press('Backspace');
+    await box.press('Backspace');
+    // With nothing highlighted, Enter submits as before.
+    await box.press('Enter');
     await expect(page.locator('.diff .add')).toContainText('- [ ] Call @sam #launch');
     expect(await readFile(page, dir, 'inbox/Inbox.md')).toContain(`- [ ] Call @sam #launch created:${localDate(0)}`);
   });
@@ -156,7 +156,7 @@ test.describe('in fields', () => {
   test('the dropdown stays on screen on a phone', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await openVault(page, VAULT);
-    await page.locator('#quick-tags').click();
+    await page.locator('#quick-text').pressSequentially('@');
     const box = await page.locator('.suggest').boundingBox();
     expect(box).not.toBeNull();
     expect(box!.x).toBeGreaterThanOrEqual(0);

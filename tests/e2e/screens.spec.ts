@@ -16,8 +16,7 @@ test.describe('quick add and New menu', () => {
   test('quick add creates the Inbox and appends without touching what is there', async ({ page }) => {
     const today = localDate(0);
     const dir = await openVault(page, { 'a.md': '# A\n' });
-    await page.locator('#quick-text').fill('Call Dana');
-    await page.locator('#quick-due').fill(today);
+    await page.locator('#quick-text').fill('Call Dana due:today');
     await page.locator('#quick-text').press('Enter');
     await expect(page.locator('.diff .add')).toHaveText(`+- [ ] Call Dana due:${today} created:${today}`);
     expect(await readFile(page, dir, 'inbox/Inbox.md')).toBe(`# Inbox\n\n- [ ] Call Dana due:${today} created:${today}\n`);

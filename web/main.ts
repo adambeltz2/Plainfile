@@ -218,8 +218,6 @@ app.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     if (state.modal && (await newmenu.click(target))) return;
 
-    const qd = target.closest<HTMLElement>('[data-qdue]')?.dataset.qdue;
-    if (qd) return todayScreen.setQuickDue(qd);
     const cp = target.closest<HTMLElement>('[data-copy]');
     if (cp) return void guide.copy(cp);
     if (state.screen === 'explore' && (await explore.click(target))) return;

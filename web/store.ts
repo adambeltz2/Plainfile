@@ -4,6 +4,8 @@ import { FsaStorage, fsaSupported } from '../src/fsa-storage';
 import { checkHealth, type HealthReport } from '../src/health';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
+import { listProjects, type Project } from '../src/projects';
+import { findProject, parseQuickLine, type QuickLine } from '../src/quickline';
 import type { VaultStorage } from '../src/storage';
 import { loadTemplates, type Template } from '../src/templates';
 import { StaleError, type ChangeResult } from '../src/writeback';
@@ -255,6 +257,35 @@ export async function quickAdd(text: string, due: string, tags = '', people = ''
   if (!storage || !index) return 'Open a folder first.';
   try {
     const r: ChangeResult = await addTask(storage, index, { text, due: due || undefined, created: today(), tags: words(tags), people: words(people) });
+    state.log = r;
+    state.selected = `${r.path}:${r.line}`;
+    state.context = undefined;
+    return null;
+  } catch (e) {
+    return writeFailure(e) ?? errorMessage(e);
+  }
+}
+
+/** Where a typed line will go, and what it means, so the preview and the save agree. */
+export function planQuickLine(line: string): { parsed: QuickLine; project?: Project; error?: string } {
+  const parsed = parseQuickLine(line, today());
+  let project: Project | undefined;
+  if (parsed.project !== undefined && state.index) {
+    project = findProject(listProjects(state.index), parsed.project);
+    if (!project) return { parsed, error: `No project called "${parsed.project}". Make it from + New, or leave off the +.` };
+  }
+  if (parsed.badDue) return { parsed, project, error: `Could not read "due:${parsed.badDue}". Try due:today, due:tomorrow, due:mon or due:2026-11-30.` };
+  return { parsed, project };
+}
+
+/** Add one typed line such as "Call Dana +Website @dana due:friday". Returns an error message, or null on success. */
+export async function quickAddLine(line: string): Promise<string | null> {
+  const { storage, index } = state;
+  if (!storage || !index) return 'Open a folder first.';
+  const plan = planQuickLine(line);
+  if (plan.error) return plan.error;
+  try {
+    const r: ChangeResult = await addTask(storage, index, { text: plan.parsed.text, created: today() }, plan.project?.path);
     state.log = r;
     state.selected = `${r.path}:${r.line}`;
     state.context = undefined;

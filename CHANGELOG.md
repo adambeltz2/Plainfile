@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.26.0] - 2026-11-21
+
+### Changed
+- **Quick add is one line.** Type `Here is a task +Project @Adam #tag due:tomorrow` and press
+  Enter. A preview under the box shows where it goes, who, which tags and which day before you
+  save. `due:` takes `today`, `tomorrow`, `mon`..`sun`, `next-week`, `+3d`, `2w` or a date;
+  `+Project` files the task in that project's note. An unknown project or date is explained
+  instead of guessed. The separate people, tags and due fields are gone from Today (the
+  New > Task form keeps them).
+- Type-ahead works inside the line: `@` offers people, `#` tags, `+` projects.
+
 ## [0.25.1] - 2026-11-21
 
 ### Fixed

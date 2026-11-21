@@ -409,3 +409,8 @@ progress:indeterminate { background: repeating-linear-gradient(90deg, var(--fg) 
   progress:indeterminate { animation: pstripe 0.9s linear infinite; }
   @keyframes pstripe { to { background-position: 32px 0; } }
 }
+
+/* ---------- one-line quick add ---------- */
+.qprev { flex-basis: 100%; min-height: 1.3em; }
+.qprev code { font-family: var(--mono); }
+.err-text { font-weight: 700; text-decoration: underline; }

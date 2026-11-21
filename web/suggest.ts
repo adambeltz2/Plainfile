@@ -62,14 +62,24 @@ function draw(): void {
 }
 
 export function show(input: HTMLInputElement): void {
-  const kind = input.dataset.suggest as SuggestKind | undefined;
+  let kind = input.dataset.suggest as SuggestKind | 'line' | undefined;
   const idx = state.index;
   if (!kind || !idx) return close();
   const { start, end, token } = tokenAt(input);
+  let prefix = /^[#@]/.exec(token)?.[0] ?? '';
+  let word = token;
+  if (kind === 'line') {
+    // A whole sentence: only the word being typed matters, and its first character says what it is.
+    const lead = token[0];
+    kind = lead === '@' ? 'people' : lead === '#' ? 'tags' : lead === '+' ? 'projects' : undefined;
+    if (!kind) return close();
+    prefix = lead as string;
+    word = token.slice(1);
+  }
   const others = (input.value.slice(0, start) + ' ' + input.value.slice(end)).split(/[\s,]+/).filter(Boolean);
-  const items = matchSuggestions(suggestionsFor(idx, kind), token, others);
+  const items = matchSuggestions(suggestionsFor(idx, kind), word, others);
   if (!items.length) return close();
-  cur = { input, items, active: -1, start, end, prefix: /^[#@]/.exec(token)?.[0] ?? '', sep: input.dataset.suggestSep ?? ' ' };
+  cur = { input, items, active: -1, start, end, prefix, sep: input.dataset.suggestSep ?? ' ' };
   draw();
 }
 
@@ -79,7 +89,7 @@ function choose(i: number): void {
   const name = items[i];
   if (name === undefined) return;
   const v = input.value;
-  const insert = `${prefix}${name}${sep}`;
+  const insert = `${prefix}${prefix === '+' ? name.replace(/\s+/g, '-') : name}${sep}`;
   input.value = v.slice(0, start) + insert + v.slice(end).replace(/^[\s,]+/, '');
   const caret = start + insert.length;
   input.setSelectionRange(caret, caret);

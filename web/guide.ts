@@ -26,6 +26,9 @@ tags:                          # or one per line
   - meeting
 
 See #launch and #area/home     # tags can sit in the text too`,
+  quick: `Send logo files +website-relaunch @dana #launch due:friday
+
+plus: due:today  due:tomorrow  due:mon  due:next-week  due:+3d  due:2026-11-23`,
   task: `- [ ] Send logo files @dana #launch due:2026-11-23 created:2026-11-21
 - [x] Share staging link`,
   taskfile: `---
@@ -159,7 +162,7 @@ export function html(): string {
   h += section('tags', 'Tags', '<p>Tags are not case sensitive. They can use letters, numbers, <code>-</code>, <code>_</code> and <code>/</code> for nesting, and need at least one letter, so <code>#2026</code> is not a tag.</p>' + block('tags', 'Three ways to tag', EX.tags));
 
   h +=
-    section('tasks', 'Tasks', '<p>A task is a checkbox line in any note, or a note of its own. Typing <code>- [ ] </code> turns into a checkbox as you type, and a typed <code>*</code> is saved as <code>-</code>.</p>' + block('task', 'A task inside a note', EX.task) + block('taskfile', 'A task as its own file (in a tasks/ folder)', EX.taskfile) + '<p>Dates are read in several styles, and written the first way:</p>' + block('dates', 'Due dates', EX.dates));
+    section('tasks', 'Tasks', '<p>A task is a checkbox line in any note, or a note of its own. Typing <code>- [ ] </code> turns into a checkbox as you type, and a typed <code>*</code> is saved as <code>-</code>.</p>' + block('quick', 'Quick add: one line in the box on Today', EX.quick) + block('task', 'A task inside a note', EX.task) + block('taskfile', 'A task as its own file (in a tasks/ folder)', EX.taskfile) + '<p>Dates are read in several styles, and written the first way:</p>' + block('dates', 'Due dates', EX.dates));
 
   h += section('links', 'Links', '<p>Links are worked out from your files, so back-links are never stored. Rename a note in Plainfile and every link to it is rewritten.</p>' + block('links', 'Linking', EX.links));
 

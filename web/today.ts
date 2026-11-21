@@ -3,10 +3,22 @@ import { dirname, type TaskItem } from '../src/index';
 import { listFollowUps, listProjects } from '../src/projects';
 import { addDays, todayView } from '../src/query';
 import { setTaskDone } from '../src/writeback';
-import { loadContext, justDone, quickAdd, render, state, today, writeFailure, errorMessage, rescan, type TodayViewId } from './store';
+import { loadContext, justDone, planQuickLine, quickAddLine, render, state, today, writeFailure, errorMessage, rescan, type TodayViewId } from './store';
 import { esc } from './util';
 
-export const quick = { text: '', due: '', tags: '', people: '', error: '' };
+export const quick = { text: '', error: '' };
+
+/** One line under the box saying how the typed text will be filed: where it goes, who, what tags, which day. */
+export function quickPreview(line: string): string {
+  if (!line.trim()) return 'One line is enough: <code>Email Sam +Project @sam #tag due:tomorrow</code>. It goes to your Inbox (or the project), dated today.';
+  const { parsed, project, error } = planQuickLine(line);
+  if (error) return `<span class="err-text">${esc(error)}</span>`;
+  const bits = [`Goes to <b>${esc(project ? project.title : 'Inbox')}</b>`];
+  if (parsed.due) bits.push(`due <b>${esc(fmtDate(parsed.due))}</b>`);
+  if (parsed.people.length) bits.push(`with ${parsed.people.map((p) => `<b>@${esc(p)}</b>`).join(' ')}`);
+  if (parsed.tags.length) bits.push(`tagged ${parsed.tags.map((x) => `<b>#${esc(x)}</b>`).join(' ')}`);
+  return bits.join(' · ');
+}
 
 const VIEWS: { id: TodayViewId; label: string }[] = [
   { id: 'today', label: 'Today' },
@@ -210,13 +222,9 @@ export function html(): string {
   const label = VIEWS.find((v) => v.id === state.view)?.label ?? 'Today';
   h += '<section class="main">';
   h += `<form class="quick" data-quick><label class="sr" for="quick-text">Add a task</label>` +
-    `<input id="quick-text" class="inp" type="text" autocomplete="off" placeholder="Add a task and press Enter. It goes to your Inbox, dated today." value="${esc(quick.text)}">` +
-    `<label class="sr" for="quick-people">People</label><input id="quick-people" class="inp mini" type="text" autocomplete="off" data-suggest="people" placeholder="@people" value="${esc(quick.people)}">` +
-    `<label class="sr" for="quick-tags">Tags</label><input id="quick-tags" class="inp mini" type="text" autocomplete="off" data-suggest="tags" placeholder="#tags" value="${esc(quick.tags)}">` +
-    `<div class="qdue" role="group" aria-label="Due date">` +
-    `<label class="datefield" for="quick-due"><span>Due</span><input id="quick-due" class="inp date" type="date" value="${esc(quick.due)}"></label>` +
-    `<span class="qpicks">${[['Today', 0], ['Tomorrow', 1], ['Next week', 7]].map(([l, n]) => `<button type="button" class="chip qpick" data-qdue="${addDays(today(), n as number)}" aria-pressed="${quick.due === addDays(today(), n as number)}">${l}</button>`).join('')}</span></div>` +
-    `<button class="btn primary" type="submit">Add</button></form>`;
+    `<input id="quick-text" class="inp" type="text" autocomplete="off" data-suggest="line" placeholder="Call Dana +Website @dana #launch due:friday" value="${esc(quick.text)}">` +
+    `<button class="btn primary" type="submit">Add</button>` +
+    `<div id="quick-preview" class="qprev small muted" aria-live="polite">${quickPreview(quick.text)}</div></form>`;
   if (quick.error) h += `<div class="notice err small">${esc(quick.error)}</div>`;
   h += `<h2 class="title">${esc(label)}</h2>`;
   if (state.view === 'followups') h += followupsHtml();
@@ -271,13 +279,10 @@ async function toggle(id: string): Promise<void> {
 }
 
 export async function submitQuick(): Promise<void> {
-  const err = await quickAdd(quick.text, quick.due, quick.tags, quick.people);
+  const err = await quickAddLine(quick.text);
   quick.error = err ?? '';
   if (!err) {
     quick.text = '';
-    quick.due = '';
-    quick.tags = '';
-    quick.people = '';
     state.view = state.view === 'today' || state.view === 'all' || state.view === 'inbox' ? state.view : 'inbox';
     if (state.selected) await loadContext(state.selected).catch(() => undefined);
   }
@@ -322,27 +327,12 @@ export async function click(target: HTMLElement): Promise<boolean> {
   return false;
 }
 
-export function setQuickDue(date: string): void {
-  quick.due = quick.due === date ? '' : date;
-  render();
-}
-
 export function input(e: Event): boolean {
   const t = e.target as HTMLInputElement;
   if (t.id === 'quick-text') {
     quick.text = t.value;
-    return true;
-  }
-  if (t.id === 'quick-due') {
-    quick.due = t.value;
-    return true;
-  }
-  if (t.id === 'quick-tags') {
-    quick.tags = t.value;
-    return true;
-  }
-  if (t.id === 'quick-people') {
-    quick.people = t.value;
+    const prev = document.getElementById('quick-preview');
+    if (prev) prev.innerHTML = quickPreview(t.value);
     return true;
   }
   return false;

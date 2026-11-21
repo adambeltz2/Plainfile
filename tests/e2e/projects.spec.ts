@@ -17,35 +17,37 @@ async function newProject(page: Page, name: string, goal = ''): Promise<void> {
   await expect(page.locator('.cm-content')).toBeVisible();
 }
 
-test.describe('quick add: created date, tags and people', () => {
-  test('has placeholders for tags and people, and writes the created date', async ({ page }) => {
+test.describe('one-line quick add', () => {
+  test('one line carries people, tags and a natural due date, plus the created date', async ({ page }) => {
     const dir = await openVault(page, { 'a.md': '# A\n' });
-    await expect(page.locator('#quick-people')).toHaveAttribute('placeholder', '@people');
-    await expect(page.locator('#quick-tags')).toHaveAttribute('placeholder', '#tags');
-    await page.locator('#quick-text').fill('Call Dana');
-    await page.locator('#quick-people').fill('dana, @sam');
-    await page.locator('#quick-tags').fill('#launch home');
-    await page.locator('#quick-due').fill(TODAY());
+    await expect(page.locator('#quick-people')).toHaveCount(0);
+    await page.locator('#quick-text').fill('Here is a task @Adam #launch due:tomorrow');
+    await expect(page.locator('#quick-preview')).toContainText('Inbox');
+    await expect(page.locator('#quick-preview')).toContainText('@Adam');
+    await expect(page.locator('#quick-preview')).toContainText('#launch');
     await page.locator('#quick-text').press('Enter');
-    const line = `- [ ] Call Dana @dana @sam #launch #home due:${TODAY()} created:${TODAY()}`;
+    const line = `- [ ] Here is a task @Adam #launch due:${localDate(1)} created:${TODAY()}`;
     await expect(page.locator('.diff .add')).toHaveText(`+${line}`);
     expect(await readFile(page, dir, 'inbox/Inbox.md')).toBe(`# Inbox\n\n${line}\n`);
-    const row = page.locator('.task', { hasText: 'Call Dana' });
-    await expect(row).toContainText('@dana');
-    await expect(row).toContainText('#launch');
+    const row = page.locator('.task', { hasText: 'Here is a task' });
+    await expect(row).toContainText(/@adam/i);
     await expect(row).toContainText('added');
+    await expect(page.locator('#quick-text')).toHaveValue('');
   });
 
-  test('the fields are cleared after adding, so the next task does not inherit them', async ({ page }) => {
-    const dir = await openVault(page, { 'a.md': '# A\n' });
-    await page.locator('#quick-text').fill('One');
-    await page.locator('#quick-people').fill('dana');
+  test('+Project files the task in that project, and an unknown project or date is explained instead of guessed', async ({ page }) => {
+    const dir = await openVault(page, { 'projects/site/index.md': '---\ntitle: Website relaunch\nactive: true\n---\nGoal.\n' });
+    await page.locator('#quick-text').fill('Send logos +site @Adam due:today');
+    await expect(page.locator('#quick-preview')).toContainText('Website relaunch');
     await page.locator('#quick-text').press('Enter');
-    await expect(page.locator('.diff .add')).toContainText('@dana');
-    await page.locator('#quick-text').fill('Two');
+    await expect(page.locator('.diff .add')).toContainText('Send logos');
+    expect(await readFile(page, dir, 'projects/site/index.md')).toBe(`---\ntitle: Website relaunch\nactive: true\n---\nGoal.\n- [ ] Send logos @Adam due:${TODAY()} created:${TODAY()}\n`);
+    await page.locator('#quick-text').fill('Nope +ghost');
+    await expect(page.locator('#quick-preview')).toContainText('No project called "ghost"');
     await page.locator('#quick-text').press('Enter');
-    await expect(page.locator('.diff .add')).toHaveText(`+- [ ] Two created:${TODAY()}`);
-    expect(await readFile(page, dir, 'inbox/Inbox.md')).toContain(`- [ ] Two created:${TODAY()}\n`);
+    await expect(page.locator('.notice.err')).toContainText('No project called "ghost"');
+    await page.locator('#quick-text').fill('Later due:someday');
+    await expect(page.locator('#quick-preview')).toContainText('Could not read "due:someday"');
   });
 
   test('a task file from the Task template starts with a created date and empty tags and people', async ({ page }) => {
@@ -139,25 +141,17 @@ test.describe('new project', () => {
 });
 
 test.describe('quick add due date', () => {
-  test('is labelled, wide enough to see on a phone, and has Today, Tomorrow and Next week buttons', async ({ page }) => {
+  test('the quick add box fits a phone and reads due words', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     const dir = await openVault(page, { 'a.md': '# A\n' });
-    await expect(page.locator('.datefield')).toContainText('Due');
-    const box = await page.locator('#quick-due').boundingBox();
-    expect(box!.width).toBeGreaterThan(110);
+    const box = await page.locator('#quick-text').boundingBox();
     expect(box!.x + box!.width).toBeLessThanOrEqual(390);
-    await page.getByRole('button', { name: 'Tomorrow' }).click();
-    await expect(page.locator('#quick-due')).toHaveValue(localDate(1));
-    await expect(page.getByRole('button', { name: 'Tomorrow' })).toHaveAttribute('aria-pressed', 'true');
-    await page.locator('#quick-text').fill('Pay invoice');
+    await page.locator('#quick-text').fill('Pay invoice due:+3d');
     await page.locator('#quick-text').press('Enter');
-    await expect(page.locator('.diff .add')).toContainText(`due:${localDate(1)}`);
-    expect(await readFile(page, dir, 'inbox/Inbox.md')).toContain(`- [ ] Pay invoice due:${localDate(1)} created:${localDate(0)}`);
-    // Pressing the same pick again clears it, and the field is empty for the next task.
-    await page.getByRole('button', { name: 'Next week' }).click();
-    await expect(page.locator('#quick-due')).toHaveValue(localDate(7));
-    await page.getByRole('button', { name: 'Next week' }).click();
-    await expect(page.locator('#quick-due')).toHaveValue('');
+    const d = new Date(); d.setDate(d.getDate() + 3);
+    await expect(page.locator('.diff .add')).toContainText('due:');
+    expect(await readFile(page, dir, 'inbox/Inbox.md')).toContain(`- [ ] Pay invoice due:${localDate(3)} created:${localDate(0)}`);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
 
   test('the New task form has the same picks', async ({ page }) => {
