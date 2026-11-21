@@ -74,6 +74,8 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
   outside the app are detected and offered as a one-click fix.
 - **Vault health:** broken links, duplicates, orphans and unused attachments, with one-click fixes.
   It never blocks your work.
+- **Fast reopening:** a saved copy of the parsed notes (only a cache) means a big folder, local or Dropbox, reads
+  only what changed. Dropbox rescans ask just for the changes.
 - **Big folders:** a progress bar with counts and a Cancel button while a large folder is read.
   Files that cannot be read are skipped and listed, so one bad file never blocks the folder.
 - **Dropbox:** open a vault stored in Dropbox from any browser. Files go only between your browser and

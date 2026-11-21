@@ -86,3 +86,58 @@ describe('DropboxStorage specifics', () => {
     await expect(s.stat('nope.md')).rejects.toMatchObject({ name: 'NotFoundError' });
   });
 });
+
+describe('incremental listing', () => {
+  it('lists everything once, then asks only for what changed, including deletes and new files', async () => {
+    const fake = new FakeDropbox();
+    fake.seed({ 'a.md': 'A', 'sub/b.md': 'B', 'sub/deep/c.md': 'C', 'keep.md': 'K' });
+    const mine = make(fake);
+    expect((await mine.list()).map((f) => f.path).sort()).toEqual(['a.md', 'keep.md', 'sub/b.md', 'sub/deep/c.md']);
+    const full = () => fake.calls.filter((c) => c === '/files/list_folder').length;
+    expect(full()).toBe(1);
+
+    // Another device changes things.
+    const other = make(fake);
+    await other.create('new.md', 'N');
+    const a = await other.stat('a.md');
+    await other.write('a.md', 'A2', a.mtime);
+    await other.remove('keep.md', (await other.stat('keep.md')).mtime);
+    fake.files.delete('/sub/b.md');
+    fake.files.delete('/sub/deep/c.md');
+    (fake as unknown as { log: unknown[] }).log.push({ seq: (fake as unknown as { seq: number }).seq++, lower: '/sub', display: '/sub' }); // the folder itself was deleted
+
+    const before = fake.calls.length;
+    const second = await mine.list();
+    expect(second.map((f) => f.path).sort()).toEqual(['a.md', 'new.md']);
+    expect(full()).toBe(1); // no second full listing
+    expect(fake.calls.slice(before)).toEqual(['/files/list_folder/continue']);
+    expect(second.find((f) => f.path === 'a.md')!.mtime).toBe((await other.stat('a.md')).mtime);
+    // Nothing changed: still one small request, same answer.
+    expect((await mine.list()).map((f) => f.path).sort()).toEqual(['a.md', 'new.md']);
+    expect(full()).toBe(1);
+  });
+
+  it('lists the whole folder again if Dropbox no longer accepts the cursor', async () => {
+    const fake = new FakeDropbox();
+    fake.seed({ 'a.md': 'A' });
+    const mine = make(fake);
+    await mine.list();
+    await make(fake).create('b.md', 'B');
+    fake.resetNext = true;
+    expect((await mine.list()).map((f) => f.path).sort()).toEqual(['a.md', 'b.md']);
+    expect(fake.calls.filter((c) => c === '/files/list_folder').length).toBe(2);
+  });
+
+  it('keeps hidden items out and still counts them', async () => {
+    const fake = new FakeDropbox();
+    fake.seed({ 'a.md': 'A', '.plainfile/h.md': 'x' });
+    const mine = make(fake);
+    let hidden = -1;
+    await mine.list({ onHidden: (n) => (hidden = n) });
+    expect(hidden).toBe(1);
+    await make(fake).create('.plainfile/more.md', 'y');
+    await mine.list({ onHidden: (n) => (hidden = n) });
+    expect((await mine.list()).map((f) => f.path)).toEqual(['a.md']);
+    expect(hidden).toBe(2);
+  });
+});

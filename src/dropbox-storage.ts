@@ -119,29 +119,60 @@ export class DropboxStorage implements VaultStorage {
     return { path, mtime: mtimeOf(m), size: m.size ?? 0 };
   }
 
+  /** What the last listing saw and where it stopped, so the next one can ask only for what changed. */
+  private known = new Map<string, { entry: FileEntry; lower: string }>();
+  private cursor: string | undefined;
+  private hiddenSeen = 0;
+
+  private apply(m: Meta): void {
+    const lower = m.path_lower ?? '';
+    if (m['.tag'] === 'deleted') {
+      // A deleted folder takes everything inside it with it.
+      for (const [rel, v] of [...this.known]) if (v.lower === lower || v.lower.startsWith(`${lower}/`)) this.known.delete(rel);
+      return;
+    }
+    if (m['.tag'] !== 'file') return;
+    const rel = this.rel(m);
+    if (!rel) return;
+    if (rel.split('/').some(HIDDEN)) {
+      this.hiddenSeen++;
+      return;
+    }
+    this.known.set(rel, { entry: this.entry(rel, m), lower });
+  }
+
+  /**
+   * Every visible file. The first call lists the whole folder. Later calls ask Dropbox only what changed since
+   * (with the saved cursor), so a rescan of a big folder is one small request. If Dropbox no longer accepts the
+   * cursor, the whole folder is listed again.
+   */
   async list(opts: ListOptions = {}): Promise<FileEntry[]> {
     const { onProgress, signal, onHidden } = opts;
-    let page = await this.rpc<{ entries: Meta[]; cursor: string; has_more: boolean }>('/files/list_folder', { path: this.root, recursive: true, include_deleted: false, limit: 2000 }, signal);
-    const out: FileEntry[] = [];
-    let hidden = 0;
-    for (;;) {
-      for (const m of page.entries) {
-        if (m['.tag'] !== 'file') continue;
-        const rel = this.rel(m);
-        if (!rel) continue;
-        if (rel.split('/').some(HIDDEN)) {
-          hidden++;
-          continue;
-        }
-        out.push(this.entry(rel, m));
+    let page: { entries: Meta[]; cursor: string; has_more: boolean } | undefined;
+    if (this.cursor) {
+      try {
+        page = await this.rpc('/files/list_folder/continue', { cursor: this.cursor }, signal);
+      } catch (e) {
+        if (!(e instanceof DropboxError && (e.summary.startsWith('reset') || e.status === 409))) throw e;
+        this.cursor = undefined;
       }
-      onProgress?.({ found: out.length, checked: out.length });
-      throwIfAborted(signal);
-      if (!page.has_more) break;
-      page = await this.rpc('/files/list_folder/continue', { cursor: page.cursor }, signal);
     }
-    onHidden?.(hidden);
-    return out;
+    if (!page) {
+      this.known.clear();
+      this.hiddenSeen = 0;
+      page = await this.rpc('/files/list_folder', { path: this.root, recursive: true, include_deleted: false, limit: 2000 }, signal);
+    }
+    let cur = page as { entries: Meta[]; cursor: string; has_more: boolean };
+    for (;;) {
+      for (const m of cur.entries) this.apply(m);
+      this.cursor = cur.cursor;
+      onProgress?.({ found: this.known.size, checked: this.known.size });
+      throwIfAborted(signal);
+      if (!cur.has_more) break;
+      cur = await this.rpc('/files/list_folder/continue', { cursor: cur.cursor }, signal);
+    }
+    onHidden?.(this.hiddenSeen);
+    return [...this.known.values()].map((v) => v.entry);
   }
 
   async listDir(dir: string): Promise<FileEntry[]> {

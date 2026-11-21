@@ -17,7 +17,11 @@ export class FakeDropbox {
   pageSize = 3;
   tokens = new Set<string>(['good']);
   private seq = 1;
-  private cursors = new Map<string, Meta[]>();
+  private cursors = new Map<string, { rest: Meta[]; snap: number }>();
+  /** Every change in order, so a saved cursor can ask for just what happened since. */
+  private log: { seq: number; lower: string; display: string; meta?: Meta }[] = [];
+  /** Make the next continue say the cursor is no longer valid, as Dropbox does after a long time. */
+  resetNext = false;
   private clock = Date.UTC(2026, 10, 21, 4, 0, 0);
   /** Set to make the next request answer 429 once. */
   rateLimitOnce = false;
@@ -43,6 +47,7 @@ export class FakeDropbox {
     const f: F = { display: path.replace(/^\//, ''), content, bytes, rev: this.seq++, modified: this.clock };
     f.display = '/' + f.display;
     this.files.set(path.toLowerCase(), f);
+    this.log.push({ seq: this.seq++, lower: path.toLowerCase(), display: f.display, meta: this.meta(f) });
     return f;
   }
 
@@ -72,9 +77,24 @@ export class FakeDropbox {
         .filter((f) => body.recursive || !f.display.slice(base.length).includes('/'))
         .map((f) => this.meta(f));
       if (!all.length && !body.recursive && ![...this.files.keys()].some((k) => k.startsWith(base))) return this.err('path/not_found/');
-      return this.page(all);
+      return this.page(all, this.seq);
     }
-    if (path === '/files/list_folder/continue') return this.page(this.cursors.get(body.cursor) ?? []);
+    if (path === '/files/list_folder/continue') {
+      if (this.resetNext) {
+        this.resetNext = false;
+        return this.err('reset/');
+      }
+      const c = String(body.cursor);
+      if (c.startsWith('L:')) {
+        const since = Number(c.slice(2));
+        const latest = new Map<string, (typeof this.log)[number]>();
+        for (const e of this.log) if (e.seq >= since) latest.set(e.lower, e);
+        const entries = [...latest.values()].map((e) => (e.meta ? e.meta : { '.tag': 'deleted' as const, name: e.display.split('/').pop() as string, path_lower: e.lower, path_display: e.display }));
+        return this.json({ entries, cursor: `L:${this.seq}`, has_more: false });
+      }
+      const p = this.cursors.get(c) ?? { rest: [], snap: this.seq };
+      return this.page(p.rest, p.snap);
+    }
     if (path === '/files/get_metadata') {
       const f = this.files.get((body.path as string).toLowerCase());
       return f ? this.json(this.meta(f)) : this.err('path/not_found/..');
@@ -99,23 +119,25 @@ export class FakeDropbox {
       if (!cur) return this.err('path_lookup/not_found/..');
       if (body.parent_rev && this.meta(cur).rev !== body.parent_rev) return this.err('path_write/conflict/rev');
       this.files.delete(key);
+      this.log.push({ seq: this.seq++, lower: key, display: cur.display });
       return this.json({ metadata: this.meta(cur) });
     }
     return this.err(`unknown/${path}`, 400);
   };
 
-  private page(all: Meta[]): Response {
+  private page(all: Meta[], snap: number): Response {
     const first = all.slice(0, this.pageSize);
     const rest = all.slice(this.pageSize);
-    const cursor = `c${this.seq++}`;
-    this.cursors.set(cursor, rest);
+    const last = rest.length === 0;
+    const cursor = last ? `L:${snap}` : `c${this.seq++}`;
+    if (!last) this.cursors.set(cursor, { rest, snap });
     // Folders are listed too, as the real service does.
-    return this.json({ entries: [...first, { '.tag': 'folder', name: 'x', path_lower: '/x', path_display: '/x' }], cursor, has_more: rest.length > 0 });
+    return this.json({ entries: [...first, { '.tag': 'folder', name: 'x', path_lower: '/x', path_display: '/x' }], cursor, has_more: !last });
   }
 }
 
 interface Meta {
-  '.tag': 'file' | 'folder';
+  '.tag': 'file' | 'folder' | 'deleted';
   name: string;
   path_lower: string;
   path_display: string;

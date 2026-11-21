@@ -4,6 +4,19 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.36.0] - 2026-11-21
+
+### Added
+- **Saved index.** The browser keeps a copy of the parsed notes (in IndexedDB, per folder). Reopening a folder,
+  local or Dropbox, reads only the notes whose file changed, so a big folder opens in a fraction of the time. The
+  copy is only a cache: a note is used from it only when its path, modified time and size all match, it is dropped
+  when the parser changes, and nothing breaks if storage is blocked. Today's sidebar says how many notes came
+  from the saved copy.
+- **Dropbox rescans ask only what changed.** After the first listing, Rescan (and returning to the tab) makes one
+  small request using Dropbox's change cursor instead of listing the whole folder. Deleted files and folders,
+  edits from other devices and new files are picked up; if Dropbox stops accepting the cursor the folder is
+  listed in full again.
+
 ## [0.35.0] - 2026-11-21
 
 ### Changed

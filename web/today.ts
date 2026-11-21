@@ -186,7 +186,7 @@ export function html(): string {
     for (const [g, n] of tags) h += `<li><button class="item mono" data-tag="${esc(g)}" aria-current="${state.tag === g}">#${esc(g)} <span class="n">${n}</span></button></li>`;
     h += '</ul></div>';
   }
-  h += `<div class="stat">${idx.notes.size} notes<br>scanned in ${state.scanMs} ms${state.demo ? '<br>sample date 21 Nov 2026' : ''}</div></aside>`;
+  h += `<div class="stat">${idx.notes.size} notes<br>scanned in ${state.scanMs} ms${idx.fromCache ? ` (${idx.fromCache} from the saved copy)` : ''}${state.demo ? '<br>sample date 21 Nov 2026' : ''}</div></aside>`;
 
   const label = VIEWS.find((v) => v.id === state.view)?.label ?? 'Today';
   h += '<section class="main">';

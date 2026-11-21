@@ -76,6 +76,21 @@ function push<K, V>(m: Map<K, V[]>, k: K, v: V): void {
  * The index is a cache. It is rebuilt from the files, never the other way round,
  * so it is always safe to throw away.
  */
+/**
+ * A saved copy of the parsed notes, so reopening a big folder reads only what changed. It is only ever a
+ * cache: a note is used from it when its path, modified time and size are all unchanged, and it is always
+ * safe to delete. The browser keeps one in IndexedDB; tests use an in-memory one.
+ */
+export interface IndexCache {
+  /** Every saved note, or an empty list if none were saved or they were saved by another version of the parser. */
+  load(): Promise<Note[]>;
+  put(notes: Note[]): Promise<void>;
+  remove(paths: string[]): Promise<void>;
+}
+
+/** Bump when parsing changes in a way that makes saved notes wrong, so every cache is dropped. */
+export const PARSER_VERSION = 1;
+
 export class VaultIndex {
   /** Increases every time the index changes, so derived results can be cached. */
   version = 0;
@@ -89,7 +104,13 @@ export class VaultIndex {
   private pathsLower = new Map<string, string>();
   private backlinkMap = new Map<string, { from: string; line: number }[]>();
 
-  constructor(private storage: VaultStorage) {}
+  /** How many notes the last scan took from the saved copy instead of reading. */
+  fromCache = 0;
+
+  constructor(
+    private storage: VaultStorage,
+    private cache?: IndexCache,
+  ) {}
 
   /** Files and folders that could not be read, from the latest scan. Skipped, never fatal. */
   get skipped(): SkippedFile[] {
@@ -128,6 +149,23 @@ export class VaultIndex {
     this.listSkipped = listSkipped;
     throwIfAborted(signal);
     this.files = new Set(entries.map((e) => e.path));
+    // The first scan can start from the saved copy: notes whose file is unchanged need no reading at all.
+    const staleCached: string[] = [];
+    if (this.cache && this.notes.size === 0) {
+      const byPath = new Map(entries.map((e) => [e.path, e]));
+      try {
+        for (const n of await this.cache.load()) {
+          const e = byPath.get(n.path);
+          if (!e) staleCached.push(n.path);
+          if (e && e.mtime === n.mtime && e.size === n.size && isMarkdown(n.path)) {
+            this.notes.set(n.path, n);
+            this.fromCache++;
+          }
+        }
+      } catch {
+        /* a cache that cannot be read is just not used */
+      }
+    }
     for (const p of [...this.readSkipped.keys()]) if (!this.files.has(p)) this.readSkipped.delete(p);
 
     const removedNotes: Note[] = [];
@@ -176,6 +214,20 @@ export class VaultIndex {
       },
       signal,
     );
+
+    if (this.cache) {
+      const keep = [...added, ...changed].map((p) => this.notes.get(p)).filter((n): n is Note => !!n);
+      // Saving is best effort and never delays or fails the scan.
+      void (async () => {
+        try {
+          if (keep.length) await this.cache?.put(keep);
+          const gone = [...removedNotes.map((n) => n.path), ...staleCached];
+          if (gone.length) await this.cache?.remove(gone);
+        } catch {
+          /* ignore */
+        }
+      })();
+    }
 
     const renamed: ScanResult['renamed'] = [];
     const gone = [...removedNotes];

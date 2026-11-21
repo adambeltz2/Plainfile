@@ -10,6 +10,7 @@ import type { VaultStorage } from '../src/storage';
 import { loadTemplates, type Template } from '../src/templates';
 import { StaleError, type ChangeResult } from '../src/writeback';
 import { hasPermission, loadHandle, saveHandle } from './handle-store';
+import { browserCache } from './index-cache';
 
 export const SAMPLE_DAY = '2026-11-21';
 
@@ -132,7 +133,7 @@ export async function loadVault(storage: VaultStorage, name: string, demo: boole
   render();
   const ticker = window.setInterval(paintProgress, 1000);
   try {
-    const index = new VaultIndex(storage);
+    const index = new VaultIndex(storage, demo ? undefined : browserCache(name));
     const r = await index.scan({
       signal: ctrl.signal,
       onProgress: (p) => {

@@ -98,3 +98,36 @@ test('notes many folders deep are found', async ({ page }) => {
   await expect(page.locator('.notice', { hasText: 'No markdown notes' })).toHaveCount(0);
   await expect(page.locator('.task', { hasText: 'Found me' })).toBeVisible();
 });
+
+test('reopening a folder reads only what changed, using the saved copy', async ({ page }) => {
+  await page.evaluate(async () => {
+    const root = await navigator.storage.getDirectory();
+    const vault = await root.getDirectoryHandle('cached-vault', { create: true });
+    for (let i = 0; i < 40; i++) {
+      const w = await (await vault.getFileHandle(`n${i}.md`, { create: true })).createWritable();
+      await w.write(`# Note ${i}\n- [ ] task ${i} due:2026-01-01\n`);
+      await w.close();
+    }
+    await window.__plainfile!.openHandle(vault, 'cached-vault');
+  });
+  await expect(page.locator('.nav, .tabbar').first()).toBeVisible();
+  await page.waitForTimeout(500); // the copy is saved just after the folder opens
+  // Count how many notes are read the second time.
+  await page.evaluate(async () => {
+    (window as unknown as { __reads: number }).__reads = 0;
+    const real = Blob.prototype.text;
+    Blob.prototype.text = function (this: Blob) {
+      (window as unknown as { __reads: number }).__reads++;
+      return real.call(this);
+    };
+    const root = await navigator.storage.getDirectory();
+    const vault = await root.getDirectoryHandle('cached-vault');
+    const w = await (await vault.getFileHandle('n7.md')).createWritable();
+    await w.write('# Note 7 edited\n- [ ] task 7 due:2026-01-01\n');
+    await w.close();
+    await window.__plainfile!.openHandle(vault, 'cached-vault');
+  });
+  await expect(page.locator('.stat')).toContainText('from the saved copy');
+  expect(await page.evaluate(() => (window as unknown as { __reads: number }).__reads)).toBe(1);
+  await expect(page.locator('.task .t', { hasText: /^task 3$/ })).toBeVisible();
+});
