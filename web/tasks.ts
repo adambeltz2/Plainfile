@@ -21,9 +21,10 @@ function chips(t: TaskItem): string {
   return out.join('');
 }
 
-export function row(t: TaskItem): string {
+export function row(t: TaskItem, pick?: { on: boolean }): string {
   return (
-    `<li class="task${t.done ? ' done' : ''}${t.id === state.selected ? ' sel' : ''}" data-id="${esc(t.id)}" tabindex="0">` +
+    `<li class="task${t.done ? ' done' : ''}${t.id === state.selected ? ' sel' : ''}${pick?.on ? ' picked' : ''}" data-id="${esc(t.id)}" tabindex="0">` +
+    (pick ? `<input type="checkbox" class="selbox" data-hub-select="${esc(t.id)}"${pick.on ? ' checked' : ''} aria-label="Select: ${esc(t.title)}">` : '') +
     `<button class="cb" data-toggle="${esc(t.id)}" aria-pressed="${t.done}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${t.done ? '✓' : ''}</button>` +
     `<div class="body"><div class="t">${esc(t.title)}</div><div class="chips">${chips(t)}</div></div></li>`
   );

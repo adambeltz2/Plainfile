@@ -137,3 +137,19 @@ describe('tidying frontmatter', () => {
     expect(fieldIssues(index, [...index.notes.values()]).filter((i) => i.path.includes('/tasks/Logo'))).toEqual([]);
   });
 });
+
+describe('portfolio', () => {
+  it('has one row per project with progress, open, overdue, next due and last change', async () => {
+    const { portfolio } = await import('../src/hub');
+    const index = await setup({
+      ...FILES,
+      'projects/kitchen/index.md': '---\ntitle: Kitchen\ntype: project\nactive: true\nsortOrder: 2\n---\n- [x] Order sink\n- [ ] Pick tiles due:2026-12-01\n',
+    });
+    const rows = portfolio(index, TODAY);
+    const site = rows.find((r) => r.project.title === 'Website')!;
+    const kitchen = rows.find((r) => r.project.title === 'Kitchen')!;
+    expect(site).toMatchObject({ total: 8, done: 2, open: 6, overdue: 1, nextDue: '2026-11-20' });
+    expect(kitchen).toMatchObject({ total: 2, done: 1, open: 1, overdue: 0, nextDue: '2026-12-01' });
+    expect(site.lastChange).toBeGreaterThan(0);
+  });
+});

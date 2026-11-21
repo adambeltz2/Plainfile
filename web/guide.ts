@@ -1,3 +1,4 @@
+import { ALIASES, STATUSES } from '../src/fields';
 import { frontmatterKeys, tagCounts } from '../src/vocabulary';
 import { state } from './store';
 import { esc } from './util';
@@ -159,6 +160,7 @@ export function html(): string {
     ['links', 'Links'],
     ['notebook', 'Follow-ups and projects'],
     ['search', 'Search'],
+    ['fields', 'Standard fields'],
     ['shortcuts', 'Quick keys'],
     ['templates', 'Templates'],
     ['vault', 'Your vault'],
@@ -191,6 +193,20 @@ export function html(): string {
     section('search', 'Search', '<p>Words search titles, text, paths and tags. Add operators to narrow them. Press Ctrl or Cmd K anywhere.</p><div class="table-wrap"><table><tbody>' +
       OPERATORS.map(([o, d]) => `<tr><td class="mono small">${esc(o)}</td><td>${esc(d)}</td></tr>`).join('') +
       '</tbody></table></div>');
+
+  h += section(
+    'fields',
+    'Standard fields (keeping notes uniform)',
+    '<p>Plainfile reads many spellings and never requires any of them: a note that lacks a field just has no value for it. What the app <b>writes</b> always uses the standard names below. In a project, the <b>Tidy</b> panel lists notes that differ and fixes them one line at a time, only when you press Fix.</p><div class="table-wrap"><table><thead><tr><th>Field</th><th>Standard value</th><th>Also understood</th></tr></thead><tbody>' +
+      `<tr><td class="mono">status</td><td class="mono small">${STATUSES.join(' · ')}</td><td class="small">${esc('"In Progress", wip, blocked, on hold, complete, closed …')}; or the key <span class="mono">${ALIASES.status?.join(', ')}</span></td></tr>` +
+      `<tr><td class="mono">due</td><td class="mono small">2026-11-23</td><td class="small">${esc('"Nov 23 2026"')}; or the key <span class="mono">${ALIASES.due?.join(', ')}</span></td></tr>` +
+      `<tr><td class="mono">phase</td><td class="mono small">Phase 1</td><td class="small">the heading above an inline task; or the key <span class="mono">${ALIASES.phase?.join(', ')}</span></td></tr>` +
+      `<tr><td class="mono">people</td><td class="mono small">[dana, sam]</td><td class="small">@name on a task line; or the key <span class="mono">${ALIASES.people?.join(', ')}</span></td></tr>` +
+      '<tr><td class="mono">project</td><td class="mono small">site, or [site, kitchen]</td><td class="small">the folder the note is in</td></tr>' +
+      '<tr><td class="mono">tags</td><td class="mono small">[launch]</td><td class="small">#launch in the text</td></tr>' +
+      '<tr><td class="mono">created</td><td class="mono small">2026-11-21</td><td class="small">➕ 2026-11-21, [created:: 2026-11-21]</td></tr>' +
+      '</tbody></table></div>',
+  );
 
   h += section(
     'shortcuts',

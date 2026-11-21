@@ -4,6 +4,7 @@ import * as cloudUi from './cloud';
 import * as explore from './explore';
 import * as guide from './guide';
 import * as health from './health';
+import * as hub from './hub';
 import * as newmenu from './newmenu';
 import * as menu from './menu';
 import * as move from './move';
@@ -354,6 +355,9 @@ app.addEventListener('submit', (e) => {
   if (form.matches('[data-quick]')) {
     e.preventDefault();
     void todayScreen.submitQuick();
+  } else if (form.matches('[data-hub-saveview]')) {
+    e.preventDefault();
+    void hub.saveCurrentView();
   } else if (form.matches('[data-proj-add]')) {
     e.preventDefault();
     notes.addProject();
@@ -366,6 +370,7 @@ app.addEventListener('input', (e) => {
   if (palette.input(e)) return;
   if (move.input(e)) return;
   if (state.modal && newmenu.input(e)) return;
+  if (state.screen === 'projects' && projectScreen.input(e)) return;
   if (todayScreen.input(e)) return;
   if (explore.input(e)) return;
   if (rename.input(e)) return;
@@ -374,6 +379,7 @@ app.addEventListener('input', (e) => {
 });
 
 app.addEventListener('change', (e) => {
+  if (state.screen === 'projects' && projectScreen.change(e)) return;
   if (rename.change(e)) return;
   notes.change(e);
 });

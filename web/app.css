@@ -480,3 +480,80 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 /* ---------- images in notes ---------- */
 .cm-img { display: block; margin: 6px 0; color: var(--mute); font-size: 13px; }
 .cm-img-el { display: block; max-width: 100%; max-height: 70vh; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+
+/* ---------- project hub ---------- */
+.hubwrap { display: grid; grid-template-columns: minmax(130px, 170px) minmax(0, 1fr) minmax(210px, 260px); gap: 18px; align-items: start; }
+.hub-main { min-width: 0; }
+.hub-rail, .hub-status { position: sticky; top: 8px; max-height: calc(100vh - 16px); overflow: auto; }
+.hub-rail h3, .hub-status h3 { margin: 10px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+.hub-rail h3:first-child, .hub-status h3:first-child { margin-top: 0; }
+.hub-rail-item { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 5px 8px; color: inherit; font: inherit; cursor: pointer; }
+.hub-rail-item:hover { background: var(--soft); }
+.hub-rail-item.on { background: var(--fg); color: var(--bg); }
+.hub-pick { display: none; align-items: center; gap: 8px; margin: 0 0 8px; }
+.tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin: 6px 0 10px; }
+.tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 6px 12px; color: inherit; font: inherit; cursor: pointer; }
+.tab.on { border-bottom-color: var(--fg); font-weight: 700; }
+.hub-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 8px; }
+.hub-sel { display: flex; align-items: center; gap: 6px; }
+.hub-q { flex: 1 1 14rem; min-width: 0; }
+.hub-quick, .hub-active { margin: 0 0 8px; }
+.chip.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip.on .muted { color: var(--bg); }
+.fchip { display: inline-flex; align-items: center; gap: 2px; padding-right: 2px; }
+.hub-facets { margin: 0 0 8px; }
+.hub-facets summary { cursor: pointer; }
+.hub-facet h4 { margin: 8px 0 4px; font-size: 12px; color: var(--mute); }
+.hub-group { margin: 0 0 6px; }
+.hub-group > .grp { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.gprog { width: 70px; height: 6px; border: 1px solid currentColor; border-radius: 4px; overflow: hidden; flex: none; }
+.gprog i { display: block; height: 100%; background: currentColor; }
+.hub-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-items: start; }
+.hub-col { border: 1px solid var(--line); border-radius: 8px; padding: 6px; min-width: 0; }
+.hub-col h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+.hub-card { border: 1px solid var(--line); border-radius: 6px; padding: 6px; margin: 0 0 6px; }
+.hub-card .t { font-weight: 600; overflow-wrap: anywhere; }
+.hub-move { display: flex; gap: 4px; margin-top: 6px; justify-content: space-between; align-items: center; }
+.hub-scroll { overflow-x: auto; }
+.hub-tl { display: grid; min-width: 760px; }
+.hub-tl > div { border-bottom: 1px solid var(--line); padding: 4px; min-height: 28px; min-width: 0; }
+.hub-tl .h { font-size: 11px; color: var(--mute); position: sticky; top: 0; background: var(--bg); }
+.hub-tl .rowh { font-weight: 700; font-size: 12px; }
+.hub-tl .cell.late { background: var(--soft); }
+.tlitem { display: block; width: 100%; text-align: left; background: var(--fg); color: var(--bg); border: 0; border-radius: 4px; padding: 1px 6px; margin: 0 0 3px; font: inherit; font-size: 11px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tlitem.done { background: none; color: var(--mute); text-decoration: line-through; border: 1px solid var(--line); }
+.prog { height: 8px; border: 1px solid var(--fg); border-radius: 5px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--fg); }
+.hub-phase { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 4px 6px; color: inherit; font: inherit; cursor: pointer; margin: 0 0 2px; }
+.hub-phase .prog { grid-column: 1 / -1; }
+.hub-phase:hover { background: var(--soft); }
+.hub-phase.on { outline: 2px solid var(--fg); }
+.hub-next { margin: 0; padding-left: 18px; }
+.hub-status .spark { display: flex; gap: 3px; align-items: flex-end; height: 36px; }
+.hub-status .spark i { flex: 1; background: var(--fg); min-height: 3px; }
+.tidy li { margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+@media (max-width: 1060px) {
+  .hubwrap { grid-template-columns: minmax(0, 1fr) minmax(200px, 240px); }
+  .hub-rail { display: none; }
+  .hub-pick { display: flex; }
+}
+@media (max-width: 760px) {
+  .hubwrap { grid-template-columns: minmax(0, 1fr); }
+  .hub-status { position: static; max-height: none; order: 2; border-top: 1px solid var(--line); padding-top: 10px; }
+  .hub-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- bulk changes ---------- */
+.task .selbox { flex: none; width: 17px; height: 17px; margin: 4px 8px 0 0; accent-color: currentColor; }
+.task.picked { background: var(--soft); outline: 1px solid var(--fg); }
+.hub-bulk { position: sticky; bottom: 8px; z-index: 5; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--bg); border: 2px solid var(--fg); border-radius: 10px; padding: 8px; margin: 0 0 10px; }
+.hub-bulk .inp { max-width: 10rem; }
+.hub-preview { margin: 0 0 10px; border: 2px solid var(--fg); }
+.hub-saveview { display: flex; gap: 6px; }
+.hub-saveview .inp { max-width: 11rem; }
+.portfolio td, .portfolio th { vertical-align: middle; }
+.portfolio tr.off { opacity: 0.7; }
+.hub-group > .grp { justify-content: flex-start; gap: 10px; }
+.hub-group > .grp .gprog { margin-left: auto; }
+.hub-quick { align-items: center; }
+.hub-quick .hub-saveview { margin-left: auto; }

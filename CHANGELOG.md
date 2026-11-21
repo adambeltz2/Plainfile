@@ -4,6 +4,30 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.34.0] - 2026-11-21
+
+### Added
+- **Project hub.** A project's page is now a hub built for hundreds of tasks:
+  - a **rail** to switch projects, and **tabs**: Tasks, Board, Timeline, Notes, Activity;
+  - **group tasks** by due date, status, person, phase, tag or note; groups collapse, show counts and a mini
+    progress bar, and list 25 at a time ("Show 25 more");
+  - **filter** with a search box and chips (overdue, due this week, no date, people, tags, phases, status),
+    shown as removable chips;
+  - a **status column** that stays in view: progress, phases (from headings or `phase:`), who has what, next
+    up, and tasks finished per week (an estimate from file times);
+  - **Board** (move task notes between statuses with ← →) and **Timeline** (weeks across, phases down);
+  - **bulk changes**: tick tasks (or Select all shown), choose Done, Reopen, a status, a due date, a person or a
+    tag, review the exact lines that will change, Apply, and Undo;
+  - **saved views** (grouping plus filters) kept as small files in `.plainfile/views/`;
+  - a **Table** on the Projects screen with progress, open, overdue, next due and last change, sortable.
+- **Tidy and standard fields.** Frontmatter is read tolerantly (many spellings of a status or key, a date
+  written as "Nov 23 2026") and never required. The hub's **Tidy** panel lists notes that differ from the
+  standard fields and fixes them one line at a time, only when you press Fix. A new Standard fields section in
+  the cheat sheet lists the standard names and what else is understood.
+
+### Changed
+- The hub reads a task's phase from the heading above it (headings like Goal, Notes and Tasks do not count).
+
 ## [0.33.0] - 2026-11-21
 
 ### Added

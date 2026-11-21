@@ -208,7 +208,7 @@ export function html(): string {
           : '<div class="empty">No tasks here yet.</div>';
     }
     for (const g of gs) {
-      h += `<div class="grp${g.late ? ' late' : ''}">${esc(g.title)} <span>${g.items.length}</span></div><ul class="tasks">${g.items.map(row).join('')}</ul>`;
+      h += `<div class="grp${g.late ? ' late' : ''}">${esc(g.title)} <span>${g.items.length}</span></div><ul class="tasks">${g.items.map((t) => row(t)).join('')}</ul>`;
     }
   }
   h += `</section><aside class="source" aria-live="polite">${source()}</aside></div>`;

@@ -215,17 +215,19 @@ test.describe('project dashboard', () => {
     await expect(page.locator('.pstat').nth(1)).toContainText('1'); // overdue
     await expect(page.locator('.pprog')).toContainText('1 of 3 tasks done');
     await expect(page.locator('.grp.late')).toContainText('Overdue');
-    await expect(page.locator('.psec', { hasText: 'Open tasks' })).toContainText('Pick a host');
-    await expect(page.locator('.psec', { hasText: 'Open tasks' })).toContainText('Write copy');
-    await expect(page.locator('.psec', { hasText: 'Open tasks' })).not.toContainText('Unrelated');
-    await expect(page.locator('.psec', { hasText: 'Notes' }).first()).toContainText('Kickoff');
-    await expect(page.locator('.psec', { hasText: 'Follow-ups' })).toContainText('Ask legal about terms');
-    await expect(page.locator('.psec', { hasText: 'People' })).toContainText('@dana');
+    await expect(page.locator('.hub-content')).toContainText('Pick a host');
+    await expect(page.locator('.hub-content')).toContainText('Write copy');
+    await expect(page.locator('.hub-content')).not.toContainText('Unrelated');
+    await expect(page.locator('.hub-status')).toContainText('@sam');
+    await page.getByRole('tab', { name: /^Notes/ }).click();
+    await expect(page.locator('.hub-content')).toContainText('Kickoff');
+    await expect(page.locator('.hub-content')).toContainText('Ask legal about terms');
+    await page.getByRole('tab', { name: /^Tasks/ }).click();
     await page.getByRole('button', { name: /Mark done: Pick a host/ }).click();
     await expect(page.locator('.plog .diff .add')).toContainText('- [x] Pick a host');
     expect(await readFile(page, dir, 'projects/site/index.md')).toContain('- [x] Pick a host @sam due:2026-01-05');
     await expect(page.locator('.task.done', { hasText: 'Pick a host' })).toBeVisible();
-    await page.getByRole('button', { name: '← All projects' }).click();
+    await page.getByRole('button', { name: 'All projects' }).first().click();
     await expect(page.locator('.pcard')).toBeVisible();
   });
 
@@ -279,8 +281,9 @@ test.describe('tagging a note with projects', () => {
 
     await nav(page, 'Projects').click();
     await page.locator('.pcard', { hasText: 'Kitchen' }).locator('.pbtn').click();
-    await expect(page.locator('.psec', { hasText: 'Notes' }).first()).toContainText('Brand ideas');
-    await expect(page.locator('.psec', { hasText: 'Open tasks' })).toContainText('Pick fonts');
+    await expect(page.locator('.hub-content')).toContainText('Pick fonts');
+    await page.getByRole('tab', { name: /^Notes/ }).click();
+    await expect(page.locator('.hub-content')).toContainText('Brand ideas');
 
     await nav(page, 'Notes').click();
     await page.locator('.projchip', { hasText: 'kitchen' }).getByRole('button', { name: /Remove from kitchen/ }).click();
@@ -297,3 +300,213 @@ test.describe('tagging a note with projects', () => {
     await expect(page.locator('.title')).toHaveText('Website relaunch');
   });
 });
+
+test.describe('project hub', () => {
+  const many = (n: number): Record<string, string> => {
+    const out: Record<string, string> = {};
+    for (let i = 0; i < n; i++) out[`projects/big/tasks/Task ${String(i).padStart(3, '0')}.md`] = `---\ntitle: Task ${String(i).padStart(3, '0')}\nstatus: ${i % 4 === 0 ? 'doing' : 'todo'}\ndue: ${i % 3 === 0 ? '2999-01-01' : ''}\nphase: ${i % 2 ? 'Phase 1' : 'Phase 2'}\npeople: [${i % 5 === 0 ? 'dana' : 'sam'}]\ntags: [${i % 7 === 0 ? 'launch' : 'misc'}]\n---\n`;
+    return out;
+  };
+  const BASE = { 'projects/big/index.md': '---\ntitle: Big project\ntype: project\nactive: true\n---\n# Big\n## Phase 1\n- [ ] Inline in phase one @dana due:2026-01-02\n', ...many(60) };
+
+  async function openBig(page: Page): Promise<string> {
+    const dir = await openVault(page, BASE);
+    await nav(page, 'Projects').click();
+    await page.locator('.pcard .pbtn').click();
+    await expect(page.locator('.hubwrap')).toBeVisible();
+    return dir;
+  }
+
+  test('groups hundreds of tasks, shows 25 at a time, and groups by person, phase and status', async ({ page }) => {
+    await openBig(page);
+    await expect(page.getByRole('tab', { name: /^Tasks 61/ })).toBeVisible();
+    await expect(page.locator('.hub-group .grp.late')).toContainText('Overdue');
+    const noDate = page.locator('.hub-group', { hasText: 'No date' });
+    await expect(noDate.locator('.task')).toHaveCount(25);
+    await noDate.getByRole('button', { name: /Show \d+ more/ }).click();
+    await expect(noDate.locator('.task')).toHaveCount(40);
+    await page.locator('#hub-group').selectOption('person');
+    await expect(page.locator('.hub-group .grp', { hasText: '@dana' })).toBeVisible();
+    await expect(page.locator('.hub-group .grp', { hasText: '@sam' })).toBeVisible();
+    await page.locator('#hub-group').selectOption('phase');
+    await expect(page.locator('.hub-group .grp', { hasText: 'Phase 1' })).toBeVisible();
+    await expect(page.locator('.hub-group .grp', { hasText: 'No phase' })).toHaveCount(0);
+    await page.locator('#hub-group').selectOption('status');
+    await expect(page.locator('.hub-group .grp', { hasText: 'Doing' })).toBeVisible();
+  });
+
+  test('filters by text and by chips, shows them as removable chips, and clears them', async ({ page }) => {
+    await openBig(page);
+    await page.locator('#hub-q').fill('Task 007');
+    await expect(page.locator('.hub-content .task')).toHaveCount(1);
+    await page.locator('#hub-q').fill('');
+    await page.locator('.hub-facets summary').click();
+    await page.locator('.hub-facets').getByRole('button', { name: /^@dana/ }).click();
+    await page.locator('.hub-facets').getByRole('button', { name: /^#launch/ }).click();
+    await expect(page.locator('.hub-active')).toContainText('@dana');
+    await expect(page.locator('.hub-active')).toContainText('#launch');
+    const n = await page.locator('.hub-content .task').count();
+    expect(n).toBeGreaterThan(0);
+    expect(n).toBeLessThan(10);
+    await page.locator('.hub-active').getByRole('button', { name: /Remove filter #launch/ }).click();
+    expect(await page.locator('.hub-content .task').count()).toBeGreaterThan(n);
+    await page.getByRole('button', { name: 'Clear all' }).click();
+    await expect(page.locator('.hub-active')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Overdue', exact: true }).click();
+    await expect(page.locator('.hub-content .task')).toHaveCount(1);
+    await expect(page.locator('.hub-content')).toContainText('Inline in phase one');
+  });
+
+  test('the status column shows progress, phases, who has what and what is next, and a phase click filters', async ({ page }) => {
+    await openBig(page);
+    const s = page.locator('.hub-status');
+    await expect(s).toContainText('0 of 61 done');
+    await expect(s).toContainText('Phase 1');
+    await expect(s).toContainText('Phase 2');
+    await expect(s).toContainText('@dana');
+    await expect(s.locator('.hub-next li')).toHaveCount(3);
+    await s.locator('.hub-phase', { hasText: 'Phase 2' }).click();
+    await expect(page.locator('.hub-active')).toContainText('Phase 2');
+    await expect(page.locator('.hub-content')).not.toContainText('Inline in phase one');
+  });
+
+  test('the project rail switches projects, and the Board moves a task note between statuses on disk', async ({ page }) => {
+    const dir = await openVault(page, { ...BASE, 'projects/other/index.md': '---\ntitle: Other thing\nactive: true\n---\nx\n' });
+    await nav(page, 'Projects').click();
+    await page.locator('.pcard', { hasText: 'Big project' }).locator('.pbtn').click();
+    await page.locator('.hub-rail').getByRole('button', { name: /Other thing/ }).click();
+    await expect(page.locator('.title')).toHaveText('Other thing');
+    await page.locator('.hub-rail').getByRole('button', { name: /Big project/ }).click();
+    await page.getByRole('tab', { name: 'Board' }).click();
+    await expect(page.locator('.hub-col[data-col="doing"] .hub-card').first()).toBeVisible();
+    const card = page.locator('.hub-col[data-col="todo"] .hub-card', { hasText: 'Task 001' });
+    await card.getByRole('button', { name: 'Move to doing' }).click();
+    await expect(page.locator('.plog .diff .add')).toContainText('status: doing');
+    expect(await readFile(page, dir, 'projects/big/tasks/Task 001.md')).toContain('status: doing');
+    await expect(page.locator('.hub-col[data-col="doing"] .hub-card', { hasText: 'Task 001' })).toBeVisible();
+  });
+
+  test('the timeline lays tasks out by week and phase', async ({ page }) => {
+    await openBig(page);
+    await page.getByRole('tab', { name: 'Timeline' }).click();
+    await expect(page.locator('.hub-tl .h', { hasText: 'Overdue' })).toBeVisible();
+    await expect(page.locator('.hub-tl .rowh', { hasText: 'Phase 1' })).toBeVisible();
+    await expect(page.locator('.hub-tl .cell.late .tlitem', { hasText: 'Inline in phase one' })).toBeVisible();
+    await expect(page.locator('.hub-tl .h', { hasText: 'No date' })).toBeVisible();
+  });
+
+  test('Tidy lists notes that differ from the standard fields and fixes one line at a time', async ({ page }) => {
+    const dir = await openVault(page, {
+      'projects/p/index.md': '---\ntitle: P\ntype: project\nactive: true\n---\nx\n',
+      'projects/p/tasks/a.md': '---\ntitle: A\nstatus: In Progress\ndeadline: Nov 23 2026\n---\n',
+      'projects/p/tasks/b.md': '---\ntitle: B\nstatus: todo\n---\n',
+    });
+    await nav(page, 'Projects').click();
+    await page.locator('.pcard .pbtn').click();
+    await expect(page.locator('.hub-status h3', { hasText: 'Tidy' })).toContainText('2');
+    await page.getByRole('button', { name: 'Review' }).click();
+    await expect(page.locator('.hub-tidy')).toContainText('status: In Progress → status: doing');
+    await page.locator('.hub-tidy li', { hasText: 'In Progress' }).getByRole('button', { name: 'Fix' }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/p/tasks/a.md')).toContain('status: doing');
+    await page.getByRole('button', { name: /Fix all/ }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/p/tasks/a.md')).toBe('---\ntitle: A\nstatus: doing\ndue: 2026-11-23\n---\n');
+    expect(await readFile(page, dir, 'projects/p/tasks/b.md')).toBe('---\ntitle: B\nstatus: todo\n---\n');
+    await expect(page.locator('.hub-tidy')).toContainText('follows the standard fields');
+    await expect(page.locator('.hub-status h3', { hasText: 'Tidy' })).toContainText('0');
+  });
+
+  test('fits a phone: no sideways scroll, the project picker replaces the rail', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await openBig(page);
+    await expect(page.locator('.hub-rail')).toBeHidden();
+    await expect(page.locator('#hub-pick')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  });
+
+  test('tick several tasks, preview the exact lines, apply one change to all, and undo it', async ({ page }) => {
+    const dir = await openVault(page, {
+      'projects/p/index.md': '---\ntitle: P\ntype: project\nactive: true\n---\n- [ ] Inline one\n- [ ] Inline two @sam\n',
+      'projects/p/tasks/a.md': '---\ntitle: A task\nstatus: todo\n---\n',
+    });
+    const FILES = {
+      index: '---\ntitle: P\ntype: project\nactive: true\n---\n- [ ] Inline one\n- [ ] Inline two @sam\n',
+      a: '---\ntitle: A task\nstatus: todo\n---\n',
+    };
+    await nav(page, 'Projects').click();
+    await page.locator('.pcard .pbtn').click();
+    await page.getByRole('checkbox', { name: 'Select: Inline one' }).check();
+    await page.getByRole('checkbox', { name: 'Select: Inline two' }).check();
+    await page.getByRole('checkbox', { name: 'Select: A task' }).check();
+    await expect(page.locator('.hub-bulk')).toContainText('3 selected');
+    await page.locator('#bulk-due').fill('2026-12-24');
+    await page.getByRole('button', { name: 'Set due' }).click();
+    await expect(page.locator('.hub-preview')).toContainText('2 notes will change');
+    await expect(page.locator('.hub-preview')).toContainText('+- [ ] Inline one due:2026-12-24');
+    expect(await readFile(page, dir, 'projects/p/index.md')).toBe(FILES.index); // nothing written yet
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await expect(page.locator('.hub-preview')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Set due' }).click();
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect(page.locator('.hub-content .notice.ok')).toContainText('changed 2 notes');
+    expect(await readFile(page, dir, 'projects/p/index.md')).toBe(FILES.index.replace('Inline one', 'Inline one due:2026-12-24').replace('Inline two @sam', 'Inline two @sam due:2026-12-24'));
+    expect(await readFile(page, dir, 'projects/p/tasks/a.md')).toBe('---\ntitle: A task\nstatus: todo\ndue: 2026-12-24\n---\n');
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/p/index.md')).toBe(FILES.index);
+    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/p/tasks/a.md')).toBe(FILES.a);
+  });
+
+  test('bulk Done, assign and tag work too, and Select all shown selects what the filters show', async ({ page }) => {
+    const dir = await openBig(page);
+    await page.locator('#hub-q').fill('Task 00');
+    await page.getByRole('button', { name: 'Select all shown' }).click();
+    await expect(page.locator('.hub-bulk')).toContainText('10 selected');
+    await page.locator('#bulk-tag').fill('batch');
+    await page.getByRole('button', { name: 'Tag', exact: true }).click();
+    await expect(page.locator('.hub-preview')).toContainText('10 notes will change');
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/big/tasks/Task 003.md')).toContain('tags: [misc, batch]');
+    await page.locator('#hub-q').fill('Task 001');
+    await page.getByRole('button', { name: 'Select all shown' }).click();
+    await page.getByRole('button', { name: 'Done', exact: true }).click();
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/big/tasks/Task 001.md')).toContain('status: done');
+  });
+
+  test('a view (grouping plus filters) is saved in the folder and brought back by name', async ({ page }) => {
+    const dir = await openBig(page);
+    await page.locator('#hub-group').selectOption('person');
+    await page.getByRole('button', { name: 'Overdue', exact: true }).click();
+    await page.locator('#hub-view-name').fill('Late by person');
+    await page.getByRole('button', { name: 'Save view' }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, '.plainfile/views/late-by-person.json')).toContain('"groupBy": "person"');
+    await page.getByRole('button', { name: 'Clear all' }).click();
+    await page.locator('#hub-group').selectOption('phase');
+    await expect(page.locator('.hub-active')).toHaveCount(0);
+    await page.locator('#hub-views').selectOption('Late by person');
+    await expect(page.locator('#hub-group')).toHaveValue('person');
+    await expect(page.locator('.hub-active')).toContainText('Overdue');
+    await expect(page.locator('.hub-content .task')).toHaveCount(1);
+  });
+});
+
+test.describe('portfolio table', () => {
+  test('Projects can be shown as a sortable table with progress, open, overdue and next due', async ({ page }) => {
+    await openVault(page, {
+      'projects/a/index.md': '---\ntitle: Alpha\nactive: true\nsortOrder: 1\n---\n- [x] Done one\n- [ ] Late one due:2026-01-01\n',
+      'projects/b/index.md': '---\ntitle: Beta\nactive: true\nsortOrder: 2\n---\n- [ ] A\n- [ ] B\n- [ ] C\n',
+    });
+    await nav(page, 'Projects').click();
+    await page.getByRole('button', { name: 'Table' }).click();
+    const rows = page.locator('.portfolio tbody tr');
+    await expect(rows).toHaveCount(2);
+    await expect(rows.first()).toContainText('Alpha');
+    await expect(rows.first().locator('.chip.late')).toHaveText('1');
+    await page.locator('.portfolio').getByRole('button', { name: /^Open/ }).click();
+    await expect(rows.first()).toContainText('Alpha'); // 1 open, ascending
+    await page.locator('.portfolio').getByRole('button', { name: /^Open/ }).click();
+    await expect(rows.first()).toContainText('Beta'); // 3 open, descending
+    await rows.first().getByRole('button', { name: 'Beta' }).click();
+    await expect(page.locator('.title')).toHaveText('Beta');
+  });
+});
+

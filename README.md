@@ -20,8 +20,9 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 |---|---|
 | **Today**: everything due or overdue, one-line quick add, a readout of the exact change on disk | ![Today](docs/screenshots/today.png) |
 | **Quick add**: `Send logos +website-relaunch @dana #launch due:friday`, with a live preview | ![Quick add](docs/screenshots/quick-add.png) |
-| **Projects**: a dashboard per project, with open tasks, notes, people, tags and follow-ups | ![Project dashboard](docs/screenshots/project.png) |
 | **Board**: task files in status columns | ![Board](docs/screenshots/board.png) |
+| **Project hub**: tasks grouped and filtered, status column, tabs, bulk changes | ![Project hub](docs/screenshots/project.png) |
+| **Project board**: the same tasks by status | ![Project board](docs/screenshots/project-board.png) |
 | **Notes**: a live editor with X-ray, a properties panel, history and focus mode | ![Notes](docs/screenshots/notes.png) |
 | **Notes home**: pinned, modified today, recent and folders | ![Notes home](docs/screenshots/notes-home.png) |
 | **⋯ More menu**: move, rename, duplicate, pin, delete | ![More menu](docs/screenshots/notes-menu.png) |
@@ -42,9 +43,12 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 - **One-line quick add:** `Call Dana +Website @dana #launch due:tomorrow`. Natural dates (`today`,
   `tomorrow`, `mon`, `next-week`, `+3d`), a preview before you save, and type-ahead for people, tags
   and projects, and `due:` day words. Every task gets a created date.
-- **Projects:** a dashboard per project with progress, overdue count, open tasks you can tick,
-  notes, follow-ups, people and tags. A project is a folder with an `index.md`; notes elsewhere
+- **Projects:** a hub per project built for hundreds of tasks: a project rail, tabs (Tasks, Board, Timeline,
+  Notes, Activity), grouping by due date, status, person, phase or tag, filter chips, a status column,
+  bulk changes with a preview and Undo, saved views, and a sortable portfolio table. A project is a folder with an `index.md`; notes elsewhere
   belong to it when their `project:` names it. Notebook projects (`active`, `sortOrder`) still work.
+- **Uniform fields without requiring them:** frontmatter is read tolerantly; a Tidy panel offers one-line
+  fixes to the standard field names and values.
 - **Notes:** reopens where you left off, or shows a home with pinned, modified-today and recent notes.
   One live editor where `- [ ] ` becomes a checkbox as you type. X-ray shows raw
   markdown, focus mode hides the noise, and a properties panel edits frontmatter. A button adds

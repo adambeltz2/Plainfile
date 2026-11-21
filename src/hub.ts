@@ -1,7 +1,7 @@
 import { fieldOf, listOf, normalizeDate, normalizeStatus, type Status } from './fields';
 import type { TaskItem, VaultIndex } from './index';
 import type { Note } from './parse';
-import { projectNotes } from './projects';
+import { listProjects, projectNotes, type Project } from './projects';
 import { addDays } from './query';
 
 /**
@@ -34,6 +34,11 @@ export interface Filters {
 }
 
 export const NO_FILTERS: Filters = { text: '', people: [], tags: [], statuses: [], phases: [], hideDone: true };
+
+/** A new set of filters. Always use this rather than copying NO_FILTERS, whose lists would be shared. */
+export function newFilters(hideDone = true): Filters {
+  return { text: '', people: [], tags: [], statuses: [], phases: [], hideDone };
+}
 
 export interface Group {
   key: string;
@@ -105,10 +110,11 @@ export function applyFilters(tasks: HubTask[], f: Filters, keep?: ReadonlySet<st
 
 const byDue = (a: HubTask, b: HubTask): number => (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.item.title.localeCompare(b.item.title) || a.item.path.localeCompare(b.item.path) || a.item.line - b.item.line;
 
-export function groupTasks(tasks: HubTask[], by: GroupBy, today: string): Group[] {
+/** `keep` lists task ids just ticked, which stay in their place (struck through) instead of jumping to Done. */
+export function groupTasks(tasks: HubTask[], by: GroupBy, today: string, keep?: ReadonlySet<string>): Group[] {
   const week = addDays(today, 7);
   const make = (key: string, title: string, items: HubTask[], late = false): Group => ({ key, title, items: [...items].sort(byDue), total: items.length, done: items.filter((t) => t.status === 'done').length, late });
-  const open = (t: HubTask): boolean => t.status !== 'done';
+  const open = (t: HubTask): boolean => t.status !== 'done' || !!keep?.has(t.item.id);
   let groups: Group[];
   if (by === 'due') {
     groups = [
@@ -181,4 +187,36 @@ export function summarize(all: HubTask[], today: string, nowMs: number): HubSumm
     next: [...open].sort(byDue).slice(0, 3),
     weekly,
   };
+}
+
+export interface PortfolioRow {
+  project: Project;
+  total: number;
+  done: number;
+  open: number;
+  overdue: number;
+  /** The earliest due date among open tasks. */
+  nextDue?: string;
+  /** When anything in the project last changed (ms). */
+  lastChange: number;
+}
+
+/** One row per project for the portfolio table. Tasks are read once, then shared out by project. */
+export function portfolio(index: VaultIndex, today: string): PortfolioRow[] {
+  const all = index.tasks();
+  return listProjects(index).map((project) => {
+    const covered = projectNotes(index, project.path);
+    const paths = new Set(covered.map((n) => n.path));
+    const mine = all.filter((t) => paths.has(t.path)).map((t) => toHubTask(t, index.notes.get(t.path) as Note));
+    const open = mine.filter((t) => t.status !== 'done');
+    return {
+      project,
+      total: mine.length,
+      done: mine.length - open.length,
+      open: open.length,
+      overdue: open.filter((t) => t.due && t.due < today).length,
+      nextDue: open.map((t) => t.due).filter((d): d is string => !!d).sort()[0],
+      lastChange: covered.reduce((m, n) => Math.max(m, n.mtime), 0),
+    };
+  });
 }
