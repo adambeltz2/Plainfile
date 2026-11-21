@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plainfile: what it could grow into (same architecture)</title>
+<style>
+:root{--bg:#fff;--fg:#000;--mute:#666;--line:#ccc;--soft:#f3f3f3}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#fff;--mute:#9a9a9a;--line:#333;--soft:#161616}}
+*{box-sizing:border-box}body{margin:auto;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif;padding:20px 16px 70px;max-width:1240px}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:42px 0 4px}h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
+p{margin:4px 0 10px;max-width:76ch}.mute{color:var(--mute)}.small{font-size:12px}
+.win{border:2px solid var(--fg);border-radius:12px;overflow:hidden;background:var(--bg);font-size:12.5px;margin-top:10px}
+.bar{display:flex;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}.bar b{font-size:14px}
+.nav span{padding:2px 9px;border-bottom:2px solid transparent;color:var(--mute)}.nav .on{color:var(--fg);font-weight:700;border-bottom-color:var(--fg)}
+.btn{border:1px solid var(--fg);border-radius:6px;padding:1px 8px;font-size:12px;background:var(--bg);white-space:nowrap}.btn.p{background:var(--fg);color:var(--bg)}
+.chip{border:1px solid var(--line);border-radius:99px;padding:0 8px;font-size:11px;white-space:nowrap}.chip.late{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.grid{display:grid;gap:10px;padding:10px}.g3{grid-template-columns:1.2fr 1fr 1fr}.g2{grid-template-columns:1.4fr 1fr}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.g3,.g2,.g4{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+.row{display:flex;gap:8px;align-items:center;padding:4px 2px;border-bottom:1px solid var(--line)}.row b{flex:1;font-weight:600}.cb{width:13px;height:13px;border:1.5px solid var(--fg);border-radius:3px;flex:none}.cb.on{background:var(--fg)}
+.prog{height:8px;border:1px solid var(--fg);border-radius:5px;overflow:hidden}.prog i{display:block;height:100%;background:var(--fg)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:0;border:1px solid var(--line)}.cal>div{border:1px solid var(--line);min-height:62px;padding:3px;font-size:11px}.cal .h{min-height:0;color:var(--mute);text-align:center}.cal .t{background:var(--soft)}.cal i{display:block;font-style:normal;background:var(--fg);color:var(--bg);border-radius:3px;padding:0 4px;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.spark{display:flex;gap:3px;align-items:flex-end;height:36px}.spark i{flex:1;background:var(--fg)}
+.heat{display:grid;grid-template-columns:repeat(26,1fr);gap:2px}.heat i{aspect-ratio:1;border:1px solid var(--line);border-radius:2px}.heat .a{background:var(--soft)}.heat .b{background:var(--mute)}.heat .c{background:var(--fg)}
+.cloud span{display:inline-block;margin:2px 6px}.pill{display:inline-block;border:1px solid var(--fg);border-radius:99px;padding:0 10px;font-size:12px;margin-right:4px}
+.phone{max-width:300px}.tabbar{display:flex;justify-content:space-around;border-top:2px solid var(--fg);padding:6px 0;font-size:11px}.tabbar .on{font-weight:700}
+.ed{font-family:ui-monospace,monospace;font-size:12px;padding:8px;line-height:1.6}.ed .h{font-size:15px;font-weight:700;font-family:system-ui}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}th{font-size:11px;text-transform:uppercase;color:var(--mute)}
+ul.lim{margin:6px 0;padding-left:18px}ul.lim li{margin:3px 0}
+</style></head><body>
+<h1>What Plainfile could grow into</h1>
+<p class="mute">A hypothetical, using only what the architecture already allows: a static web app over a folder of markdown files (local, or Dropbox and later OneDrive and Google Drive), no server of ours, no accounts, no database. Every screen below is a view computed from your files. Nothing here is built unless an earlier release says so.</p>
+
+<h2>1. Home: a daily command center</h2>
+<p>One landing screen that answers "what should I do now?" from your files: today's tasks, what is late, what you were working on, the week ahead, and a place to capture.</p>
+<div class="win"><div class="bar nav"><b>Plainfile</b><span class="on">Home</span><span>Projects</span><span>Notes</span><span>Calendar</span><span>People</span><span>Review</span><span style="flex:1"></span><span class="btn">Go to… ⌘P</span><span class="btn p">+ Quick note</span></div>
+<div class="grid g3">
+<div class="card"><h3>Capture</h3><div class="btn" style="display:block;padding:6px 10px;margin-bottom:6px">Call Dana +Website @dana #launch due:fri ▌</div><p class="small mute" style="margin:0">Becomes a task note in the Website project, due Friday. Paste a screenshot to attach it.</p>
+<h3 style="margin-top:12px">Today · Sat 21 Nov</h3>
+<div class="row"><span class="cb"></span><b>Send logo files</b><span class="chip late">Overdue</span><span class="chip">Website</span></div><div class="row"><span class="cb"></span><b>Pay invoice</b><span class="chip">Today</span><span class="chip">Home</span></div><div class="row"><span class="cb on"></span><b style="text-decoration:line-through;color:var(--mute)">Book flights</b></div><div class="row"><span class="cb"></span><b>Write pricing copy</b><span class="chip">Tue</span><span class="chip">Website</span></div></div>
+<div class="card"><h3>Pick up where you left off</h3><div class="row"><b>Kickoff call with Dana</b><span class="chip">edited 14:35</span></div><div class="row"><b>Pricing research</b><span class="chip">yesterday</span></div><div class="row"><b>2026-11-21 14:20 (quick note)</b><span class="chip">untagged</span></div>
+<h3 style="margin-top:12px">Needs triage <span class="chip late">7</span></h3><p class="small mute" style="margin:0">Quick notes and inbox tasks with no project or tags. One click to file each.</p>
+<h3 style="margin-top:12px">Waiting on</h3><div class="row"><b>Legal sign-off</b><span class="chip">@pat · 6 days</span></div></div>
+<div class="card"><h3>This week</h3><div class="spark"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:100%"></i><i style="height:55%"></i><i style="height:20%"></i><i style="height:10%"></i></div><p class="small mute" style="margin:4px 0 8px">14 due · 6 done · 2 late</p>
+<h3>Projects</h3><div class="small">1 Website relaunch</div><div class="prog"><i style="width:34%"></i></div><div class="small" style="margin-top:4px">2 Kitchen remodel</div><div class="prog"><i style="width:70%"></i></div><div class="small" style="margin-top:4px">3 Taxes 2026</div><div class="prog"><i style="width:10%"></i></div></div>
+</div></div>
+
+<h2>2. Calendar and week planner</h2>
+<p>Tasks with due dates, meetings (notes with a <code>date:</code>) and journal entries on one calendar. Drag a task to another day and the due date in its file changes. Computed from frontmatter, no calendar server. An optional import of a read-only <code>.ics</code> file would show outside events.</p>
+<div class="win"><div class="bar"><b>November 2026</b><span class="btn">‹</span><span class="btn">Today</span><span class="btn">›</span><span style="flex:1"></span><span class="btn p">Month</span><span class="btn">Week</span><span class="btn">Agenda</span></div>
+<div style="padding:10px"><div class="cal"><div class="h">Mon</div><div class="h">Tue</div><div class="h">Wed</div><div class="h">Thu</div><div class="h">Fri</div><div class="h">Sat</div><div class="h">Sun</div>
+<div>16</div><div>17<i>Kickoff call</i></div><div>18</div><div>19<i>Photograph team</i></div><div>20</div><div class="t">21<i>Pay invoice</i><i>Send logos</i></div><div>22</div>
+<div>23<i>Send logo files</i></div><div>24<i>Pricing copy</i><i>Team sync</i></div><div>25</div><div>26</div><div>27<i>Cabinet quote</i></div><div>28</div><div>29</div></div></div></div>
+
+<h2>3. People: everyone you work with, from your own notes</h2>
+<p><code>@dana</code> becomes a page: her note, every task she holds, meetings she was in, and what you are waiting on from her. Nothing to maintain, it is a view over <code>@mentions</code> and <code>people:</code> fields.</p>
+<div class="win"><div class="grid g2"><div class="card"><h3>Dana Ortiz</h3><p class="small mute" style="margin:0 0 6px">Brand lead · Northfield · people/dana.md</p>
+<div class="row"><span class="cb"></span><b>Send logo files</b><span class="chip late">Overdue</span><span class="chip">Website</span></div><div class="row"><span class="cb"></span><b>Confirm launch date</b><span class="chip">Tue</span></div><div class="row"><span class="cb"></span><b>Review pricing copy (waiting on her)</b><span class="chip">6 days</span></div>
+<h3 style="margin-top:10px">Meetings</h3><div class="row"><b>Kickoff call</b><span class="chip">17 Nov</span></div><div class="row"><b>Weekly sync</b><span class="chip">10 Nov</span></div></div>
+<div class="card"><h3>Everyone</h3><table><tr><th>Person</th><th>Open</th><th>Waiting</th><th>Last seen</th></tr><tr><td>@dana</td><td>9</td><td>1</td><td>today</td></tr><tr><td>@sam</td><td>6</td><td>0</td><td>2 days</td></tr><tr><td>@pat</td><td>3</td><td>2</td><td>6 days</td></tr></table>
+<h3 style="margin-top:10px">Follow up soon</h3><p class="small mute" style="margin:0">People you have not been in a note with for 3+ weeks.</p></div></div></div>
+
+<h2>4. Weekly review: the habit that keeps the system honest</h2>
+<p>A guided page you open on Friday: finish the quick notes, clear the inbox, look at what slipped, plan next week. It writes ordinary notes and changes ordinary fields, so skipping it breaks nothing.</p>
+<div class="win"><div class="grid g4">
+<div class="card"><h3>1 · Triage <span class="chip">7</span></h3><div class="row"><b>2026-11-21 14:20</b></div><div class="small mute" style="margin:4px 0">Project <span class="btn">Website ▾</span> Tags <span class="btn">+ #meeting</span></div><span class="btn p">File and next</span></div>
+<div class="card"><h3>2 · Slipped <span class="chip late">5</span></h3><div class="row"><b>Send logo files</b></div><div class="small mute" style="margin:4px 0">Was due 19 Nov</div><span class="btn">Tomorrow</span> <span class="btn">Next week</span> <span class="btn">Drop</span></div>
+<div class="card"><h3>3 · Waiting on <span class="chip">3</span></h3><div class="row"><b>Legal sign-off</b></div><div class="small mute" style="margin:4px 0">@pat, 6 days</div><span class="btn">Nudge note</span> <span class="btn">Still waiting</span></div>
+<div class="card"><h3>4 · Plan the week</h3><div class="small">Mon · 3 tasks<br>Tue · 5 tasks <span class="chip late">heavy</span><br>Wed · 1 task<br>Thu · 2 tasks</div><p class="small mute" style="margin:6px 0 0">Drag to rebalance.</p></div></div></div>
+
+<h2>5. Notes that feel like a workspace</h2>
+<p>The editor stays one live markdown surface, with more around it: backlinks, an outline, properties, related notes, history, and quick-capture of screenshots. Notes can be shown in a split view, side by side.</p>
+<div class="win"><div class="grid g2" style="grid-template-columns:1fr 1fr 220px"><div class="card ed"><div class="h">Kickoff call with Dana</div><span class="chip">meeting</span> <span class="chip">Website</span> <span class="chip">@dana @sam</span><br><br>## Decisions<br>• Launch date is <b>Dec 8</b><br>☐ Send logo files @dana <span class="chip">due Mon</span><br>☐ Pick a host @sam<br><br>[ pasted screenshot: homepage-v2.png ]</div>
+<div class="card ed"><div class="h">Pricing research</div><span class="chip">research</span> <span class="chip">Website</span><br><br>Three tiers tested with…<br>See [[Kickoff call with Dana]]<br>☐ Interview two customers</div>
+<div class="card"><h3>Outline</h3><div class="small">Decisions<br>Action items<br>Screenshots</div><h3 style="margin-top:8px">Linked from</h3><div class="small">Pricing research<br>Website relaunch</div><h3 style="margin-top:8px">Related</h3><div class="small">Brand brief<br>Pricing psychology</div><h3 style="margin-top:8px">History</h3><div class="small">14:35 · 14:20 · yesterday</div></div></div></div>
+
+<h2>6. Insight from your own files</h2>
+<p>All computed in the browser from frontmatter, dates and links: no analytics service.</p>
+<div class="win"><div class="grid g3">
+<div class="card"><h3>Activity (notes edited per day)</h3><div class="heat"><i class="a"></i><i class="b"></i><i class="c"></i><i class="b"></i><i></i><i class="a"></i><i class="c"></i><i class="c"></i><i class="b"></i><i class="a"></i><i></i><i class="b"></i><i class="c"></i><i class="b"></i><i class="a"></i><i class="c"></i><i class="b"></i><i></i><i class="a"></i><i class="b"></i><i class="c"></i><i class="c"></i><i class="b"></i><i class="a"></i><i class="b"></i><i class="c"></i></div></div>
+<div class="card"><h3>Topics (tags)</h3><div class="cloud"><span style="font-size:22px">#launch</span><span style="font-size:15px">#pricing</span><span style="font-size:28px">#meeting</span><span style="font-size:12px">#brand</span><span style="font-size:18px">#legal</span><span style="font-size:13px">#home</span></div></div>
+<div class="card"><h3>Health</h3><div class="row"><b>Broken links</b><span class="chip">3</span></div><div class="row"><b>Duplicate titles</b><span class="chip">1</span></div><div class="row"><b>Fields to tidy</b><span class="chip">12</span></div><div class="row"><b>Notes never linked</b><span class="chip">18</span></div></div></div></div>
+
+<h2>7. Phone: one hand, work first</h2>
+<p>A bottom tab bar, everything secondary behind one drawer, quick note and capture one tap away, installed as an app and reading offline from a saved index.</p>
+<div style="display:flex;gap:14px;flex-wrap:wrap">
+<div class="phone"><div class="win"><div class="bar"><b>Today</b><span style="flex:1"></span><span class="btn p">+</span></div><div style="padding:8px"><div class="btn" style="display:block;padding:6px">Add a task…</div><div class="row"><span class="cb"></span><b>Send logo files</b><span class="chip late">Late</span></div><div class="row"><span class="cb"></span><b>Pay invoice</b></div><div class="row"><span class="cb"></span><b>Write pricing copy</b></div></div><div class="tabbar"><span class="on">Today</span><span>Projects</span><span>Notes</span><span>Search</span><span>More</span></div></div></div>
+<div class="phone"><div class="win"><div class="bar"><b>2026-11-21 14:35</b><span style="flex:1"></span><span class="btn">⋯</span></div><div class="ed">Called Dana about the launch. She wants Dec 8.<br>☐ Send her the logo files<br>[ screenshot ]</div><div class="bar" style="border-top:1px solid var(--line);border-bottom:0"><span class="btn">☐</span><span class="btn">[[</span><span class="btn">#</span><span class="btn">@</span><span class="btn">📷</span><span class="btn">↶</span></div><div class="tabbar"><span>Today</span><span>Projects</span><span class="on">Notes</span><span>Search</span><span>More</span></div></div></div></div>
+
+<h2>8. Sharing: out of markdown for other people</h2>
+<p>Copy as formatted text for Word or email, download .docx or print to PDF, and a <b>project status report</b> built from the hub (goal, progress, open tasks by phase, selected notes). The files stay the source of truth, the report is a snapshot you hand over.</p>
+<div class="win"><div class="grid g2"><div class="card"><h3>Website relaunch: status, 21 Nov</h3><p class="small" style="margin:0 0 6px"><b>34% complete</b> · 6 overdue · next milestone Dec 8</p><div class="prog"><i style="width:34%"></i></div><p class="small" style="margin:8px 0 2px"><b>Phase 1</b> 9 of 12 done<br><b>Phase 2</b> 20 of 60 done<br><b>Open this week:</b> Write pricing copy (Dana, Tue), Pick a host (Sam, Wed)</p></div>
+<div class="card"><h3>Export</h3><div class="row"><b>Copy as formatted text</b><span class="btn">⌘⇧C</span></div><div class="row"><b>Download .docx</b></div><div class="row"><b>Print or save as PDF</b></div><div class="row"><b>Keep tags and people</b><span class="chip">off</span></div></div></div></div>
+
+<h2>What stays true, and what this cannot be</h2>
+<div class="grid g2" style="padding:0"><div class="card"><h3>Within the architecture</h3><ul class="lim"><li>Everything is a view over plain markdown and frontmatter. Delete the app and the files are fine.</li><li>Local folder, Dropbox (built), later OneDrive and Google Drive. Same screens on all.</li><li>Works offline with a saved index, installs as an app, syncs through the folder's own tool.</li><li>Custom views, templates and saved filters are small files in <code>.plainfile/</code>.</li><li>Safe writes, previews, Undo and a readout of every change.</li></ul></div>
+<div class="card"><h3>Out of reach without a server</h3><ul class="lim"><li>Real-time co-editing or shared comments (two people editing at once). Sharing happens through the shared folder, with conflicts surfaced.</li><li>Push notifications and reminders when the app is closed (a phone can show them only while it runs).</li><li>Email, Slack or calendar integrations that need a backend (read-only <code>.ics</code> import is possible).</li><li>Server-side search across devices, accounts and sign-in of our own.</li><li>AI features need your own API key typed into the browser, which I would not add by default.</li></ul></div></div>
+
+<h2>If I had to order it</h2>
+<p><span class="pill">1</span> Phone pass and bottom tabs · <span class="pill">2</span> Saved index and Dropbox incremental sync (speed and offline) · <span class="pill">3</span> Home and the weekly review · <span class="pill">4</span> Calendar and People · <span class="pill">5</span> Export and status reports · <span class="pill">6</span> Insight views. Each is a separate release, and each can be dropped without hurting the rest.</p>
+</body></html>
