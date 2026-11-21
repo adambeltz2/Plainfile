@@ -676,3 +676,12 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
   .cal-week { grid-template-columns: minmax(0, 1fr); }
   .cal-col { min-height: 0; }
 }
+
+/* ---------- export and report ---------- */
+.report { width: min(52rem, 100%); }
+.report-prev { max-height: 55vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 0 0 10px; background: var(--bg); }
+.report-prev h1 { font-size: 22px; margin: 0 0 4px; }
+.report-prev h2 { font-size: 16px; margin: 14px 0 4px; }
+.report-prev table { border-collapse: collapse; }
+.report-prev td, .report-prev th { border: 1px solid var(--line); padding: 3px 8px; }
+.report-prev ul { margin: 4px 0; padding-left: 20px; }

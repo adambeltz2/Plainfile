@@ -41,6 +41,9 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
   tasks, what you are waiting on, meetings and notes.
 - **Calendar:** month, week and agenda views of tasks and dated notes. Drag a task to another day to change its
   due date in its own file.
+- **Share outside markdown:** copy a note (or a selection) as formatted text for Word, Docs or email, download it as
+  a Word file, or print it to PDF, cleanly (no frontmatter or tags). A project **Report** builds a status snapshot
+  you can copy, download or save as a note.
 - **Home and the weekly review:** a landing screen (capture, today, where you left off, what needs filing, what
   you are waiting on, the week ahead, project progress) and a four-step review that files, reschedules and plans
   with small guarded edits to your own notes.

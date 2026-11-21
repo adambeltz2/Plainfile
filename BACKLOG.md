@@ -33,10 +33,10 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 ## Sharing and export
 
-- `[FEATURE]` **Copy as formatted text** (⋯ More, Ctrl/Cmd+Shift+C): puts rich HTML and plain text on the clipboard so it pastes into Word, Google Docs and email with headings, lists, tables and links intact. A "clean" default drops frontmatter, turns `[[links]]` into plain words, `- [ ]` into ☐/☑ and hides `#tags`, `@people` and `due:` markers. Affects new `src/render.ts`, `web/menu.ts`.
-- `[FEATURE]` **Download as .docx, .html or PDF** (PDF through a clean print stylesheet). The .docx is written without a dependency (a small zip writer). Affects new `src/docx.ts`, `web/menu.ts`.
-- `[FEATURE]` **Project report**: one document from a project (goal, progress, open tasks by phase, selected notes) for sharing status. Affects `web/project.ts`, `src/render.ts`.
-- `[FEATURE]` **Export presets** (Clean, Keep tags, Raw markdown) remembered per vault. Affects `web/menu.ts`.
+- `[FEATURE]` **Images in the Word file** (they are in copies and print, but the .docx shows a description). Affects `src/docx.ts`.
+- `[FEATURE]` **Export a whole folder or several notes as one document** (a table of contents and each note as a chapter). Affects `src/render.ts`, `web/export.ts`.
+- `[FEATURE]` **Export presets and a custom report template** kept in `.plainfile/`. Affects `src/report.ts`.
+- `[FEATURE]` **Markdown and HTML file downloads** alongside Word. Affects `web/export.ts`.
 
 ## Move and organise
 

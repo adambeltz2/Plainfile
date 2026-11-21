@@ -1,6 +1,7 @@
 import { frontmatterText } from '../src/frontmatter';
 import { duplicateNote } from '../src/move';
 import * as explore from './explore';
+import { copyFormatted, downloadDocx, keepMarkers, printDocument, setKeepMarkers } from './export';
 import { MOD } from './keys';
 import * as move from './move';
 import { applyProperty, notes, openNote, click as notesClick } from './notes';
@@ -12,7 +13,7 @@ import { esc } from './util';
  * The actions on a note, in one place: the ⋯ menu in the note's header, the menu on a right-click or
  * long-press in the note list, and the command palette all run them from here.
  */
-export type NoteAction = 'open' | 'xray' | 'explore' | 'history' | 'move' | 'rename' | 'duplicate' | 'pin' | 'copylink' | 'frontmatter' | 'delete';
+export type NoteAction = 'copyrich' | 'docx' | 'print' | 'markers' | 'open' | 'xray' | 'explore' | 'history' | 'move' | 'rename' | 'duplicate' | 'pin' | 'copylink' | 'frontmatter' | 'delete';
 
 export const KEYS: Partial<Record<NoteAction, string>> = {
   xray: `${MOD}Shift+X`,
@@ -50,6 +51,11 @@ export function itemsFor(path: string, inNote: boolean): (Item | '-')[] {
     { action: 'duplicate', label: 'Duplicate' },
     { action: 'pin', label: isPinned(path) ? 'Unpin' : 'Pin to top' },
     { action: 'copylink', label: 'Copy link' },
+    '-',
+    { action: 'copyrich', label: 'Copy as formatted text' },
+    { action: 'docx', label: 'Download as Word (.docx)' },
+    { action: 'print', label: 'Print or save as PDF' },
+    { action: 'markers', label: keepMarkers() ? 'Copies keep tags (switch to clean)' : 'Copies are clean (switch to keep tags)' },
     '-',
   );
   if (inNote && !hasFrontmatter(path)) items.push({ action: 'frontmatter', label: 'Add default frontmatter' });
@@ -91,7 +97,8 @@ export async function run(action: NoteAction, path: string): Promise<void> {
     for (const [k, v] of Object.entries(data)) b.dataset[k] = v;
     return b;
   };
-  if (action !== 'copylink' && action !== 'open' && notes.path !== path) await openNote(path);
+  const noOpen = new Set<NoteAction>(['copylink', 'open', 'copyrich', 'docx', 'print', 'markers']);
+  if (!noOpen.has(action) && notes.path !== path) await openNote(path);
   switch (action) {
     case 'open':
       return openNote(path);
@@ -120,6 +127,22 @@ export async function run(action: NoteAction, path: string): Promise<void> {
     }
     case 'pin':
       applyProperty('pinned', isPinned(path) ? null : 'true');
+      return render();
+    case 'copyrich':
+    case 'docx':
+    case 'print': {
+      const note = state.index?.notes.get(path);
+      if (!note) return;
+      const open = notes.path === path && notes.handle;
+      const selection = open ? notes.handle?.getSelection() ?? '' : '';
+      const md = selection.trim() ? selection : open ? notes.handle?.getText() ?? '' : (await state.storage?.read(path)) ?? '';
+      const title = note.title;
+      notes.status = action === 'copyrich' ? await copyFormatted(md, path) : action === 'docx' ? await downloadDocx(md, title, path) : await printDocument(md, title, path);
+      return render();
+    }
+    case 'markers':
+      setKeepMarkers(!keepMarkers());
+      notes.status = keepMarkers() ? 'Copies and Word files now keep #tags, @people and due: markers.' : 'Copies and Word files now leave out #tags, @people and due: markers.';
       return render();
     case 'copylink': {
       const n = state.index?.notes.get(path);

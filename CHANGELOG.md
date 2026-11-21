@@ -4,6 +4,21 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.40.0] - 2026-11-21
+
+### Added
+- **Share a note outside markdown.** In a note's **⋯ More** menu (and in Go to…):
+  - **Copy as formatted text** puts clean HTML and plain text on the clipboard, so it pastes into Word, Google Docs
+    or an email with headings, bold, lists, checkboxes (☐ ☑), tables and pasted images. Select part of the note
+    first to copy only that.
+  - **Download as Word (.docx)** writes a real Word file, with no library.
+  - **Print or save as PDF** opens the browser's print dialog on a clean copy.
+  Copies are **clean** by default: no frontmatter, no `#tags`, `@people`, `due:` or `created:` markers, `[[links]]` as
+  plain words. A menu switch keeps them when you want them.
+- **Project status report.** A **Report** button on a project's page builds a snapshot from the hub's numbers (progress,
+  phases, overdue, due in two weeks, who you are waiting on, follow-ups, recent notes), shown as a preview you can
+  copy for an email, download as Word, print, or **save as a note** under `reports/`.
+
 ## [0.39.0] - 2026-11-21
 
 ### Added

@@ -444,6 +444,8 @@ export interface EditorHandle {
   host: HTMLElement;
   view: EditorView;
   getText(): string;
+  /** The selected text, or an empty string. */
+  getSelection(): string;
   setText(text: string): void;
   setXray(on: boolean): void;
   focus(): void;
@@ -552,6 +554,7 @@ export function createEditor(o: { text: string; crlf: boolean; today: () => stri
     host,
     view,
     getText: text,
+    getSelection: () => view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to),
     setText(t) {
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: t } });
     },

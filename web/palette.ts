@@ -84,6 +84,9 @@ export function items(): PaletteItem[] {
       ['xray', 'Toggle X-ray'],
       ['explore', 'Explore related notes'],
       ['copylink', 'Copy a link to this note'],
+      ['copyrich', 'Copy as formatted text (for Word or email)'],
+      ['docx', 'Download this note as Word (.docx)'],
+      ['print', 'Print this note or save it as PDF'],
       ['delete', 'Delete this note…'],
     ];
     for (const [a, l] of acts) if (l.toLowerCase().includes(q) || a.includes(q)) out.push({ kind: 'action', action: a, path: cur, label: l, hint: KEYS[a] ?? t });

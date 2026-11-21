@@ -7,6 +7,7 @@ import * as guide from './guide';
 import * as health from './health';
 import * as homeScreen from './home';
 import * as reviewScreen from './review';
+import * as reportUi from './report';
 import * as hub from './hub';
 import * as newmenu from './newmenu';
 import * as menu from './menu';
@@ -287,7 +288,7 @@ function render(): void {
   const selEnd = 'selectionEnd' in (active ?? {}) ? (active as HTMLInputElement).selectionEnd : null;
   const editorFocus = state.screen === 'notes' && notes.hadFocus();
 
-  app.innerHTML = (state.index && !state.busy ? shell() : landing()) + newmenu.html() + move.html() + menu.html() + palette.html();
+  app.innerHTML = (state.index && !state.busy ? shell() : landing()) + newmenu.html() + move.html() + menu.html() + reportUi.html() + palette.html();
 
   paintProgress();
   foldSidePanels();
@@ -317,6 +318,9 @@ app.addEventListener('click', (e) => {
     if (!state.index && (await cloudUi.click(target))) return;
     if (target.closest('[data-quick-note]') && state.index && !state.modal) return newmenu.quickNote();
     if (await palette.click(target)) return;
+    if (await reportUi.click(target)) return;
+    const rp = target.closest<HTMLElement>('[data-report-open]')?.dataset.reportOpen;
+    if (rp) return reportUi.openReport(rp);
     if (await move.click(target)) return;
     if (await menu.click(target)) return;
     if (state.modal && (await newmenu.click(target))) return;

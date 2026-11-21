@@ -93,6 +93,7 @@ const SHORTCUTS: [string, string][] = [
   ['Ctrl/Cmd + K', 'Search'],
   ['Ctrl/Cmd + S', 'Save the open note now (it also saves by itself)'],
   ['Ctrl/Cmd + V on an image', 'Paste a screenshot into the open note: it is saved in _attachments and shown inline'],
+  ['⋯ More, then Copy as formatted text', 'Copy the note (or the selection) cleanly for Word, Docs or email. Also under Download as Word and Print or save as PDF'],
   ['Alt + N', 'Quick note: titled with the date and time, ready to type'],
   ['F2', 'Rename the open note'],
   ['Ctrl/Cmd + Shift + M', 'Move the open note to another folder'],
