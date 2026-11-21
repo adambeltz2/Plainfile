@@ -154,9 +154,12 @@ function shell(): string {
   h += '</nav><span class="grow"></span>';
   h += '<button class="btn" data-act="palette-open" title="Open a note or run an action" aria-label="Go to a note or action">Go to…</button>';
   h += '<button class="btn primary" data-act="new">+ New</button>';
-  h += '<button class="btn" data-act="rescan">Rescan</button>';
-  if (fsaSupported()) h += '<button class="btn" data-act="open">Open folder</button>';
-  h += `<button class="btn" data-nav="guide" aria-label="Syntax cheat sheet" title="Syntax cheat sheet" aria-current="${state.screen === 'guide'}">?</button>${themeControl()}</header>`;
+  const rest =
+    '<button class="btn" data-act="rescan">Rescan</button>' +
+    (fsaSupported() ? '<button class="btn" data-act="open">Open folder</button>' : '') +
+    `<button class="btn" data-nav="guide" aria-label="Syntax cheat sheet" title="Syntax cheat sheet" aria-current="${state.screen === 'guide'}">?</button>${themeControl()}`;
+  // On a phone the less-used buttons and the theme choice sit behind one ⋯ button, so the screen is for the work.
+  h += `<span class="hdr-wide">${rest}</span><details class="hdr-more"><summary class="btn" aria-label="More: rescan, open folder, help and theme">⋯</summary><div class="hdr-more-box">${rest}</div></details></header>`;
   if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
   if (state.index && state.index.notes.size === 0) {
     const s = state.index.summary();

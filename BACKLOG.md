@@ -47,6 +47,11 @@ Nothing here is a promise of order. Remove an item when it ships.
 - `[DEBT]` **A move can change which note a short link means** when two notes share a name and one was chosen because it sat in the same folder; today only full-path links are rewritten in that case. Affects `src/move.ts`.
 - `[FEATURE]` **Ctrl/Cmd+N** for a new note (browsers reserve it; needs an in-app alternative such as Alt+N). Affects `web/main.ts`.
 
+## Phones
+
+- `[FEATURE]` **A phone pass over Today, Notes, Board and Search** like the one done for the project hub: fold secondary controls into drawers, keep the work on the first screen. Affects `web/today.ts`, `web/notes.ts`, `web/board.ts`, `web/search.ts`.
+- `[FEATURE]` **A bottom tab bar on phones** for the main screens (Today, Projects, Notes, Search) with the rest under More. Affects `web/main.ts`.
+
 ## Project hub
 
 - `[FEATURE]` **Edit in place**: click a due chip, status or name on a task row to change it without opening the note, and j/k/x/d/s keys. Bulk changes cover this today. Affects `web/tasks.ts`, `web/hub.ts`, `src/bulk.ts`.

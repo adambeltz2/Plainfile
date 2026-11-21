@@ -61,7 +61,8 @@ test.describe('cheat sheet', () => {
   test('says so when there are no tags or frontmatter, and fits a phone', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await openVault(page, { 'a.md': 'plain note' });
-    await page.getByRole('button', { name: 'Syntax cheat sheet' }).click();
+    await page.locator('.hdr-more > summary').click(); // on a phone the ? button is behind ⋯
+    await page.locator('.hdr-more').getByRole('button', { name: 'Syntax cheat sheet' }).click();
     await expect(page.locator('#sec-vault')).toContainText('No tags yet');
     await expect(page.locator('#sec-vault')).toContainText('None of your notes have frontmatter yet');
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);

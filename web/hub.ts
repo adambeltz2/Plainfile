@@ -29,6 +29,10 @@ export const hubState = {
   tidy: false,
   /** The "more filters" drawer stays open while you pick several. */
   facetsOpen: false,
+  /** The Filter & group drawer on a phone, and whether row tick boxes are showing there. */
+  toolsOpen: false,
+  statusOpen: false,
+  selectMode: false,
   /** Task ids ticked for a bulk change. */
   selected: new Set<string>(),
   /** What the bulk bar has typed into it, kept across redraws. */
@@ -43,6 +47,7 @@ export const hubState = {
 };
 
 const PAGE = 25;
+const isNarrow = (): boolean => window.matchMedia('(max-width: 760px)').matches;
 const GROUPS: [GroupBy, string][] = [
   ['due', 'Due date'],
   ['status', 'Status'],
@@ -68,7 +73,7 @@ function tasksOf(idx: NonNullable<typeof state.index>, path: string): HubTask[] 
 /** Start fresh for a project: the filters of one project make no sense in another. */
 export function resetFor(path: string): void {
   if (hubState.project === path) return;
-  Object.assign(hubState, { project: path, filters: newFilters(), toggled: new Set<string>(), limits: new Map<string, number>(), tidy: false, facetsOpen: false, selected: new Set<string>(), preview: undefined, last: undefined, error: '' });
+  Object.assign(hubState, { project: path, filters: newFilters(), toggled: new Set<string>(), limits: new Map<string, number>(), tidy: false, facetsOpen: false, toolsOpen: false, statusOpen: false, selectMode: false, selected: new Set<string>(), preview: undefined, last: undefined, error: '' });
 }
 
 const ago = (ms: number): string => {
@@ -102,16 +107,20 @@ function toolbar(all: HubTask[]): string {
   const phases = count(all.map((t) => t.phase ?? '')).map(([v, n]): [string, string, number] => [v, v || 'No phase', n]);
   const statuses = count(all.map((t) => t.status)).map(([v, n]): [string, string, number] => [v, v, n]);
   const quick = (k: 'overdue' | 'week' | 'none', l: string): string => `<button class="chip${f.due === k ? ' on' : ''}" data-hub-due="${k}" aria-pressed="${f.due === k}">${l}</button>`;
+  const narrow = isNarrow();
+  const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + (f.due ? 1 : 0);
   return (
+    `<input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="Filter this project…" aria-label="Filter tasks in this project" value="${esc(f.text)}">` +
+    `<details class="hub-tools"${!narrow || hubState.toolsOpen ? ' open' : ''}><summary class="small">Filter &amp; group${active ? ` · ${active} on` : ''}</summary>` +
     '<div class="hub-bar">' +
     `<label class="hub-sel"><span class="small muted">View</span><select id="hub-views" class="inp" aria-label="Saved views"><option value="">${hubState.views.length ? 'Saved views…' : 'No saved views'}</option>${hubState.views.map((v) => `<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('')}${hubState.views.length ? '<option value="__delete">Delete a view…</option>' : ''}</select></label>` +
     (hubState.tab !== 'tasks' ? '' : `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` +
     `<label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>`) +
-    (hubState.tab === 'tasks' ? '<button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button>' : '') +
-    `<input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="Filter this project…" aria-label="Filter tasks in this project" value="${esc(f.text)}">` +
+    (hubState.tab === 'tasks' ? `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button>` : '') +
     '</div>' +
     `<div class="chips hub-quick">${quick('overdue', 'Overdue')}${quick('week', 'Due this week')}${quick('none', 'No date')}<form class="hub-saveview" data-hub-saveview><input id="hub-view-name" class="inp" autocomplete="off" placeholder="Name this view" aria-label="Name for this view" value="${esc(hubState.viewName)}"><button class="btn small" type="submit">Save view</button></form></div>` +
     `<details class="hub-facets"${hubState.facetsOpen || f.people.length || f.tags.length || f.phases.length || f.statuses.length ? ' open' : ''}><summary class="small">More filters: people, tags, phases, status</summary>${facet('People', 'people', people, f.people)}${facet('Tags', 'tags', tags, f.tags)}${facet('Phases', 'phases', phases, f.phases)}${facet('Status', 'statuses', statuses, f.statuses)}</details>` +
+    '</details>' +
     activeChips()
   );
 }
@@ -237,6 +246,7 @@ function statusColumn(all: HubTask[], issues: FieldIssue[]): string {
   const spark = Math.max(1, ...s.weekly);
   return (
     '<aside class="hub-status" aria-label="Project status">' +
+    `<details class="hub-status-d"${isNarrow() && !hubState.statusOpen ? '' : ' open'}><summary class="small">Status: ${s.done} of ${s.total} done${s.overdue ? `, ${s.overdue} overdue` : ''}${issues.length ? `, ${issues.length} to tidy` : ''}</summary>` +
     `<h3>Progress</h3><div class="prog"><i style="width:${pct}%"></i></div><p class="small muted" style="margin:4px 0 8px">${s.done} of ${s.total} done${s.total ? ` (${pct}%)` : ''} · ${s.overdue} overdue</p>` +
     (s.phases.length
       ? `<h3>Phases</h3>${s.phases.map((p) => `<button class="hub-phase${f.phases.includes(p.name === 'No phase' ? '' : p.name) ? ' on' : ''}" data-hub-filter="phases:${esc(p.name === 'No phase' ? '' : p.name)}"><span>${esc(p.name)}</span><b>${p.done}/${p.total}</b><span class="prog"><i style="width:${p.total ? Math.round((p.done / p.total) * 100) : 0}%"></i></span></button>`).join('')}`
@@ -245,7 +255,7 @@ function statusColumn(all: HubTask[], issues: FieldIssue[]): string {
     (s.next.length ? `<h3>Next up</h3><ol class="small hub-next">${s.next.map((t) => `<li><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button>${t.due ? ` <span class="muted">${esc(fmtDate(t.due))}</span>` : ''}</li>`).join('')}</ol>` : '') +
     `<h3>Done per week <span class="muted" title="Worked out from when each note was last changed">(estimate)</span></h3><div class="spark" aria-label="Tasks finished in each of the last six weeks">${s.weekly.map((n, i) => `<i style="height:${Math.max(6, Math.round((n / spark) * 100))}%" title="${n} done"></i>`).join('')}</div>` +
     `<h3 style="margin-top:12px">Tidy <span class="n">${issues.length}</span></h3><button class="btn small" data-hub-tidy aria-expanded="${hubState.tidy}">${hubState.tidy ? 'Hide' : issues.length ? 'Review' : 'All uniform'}</button>${hubState.tidy ? `<div class="hub-tidy">${tidyHtml(issues)}</div>` : ''}` +
-    '</aside>'
+    '</details></aside>'
   );
 }
 
@@ -290,10 +300,12 @@ export function html(path: string): string {
   }
   const log = logHtml();
   return (
-    `<div class="hubwrap">${rail(path)}<div class="hub-main">` +
+    `<div class="hubwrap${hubState.selectMode || hubState.selected.size ? ' sel-on' : ''}">${rail(path)}<div class="hub-main">` +
     `<label class="hub-pick small"><span class="muted">Project</span><select id="hub-pick" class="inp">${listProjects(idx).map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</select><button class="btn small" data-act="proj-back">All projects</button></label>` +
     `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${d.active ? 'Active' : 'Inactive'}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
-    `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-open="${esc(path)}">Open note</button></div></div>` +
+    `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
+    `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-open="${esc(path)}">Open note</button></span>` +
+    `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>` +
     (d.summary ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
     `<div class="pstats"><div class="pstat"><b>${openCount}</b><span>open</span></div><div class="pstat${d.overdue ? ' late' : ''}"><b>${d.overdue}</b><span>overdue</span></div><div class="pstat"><b>${all.length - openCount}</b><span>done</span></div><div class="pstat"><b>${d.notes.length}</b><span>notes</span></div><div class="pstat"><b>${d.followups.length}</b><span>follow-ups</span></div></div>` +
     `<div class="pprog"><progress max="${Math.max(all.length, 1)}" value="${all.length - openCount}" aria-label="Tasks done"></progress><span class="small muted">${all.length - openCount} of ${all.length} tasks done${all.length ? ` (${Math.round(((all.length - openCount) / all.length) * 100)}%)` : ''}</span></div>` +
@@ -396,6 +408,25 @@ async function move(id: string, status: string): Promise<void> {
 
 export async function click(target: HTMLElement): Promise<boolean> {
   const q = <T extends string>(attr: string): T | undefined => (target.closest(`[${attr}]`) as HTMLElement | null)?.getAttribute(attr) as T | undefined;
+  const toolsSum = target.closest<HTMLElement>('.hub-tools > summary');
+  if (toolsSum) {
+    hubState.toolsOpen = !(toolsSum.parentElement as HTMLDetailsElement).open;
+    return false;
+  }
+  const statusSum = target.closest<HTMLElement>('.hub-status-d > summary');
+  if (statusSum) {
+    hubState.statusOpen = !(statusSum.parentElement as HTMLDetailsElement).open;
+    return false;
+  }
+  if (target.closest('[data-hub-selectmode]')) {
+    hubState.selectMode = !hubState.selectMode;
+    if (!hubState.selectMode) {
+      hubState.selected.clear();
+      hubState.preview = undefined;
+    }
+    render();
+    return true;
+  }
   const sum = target.closest<HTMLElement>('.hub-facets > summary');
   if (sum) {
     hubState.facetsOpen = !(sum.parentElement as HTMLDetailsElement).open; // the click is about to toggle it

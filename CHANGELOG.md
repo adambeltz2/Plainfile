@@ -4,6 +4,19 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.34.1] - 2026-11-21
+
+### Changed
+- **Far fewer things to tap on a phone.** On a narrow screen:
+  - the header keeps the screen tabs (one scrolling row), Go to… and + New; Rescan, Open folder, the cheat
+    sheet and the Light/Dark/Auto choice are behind one ⋯ button;
+  - the project page shows the title, + Task and a ⋯ for Note, Meeting and Open note; the number tiles are
+    hidden, tabs scroll sideways, and the first tasks are on the first screen;
+  - grouping, saved views, date and people filters sit in one **Filter & group** drawer (the search box stays
+    out), and the status column is one **Status** line that opens on demand;
+  - task tick boxes for bulk changes only appear after **Select tasks**.
+  Wide screens are unchanged.
+
 ## [0.34.0] - 2026-11-21
 
 ### Added

@@ -508,5 +508,34 @@ test.describe('portfolio table', () => {
     await rows.first().getByRole('button', { name: 'Beta' }).click();
     await expect(page.locator('.title')).toHaveText('Beta');
   });
+
+  test('on a phone the controls are folded away: the work is on the first screen, and each drawer opens on demand', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    const files: Record<string, string> = { 'projects/big/index.md': '---\ntitle: Big project\ntype: project\nactive: true\n---\nGoal text\n' };
+    for (let i = 0; i < 30; i++) files[`projects/big/tasks/Task ${i}.md`] = `---\ntitle: Task ${i}\nstatus: todo\nphase: Phase ${i % 2}\n---\n`;
+    await openVault(page, files);
+    await nav(page, 'Projects').click();
+    await page.locator('.pcard .pbtn').click();
+    await expect(page.locator('.hubwrap')).toBeVisible();
+    const first = await page.locator('.hub-content .task').first().boundingBox();
+    expect(first!.y).toBeLessThan(700); // tasks are visible without scrolling past a wall of controls
+    await expect(page.locator('.pstats')).toBeHidden();
+    await expect(page.locator('.hub-tools')).not.toHaveAttribute('open', '');
+    await expect(page.locator('.hub-status-d')).not.toHaveAttribute('open', '');
+    await expect(page.locator('.selbox').first()).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Rescan' })).toBeHidden(); // behind the ⋯ button
+    await page.locator('.hub-tools > summary').click();
+    await page.locator('#hub-group').selectOption('person');
+    await expect(page.locator('.hub-tools')).toHaveAttribute('open', ''); // stays open while you work in it
+    await page.getByRole('button', { name: 'Select tasks' }).click();
+    await expect(page.locator('.selbox').first()).toBeVisible();
+    await page.getByRole('button', { name: 'Stop selecting' }).click();
+    await expect(page.locator('.selbox').first()).toBeHidden();
+    await page.locator('.hdr-more > summary').click();
+    await expect(page.locator('.hdr-more').getByRole('button', { name: 'Rescan' })).toBeVisible();
+    await expect(page.locator('.hdr-more').getByRole('button', { name: 'Dark' })).toBeVisible();
+    await page.locator('.hub-status-d > summary').click();
+    await expect(page.locator('.hub-status')).toContainText('Progress');
+  });
 });
 
