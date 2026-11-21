@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.41.0] - 2026-11-21
+
+### Added
+- **Insight.** A quiet look at your own files, all worked out in the browser from modified times, dates and tags:
+  an **activity heatmap** (notes changed per day, last 26 weeks), **this month** (notes changed and created, tasks
+  created and finished, open and overdue), **topics** (a tag cloud that leads to a search), **people**, **folders**
+  by size, and **health** (broken links, shared names, orphans, unused attachments) with a **vault-wide Tidy list**
+  that fixes non-standard fields one line at a time. It is in the header, under More on a phone, and in Go to….
+
 ## [0.40.0] - 2026-11-21
 
 ### Added

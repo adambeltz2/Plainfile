@@ -23,6 +23,7 @@ const SCREENS: [string, string][] = [
   ['calendar', 'Calendar'],
   ['people', 'People'],
   ['review', 'Weekly review'],
+  ['insight', 'Insight'],
   ['projects', 'Projects'],
   ['board', 'Board'],
   ['notes', 'Notes'],

@@ -47,6 +47,11 @@ Nothing here is a promise of order. Remove an item when it ships.
 - `[DEBT]` **A move can change which note a short link means** when two notes share a name and one was chosen because it sat in the same folder; today only full-path links are rewritten in that case. Affects `src/move.ts`.
 - `[FEATURE]` **Ctrl/Cmd+N** for a new note (browsers reserve it; needs an in-app alternative such as Alt+N). Affects `web/main.ts`.
 
+## Insight
+
+- `[FEATURE]` **Choose a time range** for the heatmap and month stats, and compare months. Affects `src/insight.ts`, `web/insight.ts`.
+- `[FEATURE]` **Tasks finished per week** from the review history if a review note is saved. Affects `src/insight.ts`.
+
 ## Calendar
 
 - `[FEATURE]` **Import a read-only `.ics` file** (or a link to one) to show outside events beside your own. Affects `src/calendar.ts`.
@@ -70,7 +75,6 @@ Nothing here is a promise of order. Remove an item when it ships.
 - `[FEATURE]` **Drag a Board card or a Timeline bar** to change status or date. The buttons work today. Affects `web/hub.ts`.
 - `[FEATURE]` **Bulk: move tasks to another project**, and set a phase. Affects `src/bulk.ts`.
 - `[FEATURE]` **Saved views in the project rail** and across all projects ("My open tasks"). They are in the toolbar today. Affects `web/hub.ts`.
-- `[FEATURE]` **Tidy checks in Vault health** for the whole vault, not one project. Affects `src/health.ts`, `src/fields.ts`.
 
 ## Cloud storage (Dropbox, OneDrive, Google Drive)
 

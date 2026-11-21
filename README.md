@@ -20,6 +20,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 |---|---|
 | **Home**: capture, today, where you left off, filing, waiting, the week | ![Home](docs/screenshots/home.png) |
 | **Calendar**: tasks and dated notes by day, drag to reschedule | ![Calendar](docs/screenshots/calendar.png) |
+| **Insight**: activity, this month, topics, people, health | ![Insight](docs/screenshots/insight.png) |
 | **Today**: everything due or overdue, one-line quick add, a readout of the exact change on disk | ![Today](docs/screenshots/today.png) |
 | **Quick add**: `Send logos +website-relaunch @dana #launch due:friday`, with a live preview | ![Quick add](docs/screenshots/quick-add.png) |
 | **Board**: task files in status columns | ![Board](docs/screenshots/board.png) |
@@ -37,6 +38,8 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 
 ## Features
 
+- **Insight:** an activity heatmap, this month at a glance, topics, people, folders and vault health, with a
+  vault-wide tidy list for non-standard fields.
 - **People:** everyone in your notes (from @mentions and people fields, joined by person notes), with their open
   tasks, what you are waiting on, meetings and notes.
 - **Calendar:** month, week and agenda views of tasks and dated notes. Drag a task to another day to change its

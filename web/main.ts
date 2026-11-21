@@ -12,6 +12,7 @@ import * as hub from './hub';
 import * as newmenu from './newmenu';
 import * as menu from './menu';
 import * as move from './move';
+import * as insightScreen from './insight';
 import * as notes from './notes';
 import * as peopleScreen from './people';
 import * as palette from './palette';
@@ -90,6 +91,7 @@ const NAV: { id: ScreenId; label: string }[] = [
   { id: 'notes', label: 'Notes' },
   { id: 'explore', label: 'Explore' },
   { id: 'search', label: 'Search' },
+  { id: 'insight', label: 'Insight' },
   { id: 'health', label: 'Vault health' },
 ];
 
@@ -161,7 +163,7 @@ function tabbar(hc: number): string {
   const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${state.screen === id}">${label}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
-      ['search:Search', 'calendar:Calendar', 'people:People', 'board:Board', 'explore:Explore', 'review:Weekly review', 'health:Vault health', 'guide:Cheat sheet']
+      ['search:Search', 'calendar:Calendar', 'people:People', 'board:Board', 'explore:Explore', 'review:Weekly review', 'insight:Insight', 'health:Vault health', 'guide:Cheat sheet']
         .map((x) => {
           const [id, label] = x.split(':') as [ScreenId, string];
           return `<button class="btn" data-nav="${id}" data-more-item>${label}${id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
@@ -210,6 +212,9 @@ function shell(): string {
     h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside Plainfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
   }
   switch (state.screen) {
+    case 'insight':
+      h += insightScreen.html();
+      break;
     case 'people':
       h += peopleScreen.html();
       break;
@@ -325,6 +330,8 @@ app.addEventListener('click', (e) => {
     if (await menu.click(target)) return;
     if (state.modal && (await newmenu.click(target))) return;
 
+    const who = target.closest<HTMLElement>('[data-person]')?.dataset.person;
+    if (who && state.screen !== 'people') return peopleScreen.openPerson(who);
     const pj = target.closest<HTMLElement>('[data-open-project]')?.dataset.openProject;
     if (pj) return projectScreen.openProject(pj);
     const cp = target.closest<HTMLElement>('[data-copy]');
@@ -419,6 +426,9 @@ app.addEventListener('click', (e) => {
     switch (state.screen) {
       case 'today':
         await todayScreen.click(target);
+        break;
+      case 'insight':
+        await insightScreen.click(target);
         break;
       case 'people':
         await peopleScreen.click(target);
