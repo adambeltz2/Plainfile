@@ -18,10 +18,10 @@ Notebook project files, including `#due:` and `#followup` tags, still work here.
 
 The core library, a command-line tool and the browser app work and are tested.
 The browser app opens a folder directly (Chrome, Edge, Brave or Opera on desktop) and has
-five parts: **Today** (every task due or overdue, quick add, tick with a readout of exactly
-what changed in the file), **Notes** (a live editor where `- [ ] ` becomes a checkbox as you
-type, with X-ray, date chips and a properties panel), **Search**, **Vault health**, and a
-**+ New** menu that creates notes and tasks from templates. Safari, Firefox and phones can
+seven parts: **Today** (every task due or overdue, quick add, tick with a readout of exactly
+what changed in the file), **Board** (task files in status columns), **Notes** (a live editor where `- [ ] ` becomes a checkbox as you
+type, with X-ray, date chips and a properties panel, and a **Rename** that rewrites every link),
+**Search**, **Vault health**, and a **+ New** menu that creates notes and tasks from templates. Safari, Firefox and phones can
 try the sample vault for now. Design mockups are in [`docs/mockups.html`](docs/mockups.html).
 
 ## Principles
@@ -50,10 +50,11 @@ try the sample vault for now. Design mockups are in [`docs/mockups.html`](docs/m
 | Browser folder access (File System Access API) | `src/fsa-storage.ts`, `web/handle-store.ts` |
 | Browser app: shell and screens (Today, Notes, Search, Health, New menu) | `web/main.ts`, `web/today.ts`, `web/notes.ts`, `web/search.ts`, `web/health.ts`, `web/newmenu.ts` |
 | Live editor | `web/editor.ts` |
+| Board and Rename screens | `web/board.ts`, `web/rename.ts`, `src/rename.ts` |
 | Templates, quick add, link fixes, frontmatter edits | `src/templates.ts`, `src/capture.ts`, `src/fixes.ts`, `src/frontmatter.ts` |
 
-Next: the Board and Rename screens, then a small local server as a fallback for browsers
-that cannot open a folder.
+Next: a small local server as a fallback for browsers that cannot open a folder, and
+making the browser app installable.
 
 ## Try it
 

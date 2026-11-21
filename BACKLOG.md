@@ -3,7 +3,6 @@
 Deferred features, bugs, and debt, per `CLAUDE.md` §4. Tags: `[BUG]`,
 `[FEATURE]`, `[REFACTOR]`, `[DEBT]`.
 
-- `[FEATURE]` Board screen and Rename screen, following `docs/mockups.html` in black and white.
 - `[FEATURE]` "Forget this folder" control, using `forgetHandle` in `web/handle-store.ts`.
   _Affected: `web/main.ts`, `web/store.ts`._
 - `[DEBT]` The File System Access API has no compare-and-swap, so a very small window
@@ -11,9 +10,6 @@ Deferred features, bugs, and debt, per `CLAUDE.md` §4. Tags: `[BUG]`,
   `src/fsa-storage.ts`._
 - `[DEBT]` The app re-renders each screen with `innerHTML`. The editor and inputs are kept
   alive across redraws, but a proper view layer would be cleaner. _Affected: `web/main.ts`._
-- `[FEATURE]` In-app rename that rewrites inbound links with a preview and
-  optionally keeps the old name under `aliases:`. _Affected: new
-  `src/rename.ts`._
 - `[FEATURE]` Follow-ups as a saved view over the `#followup` tag, replacing
   Notebook's Follow-ups rail.
 - `[FEATURE]` Notebook import check: confirm `active` and `sortOrder` frontmatter
@@ -41,3 +37,11 @@ Deferred features, bugs, and debt, per `CLAUDE.md` §4. Tags: `[BUG]`,
   Fine for thousands of notes, not for tens of thousands. _Affected: `web/notes.ts`, `src/index.ts`._
 - `[DEBT]` The editor scans the whole document to build styling on each change. _Affected:
   `web/editor.ts`._
+- `[FEATURE]` Board: group by owner or due week, and show inline checkbox tasks as cards.
+  _Affected: `web/board.ts`._
+- `[FEATURE]` Rename: also offer to rename a note from the Notes list, and rename a folder with
+  every note inside it. _Affected: `web/notes.ts`, `src/rename.ts`._
+- `[DEBT]` Rename detection of outside renames matches identical content only, so a renamed and
+  edited file is not noticed. _Affected: `src/index.ts`._
+- `[DEBT]` A rename that fails part-way leaves both files and some updated links. It says so
+  and nothing is lost, but there is no one-click resume. _Affected: `src/rename.ts`._

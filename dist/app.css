@@ -31,6 +31,7 @@ body {
 .mono { font-family: var(--mono); }
 .muted { color: var(--mute); }
 button { font: inherit; color: inherit; }
+input[type='checkbox'], input[type='radio'], select, input[type='date'] { accent-color: var(--fg); }
 button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 
 .wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
@@ -237,3 +238,30 @@ code { font-family: var(--mono); font-size: 0.92em; }
   .tplgrid { grid-template-columns: minmax(0, 1fr); }
   .note-list { max-height: 30vh; }
 }
+
+/* ---------- board ---------- */
+.board { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.col { background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 10px; min-width: 0; display: flex; flex-direction: column; gap: 8px; min-height: 8rem; }
+.col h3 { margin: 0; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); font-weight: 600; display: flex; justify-content: space-between; }
+.col.over { outline: 2px dashed var(--fg); }
+.card { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; cursor: grab; }
+.card:active { cursor: grabbing; }
+.card.done .t { color: var(--mute); text-decoration: line-through; }
+.card .t { overflow-wrap: anywhere; }
+.card-acts { display: flex; gap: 4px; margin-top: 6px; }
+.card-acts .btn { padding: 0 8px; }
+@media (max-width: 960px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .board { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- rename ---------- */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { background: var(--bg); border: 0; padding: 4px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed='true'] { background: var(--fg); color: var(--bg); font-weight: 600; }
+.ed-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 4px 0 12px; }
+.fcard { border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; margin-top: 8px; }
+.fcard .diff { margin-top: 4px; padding: 6px 10px; }
+.check { display: flex; gap: 8px; align-items: flex-start; }
+.check input { margin-top: 4px; }
+.notice.ok { border-color: var(--fg); background: var(--soft); margin-top: 12px; }
+.diff.plain-box { border-color: var(--line); }

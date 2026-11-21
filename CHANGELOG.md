@@ -4,6 +4,24 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.16.0] - 2026-11-21
+
+### Added
+- **Board screen**: task files in status columns (todo, doing, waiting, done, plus any other
+  status you use), filtered by project. Drag a card to another column or use the arrows and
+  only its `status:` line changes, with a readout of what changed on disk.
+- **Rename screen**. Rename a note in Plainfile and see every link that will change before
+  anything is written, with a checkbox per link, an option to keep the old name as an alias,
+  and a note when another note already has the new name. The new file is created first, links
+  are rewritten with the usual guards, and the old file is removed last, so a failure part-way
+  never loses a note.
+- **Renamed outside the app**: when a file vanishes and an identical one appears, Plainfile
+  offers to point the broken links at the new name and add the old name as an alias.
+- Core: `planRename`, `applyRename`, `planOutsideRename`, `applyOutsideRename`.
+
+### Fixed
+- Checkboxes, selects and date fields follow the black and white theme.
+
 ## [0.15.0] - 2026-11-21
 
 ### Added

@@ -51,7 +51,8 @@ Plainfile (working name) is the successor to **Notebook**, the single-file app t
 *   **Editing:** One live editor. Block markers convert as you type (`- [ ] ` becomes a checkbox, `# ` a heading). Inline formatting such as `**bold**`, `[[links]]` and `@name` renders when the cursor leaves the line. The markdown on disk is always visible or one keypress away. **X-ray** shows any note as raw markdown.
 *   **Transparency:** After any write, show what changed on disk (the exact before and after lines).
 *   **Non-blocking health:** Vault health lists broken links, duplicates, orphans and unused attachments with one-click fixes. It never blocks work.
-*   **Reference design:** `docs/mockups.html` holds the planning mockups: Today, Board, Note, Editor, Live typing, Search, Templates, Vault health and Rename. The mockups predate the black and white rule; follow this section where they differ.
+*   **Reference design:** `docs/mockups.html` holds the planning mockups: Today, Board, Note, Editor, Live typing, Search, Templates, Vault health and Rename. All of them are built. The mockups predate the black and white rule and the decision to use X-ray instead of per-block source handles; follow this section where they differ.
+*   **Screens:** Today, Board, Notes (live editor), Search and Vault health are in the header navigation. Rename opens from a note's header or from the banner shown when an outside rename is detected. + New and quick add create files. Each screen is one module in `web/`.
 
 ## 6. Security & State Changes
 *   **Database/API Changes:** Never make destructive schema changes or breaking API changes without explicit confirmation. Check migrations, callers, and compatibility first.

@@ -1,7 +1,9 @@
 import { fsaSupported, FsaStorage } from '../src/fsa-storage';
+import * as board from './board';
 import * as health from './health';
 import * as newmenu from './newmenu';
 import * as notes from './notes';
+import * as rename from './rename';
 import * as search from './search';
 import {
   healthCount,
@@ -43,6 +45,7 @@ function toggleTheme(): void {
 
 const NAV: { id: ScreenId; label: string }[] = [
   { id: 'today', label: 'Today' },
+  { id: 'board', label: 'Board' },
   { id: 'notes', label: 'Notes' },
   { id: 'search', label: 'Search' },
   { id: 'health', label: 'Vault health' },
@@ -92,7 +95,17 @@ function shell(): string {
   if (fsaSupported()) h += '<button class="btn" data-act="open">Open folder</button>';
   h += `<button class="btn" data-act="theme" aria-label="Switch to ${isDark() ? 'light' : 'dark'} mode">${isDark() ? 'Light' : 'Dark'}</button></header>`;
   if (state.error) h += `<div class="notice err">${esc(state.error)}</div>`;
+  if (state.renames.length && state.screen !== 'rename') {
+    const r = state.renames[0]!;
+    h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside Plainfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
+  }
   switch (state.screen) {
+    case 'board':
+      h += board.html();
+      break;
+    case 'rename':
+      h += rename.html();
+      break;
     case 'notes':
       h += notes.html();
       break;
@@ -164,6 +177,12 @@ app.addEventListener('click', (e) => {
         return newmenu.openNew();
       case 'new-note':
         return newmenu.openTemplate('Note');
+      case 'new-task-file':
+        return newmenu.openTemplate('Task');
+      case 'rename-note':
+        return void rename.openRename(notes.notes.path);
+      case 'review-renames':
+        return void rename.openRename(undefined, 'out');
       case 'rescan': {
         await rescan();
         if (state.selected) await loadContext(state.selected).catch(() => undefined);
@@ -185,6 +204,12 @@ app.addEventListener('click', (e) => {
     switch (state.screen) {
       case 'today':
         await todayScreen.click(target);
+        break;
+      case 'board':
+        await board.click(target);
+        break;
+      case 'rename':
+        await rename.click(target);
         break;
       case 'notes':
         await notes.click(target);
@@ -210,13 +235,20 @@ app.addEventListener('submit', (e) => {
 app.addEventListener('input', (e) => {
   if (state.modal && newmenu.input(e)) return;
   if (todayScreen.input(e)) return;
+  if (rename.input(e)) return;
   if (notes.input(e)) return;
   search.input(e);
 });
 
 app.addEventListener('change', (e) => {
+  if (rename.change(e)) return;
   notes.change(e);
 });
+
+app.addEventListener('dragstart', (e) => board.dragStart(e));
+app.addEventListener('dragover', (e) => board.dragOver(e));
+app.addEventListener('drop', (e) => board.drop(e));
+app.addEventListener('dragend', () => board.dragEnd());
 
 app.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && state.modal) {

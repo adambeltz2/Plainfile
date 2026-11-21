@@ -11,7 +11,7 @@ import { hasPermission, loadHandle, saveHandle } from './handle-store';
 
 export const SAMPLE_DAY = '2026-11-21';
 
-export type ScreenId = 'today' | 'notes' | 'search' | 'health';
+export type ScreenId = 'today' | 'board' | 'notes' | 'search' | 'health' | 'rename';
 export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all';
 
 export type Modal =
@@ -38,6 +38,8 @@ export const state = {
   busy: '',
   error: '',
   templates: [] as Template[],
+  /** Notes that vanished while an identical file appeared: renamed outside the app. */
+  renames: [] as { from: string; to: string }[],
   modal: undefined as Modal | undefined,
   // Today
   view: 'today' as TodayViewId,
@@ -97,6 +99,7 @@ export async function loadVault(storage: VaultStorage, name: string, demo: boole
     state.log = undefined;
     state.tag = undefined;
     state.modal = undefined;
+    state.renames = [];
     justDone.clear();
     for (const fn of vaultChangeHooks) fn();
   } catch (e) {
@@ -139,6 +142,8 @@ export async function rescan(): Promise<boolean> {
   if (!state.index) return false;
   const r = await state.index.scan();
   state.scanMs = r.ms;
+  for (const p of r.renamed) if (!state.renames.some((x) => x.from === p.from && x.to === p.to)) state.renames.push(p);
+  state.renames = state.renames.filter((x) => !state.index?.notes.has(x.from) && state.index?.notes.has(x.to));
   if (r.added.length + r.changed.length + r.removed.length === 0) return false;
   if (state.storage) state.templates = await loadTemplates(state.storage);
   if (state.selected && !state.index.getTask(state.selected)) {

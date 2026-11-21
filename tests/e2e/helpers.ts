@@ -58,11 +58,41 @@ export async function writeFileExternally(page: Page, dir: string, path: string,
 export async function addFileExternally(page: Page, dir: string, path: string, text: string): Promise<void> {
   await page.evaluate(
     async ({ dir, path, text }) => {
-      const d = await (await navigator.storage.getDirectory()).getDirectoryHandle(dir);
-      const w = await (await d.getFileHandle(path, { create: true })).createWritable();
+      let d = await (await navigator.storage.getDirectory()).getDirectoryHandle(dir);
+      const parts = path.split('/');
+      const name = parts.pop() as string;
+      for (const p of parts) d = await d.getDirectoryHandle(p, { create: true });
+      const w = await (await d.getFileHandle(name, { create: true })).createWritable();
       await w.write(text);
       await w.close();
     },
     { dir, path, text },
   );
+}
+
+export async function removeFileExternally(page: Page, dir: string, path: string): Promise<void> {
+  await page.evaluate(
+    async ({ dir, path }) => {
+      let d = await (await navigator.storage.getDirectory()).getDirectoryHandle(dir);
+      const parts = path.split('/');
+      const name = parts.pop() as string;
+      for (const p of parts) d = await d.getDirectoryHandle(p);
+      await d.removeEntry(name);
+    },
+    { dir, path },
+  );
+}
+
+export async function listFiles(page: Page, dir: string): Promise<string[]> {
+  return page.evaluate(async (dir) => {
+    const out: string[] = [];
+    const walk = async (h: FileSystemDirectoryHandle, prefix: string): Promise<void> => {
+      for await (const [name, e] of h.entries()) {
+        if (e.kind === 'directory') await walk(e as FileSystemDirectoryHandle, `${prefix}${name}/`);
+        else out.push(`${prefix}${name}`);
+      }
+    };
+    await walk(await (await navigator.storage.getDirectory()).getDirectoryHandle(dir), '');
+    return out.sort();
+  }, dir);
 }
