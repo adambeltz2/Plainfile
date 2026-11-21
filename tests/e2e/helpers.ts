@@ -96,3 +96,9 @@ export async function listFiles(page: Page, dir: string): Promise<string[]> {
     return out.sort();
   }, dir);
 }
+
+/** Run an action from the note header's ⋯ More menu, for example 'Rename' or 'Delete…'. */
+export async function noteMenu(page: Page, label: string | RegExp): Promise<void> {
+  await page.locator('.ed-actions').getByRole('button', { name: /More/ }).click();
+  await page.locator('.ctx').getByRole('menuitem', { name: label }).click();
+}

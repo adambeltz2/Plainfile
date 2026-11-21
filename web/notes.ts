@@ -3,13 +3,15 @@ import { lineDiff, type LineChange } from '../src/diff';
 import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type Version } from '../src/history';
 import { bestLinkTarget } from '../src/fixes';
 import { frontmatterText, addDefaultFrontmatter, setFrontmatterField } from '../src/frontmatter';
+import { localDateOf } from '../src/dates';
 import { dirname } from '../src/index';
-import { parseNote } from '../src/parse';
+import { parseNote, type Note } from '../src/parse';
 import { isProjectNote, projectContents } from '../src/projects';
 import { addDays } from '../src/query';
 import { linkTargets, suggestionsFor, type LinkTarget } from '../src/vocabulary';
 import { ConflictError } from '../src/storage';
 import { createEditor, type EditorHandle } from './editor';
+import { MOD } from './keys';
 import { errorMessage, onVaultChange, render, state, today } from './store';
 import { esc } from './util';
 
@@ -109,6 +111,7 @@ async function save(): Promise<void> {
     await index.refreshFile(path);
     setStatus('Saved');
     refreshSide();
+    refreshList();
   } catch (e) {
     if (e instanceof ConflictError) {
       notes.conflict = true;
@@ -161,6 +164,26 @@ export async function checkExternal(): Promise<void> {
 
 /* ---------- opening ---------- */
 
+const lastKey = (): string => `plainfile:last:${state.name}`;
+
+/** The note you were last in, remembered per folder in this browser, so Notes can reopen it. */
+function rememberLast(path: string): void {
+  try {
+    localStorage.setItem(lastKey(), path);
+  } catch {
+    // Private windows may refuse. Nothing depends on it.
+  }
+}
+
+export function lastOpened(): string | undefined {
+  try {
+    const p = localStorage.getItem(lastKey());
+    return p && state.index?.notes.has(p) ? p : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function openNote(path: string, at: At = {}): Promise<void> {
   await flush();
   const { storage } = state;
@@ -187,6 +210,7 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
     notes.lastDeleted = undefined;
     notes.confirmDelete = undefined;
     notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush(), suggest });
+    rememberLast(path);
   } catch (e) {
     notes.handle?.destroy();
     notes.handle = undefined;
@@ -221,6 +245,42 @@ function onChange(): void {
 
 /* ---------- rendering ---------- */
 
+const idxNotes = (): Note[] => [...(state.index?.notes.values() ?? [])];
+
+const noteBtn = (path: string, title: string, cls: string, extra = ''): string =>
+  `<button class="${cls}" data-note="${esc(path)}" aria-current="${path === notes.path}"><span>${esc(title)}</span>${extra}</button>`;
+
+function pinnedNotes(): Note[] {
+  return [...(state.index?.notes.values() ?? [])].filter((n) => n.frontmatter.pinned === true || String(n.frontmatter.pinned).toLowerCase() === 'true').sort((a, b) => a.title.localeCompare(b.title));
+}
+
+/** What the Notes screen shows when no note is open: where you can go next. */
+function homeHtml(): string {
+  const idx = state.index;
+  if (!idx) return '';
+  const t = today();
+  const byTime = [...idx.notes.values()].sort((a, b) => b.mtime - a.mtime || a.path.localeCompare(b.path));
+  const changed = byTime.filter((n) => localDateOf(n.mtime) === t).slice(0, 8);
+  const pinned = pinnedNotes();
+  const tops = new Map<string, number>();
+  for (const n of idx.notes.values()) {
+    const top = n.path.includes('/') ? (n.path.split('/')[0] as string) : '';
+    if (top) tops.set(top, (tops.get(top) ?? 0) + 1);
+  }
+  const list = (ns: Note[]): string => `<ul class="plain home-list">${ns.map((n) => `<li>${noteBtn(n.path, n.title, 'item note-quick', `<span class="muted mono small">${esc(dirname(n.path) || '(top level)')}</span>`)}</li>`).join('')}</ul>`;
+  let h =
+    '<div class="notes-home"><h2 class="title">Notes</h2><p class="meta">Notes are plain markdown files. Press <kbd>' + MOD + 'P</kbd> to jump to any note by name, or right-click a note for its actions.</p>' +
+    '<div class="row-gap" style="margin:0 0 8px"><button class="btn primary" data-act="new-note">+ New note</button><button class="btn" data-act="palette-open">Go to a note…</button></div>';
+  if (pinned.length) h += `<h3 class="grp">Pinned</h3>${list(pinned)}`;
+  h += `<h3 class="grp">Modified today <span>${changed.length}</span></h3>` + (changed.length ? list(changed) : '<p class="muted small">Nothing changed today yet.</p>');
+  const rest = byTime.filter((n) => !changed.includes(n)).slice(0, 6);
+  if (rest.length) h += `<h3 class="grp">Recent</h3>${list(rest)}`;
+  if (tops.size) {
+    h += '<h3 class="grp">Folders</h3><div class="chips">' + [...tops].sort((a, b) => a[0].localeCompare(b[0])).map(([f, c]) => `<button class="chip" data-folder-filter="${esc(f)}">${esc(f)}/ <span class="muted">${c}</span></button>`).join('') + '</div>';
+  }
+  return `${h}</div>`;
+}
+
 function listHtml(): string {
   const idx = state.index;
   if (!idx) return '';
@@ -234,6 +294,12 @@ function listHtml(): string {
   const open = notes.path ? all.find((x) => x.path === notes.path) : undefined;
   if (open && !shown.includes(open)) shown = [...shown, open];
   let h = '';
+  if (!q) {
+    const pins = pinnedNotes();
+    const recent = [...idxNotes()].sort((a, b) => b.mtime - a.mtime).slice(0, 5).filter((n) => !pins.includes(n));
+    if (pins.length) h += `<div class="folder mono">Pinned</div>${pins.map((n) => noteBtn(n.path, n.title, 'item note-quick')).join('')}`;
+    if (recent.length) h += `<div class="folder mono">Recent</div>${recent.map((n) => noteBtn(n.path, n.title, 'item note-quick')).join('')}`;
+  }
   let folder: string | undefined;
   for (const n of shown) {
     const d = dirname(n.path);
@@ -520,6 +586,12 @@ function sideHtml(): string {
   return h + historyHtml() + diffHtml();
 }
 
+/** Redraw the note list, so a new title, or a note you pinned, shows without a page redraw. */
+function refreshList(): void {
+  const el = document.getElementById('note-list');
+  if (el) el.innerHTML = listHtml();
+}
+
 export function refreshSide(): void {
   const el = document.getElementById('note-side');
   if (el) el.innerHTML = sideHtml();
@@ -534,8 +606,7 @@ export function html(): string {
       (notes.lastDeleted
         ? `<div class="notice ok" role="status">Deleted “${esc(notes.lastDeleted.title)}”. ${notes.lastDeleted.trashPath ? 'It is in the trash. <button class="btn small" data-act="undo-delete">Undo</button>' : 'It was removed permanently.'}</div>`
         : '') +
-      '<div class="empty">Choose a note on the left, or make a new one. Notes are plain markdown files. ' +
-      'Type <code>- [ ] </code> for a checkbox, <code>#</code> for a heading, and press X-ray to see the raw text.</div>';
+      homeHtml();
   } else {
     const n = idx.notes.get(notes.path);
     main =
@@ -543,7 +614,7 @@ export function html(): string {
       `<div class="ed-actions"><button class="btn only-narrow hide-in-focus" data-act="note-close">All notes</button>` +
       `<button class="btn" id="note-undo" data-act="note-undo" disabled>Undo</button><button class="btn" id="note-redo" data-act="note-redo" disabled>Redo</button>` +
       `<button class="btn" data-act="focus-toggle" aria-pressed="${notes.focus}">${notes.focus ? 'Exit focus' : 'Focus'}</button><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button>` +
-      `<button class="btn hide-in-focus" data-act="explore-note">Explore</button><button class="btn hide-in-focus" data-act="rename-note">Rename</button><button class="btn hide-in-focus" data-act="delete-note">Delete</button>` +
+      `<button class="btn hide-in-focus" data-act="note-menu" aria-haspopup="menu" aria-label="More actions" title="Move, rename, duplicate, pin, delete and more">⋯ More</button>` +
       `<span id="note-status" class="status" role="status">${esc(notes.status)}</span></div></div>` +
       `<div id="note-banner">${bannerHtml()}</div><div id="editor-slot" class="editor-slot"></div>`;
   }
@@ -585,7 +656,7 @@ export function hadFocus(): boolean {
 
 /* ---------- events ---------- */
 
-function applyProperty(key: string, value: string | null): void {
+export function applyProperty(key: string, value: string | null): void {
   const h = notes.handle;
   if (!h) return;
   h.applyText(setFrontmatterField(h.getText(), key, value));
@@ -596,6 +667,12 @@ export async function click(target: HTMLElement): Promise<boolean> {
   const item = target.closest<HTMLElement>('[data-note]')?.dataset.note;
   if (item) {
     await openNote(item);
+    return true;
+  }
+  const ff = target.closest<HTMLElement>('[data-folder-filter]')?.dataset.folderFilter;
+  if (ff) {
+    notes.filter = `${ff}/`;
+    render();
     return true;
   }
   const act = target.closest<HTMLElement>('[data-act]');

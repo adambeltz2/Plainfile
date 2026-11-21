@@ -8,7 +8,7 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 1. Import the first Notebook app's projects (same browser, no export needed).
 2. Undo for every write the app makes.
-3. Delete, move and duplicate notes, and new folders.
+3. Drag a note onto a folder, move several at once, and a folder tree in the Notes list.
 4. Recurring tasks and quick reschedule buttons in Today.
 5. Autocomplete for `[[links]]`, `#tags` and `@people` in the editor.
 6. Calendar view.
@@ -30,6 +30,15 @@ Nothing here is a promise of order. Remove an item when it ships.
 - `[BUG]` **Sample vault shows "Thu 1 Jan" as last change** on the project dashboard and in search, because
   the in-memory demo storage uses tiny fake modified times. Give `MemoryStorage` real times for the demo. Affects `src/memory-storage.ts`, `web/store.ts`.
 - `[DEBT]` **Sample project has no `## Goal`**, so the dashboard summary shows a raw preview. Affects `sample-vault/projects/website-relaunch/index.md`.
+
+## Move and organise
+
+- `[FEATURE]` **Folder tree in the Notes list**, with drag a note onto a folder to move it. Affects `web/notes.ts`, `web/move.ts`.
+- `[FEATURE]` **Move several notes at once** (tick notes in the list). Affects `web/notes.ts`, `src/move.ts`.
+- `[FEATURE]` **Rename a folder** and move a whole folder, rewriting links. Affects `src/move.ts`.
+- `[DEBT]` **History stays under the old path** after a move (`.plainfile/history/<old path>`). Move it with the note. Affects `src/history.ts`, `src/move.ts`.
+- `[DEBT]` **A move can change which note a short link means** when two notes share a name and one was chosen because it sat in the same folder; today only full-path links are rewritten in that case. Affects `src/move.ts`.
+- `[FEATURE]` **Ctrl/Cmd+N** for a new note (browsers reserve it; needs an in-app alternative such as Alt+N). Affects `web/main.ts`.
 
 ## Migration and compatibility
 

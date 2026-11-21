@@ -121,7 +121,7 @@ test.describe('focus mode', () => {
     await expect(page.locator('#note-list')).toBeHidden();
     await expect(page.locator('#note-side')).toBeHidden();
     await expect(page.locator('.foot')).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Rename' })).toBeHidden();
+    await expect(page.getByRole('button', { name: /More/ })).toBeHidden();
     await expect(page.getByRole('button', { name: 'Exit focus' })).toBeVisible();
     await expect(page.locator('#note-undo')).toBeVisible();
 

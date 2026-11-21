@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { listFiles, openVault, readFile, writeFileExternally } from './helpers';
+import { listFiles, openVault, readFile, writeFileExternally, noteMenu } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -22,7 +22,7 @@ const trashFiles = async (page: Page, dir: string) => (await listFiles(page, dir
 test('Delete asks first, and says what links to the note and which tasks go with it', async ({ page }) => {
   const dir = await openVault(page, VAULT);
   await open(page, 'Kickoff');
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await noteMenu(page, /^Delete/);
   const box = page.locator('#note-banner');
   await expect(box).toContainText('Delete “Kickoff”?');
   await expect(box).toContainText('1 note links here');
@@ -38,7 +38,7 @@ test('Delete asks first, and says what links to the note and which tasks go with
 test('Move to trash removes the note, keeps a copy, and Undo puts it back exactly', async ({ page }) => {
   const dir = await openVault(page, VAULT);
   await open(page, 'Kickoff');
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await noteMenu(page, /^Delete/);
   await page.getByRole('button', { name: 'Move to trash' }).click();
 
   await expect(page.locator('.notice.ok')).toContainText('Deleted “Kickoff”. It is in the trash.');
@@ -60,7 +60,7 @@ test('Move to trash removes the note, keeps a copy, and Undo puts it back exactl
 test('permanent delete needs a second confirmation and leaves no copy', async ({ page }) => {
   const dir = await openVault(page, VAULT);
   await open(page, 'other');
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await noteMenu(page, /^Delete/);
   await page.getByRole('button', { name: 'Delete permanently…' }).click();
   await expect(page.locator('#note-banner')).toContainText('There is no undo');
   expect(await listFiles(page, dir)).toContain('other.md');
@@ -75,7 +75,7 @@ test('the trash lists deleted notes, restores them later, and deletes forever on
   const dir = await openVault(page, VAULT);
   for (const title of ['other', 'Kickoff']) {
     await open(page, title);
-    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await noteMenu(page, /^Delete/);
     await page.getByRole('button', { name: 'Move to trash' }).click();
     await expect(page.locator('.notice.ok')).toBeVisible();
   }
@@ -99,7 +99,7 @@ test('the trash lists deleted notes, restores them later, and deletes forever on
 test('a note that changed on disk while you were deciding is not deleted', async ({ page }) => {
   const dir = await openVault(page, VAULT);
   await open(page, 'other');
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await noteMenu(page, /^Delete/);
   await writeFileExternally(page, dir, 'other.md', 'changed by a sync tool\n');
   await page.getByRole('button', { name: 'Move to trash' }).click();
   await expect(page.locator('.notice.err')).toContainText('changed on disk, so it was not deleted');
@@ -110,7 +110,7 @@ test('a note that changed on disk while you were deciding is not deleted', async
 test('deleting a project note warns that the project card goes away', async ({ page }) => {
   await openVault(page, { 'projects/site/index.md': '---\ntitle: Site\ntype: project\nactive: true\n---\nHome\n', 'projects/site/a.md': 'A' });
   await open(page, 'Site');
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await noteMenu(page, /^Delete/);
   await expect(page.locator('#note-banner')).toContainText('project card goes away');
 });
 
@@ -118,7 +118,7 @@ test('the delete confirmation fits a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await openVault(page, VAULT);
   await open(page, 'Kickoff');
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await noteMenu(page, /^Delete/);
   await page.getByRole('button', { name: 'Delete permanently…' }).click();
   await expect(page.locator('#note-banner')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);

@@ -20,6 +20,10 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 | **Projects**: a dashboard per project, with open tasks, notes, people, tags and follow-ups | ![Project dashboard](docs/screenshots/project.png) |
 | **Board**: task files in status columns | ![Board](docs/screenshots/board.png) |
 | **Notes**: a live editor with X-ray, a properties panel, history and focus mode | ![Notes](docs/screenshots/notes.png) |
+| **Notes home**: pinned, modified today, recent and folders | ![Notes home](docs/screenshots/notes-home.png) |
+| **⋯ More menu**: move, rename, duplicate, pin, delete | ![More menu](docs/screenshots/notes-menu.png) |
+| **Move**: a preview of the links it fixes, then Undo | ![Move](docs/screenshots/move.png) |
+| **Go to…**: the command palette | ![Palette](docs/screenshots/palette.png) |
 | **Search**: operators, plus `modified:today` and other date chips | ![Search](docs/screenshots/search.png) |
 | **Explore**: related notes and a neighbourhood graph | ![Explore](docs/screenshots/explore.png) |
 | **Dark mode**: Light, Dark or Auto on every screen | ![Dark mode](docs/screenshots/today-dark.png) |
@@ -36,10 +40,16 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 - **Projects:** a dashboard per project with progress, overdue count, open tasks you can tick,
   notes, follow-ups, people and tags. A project is a folder with an `index.md`; notes elsewhere
   belong to it when their `project:` names it. Notebook projects (`active`, `sortOrder`) still work.
-- **Notes:** one live editor where `- [ ] ` becomes a checkbox as you type. X-ray shows raw
+- **Notes:** reopens where you left off, or shows a home with pinned, modified-today and recent notes.
+  One live editor where `- [ ] ` becomes a checkbox as you type. X-ray shows raw
   markdown, focus mode hides the noise, and a properties panel edits frontmatter. A button adds
   default frontmatter to a note that has none. Autosave, Undo and Redo, version history with restore,
   and delete to a trash you can restore from.
+- **Move, duplicate, pin:** move a note to another folder with a preview of the links it fixes and an
+  Undo, duplicate it, or pin it to the top. They live in a **⋯ More** menu on the note and in a
+  right-click or long-press menu in the list.
+- **Go to… and quick keys:** Ctrl/Cmd+P finds a note by a few letters, creates one, or runs an action
+  ("move kick"). F2 renames, Ctrl/Cmd+Shift+M moves, Ctrl/Cmd+Shift+X toggles X-ray.
 - **Type-ahead:** `[[` links, `#` tags, `@` people and frontmatter values while you type.
 - **Search:** words plus `tag:`, `folder:`, `type:`, `is:open`, `due:`, `@person`, `modified:` and
   `created:`, with "Modified today" chips and a recent-notes list.
@@ -89,6 +99,7 @@ Design mockups are in [`docs/mockups.html`](docs/mockups.html).
 | Browser app: shell and screens (Today, Projects, Notes, Search, Health, New menu) | `web/main.ts`, `web/today.ts`, `web/project.ts`, `web/notes.ts`, `web/search.ts`, `web/health.ts`, `web/newmenu.ts` |
 | Live editor | `web/editor.ts` |
 | Board and Rename screens | `web/board.ts`, `web/rename.ts`, `src/rename.ts` |
+| Move and duplicate notes | `src/move.ts`, `web/move.ts`, `web/menu.ts`, `web/palette.ts` |
 | Templates, quick add and its one-line parser, link fixes, frontmatter edits | `src/templates.ts`, `src/capture.ts`, `src/quickline.ts`, `src/fixes.ts`, `src/frontmatter.ts` |
 | Projects and the project dashboard | `src/projects.ts` |
 

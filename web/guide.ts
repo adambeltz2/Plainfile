@@ -87,6 +87,19 @@ const KEYS: [string, string, string][] = [
   ['anything else', 'client: Northfield', 'Kept exactly as you wrote it and shown in the properties panel.'],
 ];
 
+const SHORTCUTS: [string, string][] = [
+  ['Ctrl/Cmd + P', 'Go to a note by a few letters, make a new one, or run an action. Try "move kick" to move the note whose name matches'],
+  ['Ctrl/Cmd + K', 'Search'],
+  ['Ctrl/Cmd + S', 'Save the open note now (it also saves by itself)'],
+  ['F2', 'Rename the open note'],
+  ['Ctrl/Cmd + Shift + M', 'Move the open note to another folder'],
+  ['Ctrl/Cmd + Shift + X', 'Toggle X-ray'],
+  ['Ctrl/Cmd + Shift + E', 'Explore notes related to the open note'],
+  ['Right-click or long-press a note', 'Its actions: open, move, rename, duplicate, pin, copy link, delete'],
+  ['?', 'This cheat sheet'],
+  ['Esc', 'Close a menu, dialog or focus mode'],
+];
+
 const OPERATORS: [string, string][] = [
   ['tag:launch   #launch', 'Notes and tasks with that tag'],
   ['folder:projects', 'Only inside a folder'],
@@ -144,6 +157,7 @@ export function html(): string {
     ['links', 'Links'],
     ['notebook', 'Follow-ups and projects'],
     ['search', 'Search'],
+    ['keys', 'Keys'],
     ['templates', 'Templates'],
     ['vault', 'Your vault'],
   ];
@@ -175,6 +189,14 @@ export function html(): string {
     section('search', 'Search', '<p>Words search titles, text, paths and tags. Add operators to narrow them. Press Ctrl or Cmd K anywhere.</p><div class="table-wrap"><table><tbody>' +
       OPERATORS.map(([o, d]) => `<tr><td class="mono small">${esc(o)}</td><td>${esc(d)}</td></tr>`).join('') +
       '</tbody></table></div>');
+
+  h += section(
+    'keys',
+    'Quick keys and menus',
+    '<p>On a phone, use <b>Go to…</b> in the header and the <b>⋯ More</b> menu on a note. Pin a note to keep it at the top of the list (it writes <code>pinned: true</code>). Moving a note updates the links that would break and offers Undo.</p><div class="table-wrap"><table><tbody>' +
+      SHORTCUTS.map(([k, d]) => `<tr><td class="mono small">${esc(k)}</td><td>${esc(d)}</td></tr>`).join('') +
+      '</tbody></table></div>',
+  );
 
   h += section('templates', 'Templates', '<p>A template is a markdown file in <code>.plainfile/templates/</code>. Its <code>plainfile:</code> block names it and says where the new note goes, and is removed from the note it makes. Each <code>{{name}}</code> becomes a question when you use it. <code>{{date}}</code>, <code>{{date+7d}}</code> and <code>{{cursor}}</code> are built in.</p>' + block('template', '.plainfile/templates/weekly-review.md', EX.template));
 

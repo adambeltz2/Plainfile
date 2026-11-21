@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openVault } from './helpers';
+import { openVault, noteMenu } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -79,7 +79,7 @@ test.describe('explore', () => {
     await page.getByRole('button', { name: 'Try the sample vault' }).click();
     await nav(page, 'Notes').click();
     await page.locator('.note-item', { hasText: 'Kickoff call with Dana' }).click();
-    await page.locator('.ed-actions').getByRole('button', { name: 'Explore', exact: true }).click();
+    await noteMenu(page, /^Explore/);
     await expect(page.locator('.ed-head .title')).toHaveText('Kickoff call with Dana');
     await expect(page.locator('.gn.focus')).toHaveCount(1);
   });

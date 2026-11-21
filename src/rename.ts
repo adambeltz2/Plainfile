@@ -129,7 +129,7 @@ export function planRename(index: VaultIndex, from: string, rawName: string): Re
 }
 
 /** Apply link edits, one guarded write per file. Each edit must still match the line it was planned from. */
-async function applyEdits(storage: VaultStorage, index: VaultIndex, edits: RenameEdit[]): Promise<ChangeResult[]> {
+export async function applyEdits(storage: VaultStorage, index: VaultIndex, edits: RenameEdit[]): Promise<ChangeResult[]> {
   const byFile = new Map<string, RenameEdit[]>();
   for (const e of edits) byFile.set(e.path, [...(byFile.get(e.path) ?? []), e]);
   const out: ChangeResult[] = [];

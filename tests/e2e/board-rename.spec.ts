@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { addFileExternally, listFiles, openVault, readFile, removeFileExternally } from './helpers';
+import { addFileExternally, listFiles, openVault, readFile, removeFileExternally, noteMenu } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -63,7 +63,7 @@ test.describe('rename', () => {
     const dir = await openVault(page, VAULT);
     await nav(page, 'Notes').click();
     await page.locator('.note-item', { hasText: 'Pricing research' }).click();
-    await page.getByRole('button', { name: 'Rename', exact: true }).click();
+    await noteMenu(page, /^Rename/);
     return dir;
   }
 
@@ -140,6 +140,6 @@ test('Board and Rename fit a phone', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   await nav(page, 'Notes').click();
   await page.locator('.note-item', { hasText: 'Pricing research' }).click();
-  await page.getByRole('button', { name: 'Rename', exact: true }).click();
+  await noteMenu(page, /^Rename/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });

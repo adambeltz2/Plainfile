@@ -4,6 +4,28 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.29.0] - 2026-11-21
+
+### Added
+- **Move a note to another folder.** From the note's **⋯ More** menu, the list's right-click menu,
+  Ctrl/Cmd+Shift+M or the palette. Pick or type a folder (a new one is created), see the exact link
+  lines that will change, then move. Links that would break (folder paths, relative markdown links,
+  and relative links and images inside the note) are rewritten; links by name keep working. The new
+  file is made first and the old one removed last, and an **Undo** snackbar moves it back.
+- **Notes landing.** Notes reopens the last note you were in. With none open it shows a home: Pinned,
+  Modified today, Recent and folders. The list has Pinned and Recent sections.
+- **⋯ More menu** on a note (X-ray, Explore, History, Move, Rename, Duplicate, Pin, Copy link, Add
+  default frontmatter, Delete). The header keeps Undo, Redo, Focus and X-ray. The same actions open by
+  right-click or long-press on a note in the list (a bottom sheet on a phone).
+- **Duplicate** a note (the copy's `title:` gets " copy") and **Pin** a note (`pinned: true`).
+- **Go to… palette** (Ctrl/Cmd+P or the header button): find a note by a few letters, create one, jump to
+  a screen, or run an action. "move kick" moves the note whose name matches.
+- **Quick keys:** F2 rename, Ctrl/Cmd+Shift+M move, +X X-ray, +E explore, ? cheat sheet. They are listed
+  in a new Keys section of the cheat sheet.
+
+### Changed
+- Rename, Explore and Delete moved from the note header into the ⋯ More menu.
+
 ## [0.28.2] - 2026-11-21
 
 ### Fixed

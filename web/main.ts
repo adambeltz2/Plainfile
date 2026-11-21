@@ -4,7 +4,10 @@ import * as explore from './explore';
 import * as guide from './guide';
 import * as health from './health';
 import * as newmenu from './newmenu';
+import * as menu from './menu';
+import * as move from './move';
 import * as notes from './notes';
+import * as palette from './palette';
 import * as projectScreen from './project';
 import * as rename from './rename';
 import * as search from './search';
@@ -85,6 +88,10 @@ async function go(screen: ScreenId): Promise<void> {
   state.error = '';
   state.screen = screen;
   state.modal = undefined;
+  if (screen === 'notes' && !notes.notes.path) {
+    const last = notes.lastOpened();
+    if (last) return notes.openNote(last);
+  }
   requestRender();
   if (screen === 'search') document.getElementById('search-q')?.focus();
 }
@@ -142,6 +149,7 @@ function shell(): string {
     h += `<button class="navbtn" data-nav="${n.id}" aria-current="${state.screen === n.id}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
   }
   h += '</nav><span class="grow"></span>';
+  h += '<button class="btn" data-act="palette-open" title="Open a note or run an action" aria-label="Go to a note or action">Go to…</button>';
   h += '<button class="btn primary" data-act="new">+ New</button>';
   h += '<button class="btn" data-act="rescan">Rescan</button>';
   if (fsaSupported()) h += '<button class="btn" data-act="open">Open folder</button>';
@@ -201,7 +209,7 @@ function render(): void {
   const selEnd = 'selectionEnd' in (active ?? {}) ? (active as HTMLInputElement).selectionEnd : null;
   const editorFocus = state.screen === 'notes' && notes.hadFocus();
 
-  app.innerHTML = (state.index && !state.busy ? shell() : landing()) + newmenu.html();
+  app.innerHTML = (state.index && !state.busy ? shell() : landing()) + newmenu.html() + move.html() + menu.html() + palette.html();
 
   paintProgress();
   if (state.index && state.screen === 'notes') notes.afterRender(editorFocus);
@@ -227,6 +235,9 @@ setRenderer(render);
 app.addEventListener('click', (e) => {
   void (async () => {
     const target = e.target as HTMLElement;
+    if (await palette.click(target)) return;
+    if (await move.click(target)) return;
+    if (await menu.click(target)) return;
     if (state.modal && (await newmenu.click(target))) return;
 
     const pj = target.closest<HTMLElement>('[data-open-project]')?.dataset.openProject;
@@ -258,6 +269,8 @@ app.addEventListener('click', (e) => {
         return void openSample(__SAMPLE_VAULT__);
       case 'new':
         return newmenu.openNew();
+      case 'palette-open':
+        return palette.openPalette();
       case 'skipped-hide':
         state.skippedHidden = true;
         return requestRender();
@@ -336,6 +349,8 @@ app.addEventListener('submit', (e) => {
 
 app.addEventListener('input', (e) => {
   suggest.onInput(e);
+  if (palette.input(e)) return;
+  if (move.input(e)) return;
   if (state.modal && newmenu.input(e)) return;
   if (todayScreen.input(e)) return;
   if (explore.input(e)) return;
@@ -407,11 +422,64 @@ window.addEventListener('beforeunload', (e) => {
   }
 });
 
+// Menus, the move dialog and the palette take the keys first, wherever the focus is.
+document.addEventListener(
+  'keydown',
+  (e) => {
+    if (palette.keydown(e) || move.keydown(e) || menu.keydown(e)) e.stopPropagation();
+  },
+  true,
+);
+
 document.addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && state.index) {
+  if (!state.index || state.busy) return;
+  const mod = e.ctrlKey || e.metaKey;
+  const k = e.key.toLowerCase();
+  const typing = (e.target as HTMLElement | null)?.closest('input, textarea, select, [contenteditable="true"]');
+  const path = state.screen === 'notes' ? notes.notes.path : undefined;
+  if (mod && !e.shiftKey && k === 'k') {
     e.preventDefault();
     void go('search');
+  } else if (mod && !e.shiftKey && k === 'p') {
+    e.preventDefault();
+    palette.openPalette();
+  } else if (mod && e.shiftKey && path && (k === 'm' || k === 'x' || k === 'e')) {
+    e.preventDefault();
+    void menu.run(k === 'm' ? 'move' : k === 'x' ? 'xray' : 'explore', path);
+  } else if (e.key === 'F2' && path) {
+    e.preventDefault();
+    void menu.run('rename', path);
+  } else if (e.key === '?' && !typing && !mod && !state.modal && !palette.pal.open) {
+    e.preventDefault();
+    void go('guide');
   }
+});
+
+palette.setRunner(async (item) => {
+  switch (item.kind) {
+    case 'note':
+      return notes.openNote(item.path);
+    case 'create': {
+      newmenu.openTemplate('Note');
+      const m = state.modal;
+      if (m?.step === 'template') {
+        m.values.title = item.title;
+        requestRender();
+      }
+      return;
+    }
+    case 'screen':
+      return go(item.screen as ScreenId);
+    case 'new-task':
+      state.modal = { step: 'task', text: '', due: '', tags: '', people: '', error: '' };
+      return requestRender();
+    default:
+      return;
+  }
+});
+
+app.addEventListener('contextmenu', (e) => {
+  if (state.screen === 'notes') menu.contextMenu(e);
 });
 
 window.__plainfile = {

@@ -56,7 +56,7 @@ export function dirname(path: string): string {
   return i < 0 ? '' : path.slice(0, i);
 }
 
-function joinPath(dir: string, rel: string): string {
+export function joinPath(dir: string, rel: string): string {
   const parts = rel.startsWith('/') || !dir ? [] : dir.split('/');
   for (const seg of rel.split('/')) {
     if (seg === '' || seg === '.') continue;
