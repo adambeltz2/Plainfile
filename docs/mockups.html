@@ -1,0 +1,1009 @@
+<title>Plainfile Mockups</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one app frame with four switchable views; raw markdown always visible beside the UI. */
+:root{
+  --bg:#ffffff; --panel:#ffffff; --line:#d8d8d8; --fg:#000000; --mute:#666666;
+  --accent:#000000; --accent-soft:#ececec; --warn:#000000; --warn-soft:#dcdcdc;
+  --code-bg:#f4f4f4; --key:#000000; --str:#555555; --tag:#222222; --tag-soft:#ececec;
+  --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#000000; --panel:#0c0c0c; --line:#2a2a2a; --fg:#ffffff; --mute:#999999;
+  --accent:#ffffff; --accent-soft:#232323; --warn:#ffffff; --warn-soft:#303030;
+  --code-bg:#121212; --key:#ffffff; --str:#aaaaaa; --tag:#dddddd; --tag-soft:#232323; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000; --panel:#0c0c0c; --line:#2a2a2a; --fg:#ffffff; --mute:#999999;
+  --accent:#ffffff; --accent-soft:#232323; --warn:#ffffff; --warn-soft:#303030;
+  --code-bg:#121212; --key:#ffffff; --str:#aaaaaa; --tag:#dddddd; --tag-soft:#232323; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--sans);padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-size:20px;margin:0;font-weight:600}
+.sub{color:var(--mute);margin:2px 0 0;max-width:68ch}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tabs button{font:inherit;background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;color:var(--mute);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--fg);border-color:var(--accent);font-weight:500}
+button:focus-visible,a:focus-visible,li:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.view[hidden]{display:none}
+.frame{display:grid;grid-template-columns:200px minmax(0,1fr) minmax(0,340px);background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;min-height:520px}
+.frame.two{grid-template-columns:200px minmax(0,1fr)}
+.side{border-right:1px solid var(--line);padding:14px 12px;display:flex;flex-direction:column;gap:14px;background:var(--bg)}
+.side h4{margin:0 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.side ul{list-style:none;margin:0;padding:0}
+.side li{padding:3px 6px;border-radius:4px;display:flex;justify-content:space-between;gap:8px;min-width:0}
+.side li.on{background:var(--accent-soft);color:var(--accent);font-weight:500}
+.side li span.n{color:var(--mute);font-variant-numeric:tabular-nums}
+.side .mono{font-family:var(--mono);font-size:12.5px}
+.main{padding:16px 18px;min-width:0}
+.main h2{font-size:16px;margin:0 0 2px}
+.main .meta{color:var(--mute);margin:0 0 14px;font-size:13px}
+.grp{margin:18px 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.grp.over{color:var(--warn)}
+.task{display:flex;gap:10px;align-items:flex-start;padding:8px 8px;border-radius:6px;cursor:pointer;border:1px solid transparent}
+.task:hover{background:var(--bg)}
+.task.sel{background:var(--accent-soft);border-color:var(--accent)}
+.task .cb{flex:none;width:16px;height:16px;margin-top:3px;border:1.5px solid var(--mute);border-radius:4px;display:grid;place-items:center;font-size:11px;line-height:1;background:none;color:var(--panel);padding:0;cursor:pointer}
+.task.done .cb{background:var(--accent);border-color:var(--accent)}
+.task.done .t{text-decoration:line-through;color:var(--mute)}
+.task .body{min-width:0;flex:1}
+.task .t{overflow-wrap:anywhere}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px;align-items:center}
+.chip{font-size:12px;padding:0 6px;border-radius:4px;background:var(--tag-soft);color:var(--tag);font-family:var(--mono)}
+.chip.src{background:var(--code-bg);color:var(--mute)}
+.chip.due{background:var(--code-bg);color:var(--fg);font-family:var(--sans)}
+.chip.due.late{background:var(--warn-soft);color:var(--warn)}
+.raw{border-left:1px solid var(--line);background:var(--code-bg);padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.6;min-width:0;overflow:auto}
+.raw .cap{font-family:var(--sans);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:8px;display:block}
+.raw pre,pre.code{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:12px;font-family:var(--mono);font-size:12.5px;line-height:1.6;overflow-x:auto;white-space:pre}
+.k{color:var(--key)}.s{color:var(--str)}.g{color:var(--tag)}.m{color:var(--mute)}
+.hl{background:var(--accent-soft);display:block;margin:0 -14px;padding:0 14px}
+.note{font-size:12.5px;color:var(--mute);margin-top:12px;font-family:var(--sans)}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.col{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.col h3{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:500;display:flex;justify-content:space-between}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.card .t{overflow-wrap:anywhere}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0}
+.split>div{padding:16px 18px;min-width:0}
+.split>div+div{border-left:1px solid var(--line)}
+.fm{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-bottom:14px;font-size:13px}
+.fm dt{color:var(--mute)}.fm dd{margin:0;display:flex;gap:6px;flex-wrap:wrap}
+.prose h2{font-size:18px;margin:0 0 8px}
+.prose p,.prose li{max-width:60ch}
+.prose .wl{color:var(--accent);text-decoration:underline;text-decoration-style:dotted}
+.bl{margin-top:16px;border-top:1px solid var(--line);padding-top:10px;font-size:13px}
+.bl b{font-weight:500}
+.under{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.under section{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.under h3{margin:0 0 8px;font-size:14px}
+.under p{margin:6px 0;max-width:62ch}
+.tree .d{color:var(--accent)}
+.full{grid-column:1/-1}
+.pill{display:inline-block;font-size:12px;padding:0 8px;border-radius:10px;border:1px solid var(--line);color:var(--mute)}
+.le-row{display:flex;gap:8px;align-items:flex-start;padding:3px 6px;border-radius:6px;min-height:30px;cursor:text}
+.le-row.act{background:var(--bg);box-shadow:inset 0 0 0 1px var(--accent)}
+.le-in{flex:1;min-width:0;font:inherit;background:none;border:0;color:var(--fg);outline:0;padding:2px 0}
+.le-mk{font:11.5px var(--mono);color:var(--mute);background:var(--code-bg);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-top:3px;white-space:nowrap;flex:none}
+.le-row.task{border:0;padding:3px 6px}
+.le-row.task:hover{background:none}
+.le-row.task.act:hover{background:var(--bg)}
+.le-row.lh1 .le-in,.le-row.lh1 .le-t{font-size:22px;font-weight:600;line-height:1.3}
+.le-row.lh2 .le-in,.le-row.lh2 .le-t{font-size:18px;font-weight:600;line-height:1.35}
+.le-row.lh3 .le-in,.le-row.lh3 .le-t{font-size:16px;font-weight:600}
+.le-t{min-width:0;flex:1;overflow-wrap:anywhere;padding:2px 0}
+.row{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.row>div{min-width:0}
+.side li[data-hc]{cursor:pointer}
+.side li[data-hc]:hover{background:var(--accent-soft)}
+.side li.on[data-hc]{background:var(--accent-soft)}
+.badge{font-size:12px;padding:0 7px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-variant-numeric:tabular-nums}
+.badge.ok{background:var(--accent-soft);color:var(--accent)}
+.okbox{border:1px solid var(--accent);background:var(--accent-soft);color:var(--fg);border-radius:6px;padding:10px 12px;margin-top:12px}
+.warnbox{border:1px solid var(--warn);background:var(--warn-soft);border-radius:6px;padding:8px 12px;margin-top:10px;font-size:13px}
+.fcard{border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin-top:8px}
+.fcard .diff{margin-top:4px;min-height:0;padding:6px 10px}
+.sbox{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--bg)}
+.sbox:focus-within{border-color:var(--accent)}
+.sbox input{flex:1;min-width:0;font:15px var(--mono);background:none;border:0;color:var(--fg);outline:0}
+.sbox kbd{white-space:nowrap}
+.exs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px;align-items:center}
+.ex{font:12px var(--mono);border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:2px 8px;border-radius:10px;cursor:pointer}
+.ex:hover{border-color:var(--accent)}
+.res{border-bottom:1px solid var(--line);padding:10px 4px}
+.res:last-child{border-bottom:0}
+.res .rt{font-weight:500;overflow-wrap:anywhere}
+.res .sn{color:var(--mute);font-size:13px;margin-top:2px;overflow-wrap:anywhere}
+mark{background:var(--accent-soft);color:inherit;border-radius:2px;padding:0 1px}
+.side li[data-add]{cursor:pointer}
+.side li[data-add]:hover{background:var(--accent-soft)}
+.side li[data-tpl]{cursor:pointer}
+.side li[data-tpl]:hover{background:var(--accent-soft)}
+.tplgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.tplgrid>div{min-width:0}
+.inp{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:4px 8px;width:100%}
+.fld{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.fld label{font-size:12.5px;color:var(--mute)}
+.btn.pri{background:var(--accent);color:var(--panel);border-color:var(--accent);font-weight:500}
+@media (max-width:900px){.tplgrid{grid-template-columns:minmax(0,1fr)}}
+.ed-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button,.btn{font:inherit;background:var(--panel);color:var(--fg);border:0;padding:4px 10px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"],.btn[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:500}
+.btn{border:1px solid var(--line);border-radius:6px}
+.grow{flex:1}
+.status{font-size:12.5px;color:var(--mute)}
+.props{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:10px 12px;margin-bottom:14px;font-size:13px}
+.props-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.props-g{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;margin-top:8px}
+.props-g label{color:var(--mute)}
+.props select,.props input{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:2px 6px;max-width:100%}
+.doc{max-width:74ch}
+.blk{display:grid;grid-template-columns:28px minmax(0,1fr);gap:4px;padding:4px 0;border-radius:6px}
+.blk .h{width:24px;height:24px;margin-top:2px;border:1px solid var(--line);background:var(--panel);color:var(--mute);border-radius:4px;font:11px var(--mono);cursor:pointer;opacity:.55;padding:0}
+.blk:hover .h,.blk .h:focus-visible,.blk.raw .h{opacity:1}
+.blk.raw .h{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.blk .c{min-width:0;border-radius:6px;padding:2px 8px;cursor:text}
+.blk:hover .c{background:var(--bg)}
+.blk.raw .c{background:var(--code-bg);font-family:var(--mono);font-size:12.5px;line-height:1.7}
+.blk.raw .c pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
+.doc h2.dh{font-size:22px;margin:0;line-height:1.3}
+.doc p{margin:0}
+.doc table{border-collapse:collapse;font-size:13.5px}
+.doc th,.doc td{border:1px solid var(--line);padding:4px 10px;text-align:left}
+.doc th{background:var(--bg);font-weight:500}
+.pop{position:relative;display:inline-block}
+.pop .menu{position:absolute;z-index:5;top:100%;left:0;margin-top:4px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px;display:flex;flex-direction:column;min-width:130px;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.pop .menu button{font:inherit;text-align:left;background:none;border:0;color:var(--fg);padding:4px 8px;border-radius:4px;cursor:pointer}
+.pop .menu button:hover{background:var(--accent-soft)}
+button.chip{border:0;cursor:pointer;font-family:var(--sans)}
+.diff{margin-top:16px;border:1px solid var(--line);border-radius:6px;background:var(--code-bg);padding:8px 12px;font:12.5px/1.6 var(--mono);min-height:56px}
+.diff .cap{font:11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:2px}
+.diff .del{color:var(--warn)}.diff .add{color:var(--accent)}
+.xray-on .doc{outline:2px dashed var(--accent);outline-offset:6px}
+.hint{font-size:12.5px;color:var(--mute);margin-top:12px;max-width:70ch}
+kbd{font:11.5px var(--mono);border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--panel)}
+@media (max-width:900px){
+  .frame,.frame.two{grid-template-columns:minmax(0,1fr)}
+  .side{border-right:0;border-bottom:1px solid var(--line);flex-direction:row;flex-wrap:wrap}
+  .raw{border-left:0;border-top:1px solid var(--line)}
+  .board{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .split,.under{grid-template-columns:minmax(0,1fr)}
+  .split>div+div{border-left:0;border-top:1px solid var(--line)}
+}
+@media (max-width:520px){.board{grid-template-columns:minmax(0,1fr)}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Plainfile — concept mockups</h1>
+    <p class="sub">A hub that reads a folder of markdown files and shows every task, note and project in one place. The files stay the source of truth. Working name only. All data below is made up.</p>
+  </header>
+
+  <div class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-v="today" aria-selected="true">Today</button>
+    <button role="tab" data-v="board" aria-selected="false">Board</button>
+    <button role="tab" data-v="note" aria-selected="false">Note</button>
+    <button role="tab" data-v="editor" aria-selected="false">Editor</button>
+    <button role="tab" data-v="live" aria-selected="false">Live typing</button>
+    <button role="tab" data-v="search" aria-selected="false">Search</button>
+    <button role="tab" data-v="templates" aria-selected="false">Templates</button>
+    <button role="tab" data-v="health" aria-selected="false">Vault health</button>
+    <button role="tab" data-v="rename" aria-selected="false">Rename</button>
+    <button role="tab" data-v="under" aria-selected="false">Under the hood</button>
+  </div>
+
+  <!-- TODAY -->
+  <section class="view" id="v-today">
+    <div class="frame">
+      <aside class="side">
+        <div><h4>Views</h4><ul>
+          <li class="on">Today <span class="n">6</span></li><li>Upcoming <span class="n">9</span></li><li>Inbox <span class="n">3</span></li><li>Waiting on <span class="n">2</span></li><li>Done this week <span class="n">11</span></li></ul></div>
+        <div><h4>Folders</h4><ul class="mono">
+          <li>projects/ <span class="n">4</span></li><li>journal/ <span class="n">31</span></li><li>people/ <span class="n">12</span></li><li>reference/ <span class="n">48</span></li></ul></div>
+        <div><h4>Tags</h4><ul class="mono">
+          <li>#launch <span class="n">5</span></li><li>#admin <span class="n">4</span></li><li>#reading <span class="n">7</span></li><li>#home <span class="n">3</span></li></ul></div>
+      </aside>
+      <div class="main">
+        <h2>Today</h2>
+        <p class="meta">Saturday 21 Nov · 6 open · pulled from 4 files · last scan 0.2s ago</p>
+        <div id="tasklist"></div>
+      </div>
+      <div class="raw" aria-live="polite"><span class="cap">Source on disk</span><pre id="rawsrc"></pre><div class="note" id="rawnote">Select a task to see the exact lines in the file. Tick the box and watch the file change.</div></div>
+    </div>
+  </section>
+
+  <!-- BOARD -->
+  <section class="view" id="v-board" hidden>
+    <div class="frame two">
+      <aside class="side">
+        <div><h4>Project</h4><ul class="mono"><li class="on">projects/website-relaunch</li><li>projects/tax-2026</li><li>projects/kitchen</li></ul></div>
+        <div><h4>Group by</h4><ul class="mono"><li class="on">status</li><li>owner</li><li>due week</li></ul></div>
+      </aside>
+      <div class="main">
+        <h2>Website relaunch</h2>
+        <p class="meta">Cards are files in <span class="mono">projects/website-relaunch/tasks/</span>. Dragging a card rewrites its <span class="mono">status:</span> line.</p>
+        <div class="board">
+          <div class="col"><h3>Backlog <span>2</span></h3>
+            <div class="card"><div class="t">Audit old URLs for redirects</div><div class="chips"><span class="chip">#seo</span></div></div>
+            <div class="card"><div class="t">Pick analytics tool</div><div class="chips"><span class="chip">#decision</span></div></div></div>
+          <div class="col"><h3>Doing <span>2</span></h3>
+            <div class="card"><div class="t">Write pricing page copy</div><div class="chips"><span class="chip due">Tue 24 Nov</span><span class="chip">#launch</span></div></div>
+            <div class="card"><div class="t">Photograph team</div><div class="chips"><span class="chip due late">Thu 19 Nov</span></div></div></div>
+          <div class="col"><h3>Waiting <span>1</span></h3>
+            <div class="card"><div class="t">Logo files from Dana</div><div class="chips"><span class="chip">@dana</span><span class="chip due">Mon 23 Nov</span></div></div></div>
+          <div class="col"><h3>Done <span>3</span></h3>
+            <div class="card"><div class="t m">Register domain</div></div>
+            <div class="card"><div class="t m">Choose CMS</div></div>
+            <div class="card"><div class="t m">Draft sitemap</div></div></div>
+        </div>
+        <pre class="code" style="margin-top:16px"><span class="m">---</span>
+<span class="k">title</span>: Write pricing page copy
+<span class="k">status</span>: <span class="s">doing</span>
+<span class="k">due</span>: <span class="s">2026-11-24</span>
+<span class="k">tags</span>: [<span class="g">launch</span>]
+<span class="k">project</span>: <span class="s">website-relaunch</span>
+<span class="m">---</span></pre>
+        <p class="note">Same file, different view. The board is just a query: <span class="mono">folder = projects/website-relaunch/tasks, group by status</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOTE -->
+  <section class="view" id="v-note" hidden>
+    <div class="frame two">
+      <aside class="side">
+        <div><h4>projects/website-relaunch</h4><ul class="mono"><li>index.md</li><li class="on">kickoff-call.md</li><li>pricing-research.md</li><li>tasks/ <span class="n">8</span></li></ul></div>
+        <div><h4>Outline</h4><ul><li>Decisions</li><li>Action items</li><li>Open questions</li></ul></div>
+      </aside>
+      <div class="split">
+        <div>
+          <span class="pill">markdown · editable</span>
+          <pre class="code" style="margin-top:10px"><span class="m">---</span>
+<span class="k">title</span>: Kickoff call with Dana
+<span class="k">type</span>: <span class="s">meeting</span>
+<span class="k">date</span>: <span class="s">2026-11-17</span>
+<span class="k">project</span>: <span class="s">website-relaunch</span>
+<span class="k">attendees</span>: [<span class="g">dana</span>, <span class="g">sam</span>]
+<span class="k">tags</span>: [<span class="g">launch</span>, <span class="g">meeting</span>]
+<span class="m">---</span>
+
+## Decisions
+- Launch date is <span class="s">Dec 8</span>
+- Keep current brand colors
+
+## Action items
+- [ ] Send logo files <span class="g">@dana</span> <span class="s">due:2026-11-23</span>
+- [ ] Write pricing copy <span class="g">#launch</span> <span class="s">due:2026-11-24</span>
+- [x] Share staging link
+
+See also [[pricing-research]] and [[people/dana]].</pre>
+        </div>
+        <div class="prose">
+          <span class="pill">rendered · with properties</span>
+          <dl class="fm" style="margin-top:10px">
+            <dt>type</dt><dd>meeting</dd>
+            <dt>date</dt><dd>17 Nov 2026</dd>
+            <dt>project</dt><dd>website-relaunch</dd>
+            <dt>attendees</dt><dd><span class="chip">dana</span><span class="chip">sam</span></dd>
+            <dt>tags</dt><dd><span class="chip">#launch</span><span class="chip">#meeting</span></dd>
+          </dl>
+          <h2>Decisions</h2>
+          <ul><li>Launch date is Dec 8</li><li>Keep current brand colors</li></ul>
+          <h2>Action items</h2>
+          <div class="task"><span class="cb"></span><div class="body"><div class="t">Send logo files</div><div class="chips"><span class="chip">@dana</span><span class="chip due">Mon 23 Nov</span></div></div></div>
+          <div class="task"><span class="cb"></span><div class="body"><div class="t">Write pricing copy</div><div class="chips"><span class="chip due">Tue 24 Nov</span></div></div></div>
+          <div class="task done"><span class="cb">✓</span><div class="body"><div class="t">Share staging link</div></div></div>
+          <div class="bl"><b>Linked from</b> · <span class="wl" style="color:var(--accent)">index.md</span> · <span style="color:var(--accent)">journal/2026-11-17.md</span><br><b>Mentions</b> · pricing-research, people/dana</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDITOR -->
+  <section class="view" id="v-editor" hidden>
+    <div class="frame two" id="edframe">
+      <aside class="side">
+        <div><h4>projects/website-relaunch</h4><ul class="mono"><li>index.md</li><li class="on">kickoff-call.md</li><li>pricing-research.md</li></ul></div>
+        <div><h4>Outline</h4><ul><li>Kickoff call with Dana</li><li>Action items</li><li>Pages</li></ul></div>
+      </aside>
+      <div class="main">
+        <div class="ed-bar">
+          <div class="seg" role="group" aria-label="Editor mode"><button aria-pressed="true" data-m="live">Live preview</button><button aria-pressed="false" data-m="source">Source</button></div>
+          <button class="btn" id="xray" aria-pressed="false">X-ray</button>
+          <span class="grow"></span>
+          <span class="status" id="edstatus">Saved · kickoff-call.md</span>
+        </div>
+
+        <div class="props">
+          <div class="props-h"><b style="font-weight:500">Properties</b><button class="btn" id="yamlbtn" aria-pressed="false">Show YAML</button></div>
+          <div id="propsbody"></div>
+        </div>
+
+        <div class="doc" id="doc"></div>
+
+        <div class="diff" id="diff"><span class="cap">What changed on disk</span><span class="m">Nothing yet. Edit something and the exact change shows here.</span></div>
+        <p class="hint">Try it: click any paragraph to reveal its markdown, click the <kbd>&lt;/&gt;</kbd> handle to pin a block as source, press <b>X-ray</b> (or hold <kbd>Alt</kbd>) to see the whole page as source, click a date chip to move a task, or change the status in Properties.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH -->
+  <section class="view" id="v-search" hidden>
+    <div class="frame two">
+      <aside class="side" id="facets"></aside>
+      <div class="main">
+        <div class="sbox"><span class="m" aria-hidden="true">⌕</span><input id="sq" type="text" autocomplete="off" spellcheck="false" aria-label="Search" value="pricing"><kbd>Ctrl K</kbd></div>
+        <div class="exs"><span class="status">Try</span>
+          <button class="ex" data-q="pricing">pricing</button>
+          <button class="ex" data-q="is:open tag:launch">is:open tag:launch</button>
+          <button class="ex" data-q="type:meeting dana">type:meeting dana</button>
+          <button class="ex" data-q="is:task due:&lt;2026-11-24">is:task due:&lt;2026-11-24</button>
+          <button class="ex" data-q="folder:journal">folder:journal</button></div>
+        <p class="meta" id="scount" style="margin:8px 0 0"></p>
+        <div id="sres"></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn" id="saveview">Save as view</button><span class="status">Words search titles, body text, paths and tags. Operators narrow by property.</span></div>
+        <pre class="code" id="viewfile" hidden style="margin-top:10px"></pre>
+        <p class="note"><b>Operators</b> · <span class="mono">tag:launch  #launch  folder:projects  type:meeting  is:task  is:open  is:done  due:&lt;2026-11-30  @dana  "exact phrase"</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEMPLATES -->
+  <section class="view" id="v-templates" hidden>
+    <div class="frame two">
+      <aside class="side">
+        <div><h4>New from template</h4><ul id="tpllist"></ul></div>
+        <div><h4>Stored in</h4><p class="mono" style="margin:0;font-size:12px">.plainfile/templates/</p></div>
+      </aside>
+      <div class="main">
+        <h2 id="tplname"></h2>
+        <p class="meta" id="tplmeta"></p>
+        <div class="tplgrid">
+          <div>
+            <div class="grp" style="margin-top:0">Fill in</div>
+            <div id="tplform"></div>
+            <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn pri" id="tplcreate">Create file</button><span class="status" id="tplstatus"></span></div>
+          </div>
+          <div>
+            <div class="grp" style="margin-top:0">Creates</div>
+            <div class="mono" id="tplpath" style="font-size:12.5px;margin-bottom:6px;overflow-wrap:anywhere"></div>
+            <pre class="code" id="tploutput"></pre>
+          </div>
+        </div>
+        <div class="grp">The template file itself</div>
+        <pre class="code" id="tplsrc"></pre>
+        <p class="note"><b>Variables</b> · <span class="mono">{{title}}  {{date}}  {{date+7d}}  {{cursor}}</span> plus any prompt you define. The <span class="mono">plainfile:</span> block is the template's settings and is removed from the new file. A template is a normal markdown file, so you can edit it in the editor.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE TYPING -->
+  <section class="view" id="v-live" hidden>
+    <div class="frame" style="grid-template-columns:minmax(0,1fr)">
+      <div class="main">
+        <h2>Live typing</h2>
+        <p class="meta">Type in the page and markdown converts as you go. The file on the right is always the real text. This replaces the click-to-reveal demo in the Editor tab.</p>
+        <div class="ed-bar">
+          <button class="btn" id="le-xray" aria-pressed="false">X-ray</button>
+          <button class="btn" id="le-reset">Reset</button>
+          <span class="grow"></span>
+          <span class="status" id="le-status">Saved</span>
+        </div>
+        <div class="tplgrid">
+          <div>
+            <div class="grp" style="margin-top:0">What you see</div>
+            <div id="lerows" style="border:1px solid var(--line);border-radius:6px;padding:8px;min-height:260px"></div>
+          </div>
+          <div>
+            <div class="grp" style="margin-top:0">What is saved <span class="mono" style="text-transform:none;letter-spacing:0">journal/2026-11-21.md</span></div>
+            <pre class="code" id="ledisk" style="white-space:pre-wrap"></pre>
+          </div>
+        </div>
+        <p class="hint"><b>Try these at the start of a line:</b> <kbd>* [ ]</kbd> then a space for a checkbox (a <kbd>*</kbd> is saved as <kbd>-</kbd>), <kbd>#</kbd> or <kbd>##</kbd> then a space for a heading, <kbd>-</kbd> then a space for a bullet. <kbd>Enter</kbd> continues a list, and <kbd>Enter</kbd> on an empty item ends it. <kbd>Backspace</kbd> on an empty item turns it back into plain markdown. Click the checkbox to tick it and watch the saved text change. Inline pieces such as <kbd>**bold**</kbd>, <kbd>[[links]]</kbd>, <kbd>@dana</kbd>, <kbd>#tags</kbd> and <kbd>due:2026-11-24</kbd> render when you move to another line. <b>X-ray</b> shows every line as raw markdown.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VAULT HEALTH -->
+  <section class="view" id="v-health" hidden>
+    <div class="frame two">
+      <aside class="side">
+        <div><h4>Checks</h4><ul id="hlist"></ul></div>
+        <div><h4>Last scan</h4><p class="mono" style="margin:0;font-size:12px">1,284 files<br>12 ms</p></div>
+      </aside>
+      <div class="main">
+        <h2>Vault health</h2>
+        <p class="meta" id="hsum"></p>
+        <div class="grp" id="hname" style="margin-top:0"></div>
+        <p class="status" id="hhelp" style="margin:0 0 6px"></p>
+        <div id="hitems"></div>
+        <div class="diff" id="hlog" hidden></div>
+        <p class="note">Nothing here blocks you from working. Every fix edits the smallest piece of text and shows what it changed. Files you have not touched are never modified.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- RENAME -->
+  <section class="view" id="v-rename" hidden>
+    <div class="frame two">
+      <aside class="side">
+        <div><h4>Note</h4><ul class="mono"><li class="on">pricing-research.md</li></ul></div>
+        <div><h4>Linked from</h4><ul class="mono"><li>kickoff-call.md</li><li>2026-11-17.md</li><li>index.md</li></ul></div>
+      </aside>
+      <div class="main">
+        <h2>Rename a note</h2>
+        <p class="meta mono" style="font-size:12.5px">projects/website-relaunch/pricing-research.md</p>
+        <div class="ed-bar"><div class="seg" role="group" aria-label="Rename scenario"><button data-rm="in" aria-pressed="true">Rename in the app</button><button data-rm="out" aria-pressed="false">Renamed outside the app</button></div></div>
+
+        <div id="rn-in">
+          <div class="fld" style="max-width:380px"><label for="rn-name">New name</label><div style="display:flex;gap:6px;align-items:center"><input class="inp" id="rn-name" value="pricing-analysis" autocomplete="off" spellcheck="false"><span class="mono m">.md</span></div></div>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="rn-alias" checked> Keep the old name as an alias, so old links still resolve</label>
+          <div id="rnpreview"></div>
+        </div>
+
+        <div id="rn-out" hidden>
+          <div class="warnbox"><b style="font-weight:500">Found during rescan.</b> <span class="mono">pricing-research.md</span> is gone and <span class="mono">pricing-analysis.md</span> appeared in the same folder.</div>
+          <ul style="margin:10px 0;padding-left:18px;max-width:64ch">
+            <li>98% of the text matches</li>
+            <li>Same folder, modified within the same minute</li>
+            <li>No <span class="mono">id:</span> in the file, so it was matched by content only</li>
+          </ul>
+          <p class="status" style="margin:0">3 links in 3 files still point to the old name:</p>
+          <div id="rnout-list"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn pri" id="rnout-yes">Yes, it was renamed. Fix 3 links</button><button class="btn" id="rnout-no">No, different note</button></div>
+          <div id="rnout-status"></div>
+        </div>
+        <p class="note">Back-links are not stored anywhere. The index works them out from the links in your files, so they stay correct as long as the links resolve.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- UNDER THE HOOD -->
+  <section class="view" id="v-under" hidden>
+    <div class="under">
+      <section>
+        <h3>A vault is just a folder</h3>
+        <pre class="code tree">~/Plainfile/
+├─ <span class="d">inbox/</span>               <span class="m">quick capture lands here</span>
+├─ <span class="d">projects/</span>
+│  └─ <span class="d">website-relaunch/</span>
+│     ├─ index.md
+│     ├─ kickoff-call.md
+│     └─ <span class="d">tasks/</span>  write-pricing-copy.md …
+├─ <span class="d">journal/</span>             2026-11-21.md
+├─ <span class="d">people/</span>              dana.md
+├─ <span class="d">reference/</span>
+├─ <span class="d">.plainfile/</span>
+│  ├─ config.md        <span class="m">views, tag colors, templates</span>
+│  ├─ views/           <span class="m">saved queries, also markdown</span>
+│  └─ index.db         <span class="m">cache only, safe to delete</span>
+└─ README.md</pre>
+        <p>Copy the folder to a USB stick, sync it with any service, or open it in another editor. Nothing is stored anywhere else. If the app disappears, you still have readable files.</p>
+      </section>
+      <section>
+        <h3>Two kinds of task, one list</h3>
+        <p><b>Inline</b>: a checkbox line inside any note. Good for meeting notes and journals.</p>
+        <pre class="code"><span class="m">- [ ]</span> Send logo files <span class="g">@dana</span> <span class="s">due:2026-11-23</span> <span class="g">#launch</span></pre>
+        <p><b>File task</b>: one file per task, for work with its own notes, status and history.</p>
+        <pre class="code"><span class="m">---</span>
+<span class="k">title</span>: Write pricing page copy
+<span class="k">status</span>: <span class="s">doing</span>
+<span class="k">due</span>: <span class="s">2026-11-24</span>
+<span class="k">repeat</span>: <span class="s">none</span>
+<span class="m">---</span></pre>
+        <p>The hub scans both and shows them together. Each row links back to the exact file and line.</p>
+      </section>
+      <section>
+        <h3>Views are saved queries</h3>
+        <pre class="code"><span class="m">---</span>
+<span class="k">view</span>: <span class="s">Today</span>
+<span class="k">where</span>: <span class="s">done = false AND due &lt;= today</span>
+<span class="k">sort</span>: <span class="s">due, project</span>
+<span class="m">---</span></pre>
+        <p>Board, list, calendar and table are different layouts of the same query. Views live in <span class="mono">.plainfile/views/</span> so they travel with the vault.</p>
+      </section>
+      <section>
+        <h3>How edits stay safe</h3>
+        <p>The app edits the smallest piece of text it can: one checkbox, one frontmatter line. It never rewrites a whole file or reformats your prose.</p>
+        <p>It watches the folder. If you edit a file in another editor, the hub updates. If a sync tool creates a conflict copy, the hub shows both and lets you pick.</p>
+        <p>The index database is rebuilt from the files at any time, so it is never the thing you back up.</p>
+      </section>
+    </div>
+  </section>
+</div>
+
+<script>
+var TASKS=[
+ {id:1,t:"Send logo files to Dana",file:"projects/website-relaunch/kickoff-call.md",line:19,due:"Mon 23 Nov",late:false,tags:["@dana"],done:false,
+  src:['## Action items','- [ ] Send logo files @dana due:2026-11-23'],grp:"later"},
+ {id:2,t:"Photograph team",file:"projects/website-relaunch/tasks/photograph-team.md",line:1,due:"Thu 19 Nov",late:true,tags:["#launch"],done:false,
+  src:['---','title: Photograph team','status: doing','due: 2026-11-19','---'],fm:true,grp:"over"},
+ {id:3,t:"File estimated tax payment",file:"projects/tax-2026/index.md",line:42,due:"Wed 18 Nov",late:true,tags:["#admin"],done:false,
+  src:['## Q4','- [ ] File estimated tax payment due:2026-11-18 #admin'],grp:"over"},
+ {id:4,t:"Write pricing page copy",file:"projects/website-relaunch/tasks/write-pricing-copy.md",line:1,due:"Tue 24 Nov",late:false,tags:["#launch"],done:false,
+  src:['---','title: Write pricing page copy','status: doing','due: 2026-11-24','---'],fm:true,grp:"later"},
+ {id:5,t:"Buy light bulbs for hallway",file:"journal/2026-11-21.md",line:8,due:"Today",late:false,tags:["#home"],done:false,
+  src:['## Tasks','- [ ] Buy light bulbs for hallway due:2026-11-21 #home'],grp:"today"},
+ {id:6,t:"Read Dana's brand brief",file:"inbox/brand-brief.md",line:3,due:"Today",late:false,tags:["#reading"],done:false,
+  src:['---','title: Read Dana\'s brand brief','status: todo','due: 2026-11-21','---'],fm:true,grp:"today"}
+];
+var GROUPS=[["over","Overdue"],["today","Due today"],["later","This week"]];
+var sel=5;
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function renderList(){
+  var h='';
+  GROUPS.forEach(function(g){
+    var items=TASKS.filter(function(x){return x.grp===g[0]});
+    if(!items.length)return;
+    h+='<div class="grp'+(g[0]==='over'?' over':'')+'">'+g[1]+'</div>';
+    items.forEach(function(x){
+      h+='<div class="task'+(x.done?' done':'')+(x.id===sel?' sel':'')+'" data-id="'+x.id+'" tabindex="0">'+
+        '<button class="cb" aria-label="Toggle done" data-cb="'+x.id+'">'+(x.done?'✓':'')+'</button>'+
+        '<div class="body"><div class="t">'+esc(x.t)+'</div><div class="chips">'+
+        '<span class="chip due'+(x.late?' late':'')+'">'+x.due+'</span>'+
+        x.tags.map(function(t){return '<span class="chip">'+esc(t)+'</span>'}).join('')+
+        '<span class="chip src">'+esc(x.file.split('/').slice(-2).join('/'))+'</span></div></div></div>';
+    });
+  });
+  document.getElementById('tasklist').innerHTML=h;
+  var x=TASKS.filter(function(t){return t.id===sel})[0];
+  var lines=x.src.map(function(l,i){
+    var out=esc(l);
+    var changing=false;
+    if(x.done){
+      if(x.fm){ if(/^status:/.test(l)) {out='status: <span class="s">done</span>';changing=true;} }
+      else if(/^- \[ \]/.test(l)){out='- [x]'+esc(l.slice(5));changing=true;}
+    }
+    return changing?'<span class="hl">'+out+'</span>':out;
+  });
+  document.getElementById('rawsrc').innerHTML='<span class="m">'+esc(x.file)+'</span>\n\n'+lines.join('\n');
+  document.getElementById('rawnote').textContent=x.done
+    ? (x.fm?'One line changed in the file: status is now done.':'One character changed in the file: [ ] became [x].')
+    : 'Select a task to see the exact lines in the file. Tick the box and watch the file change.';
+}
+document.getElementById('tasklist').addEventListener('click',function(e){
+  var cb=e.target.closest('[data-cb]');
+  var row=e.target.closest('.task');
+  if(!row)return;
+  var id=+row.dataset.id; sel=id;
+  if(cb){var t=TASKS.filter(function(x){return x.id===id})[0];t.done=!t.done;}
+  renderList();
+});
+document.getElementById('tasklist').addEventListener('keydown',function(e){
+  if(e.key==='Enter'||e.key===' '){var row=e.target.closest('.task');if(row){e.preventDefault();sel=+row.dataset.id;renderList();}}
+});
+function show(v){
+  ['today','board','note','editor','live','search','templates','health','rename','under'].forEach(function(n){document.getElementById('v-'+n).hidden=(n!==v)});
+  document.querySelectorAll('#tabs button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.v===v)});
+}
+document.getElementById('tabs').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  show(b.dataset.v);
+  try{history.replaceState(null,'','#'+b.dataset.v)}catch(_){}
+});
+var h=(location.hash||'').slice(1);
+if(['today','board','note','editor','live','search','templates','health','rename','under'].indexOf(h)>-1)show(h);
+renderList();
+
+/* ---------- Editor mockup ---------- */
+var DATES=[['2026-11-23','Mon 23 Nov'],['2026-11-24','Tue 24 Nov'],['2026-11-25','Wed 25 Nov']];
+var ED={mode:'live',xray:false,alt:false,yaml:false,status:'doing',open:null,pinned:{},openPop:null,
+  tasks:[{done:false,text:'Send logo files',who:'@dana',due:'2026-11-23'},{done:false,text:'Write pricing copy',who:'',due:'2026-11-24'},{done:true,text:'Share staging link',who:'',due:''}]};
+function dlabel(d){var f=DATES.filter(function(x){return x[0]===d})[0];return f?f[1]:d}
+function taskLine(t){return '- ['+(t.done?'x':' ')+'] '+t.text+(t.who?' '+t.who:'')+(t.due?' due:'+t.due:'')}
+function colorTask(l){return esc(l).replace(/(@\w+)/g,'<span class="g">$1</span>').replace(/(due:[\d-]+)/g,'<span class="s">$1</span>')}
+var BLOCKS=[
+ {id:'h',raw:function(){return '# Kickoff call with Dana'},html:function(){return '<h2 class="dh">Kickoff call with Dana</h2>'}},
+ {id:'p',raw:function(){return 'Launch is **Dec 8**. See [[pricing-research]] and [[people/dana]] for context.'},
+  html:function(){return '<p>Launch is <b>Dec 8</b>. See <span class="wl" style="color:var(--accent);text-decoration:underline dotted">pricing-research</span> and <span style="color:var(--accent);text-decoration:underline dotted">people/dana</span> for context.</p>'}},
+ {id:'t',raw:function(){return '## Action items\n'+ED.tasks.map(taskLine).join('\n')},
+  html:function(){return '<h2 style="font-size:17px;margin:0 0 4px">Action items</h2>'+ED.tasks.map(function(t,i){
+    var chips='';
+    if(t.who)chips+='<span class="chip">'+t.who+'</span>';
+    if(t.due)chips+='<span class="pop"><button class="chip due" data-pop="'+i+'">'+dlabel(t.due)+'</button>'+(ED.openPop===i?'<span class="menu">'+DATES.map(function(d){return '<button data-setdue="'+i+'|'+d[0]+'">'+d[1]+'</button>'}).join('')+'</span>':'')+'</span>';
+    return '<div class="task'+(t.done?' done':'')+'" style="cursor:default;padding:4px 0"><button class="cb" data-tick="'+i+'" aria-label="Toggle done">'+(t.done?'✓':'')+'</button><div class="body"><span class="t">'+esc(t.text)+'</span> <span class="chips" style="display:inline-flex;margin:0 0 0 6px">'+chips+'</span></div></div>'}).join('')}},
+ {id:'tb',raw:function(){return '## Pages\n\n| Page | Owner | Status |\n|---|---|---|\n| Pricing | Sam | Draft |\n| About | Dana | Waiting |'},
+  html:function(){return '<h2 style="font-size:17px;margin:0 0 6px">Pages</h2><div style="overflow-x:auto"><table><tr><th>Page</th><th>Owner</th><th>Status</th></tr><tr><td>Pricing</td><td>Sam</td><td>Draft</td></tr><tr><td>About</td><td>Dana</td><td>Waiting</td></tr></table></div>'}}
+];
+function yamlText(){return '<span class="m">---</span>\n<span class="k">title</span>: Kickoff call with Dana\n<span class="k">type</span>: <span class="s">meeting</span>\n<span class="k">status</span>: <span class="s">'+ED.status+'</span>\n<span class="k">project</span>: <span class="s">website-relaunch</span>\n<span class="k">tags</span>: [<span class="g">launch</span>, <span class="g">meeting</span>]\n<span class="m">---</span>'}
+function renderEd(){
+  var all=ED.mode==='source'||ED.xray||ED.alt;
+  var frame=document.getElementById('edframe');
+  frame.classList.toggle('xray-on',ED.xray||ED.alt);
+  document.getElementById('doc').innerHTML=BLOCKS.map(function(b){
+    var raw=all||ED.pinned[b.id]||ED.open===b.id;
+    var inner=raw?'<pre>'+(b.id==='t'?b.raw().split('\n').map(colorTask).join('\n'):esc(b.raw()))+'</pre>':b.html();
+    return '<div class="blk'+(raw?' raw':'')+'" data-b="'+b.id+'"><button class="h" data-pin="'+b.id+'" aria-label="Toggle source for this block" title="Show markdown for this block">&lt;/&gt;</button><div class="c" data-edit="'+b.id+'">'+inner+'</div></div>';
+  }).join('');
+  var pb=document.getElementById('propsbody');
+  pb.innerHTML=ED.yaml?'<pre class="code" style="margin-top:8px">'+yamlText()+'</pre>':
+   '<div class="props-g"><label for="pstatus">status</label><select id="pstatus"><option'+(ED.status==='todo'?' selected':'')+'>todo</option><option'+(ED.status==='doing'?' selected':'')+'>doing</option><option'+(ED.status==='done'?' selected':'')+'>done</option></select>'+
+   '<label>type</label><span>meeting</span><label>project</label><span>website-relaunch</span><label>tags</label><span class="chips" style="margin:0"><span class="chip">#launch</span><span class="chip">#meeting</span></span></div>';
+  document.getElementById('yamlbtn').setAttribute('aria-pressed',ED.yaml);
+  document.getElementById('yamlbtn').textContent=ED.yaml?'Show form':'Show YAML';
+  document.getElementById('xray').setAttribute('aria-pressed',ED.xray);
+  document.querySelectorAll('[data-m]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.m===ED.mode)});
+}
+function showDiff(del,add){
+  document.getElementById('diff').innerHTML='<span class="cap">What changed on disk</span><span class="m">kickoff-call.md</span>\n<span class="del">- '+esc(del)+'</span>\n<span class="add">+ '+esc(add)+'</span>';
+  document.getElementById('edstatus').textContent='Saved just now · 1 line changed';
+}
+var docEl=document.getElementById('doc');
+docEl.addEventListener('click',function(e){
+  var pin=e.target.closest('[data-pin]');
+  if(pin){var id=pin.dataset.pin;ED.pinned[id]=!ED.pinned[id];renderEd();return}
+  var tick=e.target.closest('[data-tick]');
+  if(tick){var t=ED.tasks[+tick.dataset.tick],old=taskLine(t);t.done=!t.done;ED.openPop=null;showDiff(old,taskLine(t));renderEd();return}
+  var pp=e.target.closest('[data-pop]');
+  if(pp){var i=+pp.dataset.pop;ED.openPop=(ED.openPop===i?null:i);renderEd();return}
+  var sd=e.target.closest('[data-setdue]');
+  if(sd){var p=sd.dataset.setdue.split('|'),t2=ED.tasks[+p[0]],o=taskLine(t2);t2.due=p[1];ED.openPop=null;showDiff(o,taskLine(t2));renderEd();return}
+  var ed=e.target.closest('[data-edit]');
+  if(ed&&ED.open!==ed.dataset.edit){ED.open=ed.dataset.edit;ED.openPop=null;renderEd();return}
+});
+document.addEventListener('click',function(e){
+  if(!document.getElementById('v-editor').hidden&&ED.open&&!e.target.closest('#doc')){ED.open=null;ED.openPop=null;renderEd()}
+  else if(ED.openPop!==null&&!e.target.closest('.pop')){ED.openPop=null;renderEd()}
+});
+document.getElementById('v-editor').addEventListener('change',function(e){
+  if(e.target.id==='pstatus'){var o='status: '+ED.status;ED.status=e.target.value;showDiff(o,'status: '+ED.status);renderEd()}
+});
+document.getElementById('v-editor').addEventListener('click',function(e){
+  var m=e.target.closest('[data-m]');if(m){ED.mode=m.dataset.m;renderEd()}
+  if(e.target.closest('#xray')){ED.xray=!ED.xray;renderEd()}
+  if(e.target.closest('#yamlbtn')){ED.yaml=!ED.yaml;renderEd()}
+});
+document.addEventListener('keydown',function(e){if(e.key==='Alt'&&!ED.alt){ED.alt=true;renderEd()}});
+document.addEventListener('keyup',function(e){if(e.key==='Alt'&&ED.alt){ED.alt=false;renderEd()}});
+window.addEventListener('blur',function(){if(ED.alt){ED.alt=false;renderEd()}});
+renderEd();
+
+/* ---------- Search mockup ---------- */
+var SI=[
+ {k:'note',title:'Kickoff call with Dana',path:'projects/website-relaunch/kickoff-call.md',type:'meeting',tags:['launch','meeting'],text:'Launch is Dec 8. Keep current brand colors. Pricing copy is next, and Dana will send the logo files.'},
+ {k:'note',title:'Pricing research',path:'projects/website-relaunch/pricing-research.md',type:'research',tags:['launch','pricing'],text:'Competitors charge $12 to $29 per seat. Anchor on the middle tier and show annual savings.'},
+ {k:'note',title:'Pricing psychology',path:'reference/pricing-psychology.md',type:'reference',tags:['reading','pricing'],text:'Anchoring and decoy pricing. A third, higher tier makes the middle tier look like the sensible choice.'},
+ {k:'note',title:'Dana Ortiz',path:'people/dana.md',type:'person',tags:['client'],text:'Runs brand at Northfield. Prefers email. Sent the first draft of the logo files.'},
+ {k:'note',title:'2026-11-17',path:'journal/2026-11-17.md',type:'journal',tags:['journal'],text:'Kickoff call went well. Dana wants to launch Dec 8. Need to finish pricing page copy this week.'},
+ {k:'note',title:'Tax 2026',path:'projects/tax-2026/index.md',type:'project',tags:['admin'],text:'Quarterly estimates, receipts folder, accountant contact.'},
+ {k:'task',title:'Send logo files',path:'projects/website-relaunch/kickoff-call.md',type:'task',tags:['launch'],text:'',who:'@dana',due:'2026-11-23',done:false},
+ {k:'task',title:'Write pricing page copy',path:'projects/website-relaunch/tasks/write-pricing-copy.md',type:'task',tags:['launch','pricing'],text:'',who:'',due:'2026-11-24',done:false},
+ {k:'task',title:'Photograph team',path:'projects/website-relaunch/tasks/photograph-team.md',type:'task',tags:['launch'],text:'',who:'',due:'2026-11-19',done:false},
+ {k:'task',title:'File estimated tax payment',path:'projects/tax-2026/index.md',type:'task',tags:['admin'],text:'',who:'',due:'2026-11-18',done:false},
+ {k:'task',title:'Share staging link',path:'projects/website-relaunch/kickoff-call.md',type:'task',tags:['launch'],text:'',who:'',due:'',done:true}
+];
+function matchesQ(it,toks){
+  for(var i=0;i<toks.length;i++){
+    var l=toks[i].toLowerCase();
+    if(l.indexOf('tag:')===0){if(it.tags.indexOf(l.slice(4))<0)return false}
+    else if(l.charAt(0)==='#'){if(it.tags.indexOf(l.slice(1))<0)return false}
+    else if(l.indexOf('folder:')===0){if(it.path.toLowerCase().indexOf(l.slice(7))!==0)return false}
+    else if(l.indexOf('type:')===0){if(it.type!==l.slice(5))return false}
+    else if(l==='is:task'){if(it.k!=='task')return false}
+    else if(l==='is:note'){if(it.k!=='note')return false}
+    else if(l==='is:open'){if(it.k!=='task'||it.done)return false}
+    else if(l==='is:done'){if(it.k!=='task'||!it.done)return false}
+    else if(l.indexOf('due:')===0){var v=l.slice(4);if(!it.due)return false;
+      if(v.charAt(0)==='<'){if(!(it.due<v.slice(1)))return false}
+      else if(v.charAt(0)==='>'){if(!(it.due>v.slice(1)))return false}
+      else if(it.due!==v)return false}
+    else if(l.charAt(0)==='@'){if(it.who!==l&&(it.title+' '+it.text+' '+it.path).toLowerCase().indexOf(l.slice(1))<0)return false}
+    else{var w=l.replace(/"/g,'');if(w&&(it.title+' '+it.text+' '+it.path+' '+it.tags.join(' ')).toLowerCase().indexOf(w)<0)return false}
+  }
+  return true;
+}
+function hl(s,ws){
+  var out='',low=s.toLowerCase(),i=0;
+  while(i<s.length){
+    var best=-1,bl=0;
+    ws.forEach(function(w){var p=low.indexOf(w,i);if(p>-1&&(best<0||p<best)){best=p;bl=w.length}});
+    if(best<0){out+=esc(s.slice(i));break}
+    out+=esc(s.slice(i,best))+'<mark>'+esc(s.slice(best,best+bl))+'</mark>';i=best+bl;
+  }
+  return out;
+}
+function renderSearch(){
+  var q=document.getElementById('sq').value;
+  var toks=q.match(/"[^"]+"|\S+/g)||[];
+  var ws=toks.filter(function(t){return !/^(tag:|folder:|type:|is:|due:|#|@)/i.test(t)}).map(function(t){return t.replace(/"/g,'').toLowerCase()}).filter(Boolean);
+  var res=SI.filter(function(it){return matchesQ(it,toks)});
+  document.getElementById('scount').textContent=res.length+' result'+(res.length===1?'':'s')+' · searched 1,284 files in 12 ms';
+  document.getElementById('sres').innerHTML=res.length?res.map(function(it){
+    var tags=it.tags.map(function(t){return '<span class="chip">#'+esc(t)+'</span>'}).join('');
+    if(it.k==='task'){
+      return '<div class="res"><div class="task'+(it.done?' done':'')+'" style="cursor:default;padding:0"><span class="cb">'+(it.done?'✓':'')+'</span><div class="body"><div class="rt t">'+hl(it.title,ws)+'</div><div class="chips">'+(it.due?'<span class="chip due'+(it.due<'2026-11-21'?' late':'')+'">due '+it.due+'</span>':'')+(it.who?'<span class="chip">'+it.who+'</span>':'')+tags+'<span class="chip src">'+hl(it.path,ws)+'</span></div></div></div></div>';
+    }
+    return '<div class="res"><div class="rt">'+hl(it.title,ws)+'</div><div class="sn">'+hl(it.text,ws)+'</div><div class="chips"><span class="chip src">'+hl(it.path,ws)+'</span><span class="chip due">'+esc(it.type)+'</span>'+tags+'</div></div>';
+  }).join(''):'<p class="meta" style="margin-top:16px">No matches. Remove an operator or check the spelling.</p>';
+  var tc={},ty={},fo={};
+  res.forEach(function(it){it.tags.forEach(function(t){tc[t]=(tc[t]||0)+1});ty[it.type]=(ty[it.type]||0)+1;var f=it.path.split('/')[0];fo[f]=(fo[f]||0)+1});
+  function lst(h,o,pre,mono){var ks=Object.keys(o).sort(function(a,b){return o[b]-o[a]});return '<div><h4>'+h+'</h4><ul'+(mono?' class="mono"':'')+'>'+(ks.length?ks.map(function(k){return '<li data-add="'+pre+k+'" tabindex="0">'+esc(k)+' <span class="n">'+o[k]+'</span></li>'}).join(''):'<li class="m">none</li>')+'</ul></div>'}
+  document.getElementById('facets').innerHTML=lst('Narrow by type',ty,'type:')+lst('Folder',fo,'folder:',true)+lst('Tag',tc,'tag:',true);
+  document.getElementById('viewfile').hidden=true;
+}
+document.getElementById('sq').addEventListener('input',renderSearch);
+document.getElementById('v-search').addEventListener('click',function(e){
+  var ex=e.target.closest('[data-q]');
+  if(ex){document.getElementById('sq').value=ex.dataset.q;renderSearch();return}
+  var fa=e.target.closest('[data-add]');
+  if(fa){var i=document.getElementById('sq');i.value=(i.value.trim()+' '+fa.dataset.add).trim();renderSearch();i.focus();return}
+  if(e.target.closest('#saveview')){
+    var q=document.getElementById('sq').value.trim();
+    var vf=document.getElementById('viewfile');
+    vf.innerHTML='<span class="m">.plainfile/views/'+esc(q.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()||'search')+'.md</span>\n<span class="m">---</span>\n<span class="k">view</span>: <span class="s">'+esc(q||'All')+'</span>\n<span class="k">search</span>: <span class="s">'+esc(q)+'</span>\n<span class="k">layout</span>: <span class="s">list</span>\n<span class="m">---</span>';
+    vf.hidden=false;
+  }
+});
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();show('search');var i=document.getElementById('sq');i.focus();i.select()}
+});
+renderSearch();
+
+/* ---------- Templates mockup ---------- */
+var TODAY='2026-11-21';
+function addDays(d,n){var x=new Date(d+'T00:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)}
+var TPL=[
+ {id:'meeting',name:'Meeting',desc:'Agenda, decisions and action items. Placed inside the project you pick.',folder:'projects/{{project}}',file:'{{date}} {{title}}',
+  fields:[['title','Title','Weekly sync'],['project','Project','website-relaunch'],['attendees','Attendees','dana, sam']],
+  fm:'title: {{title}}\ntype: meeting\ndate: {{date}}\nproject: {{project}}\nattendees: [{{attendees}}]\ntags: [meeting]',
+  body:'\n## Agenda\n- \n\n## Decisions\n\n## Action items\n- [ ] {{cursor}}\n'},
+ {id:'task',name:'Task',desc:'One file per task, with status and due date. Shows up on the board.',folder:'projects/{{project}}/tasks',file:'{{title}}',
+  fields:[['title','Title','Write launch email'],['project','Project','website-relaunch'],['due','Due','{{date+7d}}']],
+  fm:'title: {{title}}\nstatus: todo\ndue: {{due}}\nproject: {{project}}\ntags: []',
+  body:'\n{{cursor}}\n'},
+ {id:'journal',name:'Daily journal',desc:'Applied automatically to new files in journal/. No prompts needed.',folder:'journal',file:'{{date}}',
+  fields:[],
+  fm:'title: {{date}}\ntype: journal\ndate: {{date}}',
+  body:'\n## Tasks\n- [ ] {{cursor}}\n\n## Notes\n\n## End of day\n'},
+ {id:'person',name:'Person',desc:'Contact notes. Link to it from meetings with [[name]].',folder:'people',file:'{{title}}',
+  fields:[['title','Name','Dana Ortiz'],['company','Company','Northfield']],
+  fm:'title: {{title}}\ntype: person\ncompany: {{company}}\ntags: [people]',
+  body:'\n## Contact\n- Email: \n\n## Notes\n{{cursor}}\n\n## Conversations\n'}
+];
+var TS={id:'meeting',vals:{}};
+function tfill(s,vals){
+  return s.replace(/\{\{(\w+)(?:\+(\d+)d)?\}\}/g,function(m,n,d){
+    if(n==='date')return d?addDays(TODAY,+d):TODAY;
+    if(n==='cursor')return '▌';
+    return vals[n]!==undefined?vals[n]:m;
+  });
+}
+function curTpl(){return TPL.filter(function(t){return t.id===TS.id})[0]}
+function pickTpl(id){
+  TS.id=id;var t=curTpl();TS.vals={};
+  t.fields.forEach(function(f){TS.vals[f[0]]=tfill(f[2],{})});
+  document.getElementById('tpllist').innerHTML=TPL.map(function(x){return '<li data-tpl="'+x.id+'" tabindex="0" class="'+(x.id===id?'on':'')+'">'+x.name+'</li>'}).join('');
+  document.getElementById('tplname').textContent=t.name;
+  document.getElementById('tplmeta').textContent=t.desc;
+  document.getElementById('tplform').innerHTML=t.fields.length?t.fields.map(function(f){return '<div class="fld"><label for="tf-'+f[0]+'">'+f[1]+'</label><input class="inp" id="tf-'+f[0]+'" data-f="'+f[0]+'" value="'+esc(TS.vals[f[0]]).replace(/"/g,'&quot;')+'"></div>'}).join(''):'<p class="meta">No prompts. The file is created as soon as you open today.</p>';
+  document.getElementById('tplstatus').textContent='';
+  var cfg='<span class="m">---</span>\n<span class="k">plainfile</span>:\n  <span class="k">name</span>: <span class="s">'+t.name+'</span>\n  <span class="k">folder</span>: <span class="s">'+esc(t.folder)+'</span>\n  <span class="k">filename</span>: <span class="s">"'+esc(t.file)+'"</span>\n';
+  var fm=esc(t.fm).split('\n').map(function(l){var i=l.indexOf(':');return '<span class="k">'+l.slice(0,i)+'</span>:'+l.slice(i+1)}).join('\n');
+  document.getElementById('tplsrc').innerHTML=cfg+fm+'\n<span class="m">---</span>'+esc(t.body);
+  renderTpl();
+}
+function renderTpl(){
+  var t=curTpl(),v=TS.vals;
+  var name=tfill(t.file,v).replace(/[\/\\:?*"<>|]/g,'-');
+  document.getElementById('tplpath').textContent=tfill(t.folder,v)+'/'+name+'.md';
+  document.getElementById('tploutput').textContent='---\n'+tfill(t.fm,v)+'\n---'+tfill(t.body,v);
+}
+document.getElementById('v-templates').addEventListener('input',function(e){
+  var f=e.target.dataset.f;if(f){TS.vals[f]=e.target.value;document.getElementById('tplstatus').textContent='';renderTpl()}
+});
+document.getElementById('v-templates').addEventListener('click',function(e){
+  var li=e.target.closest('[data-tpl]');if(li){pickTpl(li.dataset.tpl);return}
+  if(e.target.closest('#tplcreate')){document.getElementById('tplstatus').textContent='Created '+document.getElementById('tplpath').textContent+' and opened it in the editor.'}
+});
+pickTpl('meeting');
+
+/* ---------- Vault health mockup ---------- */
+var HC=[
+ {id:'links',name:'Unresolved links',help:'Links that point to something that does not exist. A suggested fix edits only the link text.',items:[
+  {t:'[[pricing-reserach]]',w:'projects/website-relaunch/kickoff-call.md · line 14',s:'Closest match: pricing-research',a:'Link to pricing-research',file:'projects/website-relaunch/kickoff-call.md',del:'See also [[pricing-reserach]] and [[people/dana]].',add:'See also [[pricing-research]] and [[people/dana]].'},
+  {t:'[[Dana]]',w:'journal/2026-11-17.md · line 6',s:'Matches 2 notes: people/dana.md and reference/dana-brief.md. Best guess is the person note.',a:'Link to people/dana',file:'journal/2026-11-17.md',del:'Call with [[Dana]] went long.',add:'Call with [[people/dana]] went long.'},
+  {t:'![](../_attachments/logo-v2.png)',w:'projects/website-relaunch/index.md · line 3',s:'File not found. Closest match: logo-v3.png',a:'Use logo-v3.png',file:'projects/website-relaunch/index.md',del:'![](../_attachments/logo-v2.png)',add:'![](../_attachments/logo-v3.png)'}]},
+ {id:'dups',name:'Duplicate titles',help:'Two notes share a name, so a link by name is ambiguous.',items:[
+  {t:'Weekly sync',w:'projects/website-relaunch/weekly-sync.md and projects/tax-2026/weekly-sync.md',s:'Links to either note will include the folder, for example [[tax-2026/weekly-sync]].',a:'Keep both',note:'No files changed. New links to these two notes will include the folder path.'}]},
+ {id:'orph',name:'Orphan notes',help:'Notes with no links in or out. They are only findable by search.',items:[
+  {t:'pricing-psychology',w:'reference/pricing-psychology.md',s:'Shares the tag #pricing with pricing-research.',a:'Link from pricing-research',file:'projects/website-relaunch/pricing-research.md',add:'Related: [[pricing-psychology]]'},
+  {t:'old-bookmarks',w:'reference/old-bookmarks.md',s:'Last edited 14 months ago.',a:'Ignore',note:'Added to the ignore list in .plainfile/config.md. The note itself is unchanged.'}]},
+ {id:'type',name:'Files with no type',help:'Untyped files still work. A folder rule gives them a type without editing the files.',items:[
+  {t:'18 files have no type',w:'12 in journal/, 4 in people/, 2 in reference/',s:'One rule per folder covers all of them.',a:'Add folder rules',file:'.plainfile/config.md',add:'journal/ -> type: journal, template: Daily journal\npeople/ -> type: person, template: Person'}]},
+ {id:'unused',name:'Unused attachments',help:'Images and files that no note links to. Nothing is deleted automatically.',items:[
+  {t:'IMG_4411.png',w:'_attachments/IMG_4411.png · 2.1 MB',s:'Not referenced by any note.',a:'Move to _unused/',file:'move',del:'_attachments/IMG_4411.png',add:'_attachments/_unused/IMG_4411.png'},
+  {t:'whiteboard-old.png',w:'_attachments/whiteboard-old.png · 840 KB',s:'Not referenced by any note.',a:'Move to _unused/',file:'move',del:'_attachments/whiteboard-old.png',add:'_attachments/_unused/whiteboard-old.png'}]}
+];
+var HS={id:'links',log:null};
+function hcur(){return HC.filter(function(c){return c.id===HS.id})[0]}
+function renderHealth(){
+  var total=0;HC.forEach(function(c){total+=c.items.length});
+  document.getElementById('hsum').textContent=total?('1,284 files · '+total+' thing'+(total===1?'':'s')+' worth a look. None of them stop anything from working.'):'1,284 files · all checks are clear.';
+  document.getElementById('hlist').innerHTML=HC.map(function(c){var n=c.items.length;return '<li data-hc="'+c.id+'" tabindex="0" class="'+(c.id===HS.id?'on':'')+'"><span>'+c.name+'</span><span class="badge'+(n?'':' ok')+'">'+(n||'✓')+'</span></li>'}).join('');
+  var c=hcur();
+  document.getElementById('hname').textContent=c.name;
+  document.getElementById('hhelp').textContent=c.help;
+  document.getElementById('hitems').innerHTML=c.items.length?c.items.map(function(it,i){
+    return '<div class="res"><div class="row"><div><div class="rt mono" style="font-size:13.5px">'+esc(it.t)+'</div><div class="sn mono" style="font-size:12px">'+esc(it.w)+'</div><div class="sn">'+esc(it.s)+'</div></div><button class="btn" data-fix="'+i+'">'+esc(it.a)+'</button></div></div>';
+  }).join(''):'<div class="okbox">Nothing to fix here.</div>';
+  var lg=document.getElementById('hlog');
+  if(HS.log){
+    var it=HS.log,h='<span class="cap">What changed on disk</span>';
+    if(it.note){h+='<span class="m">'+esc(it.note)+'</span>'}
+    else{
+      h+='<span class="m">'+esc(it.file==='move'?'moved':it.file)+'</span>';
+      if(it.del)h+='<div class="del">- '+esc(it.del)+'</div>';
+      h+=it.add.split('\n').map(function(l){return '<div class="add">+ '+esc(l)+'</div>'}).join('');
+    }
+    lg.innerHTML=h;lg.hidden=false;
+  }else lg.hidden=true;
+}
+document.getElementById('v-health').addEventListener('click',function(e){
+  var li=e.target.closest('[data-hc]');
+  if(li){HS.id=li.dataset.hc;HS.log=null;renderHealth();return}
+  var fx=e.target.closest('[data-fix]');
+  if(fx){HS.log=hcur().items.splice(+fx.dataset.fix,1)[0];renderHealth()}
+});
+renderHealth();
+
+/* ---------- Rename mockup ---------- */
+var RN={inc:[true,true,true],done:false,mode:'in',outDone:null};
+var RL=[
+ {f:'projects/website-relaunch/kickoff-call.md',n:14,l:'See also [[pricing-research]] and [[people/dana]].'},
+ {f:'journal/2026-11-17.md',n:6,l:'Reviewed [[pricing-research]] before the call.'},
+ {f:'projects/website-relaunch/index.md',n:9,l:'- [[pricing-research|Pricing notes]]'}
+];
+function rnNew(l,name){return l.split('pricing-research').join(name)}
+function rnName(){return document.getElementById('rn-name').value.trim().split(' ').join('-')}
+function linkCards(name,withBoxes){
+  return RL.map(function(x,i){
+    var body='<span class="mono" style="font-size:12.5px">'+esc(x.f)+' · line '+x.n+'</span><span class="diff" style="display:block;margin-top:4px;min-height:0;padding:6px 10px"><div class="del">- '+esc(x.l)+'</div><div class="add">+ '+esc(rnNew(x.l,name))+'</div></span>';
+    return '<div class="fcard">'+(withBoxes?'<label style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" data-inc="'+i+'"'+(RN.inc[i]?' checked':'')+'><span style="min-width:0;flex:1">'+body+'</span></label>':body)+'</div>';
+  }).join('');
+}
+function renderRn(){
+  var name=rnName(),alias=document.getElementById('rn-alias').checked;
+  var out=document.getElementById('rnpreview');
+  var n=RN.inc.filter(Boolean).length;
+  if(RN.done){
+    out.innerHTML='<div class="okbox"><b style="font-weight:500">Renamed to '+esc(name)+'.md</b><br>'+n+' link'+(n===1?'':'s')+' updated'+(alias?', old name kept as an alias.':'.')+' <button class="btn" id="rn-undo" style="margin-left:8px">Undo</button></div>'+
+      '<div class="diff" style="margin-top:12px"><span class="cap">What changed on disk</span><span class="m">renamed</span><div class="del">- projects/website-relaunch/pricing-research.md</div><div class="add">+ projects/website-relaunch/'+esc(name)+'.md</div>'+(alias?'<span class="m">frontmatter</span><div class="add">+ aliases: [pricing-research]</div>':'')+RL.map(function(x,i){return RN.inc[i]?'<span class="m">'+esc(x.f)+':'+x.n+'</span><div class="del">- '+esc(x.l)+'</div><div class="add">+ '+esc(rnNew(x.l,name))+'</div>':''}).join('')+'</div>';
+    return;
+  }
+  if(!name||name==='pricing-research'){out.innerHTML='<p class="meta" style="margin-top:12px">Choose a different name to preview the changes.</p>';return}
+  var h='<p class="meta" style="margin:14px 0 0">'+n+' link'+(n===1?'':'s')+' in '+n+' file'+(n===1?'':'s')+' will update · scanned 1,284 files in 12 ms · only the link text changes</p>'+linkCards(name,true);
+  if(alias){h+='<div class="fcard"><span class="mono" style="font-size:12.5px">projects/website-relaunch/'+esc(name)+'.md · frontmatter</span><span class="diff" style="display:block;margin-top:4px;min-height:0;padding:6px 10px"><div class="add">+ aliases: [pricing-research]</div></span></div>'}
+  var skipped=3-n;
+  if(skipped&&!alias){h+='<div class="warnbox">'+skipped+' unchecked link'+(skipped===1?'':'s')+' will become unresolved. Turn on the alias to keep them working.</div>'}
+  else if(skipped){h+='<div class="okbox" style="font-size:13px">'+skipped+' unchecked link'+(skipped===1?'':'s')+' will keep working through the alias.</div>'}
+  h+='<div style="margin-top:12px"><button class="btn pri" id="rn-go">Rename and update '+n+' link'+(n===1?'':'s')+'</button></div>';
+  out.innerHTML=h;
+}
+function renderRnOut(){
+  document.getElementById('rnout-list').innerHTML=linkCards('pricing-analysis',false);
+  var st=document.getElementById('rnout-status');
+  if(RN.outDone==='yes')st.innerHTML='<div class="okbox">Updated 3 links in 3 files and added <span class="mono">aliases: [pricing-research]</span> to pricing-analysis.md. Nothing else changed.</div>';
+  else if(RN.outDone==='no')st.innerHTML='<div class="warnbox">Left as is. The 3 links now appear under Unresolved links in Vault health, with suggestions.</div>';
+  else st.innerHTML='';
+}
+function setRm(m){
+  RN.mode=m;
+  document.getElementById('rn-in').hidden=(m!=='in');
+  document.getElementById('rn-out').hidden=(m!=='out');
+  document.querySelectorAll('[data-rm]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.rm===m)});
+}
+var rv=document.getElementById('v-rename');
+rv.addEventListener('click',function(e){
+  var rm=e.target.closest('[data-rm]');if(rm){setRm(rm.dataset.rm);return}
+  if(e.target.closest('#rn-go')){RN.done=true;renderRn();return}
+  if(e.target.closest('#rn-undo')){RN.done=false;renderRn();return}
+  if(e.target.closest('#rnout-yes')){RN.outDone='yes';renderRnOut();return}
+  if(e.target.closest('#rnout-no')){RN.outDone='no';renderRnOut()}
+});
+rv.addEventListener('change',function(e){
+  var ic=e.target.dataset.inc;
+  if(ic!==undefined){RN.inc[+ic]=e.target.checked;renderRn();return}
+  if(e.target.id==='rn-alias')renderRn();
+});
+rv.addEventListener('input',function(e){if(e.target.id==='rn-name'){RN.done=false;renderRn()}});
+renderRn();renderRnOut();
+
+/* ---------- Live typing mockup ---------- */
+var LE0=['## Try typing','Start a line with * [ ] or # or - and it converts the moment you type the space. A * is saved as -.','Backspace on an empty one turns it back into plain markdown.','- [ ] Send logo files @dana due:2026-11-23','- [x] Share staging link',''];
+var LE={lines:LE0.slice(),act:-1,xray:false};
+function attr(s){return esc(s).split('"').join('&quot;')}
+function leKind(raw){
+  var m=raw.match(/^([-*+]) \[( |x)\] (.*)$/);
+  if(m)return {k:'task',mk:m[1],s:m[2],rest:m[3]};
+  m=raw.match(/^(#{1,3}) (.*)$/);
+  if(m)return {k:'h',lv:m[1].length,mk:m[1],rest:m[2]};
+  m=raw.match(/^([-*+]) (.*)$/);
+  if(m)return {k:'li',mk:m[1],rest:m[2]};
+  return {k:'p',rest:raw};
+}
+function lePrefix(kd){return kd.k==='task'?kd.mk+' ['+kd.s+'] ':(kd.k==='h'||kd.k==='li')?kd.mk+' ':''}
+function leInline(s){
+  var h=esc(s);
+  h=h.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  h=h.replace(/\[\[(.+?)\]\]/g,'<span style="color:var(--accent);text-decoration:underline dotted">$1</span>');
+  h=h.replace(/(^|\s)#(\w+)/g,'$1<span class="chip">#$2</span>');
+  h=h.replace(/(^|\s)@(\w+)/g,'$1<span class="chip">@$2</span>');
+  h=h.replace(/due:(\d{4}-\d{2}-\d{2})/g,'<span class="chip due">due $1</span>');
+  return h;
+}
+function renderDisk(){
+  document.getElementById('ledisk').innerHTML=LE.lines.map(function(l,i){
+    var c=colorTask(l);
+    return '<span style="display:block;min-height:1.6em'+(i===LE.act?';background:var(--accent-soft);margin:0 -12px;padding:0 12px':'')+'">'+(c||' ')+'</span>';
+  }).join('');
+}
+function renderLe(focus){
+  var all=LE.xray;
+  document.getElementById('lerows').innerHTML=LE.lines.map(function(raw,i){
+    var a=(i===LE.act),kd=leKind(raw),cls='le-row'+(a?' act':'');
+    if(all){
+      return '<div class="'+cls+'" data-r="'+i+'"><span class="m mono" style="font-size:11px;width:16px;text-align:right;padding-top:5px;flex:none">'+(i+1)+'</span>'+(a?'<input class="le-in mono" data-in="'+i+'" value="'+attr(raw)+'" style="font-size:13px" aria-label="Line '+(i+1)+'">':'<span class="mono" style="font-size:13px;min-width:0;overflow-wrap:anywhere;padding-top:2px">'+(esc(raw)||'&nbsp;')+'</span>')+'</div>';
+    }
+    if(kd.k==='task'){
+      return '<div class="'+cls+' task'+(kd.s==='x'?' done':'')+'" data-r="'+i+'"><button class="cb" data-cb="'+i+'" aria-label="Toggle done">'+(kd.s==='x'?'✓':'')+'</button>'+(a?'<span class="le-mk">'+esc(kd.mk)+' ['+kd.s+']</span><input class="le-in" data-in="'+i+'" value="'+attr(kd.rest)+'" placeholder="Task" aria-label="Task">':'<span class="t le-t">'+(kd.rest?leInline(kd.rest):'<span class="m">Task</span>')+'</span>')+'</div>';
+    }
+    if(kd.k==='h'){
+      return '<div class="'+cls+' lh'+kd.lv+'" data-r="'+i+'">'+(a?'<span class="le-mk">'+esc(kd.mk)+'</span><input class="le-in" data-in="'+i+'" value="'+attr(kd.rest)+'" placeholder="Heading" aria-label="Heading">':'<span class="le-t">'+(kd.rest?leInline(kd.rest):'<span class="m">Heading</span>')+'</span>')+'</div>';
+    }
+    if(kd.k==='li'){
+      return '<div class="'+cls+'" data-r="'+i+'"><span style="width:16px;text-align:center;flex:none;padding-top:2px">•</span>'+(a?'<span class="le-mk">'+esc(kd.mk)+'</span><input class="le-in" data-in="'+i+'" value="'+attr(kd.rest)+'" aria-label="List item">':'<span class="le-t">'+leInline(kd.rest)+'</span>')+'</div>';
+    }
+    return '<div class="'+cls+'" data-r="'+i+'">'+(a?'<input class="le-in" data-in="'+i+'" value="'+attr(raw)+'" placeholder="Type here. Try * [ ] " aria-label="Text">':'<span class="le-t">'+(raw?leInline(raw):'<span class="m">Click here and try typing * [ ] </span>')+'</span>')+'</div>';
+  }).join('');
+  if(focus&&LE.act>=0){var el=document.querySelector('[data-in="'+LE.act+'"]');if(el){el.focus();var n=el.value.length;el.setSelectionRange(n,n)}}
+  renderDisk();
+}
+var LR=document.getElementById('lerows');
+LR.addEventListener('input',function(e){
+  var el=e.target;if(el.dataset.in===undefined)return;
+  var i=+el.dataset.in,ok=leKind(LE.lines[i]);
+  var nr=(LE.xray||ok.k==='p')?el.value:lePrefix(ok)+el.value;
+  var nk=leKind(nr),norm=false;
+  if(!LE.xray&&(nk.k==='task'||nk.k==='li')&&nk.mk!=='-'){nr='-'+nr.slice(1);norm=true}
+  LE.lines[i]=nr;
+  document.getElementById('le-status').textContent=norm?'Saved just now · ' + nk.mk + ' saved as -':'Saved just now';
+  if(!LE.xray&&(nk.k!==ok.k||norm)){renderLe(true)}else{renderDisk()}
+});
+LR.addEventListener('keydown',function(e){
+  var el=e.target;if(el.dataset.in===undefined)return;
+  var i=+el.dataset.in,kd=leKind(LE.lines[i]);
+  if(e.key==='Enter'){
+    e.preventDefault();
+    var nl='';
+    if(!LE.xray){
+      if((kd.k==='task'||kd.k==='li')&&kd.rest===''){LE.lines[i]='';LE.act=i;renderLe(true);return}
+      if(kd.k==='task')nl=kd.mk+' [ ] ';else if(kd.k==='li')nl=kd.mk+' ';
+    }
+    LE.lines.splice(i+1,0,nl);LE.act=i+1;renderLe(true);
+  }else if(e.key==='Backspace'&&el.value===''){
+    if(!LE.xray&&kd.k!=='p'){e.preventDefault();LE.lines[i]=(kd.k==='task'?kd.mk+' ['+kd.s+']':kd.mk);renderLe(true)}
+    else if(i>0){e.preventDefault();LE.lines.splice(i,1);LE.act=i-1;renderLe(true)}
+  }else if(e.key==='ArrowUp'&&i>0){e.preventDefault();LE.act=i-1;renderLe(true)}
+  else if(e.key==='ArrowDown'&&i<LE.lines.length-1){e.preventDefault();LE.act=i+1;renderLe(true)}
+});
+LR.addEventListener('click',function(e){
+  var cb=e.target.closest('[data-cb]');
+  if(cb){var i=+cb.dataset.cb,kd=leKind(LE.lines[i]);LE.lines[i]=kd.mk+' ['+(kd.s==='x'?' ':'x')+'] '+kd.rest;LE.act=i;document.getElementById('le-status').textContent='Saved just now';renderLe(false);return}
+  var r=e.target.closest('[data-r]');
+  if(r&&+r.dataset.r!==LE.act){LE.act=+r.dataset.r;renderLe(true)}
+});
+document.addEventListener('click',function(e){
+  if(!document.getElementById('v-live').hidden&&LE.act>=0&&!e.target.closest('#lerows')){LE.act=-1;renderLe(false)}
+});
+document.getElementById('le-xray').addEventListener('click',function(){
+  LE.xray=!LE.xray;this.setAttribute('aria-pressed',LE.xray);renderLe(false);
+});
+document.getElementById('le-reset').addEventListener('click',function(){
+  LE.lines=LE0.slice();LE.act=-1;LE.xray=false;document.getElementById('le-xray').setAttribute('aria-pressed','false');document.getElementById('le-status').textContent='Saved';renderLe(false);
+});
+renderLe(false);
+</script>

@@ -1,4 +1,4 @@
 node_modules/
-test-results/
-playwright-report/
+*.plainfile-tmp
+.plainfile/index.db
 .DS_Store

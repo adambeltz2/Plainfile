@@ -1,8 +1,9 @@
-name: Deploy to GitHub Pages
+name: CI and GitHub Pages
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,23 +12,44 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+  build:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Until the web interface exists, Pages serves a short status page.
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp index.html _site/index.html
-          if [ -d icons ]; then cp -r icons _site/icons; fi
-          if [ -f manifest.json ]; then cp manifest.json _site/manifest.json; fi
-          if [ -f sw.js ]; then cp sw.js _site/sw.js; fi
+          cp site/index.html _site/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -36,6 +58,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

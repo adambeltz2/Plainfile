@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plainfile</title>
+<style>
+  :root { --bg:#fff; --fg:#000; --mute:#666; --line:#d8d8d8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#000; --fg:#fff; --mute:#999; --line:#2a2a2a; color-scheme: dark; }
+  }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui, sans-serif; }
+  main { max-width: 38rem; margin: 0 auto; padding: 4rem 1rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .5rem; }
+  p { margin: .75rem 0; }
+  .mute { color: var(--mute); }
+  a { color: inherit; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Plainfile</h1>
+  <p>A productivity hub over a plain folder of markdown files. Tasks, notes, tags and links stay in ordinary files you own.</p>
+  <p class="mute">The web interface is being built. The core library and command-line tool already work.</p>
+  <hr>
+  <p>
+    <a href="https://github.com/adambeltz2/Simple-Productivity" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+  </p>
+  <p class="mute">
+    This replaces Notebook, the earlier app. Its last release is kept at the
+    <a href="https://github.com/adambeltz2/Simple-Productivity/tree/notebook-v0.12.1" target="_blank" rel="noopener noreferrer">notebook-v0.12.1</a> tag.
+  </p>
+</main>
+</body>
+</html>

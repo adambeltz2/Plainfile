@@ -1,0 +1,51 @@
+import { promises as fs } from 'node:fs';
+import { join, sep } from 'node:path';
+import { ConflictError, type FileEntry, type VaultStorage } from './storage';
+
+const SKIP_DIRS = new Set(['node_modules']);
+
+/** A vault on a real folder. Used by the CLI and the future local-server mode. */
+export class NodeStorage implements VaultStorage {
+  constructor(private root: string) {}
+
+  private abs(path: string): string {
+    return join(this.root, ...path.split('/'));
+  }
+
+  async list(): Promise<FileEntry[]> {
+    const out: FileEntry[] = [];
+    const walk = async (dir: string, prefix: string): Promise<void> => {
+      for (const e of await fs.readdir(dir, { withFileTypes: true })) {
+        if (e.name.startsWith('.') || SKIP_DIRS.has(e.name)) continue;
+        const rel = prefix ? `${prefix}/${e.name}` : e.name;
+        if (e.isDirectory()) await walk(join(dir, e.name), rel);
+        else if (e.isFile()) {
+          const s = await fs.stat(join(dir, e.name));
+          out.push({ path: rel, mtime: s.mtimeMs, size: s.size });
+        }
+      }
+    };
+    await walk(this.root, '');
+    return out.map((f) => ({ ...f, path: f.path.split(sep).join('/') }));
+  }
+
+  async stat(path: string): Promise<FileEntry> {
+    const s = await fs.stat(this.abs(path));
+    return { path, mtime: s.mtimeMs, size: s.size };
+  }
+
+  async read(path: string): Promise<string> {
+    return fs.readFile(this.abs(path), 'utf8');
+  }
+
+  async write(path: string, content: string, expectedMtime: number): Promise<FileEntry> {
+    const target = this.abs(path);
+    const current = await fs.stat(target);
+    if (current.mtimeMs !== expectedMtime) throw new ConflictError(path);
+    // Write beside the file, then rename over it, so a sync tool never sees a half-written file.
+    const tmp = `${target}.plainfile-tmp`;
+    await fs.writeFile(tmp, content, { encoding: 'utf8', mode: current.mode });
+    await fs.rename(tmp, target);
+    return this.stat(path);
+  }
+}

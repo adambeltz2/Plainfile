@@ -1,11 +1,21 @@
 {
-  "name": "notebook",
+  "name": "plainfile",
+  "version": "0.13.0",
   "private": true,
-  "description": "Dev-only tooling for Notebook. The app itself ships as a single static index.html with no build step -- this package.json exists solely to run the Playwright UI test suite in tests/.",
+  "description": "A productivity hub over a plain folder of markdown files.",
+  "type": "module",
   "scripts": {
-    "test": "playwright test"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "plainfile": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.56.0"
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
   }
 }
