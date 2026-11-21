@@ -37,8 +37,7 @@ test.describe('in the editor', () => {
     await page.keyboard.type('Pri');
     await expect(options(page)).toHaveCount(1);
     await page.keyboard.press('Enter');
-    await expect(page.locator('#note-status')).toHaveText('Saved');
-    expect(await readFile(page, dir, 'draft.md')).toBe('Draft\n[[pricing-research]]');
+    await expect.poll(() => readFile(page, dir, 'draft.md'), { timeout: 5000 }).toBe('Draft\n[[pricing-research]]');
   });
 
   test('a note\'s alias is offered too, and links to a nested note use the shortest name', async ({ page }) => {
@@ -83,8 +82,7 @@ test.describe('in the editor', () => {
     await page.keyboard.type('\ntags: [la');
     await expect(options(page).filter({ hasText: 'launch' })).toBeVisible();
     await page.keyboard.press('Enter');
-    await expect(page.locator('#note-status')).toHaveText('Saved');
-    expect(await readFile(page, dir, 'fm.md')).toBe('---\ntitle: X\nproject: site\ntype: project\nstatus: waiting\ntags: [launch\n---\nbody');
+    await expect.poll(() => readFile(page, dir, 'fm.md'), { timeout: 5000 }).toBe('---\ntitle: X\nproject: site\ntype: project\nstatus: waiting\ntags: [launch\n---\nbody');
   });
 
   test('suggestions do not appear where they would get in the way', async ({ page }) => {

@@ -26,8 +26,6 @@ Nothing here is a promise of order. Remove an item when it ships.
 - `[DEBT]` **Per-screen event routing in `web/main.ts`** is a long chain of `target.closest`
   checks. Give each screen a `handles(target)` so ordering stops mattering (a `data-project`
   clash with the Board already cost a failed test).
-- `[DEBT]` **Flaky browser tests under load:** `typeahead.spec.ts` "# offers the tags" and
-  "[[ offers the notes" fail occasionally when the whole suite runs in parallel, pass alone.
 
 ## Migration and compatibility
 
