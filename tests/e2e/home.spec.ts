@@ -16,6 +16,37 @@ const VAULT: Record<string, string> = {
 };
 
 test.describe('Home', () => {
+  test('clicking an inline task on Home opens its note at that line, and the checkbox only ticks it', async ({ page }) => {
+    const dir = await openVault(page, { 'plan.md': `# Plan\n\nIntro\n- [ ] Ship it due:${TODAY}\n` }, true, 'home');
+    await card(page, 'Today').locator('li.task .cb').click();
+    await expect.poll(() => readFile(page, dir, 'plan.md')).toContain('- [x] Ship it');
+    await expect(page.locator('.home')).toBeVisible(); // ticking did not leave Home
+    await card(page, 'Today').locator('li.task .t').click();
+    await expect(page.locator('.cm-content')).toContainText('Intro');
+  });
+
+  test('the one-line bar at the top adds a task file and Quick note starts a note', async ({ page }) => {
+    const dir = await openVault(page, { 'a.md': '# A\n' }, true, 'home');
+    await expect(page.locator('.home-top')).toContainText(/\w+day \d+ \w+/);
+    await page.locator('#quick-text').fill('Call Dana @dana due:tomorrow');
+    await expect(page.locator('#quick-preview')).toContainText('Call Dana');
+    await page.locator('#quick-text').press('Enter');
+    await expect.poll(async () => (await listFiles(page, dir)).filter((f) => f.startsWith('tasks/')).length).toBe(1);
+    await expect(page.locator('#quick-text')).toHaveValue('');
+    await page.locator('.home-quick').getByRole('button', { name: 'Quick note' }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+  });
+
+  test('on a phone Home has no sideways scroll and the quick bar, stats and Recent link work', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await openVault(page, { 'a.md': '# A\n' }, true, 'home');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+    await expect(page.locator('#quick-text')).toBeVisible();
+    await expect(page.locator('.wday')).toHaveCount(7);
+    await page.locator('.home-links').getByRole('button', { name: 'Recent' }).click();
+    await expect(page.locator('.title')).toHaveText('Recent');
+  });
+
   test('clicking a task on Home opens its note', async ({ page }) => {
     await openVault(page, { 'tasks/Do things.md': `---\ntitle: Do things\nstatus: todo\ndue: ${TODAY}\n---\n\nBody text\n` }, true, 'home');
     await card(page, 'Today').locator('li.task .t').click();

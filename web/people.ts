@@ -2,7 +2,7 @@ import { fmtDate, localDateOf } from '../src/dates';
 import { buildPeople, personPage, type PeopleIndex } from '../src/people';
 import { openTemplate } from './newmenu';
 import { render, state, today } from './store';
-import { logHtml, row, toggleTask } from './tasks';
+import { logHtml, openTaskRow, row, toggleTask } from './tasks';
 import { esc } from './util';
 
 /**
@@ -129,5 +129,6 @@ export async function click(target: HTMLElement): Promise<boolean> {
     await toggleTask(tg);
     return true;
   }
+  if (await openTaskRow(target)) return true;
   return false;
 }

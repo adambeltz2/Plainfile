@@ -1,6 +1,7 @@
 import { fmtDate } from '../src/dates';
 import type { TaskItem } from '../src/index';
 import { setTaskDone } from '../src/writeback';
+import { openNote } from './notes';
 import { errorMessage, justDone, loadContext, render, rescan, state, today, writeFailure } from './store';
 import { esc } from './util';
 
@@ -66,4 +67,13 @@ export function logHtml(): string {
     (log.before ? `<div class="del"><span class="sg">−</span><span>${esc(log.before)}</span></div>` : '') +
     `<div class="add"><span class="sg">+</span><span>${esc(log.after)}</span></div></div>`
   );
+}
+
+/** On screens with no side panel (Home, Calendar, People), a click on a task row opens the note it lives in, at its line. */
+export async function openTaskRow(target: HTMLElement): Promise<boolean> {
+  const id = target.closest<HTMLElement>('li.task[data-id]')?.dataset.id;
+  const task = id ? state.index?.getTask(id) : undefined;
+  if (!task) return false;
+  await openNote(task.path, { line: task.line });
+  return true;
 }

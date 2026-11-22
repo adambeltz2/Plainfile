@@ -3,7 +3,7 @@ import { fmtDate, fmtDateLong } from '../src/dates';
 import { reschedule } from '../src/home';
 import { addDays } from '../src/query';
 import { errorMessage, quickAddTask, render, rescan, state, today, writeFailure } from './store';
-import { logHtml, row, toggleTask } from './tasks';
+import { logHtml, openTaskRow, row, toggleTask } from './tasks';
 import { esc } from './util';
 
 /**
@@ -156,6 +156,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
     await toggleTask(tg);
     return true;
   }
+  if (await openTaskRow(target)) return true;
   return false;
 }
 

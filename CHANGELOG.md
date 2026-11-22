@@ -7,6 +7,7 @@ deploy-intended change, together with an entry here.
 ## [0.42.1] - 2026-11-22
 
 ### Fixed
+- Clicking a task on Calendar or People did nothing for the same reason. It now opens the note too.
 - Clicking a task on Home did nothing, because Home has no side panel to show it in. It now opens the note, at the task's line.
 
 ## [0.42.0] - 2026-11-21

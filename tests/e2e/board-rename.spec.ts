@@ -112,12 +112,19 @@ test.describe('rename', () => {
     await page.getByRole('button', { name: 'Rescan' }).click();
     await expect(page.locator('.notice', { hasText: 'was renamed to' })).toBeVisible();
     await page.getByRole('button', { name: /^Review/ }).click();
+    await expect(page.getByRole('button', { name: /^Renamed outside/ })).toContainText('1');
     await expect(page.locator('#rn-out')).toContainText('The text is identical');
     await page.getByRole('button', { name: /^Yes, it was renamed/ }).click();
     await expect(page.locator('.notice.ok')).toBeVisible();
     expect(await readFile(page, dir, 'a.md')).toBe('See [[pricing-analysis]] and [[people/dana.md]].\r\nTail'.replace('dana.md', 'dana'));
     expect(await readFile(page, dir, 'b.md')).toBe('Read [[pricing-analysis|the research]] today.\n');
     expect(await readFile(page, dir, 'notes/pricing-analysis.md')).toContain('aliases: [pricing-research]');
+  });
+
+  test('the Renamed outside tab is not offered when nothing was renamed outside', async ({ page }) => {
+    await startRename(page);
+    await expect(page.locator('#rn-name')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Renamed outside/ })).toHaveCount(0);
   });
 
   test('"No, different note" dismisses the banner and changes nothing', async ({ page }) => {
