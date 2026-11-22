@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.42.3] - 2026-11-22
+
+### Changed
+- Focus mode uses more of the screen: the writing column is up to 68rem wide (it was 46rem), still centred.
+
 ## [0.42.2] - 2026-11-22
 
 ### Fixed

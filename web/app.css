@@ -365,7 +365,7 @@ th { background: var(--soft); font-weight: 600; white-space: nowrap; }
 /* ---------- focus mode: the note alone ---------- */
 .wrap.focus .bar, .wrap.focus .foot, .wrap.focus .side, .wrap.focus .source, .wrap.focus .hide-in-focus { display: none !important; }
 .wrap.focus .frame.notes { grid-template-columns: minmax(0, 1fr); border: 0; background: var(--bg); min-height: 0; }
-.wrap.focus .editor-main { width: 100%; max-width: 46rem; margin: 0 auto; padding-top: 6px; }
+.wrap.focus .editor-main { width: 100%; max-width: min(68rem, 94vw); margin: 0 auto; padding-top: 6px; }
 .wrap.focus .ed-head { position: sticky; top: 0; z-index: 3; background: var(--bg); padding: 8px 0; border-bottom: 1px solid var(--line); }
 .wrap.focus .ed-head .path { display: none; }
 .wrap.focus .editor-host .cm-editor { border: 0; min-height: 75vh; }
