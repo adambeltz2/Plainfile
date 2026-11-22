@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.46.0] - 2026-11-22
+
+### Added
+- **Mermaid diagrams (experimental).** A fenced block starting with ```` ```mermaid ```` is drawn as a diagram under its code in the editor, in the app's black and white. The code stays visible, so the markdown is unchanged. A diagram that cannot be drawn shows the reason instead.
+  - Mermaid 11.4.1 is loaded from the jsDelivr CDN the first time a note has a diagram, pinned with an integrity hash. Offline, or if it fails to load, the note shows its code as before.
+  - It is one removable module: `web/mermaid.ts`, `web/mermaid-widget.ts`, `src/diagrams.ts`, and the lines marked `MERMAID` in `web/editor.ts`.
+  - Not in Word, PDF or copy-as-formatted export yet (they show the code).
+
 ## [0.45.1] - 2026-11-22
 
 ### Fixed

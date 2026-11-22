@@ -78,6 +78,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 - **Go to… and quick keys:** Ctrl/Cmd+P finds a note by a few letters, creates one, or runs an action
   ("move kick"). F2 renames, Ctrl/Cmd+Shift+M moves, Ctrl/Cmd+Shift+X toggles X-ray.
 - **Paste images:** paste a screenshot or drop an image into a note; it is saved in `_attachments/`, linked
+- **Diagrams (experimental):** a fenced `mermaid` code block is drawn under its code. Mermaid is loaded from a pinned CDN copy only when a note has a diagram; offline you just see the code. It lives in `web/mermaid.ts` and can be removed on its own.
   relative to the note and shown inline.
 - **Type-ahead:** `[[` links, `#` tags, `@` people, `due:` days and frontmatter values while you type.
 - **Projects on any note:** add a note to one or more projects from its properties, and it shows on

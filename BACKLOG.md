@@ -406,3 +406,8 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` A friendly error screen with a "copy diagnostics" button. No usage data is collected.
   _Affected: `web/main.ts`._
 - `[FEATURE]` `CONTRIBUTING.md` and issue and pull request templates. _Affected: repo root._
+
+## Mermaid (experimental)
+- [FEATURE] Draw Mermaid diagrams in Word/PDF/copy export. `src/render.ts`, `src/docx.ts`, `web/export.ts`.
+- [DEBT] Verify the SRI hash against the live jsDelivr file (computed from the npm package, which should be identical). `web/mermaid.ts`.
+- [FEATURE] Click a diagram to enlarge it. `web/mermaid-widget.ts`.

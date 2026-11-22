@@ -1,4 +1,6 @@
 import { linkAt, type LinkAt } from '../src/linknote';
+import { isMermaidOpen } from '../src/diagrams'; // MERMAID
+import { MermaidWidget } from './mermaid-widget'; // MERMAID
 import { defaultKeymap, history, historyKeymap, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { parseDueWord } from '../src/quickline';
 import { acceptCompletion, autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
@@ -183,6 +185,7 @@ function build(view: EditorView): { all: DecorationSet; atomic: DecorationSet } 
   const items: Range<Decoration>[] = [];
   const atomic: Range<Decoration>[] = [];
   let inFence = false;
+  let diagram: string[] | undefined; // MERMAID: the lines of the diagram block being read
 
   for (let n = 1; n <= doc.lines; n++) {
     const line = doc.line(n);
@@ -193,10 +196,13 @@ function build(view: EditorView): { all: DecorationSet; atomic: DecorationSet } 
     }
     if (FENCE.test(text)) {
       inFence = !inFence;
+      if (inFence) diagram = isMermaidOpen(text) ? [] : undefined; // MERMAID
+      else if (diagram) items.push(Decoration.widget({ widget: new MermaidWidget(diagram.join('\n')), side: 1 }).range(line.to)); // MERMAID
       items.push(Decoration.line({ class: 'cm-code' }).range(line.from));
       continue;
     }
     if (inFence) {
+      diagram?.push(text); // MERMAID
       items.push(Decoration.line({ class: 'cm-code' }).range(line.from));
       continue;
     }
