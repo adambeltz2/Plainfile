@@ -732,3 +732,4 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
   .frame.notes .editor-main { min-width: 0; }
 }
 .finder { margin: 0 0 10px; }
+#note-banner .notice { position: sticky; top: 0; z-index: 4; }

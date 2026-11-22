@@ -534,16 +534,18 @@ export function createEditor(o: { openLink?: (link: LinkAt) => void; text: strin
       EditorView.domEventHandlers({
         mousedown(e, view) {
           const el = e.target as HTMLElement;
-          // A click on a rendered link goes to the note. It is handled on mouse down, before the cursor
-          // lands on the line and turns the link back into raw text.
-          if (o.openLink && el.classList?.contains('cm-link') && e.button === 0 && !e.shiftKey) {
-            const pos = view.posAtDOM(el);
-            const line = view.state.doc.lineAt(pos);
-            const link = linkAt(line.text, pos - line.from);
-            if (link) {
-              e.preventDefault();
-              o.openLink(link);
-              return true;
+          // A click on a link goes to the note, whether it is drawn as a link or is still raw text on the line
+          // being typed. It is handled on mouse down, before the cursor lands and redraws the line.
+          if (o.openLink && e.button === 0 && !e.shiftKey && !e.altKey) {
+            const pos = view.posAtCoords({ x: e.clientX, y: e.clientY }, false);
+            if (pos !== null) {
+              const line = view.state.doc.lineAt(pos);
+              const link = linkAt(line.text, pos - line.from);
+              if (link) {
+                e.preventDefault();
+                o.openLink(link);
+                return true;
+              }
             }
           }
           if (el.classList?.contains('cm-due')) {

@@ -319,3 +319,33 @@ test('the list and details panes can be hidden on a wide screen, and stay hidden
   await page.getByRole('button', { name: 'Details' }).click();
   await expect(page.locator('#note-side')).toBeVisible();
 });
+
+test('a link typed just now can be clicked right away, and creating it opens the new note', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { 'a.md': '---\ntitle: Alpha\n---\nBody\n' });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Alpha')).click();
+  await page.locator('.cm-content').click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('See [[Fresh idea');
+  await page.keyboard.press('Escape');
+  await page.keyboard.type(']] now');
+  const at = await page.evaluate(() => {
+    const w = document.createTreeWalker(document.querySelector('.cm-content')!, NodeFilter.SHOW_TEXT);
+    for (let n = w.nextNode(); n; n = w.nextNode()) {
+      const i = (n.textContent ?? '').indexOf('Fresh');
+      if (i >= 0) {
+        const r = document.createRange();
+        r.setStart(n, i);
+        r.setEnd(n, i + 5);
+        const b = r.getBoundingClientRect();
+        return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+      }
+    }
+    return null;
+  });
+  await page.mouse.click(at!.x, at!.y);
+  await expect(page.locator('#note-banner')).toContainText('There is no note called');
+  await page.getByRole('button', { name: /^Create / }).click();
+  await expect(page.locator('#note-title')).toHaveValue('Fresh idea');
+});

@@ -9,14 +9,14 @@ export interface LinkAt {
 export function linkAt(line: string, col: number): LinkAt | undefined {
   for (const m of line.matchAll(/\[\[([^\]]+)\]\]/g)) {
     const from = m.index ?? 0;
-    if (col >= from && col <= from + m[0].length) {
+    if (col > from && col < from + m[0].length) {
       const target = (m[1] ?? '').split('|')[0]!.split('#')[0]!.trim();
       return target ? { kind: 'wiki', target } : undefined;
     }
   }
   for (const m of line.matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)\)/g)) {
     const from = m.index ?? 0;
-    if (col >= from && col <= from + m[0].length) {
+    if (col > from && col < from + m[0].length) {
       const t = decodeURI((m[1] ?? '').split('#')[0]!);
       if (!t || /^[a-z][a-z0-9+.-]*:/i.test(t)) return undefined; // empty, or a web address
       return { kind: 'md', target: t };

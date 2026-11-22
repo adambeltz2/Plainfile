@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.44.1] - 2026-11-22
+
+### Fixed
+- A link you have just typed (still shown as raw `[[text]]` on the line you are writing) can be clicked straight away, to open the note or to create it. The "no note called…" bar now stays in view when the note is scrolled.
+
 ## [0.44.0] - 2026-11-22
 
 ### Added
