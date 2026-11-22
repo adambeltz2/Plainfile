@@ -1,6 +1,7 @@
 import { fmtDate } from '../src/dates';
 import { setTaskStatus } from '../src/writeback';
 import { errorMessage, rescan, render, state, today, writeFailure, type Log } from './store';
+import { openNote } from './notes';
 import { esc } from './util';
 
 const BASE = ['todo', 'doing', 'waiting', 'done'];
@@ -93,6 +94,13 @@ export async function click(target: HTMLElement): Promise<boolean> {
   const mv = target.closest<HTMLButtonElement>('[data-move]');
   if (mv && !mv.disabled) {
     await move(mv.dataset.move ?? '', mv.dataset.to ?? '');
+    return true;
+  }
+  // A click on the card itself (not a button) opens the task's note.
+  const card = target.closest<HTMLElement>('[data-card]');
+  const task = card?.dataset.card ? state.index?.getTask(card.dataset.card) : undefined;
+  if (task && !target.closest('button')) {
+    await openNote(task.path);
     return true;
   }
   return false;

@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.42.2] - 2026-11-22
+
+### Fixed
+- Clicking a card on the Board, or in a project's board view, did nothing. It now opens the note. The Open and arrow buttons work as before.
+
 ## [0.42.1] - 2026-11-22
 
 ### Fixed

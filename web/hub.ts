@@ -8,6 +8,7 @@ import { addDays } from '../src/query';
 import { deleteView, listViews, saveView, type SavedView } from '../src/views';
 import { setTaskStatus } from '../src/writeback';
 import { errorMessage, justDone, render, rescan, state, today, writeFailure } from './store';
+import { openNote } from './notes';
 import { logHtml, row } from './tasks';
 import { esc } from './util';
 
@@ -185,7 +186,7 @@ function boardHtml(all: HubTask[]): string {
             const prev = COLS[ci - 1]?.[0];
             const next = COLS[ci + 1]?.[0];
             return (
-              `<div class="hub-card"><div class="t">${esc(t.item.title)}</div><div class="chips">${t.due ? `<span class="chip${t.due < today() && t.status !== 'done' ? ' late' : ''}">${esc(fmtDate(t.due))}</span>` : ''}${t.people.map((p) => `<span class="chip mono">@${esc(p)}</span>`).join('')}${t.phase ? `<span class="chip quiet">${esc(t.phase)}</span>` : ''}</div>` +
+              `<div class="hub-card" data-card-open="${esc(t.item.path)}" data-line="${t.item.line}"><div class="t">${esc(t.item.title)}</div><div class="chips">${t.due ? `<span class="chip${t.due < today() && t.status !== 'done' ? ' late' : ''}">${esc(fmtDate(t.due))}</span>` : ''}${t.people.map((p) => `<span class="chip mono">@${esc(p)}</span>`).join('')}${t.phase ? `<span class="chip quiet">${esc(t.phase)}</span>` : ''}</div>` +
               `<div class="hub-move">${file && prev ? `<button class="btn small" data-hub-move="${esc(t.item.id)}|${prev}" aria-label="Move to ${prev}">←</button>` : ''}<button class="btn small" data-open="${esc(t.item.path)}" data-line="${t.item.line}">Open</button>${file && next ? `<button class="btn small" data-hub-move="${esc(t.item.id)}|${next}" aria-label="Move to ${next}">→</button>` : ''}${!file ? `<button class="cb" data-toggle="${esc(t.item.id)}" aria-pressed="${t.status === 'done'}" aria-label="${t.status === 'done' ? 'Mark not done' : 'Mark done'}: ${esc(t.item.title)}">${t.status === 'done' ? '✓' : ''}</button>` : ''}</div></div>`
             );
           })
@@ -408,6 +409,11 @@ async function move(id: string, status: string): Promise<void> {
 
 export async function click(target: HTMLElement): Promise<boolean> {
   const q = <T extends string>(attr: string): T | undefined => (target.closest(`[${attr}]`) as HTMLElement | null)?.getAttribute(attr) as T | undefined;
+  const cardOpen = target.closest<HTMLElement>('[data-card-open]');
+  if (cardOpen?.dataset.cardOpen && !target.closest('button')) {
+    await openNote(cardOpen.dataset.cardOpen, { line: Number(cardOpen.dataset.line) });
+    return true;
+  }
   const toolsSum = target.closest<HTMLElement>('.hub-tools > summary');
   if (toolsSum) {
     hubState.toolsOpen = !(toolsSum.parentElement as HTMLDetailsElement).open;

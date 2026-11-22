@@ -24,6 +24,14 @@ test.describe('board', () => {
     await expect(page.locator('.card')).toHaveCount(3);
   });
 
+  test('clicking a card opens its note, and the arrow buttons still only move it', async ({ page }) => {
+    const dir = await openVault(page, { 'tasks/a.md': task('Alpha', 'todo') });
+    await nav(page, 'Board').click();
+    await page.locator('[data-col="todo"] .card .t, [data-col="todo"] .card').first().click({ position: { x: 20, y: 12 } });
+    await expect(page.locator('.cm-content')).toContainText('Body of Alpha');
+    expect(await readFile(page, dir, 'tasks/a.md')).toBe(task('Alpha', 'todo'));
+  });
+
   test('the arrow buttons change one status line and show what changed', async ({ page }) => {
     const text = task('Alpha', 'todo');
     const dir = await openVault(page, { 'tasks/a.md': text });
