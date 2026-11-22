@@ -273,3 +273,49 @@ test('clicking the title changes it: Enter saves just the title line, Escape put
   await expect.poll(() => readFile(page, dir, 'a.md')).toBe('---\ntitle: "Beta: the sequel"\ncreated: 2026-11-21\n---\nBody\n');
   await expect(page.locator('.note-item', { hasText: 'Beta: the sequel' }).first()).toBeVisible();
 });
+
+test.describe('links in a note', () => {
+  test('clicking a link opens that note, and a missing one can be created', async ({ page }) => {
+    await page.goto('/');
+    const dir = await openVault(page, {
+      'plan/index.md': '---\ntitle: Plan\n---\nGo to [[Target note]] then [[Not there yet]].\n',
+      'plan/Target note.md': '---\ntitle: Target note\n---\nHello target\n',
+    });
+    await nav(page, 'Notes').click();
+    await (await noteItem(page, /^Plan$/)).click();
+    await page.locator('.cm-content').click(); // leave the line, so the links render
+    await page.keyboard.press('Control+End');
+    await page.keyboard.type('x'); // move off the line with the links
+    await page.keyboard.press('Control+Home');
+    await page.keyboard.press('ArrowDown');
+    await page.locator('.cm-link', { hasText: 'Target note' }).click();
+    await expect(page.locator('#note-title')).toHaveValue('Target note');
+    await (await noteItem(page, /^Plan$/)).click();
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+End');
+    await page.locator('.cm-link', { hasText: 'Not there yet' }).click();
+    await expect(page.locator('#note-banner')).toContainText('There is no note called');
+    await page.getByRole('button', { name: /^Create plan\/Not there yet\.md/ }).click();
+    await expect(page.locator('#note-title')).toHaveValue('Not there yet');
+    expect(await readFile(page, dir, 'plan/Not there yet.md')).toBe(`---\ntitle: Not there yet\ncreated: ${new Date().toLocaleDateString('en-CA')}\n---\n\n`);
+  });
+});
+
+test('the list and details panes can be hidden on a wide screen, and stay hidden', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openVault(page, { 'a.md': '---\ntitle: Alpha\n---\nBody\n' });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Alpha')).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  await expect(page.locator('.frame.notes > .side')).toBeVisible();
+  const wide = (await page.locator('.editor-main').boundingBox())!.width;
+  await page.getByRole('button', { name: 'Notes list' }).click();
+  await page.getByRole('button', { name: 'Details' }).click();
+  await expect(page.locator('.frame.notes > .side')).toBeHidden();
+  await expect(page.locator('#note-side')).toBeHidden();
+  expect((await page.locator('.editor-main').boundingBox())!.width).toBeGreaterThan(wide + 400);
+  expect(await page.evaluate(() => localStorage.getItem('plainfile.panes'))).toBe('{"list":false,"details":false}');
+  await page.getByRole('button', { name: 'Details' }).click();
+  await expect(page.locator('#note-side')).toBeVisible();
+});

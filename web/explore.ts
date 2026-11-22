@@ -1,3 +1,4 @@
+import { finder } from './search';
 import { graphAround, hubs, layoutRadial, linksOf, relatedNotLinked, unlinkedMentions, type Mention, type Related } from '../src/related';
 import { flush } from './notes';
 import { render, state } from './store';
@@ -107,7 +108,7 @@ export function html(): string {
   let h = '<div class="frame two"><aside class="side">';
   h += `<div><label class="sr" for="explore-find">Find a note</label><input id="explore-find" class="inp" type="text" autocomplete="off" placeholder="Find a note" value="${esc(exploreState.filter)}"></div>`;
   h += `<div><h2>${q ? 'Matches' : 'Most connected'}</h2><ul id="explore-list" class="plain">${listItems(matches, q.length > 0)}</ul></div>`;
-  h += '</aside><section class="main">';
+  h += '</aside><section class="main">' + finder('explore');
 
   const path = exploreState.path;
   const note = path ? idx.notes.get(path) : undefined;

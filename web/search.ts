@@ -72,12 +72,19 @@ function results(): { list: string; count: string; facets: string } {
   return { list, count, facets: facet('Folder', fc, 'folder:') + facet('Tag', tc, 'tag:') };
 }
 
+/** Search and Explore are two ways to find things, so they share one place in the navigation and this switch. */
+export function finder(active: 'search' | 'explore'): string {
+  return `<div class="seg finder" role="group" aria-label="Find or explore"><button data-nav="search" aria-pressed="${active === 'search'}">Search</button><button data-nav="explore" aria-pressed="${active === 'explore'}">Explore connections</button></div>`;
+}
+
 export function html(): string {
   const r = results();
   return (
     '<div class="frame two"><aside class="side" id="search-facets">' +
     (r.facets || '<p class="muted small" style="margin:0">Folders and tags from your results appear here to narrow them.</p>') +
-    '</aside><section class="main"><h2 class="title">Search</h2>' +
+    '</aside><section class="main">' +
+    finder('search') +
+    '<h2 class="title">Search</h2>' +
     `<div class="sbox"><input id="search-q" type="text" autocomplete="off" spellcheck="false" aria-label="Search every note and task" placeholder="Search notes and tasks" value="${esc(searchState.q)}"></div>` +
     `<div class="examples" id="search-quick" role="group" aria-label="Find by date"><span class="muted small">When</span>${QUICK.map(([l, v]) => `<button class="chip ex" data-q="${esc(v)}" aria-pressed="${searchState.q.trim() === v}">${esc(l)}</button>`).join('')}</div>` +
     `<div class="examples"><span class="muted small">Try</span>${EXAMPLES.map((e) => `<button class="chip mono ex" data-q="${esc(e)}">${esc(e)}</button>`).join('')}</div>` +

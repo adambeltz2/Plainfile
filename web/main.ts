@@ -91,7 +91,6 @@ const NAV: { id: ScreenId; label: string }[] = [
   { id: 'board', label: 'Board' },
   { id: 'notes', label: 'Notes' },
   { id: 'recent', label: 'Recent' },
-  { id: 'explore', label: 'Explore' },
   { id: 'search', label: 'Search' },
   { id: 'insight', label: 'Insight' },
   { id: 'health', label: 'Vault health' },
@@ -165,7 +164,7 @@ function tabbar(hc: number): string {
   const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${state.screen === id}">${label}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
-      ['recent:Recent', 'search:Search', 'calendar:Calendar', 'people:People', 'board:Board', 'explore:Explore', 'review:Weekly review', 'insight:Insight', 'health:Vault health', 'guide:Cheat sheet']
+      ['recent:Recent', 'search:Search', 'calendar:Calendar', 'people:People', 'board:Board', 'review:Weekly review', 'insight:Insight', 'health:Vault health', 'guide:Cheat sheet']
         .map((x) => {
           const [id, label] = x.split(':') as [ScreenId, string];
           return `<button class="btn" data-nav="${id}" data-more-item>${label}${id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
@@ -181,11 +180,11 @@ function tabbar(hc: number): string {
 function shell(): string {
   const hc = healthCount();
   const focusing = state.screen === 'notes' && notes.notes.focus && !!notes.notes.path;
-  let h = `<div class="wrap${focusing ? ' focus' : ''}"><header class="bar"><h1>Plainfile</h1>`;
+  let h = `<div class="wrap${focusing ? ' focus' : ''}${state.screen === 'notes' ? ' notes-wide' : ''}"><header class="bar"><h1>Plainfile</h1>`;
   h += `<span class="tag-pill${state.demo ? '' : ' inv'}" title="${esc(state.name)}">${esc(state.name)}</span>`;
   h += '<nav class="nav" aria-label="Screens">';
   for (const n of NAV) {
-    h += `<button class="navbtn" data-nav="${n.id}" aria-current="${state.screen === n.id}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
+    h += `<button class="navbtn" data-nav="${n.id}" aria-current="${state.screen === n.id || (n.id === 'search' && state.screen === 'explore')}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
   }
   h += '</nav><span class="grow"></span>';
   h += '<button class="btn" data-act="palette-open" title="Open a note or run an action" aria-label="Go to a note or action">Go to…</button>';

@@ -1,3 +1,4 @@
+import { linkAt, type LinkAt } from '../src/linknote';
 import { defaultKeymap, history, historyKeymap, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { parseDueWord } from '../src/quickline';
 import { acceptCompletion, autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
@@ -479,7 +480,7 @@ async function insertImages(view: EditorView, files: File[], save: (f: File) => 
 const imagesIn = (list: FileList | DataTransferItemList | null | undefined): File[] =>
   [...((list as FileList | undefined) ?? [])].filter((f): f is File => f instanceof File && f.type.startsWith('image/'));
 
-export function createEditor(o: { text: string; crlf: boolean; today: () => string; onChange(): void; onSave(): void; suggest?: Suggester; pasteImage?: (f: File) => Promise<string | null>; loadImage?: (rel: string) => Promise<string | undefined> }): EditorHandle {
+export function createEditor(o: { openLink?: (link: LinkAt) => void; text: string; crlf: boolean; today: () => string; onChange(): void; onSave(): void; suggest?: Suggester; pasteImage?: (f: File) => Promise<string | null>; loadImage?: (rel: string) => Promise<string | undefined> }): EditorHandle {
   const mode = new Compartment();
   const host = document.createElement('div');
   host.className = 'editor-host';
@@ -533,6 +534,18 @@ export function createEditor(o: { text: string; crlf: boolean; today: () => stri
       EditorView.domEventHandlers({
         mousedown(e, view) {
           const el = e.target as HTMLElement;
+          // A click on a rendered link goes to the note. It is handled on mouse down, before the cursor
+          // lands on the line and turns the link back into raw text.
+          if (o.openLink && el.classList?.contains('cm-link') && e.button === 0 && !e.shiftKey) {
+            const pos = view.posAtDOM(el);
+            const line = view.state.doc.lineAt(pos);
+            const link = linkAt(line.text, pos - line.from);
+            if (link) {
+              e.preventDefault();
+              o.openLink(link);
+              return true;
+            }
+          }
           if (el.classList?.contains('cm-due')) {
             e.preventDefault();
             openDateMenu(view, el, o.today);

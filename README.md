@@ -33,7 +33,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 | **Move**: a preview of the links it fixes, then Undo | ![Move](docs/screenshots/move.png) |
 | **Go to…**: the command palette | ![Palette](docs/screenshots/palette.png) |
 | **Search**: operators, plus `modified:today` and other date chips | ![Search](docs/screenshots/search.png) |
-| **Explore**: related notes and a neighbourhood graph | ![Explore](docs/screenshots/explore.png) |
+| **Explore** (a switch inside Search): related notes and a neighbourhood graph | ![Explore](docs/screenshots/explore.png) |
 | **Dark mode**: Light, Dark or Auto on every screen | ![Dark mode](docs/screenshots/today-dark.png) |
 | **On a phone**: installable, works offline | <img src="docs/screenshots/phone-today.png" alt="Phone" width="240"> |
 
@@ -65,6 +65,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
   belong to it when their `project:` names it. Notebook projects (`active`, `sortOrder`) still work.
 - **Uniform fields without requiring them:** frontmatter is read tolerantly; a Tidy panel offers one-line
   fixes to the standard field names and values.
+- **Notes:** click a link in a note to go to it (or to create it, if it does not exist yet); hide the list and details panes to use the whole window on a wide screen.
 - **Notes:** reopens where you left off, or shows a home with pinned, modified-today and recent notes.
   One live editor where `- [ ] ` becomes a checkbox as you type. X-ray shows raw
   markdown, focus mode hides the noise, and a properties panel edits frontmatter. A button adds
@@ -83,7 +84,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
   each project's dashboard with its tasks.
 - **Search:** words plus `tag:`, `folder:`, `type:`, `is:open`, `due:`, `@person`, `modified:` and
   `created:`, with "Modified today" chips and a recent-notes list.
-- **Explore:** related notes (shared tags, links, project, similar text) and a graph.
+- **Explore** (under the Search tab, switch at the top): related notes (shared tags, links, project, similar text) and a graph.
 - **Templates:** markdown files in `.plainfile/templates/`, with questions, date variables and a
   cursor position. Built in: Note, Task, Project, Meeting (people and project), Journal, Person.
 - **Rename and links:** renaming a note rewrites every link to it, with a preview. Renames made

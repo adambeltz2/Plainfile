@@ -1,3 +1,4 @@
+import { newNoteForLink, type LinkAt } from '../src/linknote';
 import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type DeletePlan, type TrashItem } from '../src/delete';
 import { lineDiff, type LineChange } from '../src/diff';
 import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type Version } from '../src/history';
@@ -22,6 +23,15 @@ interface At {
   offset?: number;
 }
 
+function loadPanes(): { list: boolean; details: boolean } {
+  try {
+    const v = JSON.parse(localStorage.getItem('plainfile.panes') ?? 'null') as { list?: boolean; details?: boolean } | null;
+    return { list: v?.list !== false, details: v?.details !== false };
+  } catch {
+    return { list: true, details: true };
+  }
+}
+
 export const notes = {
   path: undefined as string | undefined,
   mtime: 0,
@@ -39,7 +49,11 @@ export const notes = {
   filter: '',
   pending: {} as At,
   /** The delete confirmation that is showing: move to trash, or the second step for permanent. */
+  /** Which side panels show on a wide screen. Remembered in this browser. */
+  panes: loadPanes(),
   confirmDelete: undefined as undefined | 'trash' | 'permanent',
+  /** A clicked link to a note that does not exist yet, waiting for Create or Cancel. */
+  missingLink: undefined as undefined | { path: string; title: string; content: string },
   /** A delete is in progress, so the buttons say so and cannot be pressed twice. */
   deleting: false,
   lastDeleted: undefined as undefined | { title: string; path: string; trashPath?: string },
@@ -188,6 +202,34 @@ export function lastOpened(): string | undefined {
   }
 }
 
+/** A click on a link in the editor: open the note it points to, or offer to create it. */
+async function openLink(link: LinkAt): Promise<void> {
+  const { index, storage } = state;
+  const from = notes.path ? index?.notes.get(notes.path) : undefined;
+  if (!index || !storage || !from || !notes.path) return;
+  const hit = index.resolveLink(from, { kind: link.kind, target: link.target, line: 0 });
+  if (hit.path) return void (await openNote(hit.path));
+  const plan = newNoteForLink(notes.path, link, today());
+  if (index.files.has(plan.path)) return void (await openNote(plan.path));
+  notes.missingLink = plan;
+  refreshBanner();
+}
+
+async function createLinked(): Promise<void> {
+  const m = notes.missingLink;
+  const { index, storage } = state;
+  if (!m || !index || !storage) return;
+  notes.missingLink = undefined;
+  try {
+    await storage.create(m.path, m.content);
+    await index.refreshFile(m.path);
+    await openNote(m.path);
+  } catch (e) {
+    state.error = `Could not create ${m.path}. ${errorMessage(e)}`;
+    render();
+  }
+}
+
 export async function openNote(path: string, at: At = {}): Promise<void> {
   await flush();
   const { storage } = state;
@@ -213,7 +255,8 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
     notes.versions = [];
     notes.lastDeleted = undefined;
     notes.confirmDelete = undefined;
-    notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush(), suggest, pasteImage, loadImage });
+    notes.missingLink = undefined;
+    notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush(), suggest, pasteImage, loadImage, openLink });
     rememberLast(path);
   } catch (e) {
     notes.handle?.destroy();
@@ -471,6 +514,10 @@ async function restoreFromTrash(trashPath: string): Promise<void> {
 }
 
 function bannerHtml(): string {
+  if (notes.missingLink) {
+    const m = notes.missingLink;
+    return `<div class="notice">There is no note called “${esc(m.title)}” yet. <button class="btn primary" data-act="link-create">Create ${esc(m.path)}</button> <button class="btn" data-act="link-cancel">Cancel</button></div>`;
+  }
   if (notes.confirmDelete && notes.path) return deleteConfirmHtml();
   if (notes.missing) return '<div class="notice err">This file was deleted or moved outside the app. Your edits here are not saved.</div>';
   if (notes.conflict) {
@@ -678,13 +725,14 @@ export function html(): string {
       `<div class="ed-head"><div style="min-width:0"><input id="note-title" class="title title-input" type="text" value="${esc(n?.title ?? notes.path)}" aria-label="Note title (click to change)" title="Click to change the title" spellcheck="false" autocomplete="off"><div class="mono muted small path">${esc(notes.path)}</div></div>` +
       `<div class="ed-actions"><button class="btn only-narrow hide-in-focus" data-act="note-close">All notes</button>` +
       `<button class="btn" id="note-undo" data-act="note-undo" disabled>Undo</button><button class="btn" id="note-redo" data-act="note-redo" disabled>Redo</button>` +
+      `<button class="btn only-wide" data-act="pane-list" aria-pressed="${notes.panes.list}" title="Show or hide the list of notes">Notes list</button><button class="btn only-wide" data-act="pane-details" aria-pressed="${notes.panes.details}" title="Show or hide properties, links and history">Details</button>` +
       `<button class="btn" data-act="focus-toggle" aria-pressed="${notes.focus}">${notes.focus ? 'Exit focus' : 'Focus'}</button><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button>` +
       `<button class="btn hide-in-focus" data-act="note-menu" aria-haspopup="menu" aria-label="More actions" title="Move, rename, duplicate, pin, delete and more">⋯ More</button>` +
       `<span id="note-status" class="status" role="status">${esc(notes.status)}</span></div></div>` +
       `<div id="note-banner">${bannerHtml()}</div><div id="editor-slot" class="editor-slot"></div>`;
   }
   return (
-    `<div class="frame notes${notes.path ? ' has-note' : ''}">` +
+    `<div class="frame notes${notes.path ? ' has-note' : ''}${notes.panes.list ? '' : ' no-list'}${notes.panes.details ? '' : ' no-details'}">` +
     `<aside class="side"><div class="side-head"><input id="note-filter" class="inp" type="text" placeholder="Filter notes" aria-label="Filter notes" value="${esc(notes.filter)}">` +
     '<button class="btn primary" data-act="new-note">+ New note</button><button class="btn" data-quick-note title="Titled with the date and time, ready to type (Alt+N)">Quick note</button></div>' +
     `<div id="note-list" class="note-list">${listHtml()}</div><div id="note-trash">${trashHtml()}</div></aside>` +
@@ -886,6 +934,25 @@ export async function click(target: HTMLElement): Promise<boolean> {
       await refreshTrash();
       return true;
     }
+    case 'pane-list':
+    case 'pane-details': {
+      if (act.dataset.act === 'pane-list') notes.panes.list = !notes.panes.list;
+      else notes.panes.details = !notes.panes.details;
+      try {
+        localStorage.setItem('plainfile.panes', JSON.stringify(notes.panes));
+      } catch {
+        /* the choice just is not remembered */
+      }
+      render();
+      return true;
+    }
+    case 'link-create':
+      await createLinked();
+      return true;
+    case 'link-cancel':
+      notes.missingLink = undefined;
+      refreshBanner();
+      return true;
     case 'note-reload': {
       const p = notes.path;
       window.clearTimeout(notes.timer);

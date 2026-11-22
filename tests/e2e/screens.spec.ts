@@ -304,10 +304,10 @@ test.describe('phone navigation', () => {
     await page.locator('.side-toggle').click();
     await expect(page.locator('.side [data-view="inbox"]')).toBeVisible();
     await page.locator('.side [data-view="inbox"]').click();
-    // More holds Board, Explore, Vault health, the cheat sheet, Rescan and the theme.
+    // More holds Board, Vault health, the cheat sheet, Rescan and the theme.
     await bar.getByRole('button', { name: /^More/ }).click();
     const sheet = page.locator('.more-sheet');
-    for (const n of ['Search', 'Board', 'Explore', 'Weekly review', /^Vault health/, 'Cheat sheet', 'Rescan', 'Light', 'Dark', 'Auto']) await expect(sheet.getByRole('button', { name: n })).toBeVisible();
+    for (const n of ['Search', 'Board', 'Weekly review', /^Vault health/, 'Cheat sheet', 'Rescan', 'Light', 'Dark', 'Auto']) await expect(sheet.getByRole('button', { name: n })).toBeVisible();
     await sheet.getByRole('button', { name: 'Board' }).click();
     await expect(page.locator('.more-sheet')).toHaveCount(0);
     await expect(page.locator('.title')).toContainText('Board');

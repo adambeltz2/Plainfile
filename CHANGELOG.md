@@ -4,6 +4,16 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.44.0] - 2026-11-22
+
+### Added
+- **Click a link to go to the note.** A `[[link]]` or `[text](note.md)` in a note opens its target on one click. If the note does not exist, a bar offers to create it beside the note you are in (titled, dated, ready to type).
+- **Hide the side panels.** On a wide screen the Notes screen has Notes list and Details buttons to hide either panel, and it now uses the full window width. The choice is remembered.
+
+### Changed
+- **Search and Explore share one tab.** Explore is no longer a separate item in the navigation; a Search | Explore connections switch sits at the top of both. The Go to… palette and Ctrl+Shift+E still reach Explore directly.
+- The note menu stays on screen when it is tall.
+
 ## [0.43.0] - 2026-11-22
 
 ### Added

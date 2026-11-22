@@ -112,6 +112,11 @@ export async function readFileOrEmpty(page: Page, dir: string, path: string): Pr
 
 /** Go to a screen by name at any width: the header tabs on a wide screen, the bottom bar (or its More sheet) on a phone. */
 export async function goTo(page: Page, name: RegExp | string): Promise<void> {
+  // Explore lives under Search now: go to Search, then switch.
+  if (name === 'Explore') {
+    await goTo(page, 'Search');
+    return page.locator('.finder').getByRole('button', { name: /^Explore/ }).click();
+  }
   const top = page.locator('.nav').getByRole('button', { name });
   if (await top.isVisible()) return top.click();
   if (!(await page.locator('.tabbar').count())) {

@@ -719,3 +719,16 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .title-input:hover { border-color: var(--line); }
 .title-input:focus { border-color: var(--fg); outline: none; background: var(--bg); }
 .ed-head > div:first-child { flex: 1 1 14rem; min-width: 0; }
+
+/* Wide screens: the Notes screen uses the whole window, and its side panels can be hidden. */
+.wrap.notes-wide { max-width: min(2400px, 100%); }
+.only-wide { display: inline-block; }
+@media (max-width: 960px) { .only-wide { display: none; } }
+@media (min-width: 961px) {
+  .frame.notes.no-list { grid-template-columns: minmax(0, 1fr) minmax(0, 320px); }
+  .frame.notes.no-details { grid-template-columns: 220px minmax(0, 1fr); }
+  .frame.notes.no-list.no-details { grid-template-columns: minmax(0, 1fr); }
+  .frame.notes.no-list > .side, .frame.notes.no-details > .source { display: none; }
+  .frame.notes .editor-main { min-width: 0; }
+}
+.finder { margin: 0 0 10px; }
