@@ -1,5 +1,5 @@
 import { fmtDate } from '../src/dates';
-import { groupRecent, recentNotes } from '../src/recent';
+import { folderOf, recentNotes, whenParts } from '../src/recent';
 import { render, state, today } from './store';
 import { esc } from './util';
 
@@ -14,14 +14,17 @@ export function html(): string {
   let h = '<div class="head"><h2 class="title">Recent</h2></div>';
   h += `<div class="ed-bar"><input type="search" id="recent-q" placeholder="Filter by title or folder" aria-label="Filter recent notes" value="${esc(recent.query)}"><span class="muted small">${all.length} note${all.length === 1 ? '' : 's'}, newest change first</span></div>`;
   if (!shown.length) return `${h}<p class="muted">${recent.query ? 'No note matches that.' : 'No notes yet. Try a quick note from Home.'}</p>`;
-  for (const g of groupRecent(shown, today())) {
-    h += `<section class="recent-group"><h3 class="small muted">${esc(g.label)}</h3><div class="list">`;
-    for (const it of g.items) {
-      const time = new Date(it.mtime).toTimeString().slice(0, 5);
-      h += `<button class="item note-quick" data-open="${esc(it.path)}"><span>${esc(it.title)}${it.task ? ' <span class="chip quiet">task</span>' : ''}${it.project ? ` <span class="chip quiet">${esc(it.project)}</span>` : ''}<span class="muted mono small" style="display:block">${esc(it.path)}</span></span><span class="muted mono small">${esc(g.label === 'Today' || g.label === 'Yesterday' ? time : fmtDate(it.date))}</span></button>`;
-    }
-    h += '</div></section>';
+  h += '<div class="table-wrap"><table class="portfolio recent-table"><thead><tr><th>Note</th><th>Folder</th><th>Project</th><th>Type</th><th class="r">Modified</th></tr></thead><tbody>';
+  const t = today();
+  for (const it of shown) {
+    const w = whenParts(it, t, fmtDate);
+    h += `<tr class="recent-row" data-open="${esc(it.path)}"><td><button class="link" data-open="${esc(it.path)}">${esc(it.title)}</button></td>` +
+      `<td class="muted mono small">${esc(folderOf(it.path) || '·')}</td>` +
+      `<td>${it.project ? `<span class="chip quiet">${esc(it.project)}</span>` : '<span class="muted">·</span>'}</td>` +
+      `<td>${it.task ? '<span class="chip quiet">task</span>' : '<span class="muted small">note</span>'}</td>` +
+      `<td class="r small"><b>${esc(w.day)}</b> <span class="muted mono">${esc(w.time)}</span></td></tr>`;
   }
+  h += '</tbody></table></div>';
   if (all.length > shown.length) h += `<button class="btn" data-recent-more>Show more (${all.length - shown.length} left)</button>`;
   return h;
 }

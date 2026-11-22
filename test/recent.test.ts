@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
-import { groupRecent, recentNotes } from '../src/recent';
+import { folderOf, recentNotes, whenParts } from '../src/recent';
 
 describe('recent', () => {
   it('lists newest change first, filters, and groups by day', async () => {
@@ -14,8 +14,13 @@ describe('recent', () => {
     expect(all[0]!.path).toBe('a.md');
     expect(all.find((x) => x.path === 'tasks/c.md')!.task).toBe(true);
     expect(recentNotes(index, 'beta').map((x) => x.path)).toEqual(['b.md']);
-    const day = (d: string, p: string) => ({ path: p, title: p, mtime: 0, date: d, task: false });
-    const g = groupRecent([day('2026-11-21', 'x'), day('2026-11-20', 'y'), day('2026-11-17', 'z'), day('2026-10-03', 'w'), day('2026-10-01', 'v')], '2026-11-21');
-    expect(g.map((x) => [x.label, x.items.length])).toEqual([['Today', 1], ['Yesterday', 1], ['Earlier this week', 1], ['October 2026', 2]]);
+    const it = (date: string, mtime: number) => ({ path: 'x.md', title: 'x', mtime, date, task: false });
+    const noon = new Date(2026, 10, 17, 9, 5).getTime();
+    const fmt = (d: string) => `D${d}`;
+    expect(whenParts(it('2026-11-21', noon), '2026-11-21', fmt)).toEqual({ day: 'Today', time: '09:05' });
+    expect(whenParts(it('2026-11-20', noon), '2026-11-21', fmt).day).toBe('Yesterday');
+    expect(whenParts(it('2026-11-17', noon), '2026-11-21', fmt).day).toBe('D2026-11-17');
+    expect(folderOf('a/b/c.md')).toBe('a/b');
+    expect(folderOf('c.md')).toBe('');
   });
 });

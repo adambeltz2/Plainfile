@@ -10,11 +10,6 @@ export interface RecentItem {
   task: boolean;
   project?: string;
 }
-export interface RecentGroup {
-  label: string;
-  items: RecentItem[];
-}
-
 /** Every note, newest change first. `query` matches the title or path. Task notes are included and marked. */
 export function recentNotes(index: VaultIndex, query = ''): RecentItem[] {
   const q = query.trim().toLowerCase();
@@ -27,24 +22,16 @@ export function recentNotes(index: VaultIndex, query = ''): RecentItem[] {
   return out.sort((a, b) => b.mtime - a.mtime || a.path.localeCompare(b.path));
 }
 
-/** Group by when it changed: Today, Yesterday, Earlier this week (last 7 days), then by month. */
-export function groupRecent(items: RecentItem[], today: string): RecentGroup[] {
-  const yesterday = addDays(today, -1);
-  const weekStart = addDays(today, -6);
-  const groups: RecentGroup[] = [];
-  for (const it of items) {
-    const label = it.date >= today ? 'Today' : it.date === yesterday ? 'Yesterday' : it.date >= weekStart ? 'Earlier this week' : monthLabel(it.date);
-    let g = groups[groups.length - 1];
-    if (!g || g.label !== label) {
-      g = { label, items: [] };
-      groups.push(g);
-    }
-    g.items.push(it);
-  }
-  return groups;
+/** "Today 22:54", "Yesterday 22:54", or "Mon 17 Nov 22:54" style pieces: the day word (or date) and the time. */
+export function whenParts(it: RecentItem, today: string, fmt: (iso: string) => string): { day: string; time: string } {
+  const d = new Date(it.mtime);
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const day = it.date >= today ? 'Today' : it.date === addDays(today, -1) ? 'Yesterday' : fmt(it.date);
+  return { day, time };
 }
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-function monthLabel(date: string): string {
-  return `${MONTHS[Number(date.slice(5, 7)) - 1] ?? ''} ${date.slice(0, 4)}`;
+/** The folder a note lives in, or an empty string at the top level. */
+export function folderOf(path: string): string {
+  const i = path.lastIndexOf('/');
+  return i < 0 ? '' : path.slice(0, i);
 }

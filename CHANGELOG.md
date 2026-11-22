@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.42.4] - 2026-11-22
+
+### Changed
+- Recent is a flat table: note, folder, project, type and when it changed (Today 22:54), one row each. Click anywhere on the row to open it.
+
 ## [0.42.3] - 2026-11-22
 
 ### Changed
