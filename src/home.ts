@@ -93,14 +93,6 @@ export function undated(index: VaultIndex): HubTask[] {
   return allTasks(index).filter((t) => t.status !== 'done' && !t.due);
 }
 
-/** (Home no longer shows this; the Recent screen lists every note.) Where you left off: the notes changed most recently, leaving out task notes and the generated inbox file. */
-export function pickUp(index: VaultIndex, limit = 5): Note[] {
-  return [...index.notes.values()]
-    .filter((n) => !isTaskNote(n))
-    .sort((a, b) => b.mtime - a.mtime || a.path.localeCompare(b.path))
-    .slice(0, limit);
-}
-
 /** File a note or task note: add it to a project and add tags. Only those two fields change. */
 export async function fileItem(storage: VaultStorage, index: VaultIndex, path: string, opts: { project?: string; tags?: string[] }): Promise<ChangeResult> {
   const stat = await storage.stat(path);

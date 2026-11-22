@@ -459,8 +459,6 @@ progress:indeterminate { background: repeating-linear-gradient(90deg, var(--fg) 
 .pal-item span { opacity: 0.7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
 .pal-item[aria-selected='true'], .pal-item:hover { background: var(--fg); color: var(--bg); }
 .notes-home { max-width: 52rem; }
-.home-list li { margin: 0; }
-.home-list .note-quick { display: flex; justify-content: space-between; gap: 12px; width: 100%; }
 .note-quick { font-weight: 400; }
 kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12px var(--mono); }
 
@@ -623,7 +621,6 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .home-rows li { margin: 0; }
 .home-rows .note-quick { display: flex; justify-content: space-between; gap: 10px; width: 100%; }
 .home-log { margin-top: 8px; }
-.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; height: 96px; margin: 0 0 10px; }
 .wday { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; font-size: 11px; position: relative; }
 .wday i { display: block; width: 100%; background: var(--fg); border-radius: 3px 3px 0 0; min-height: 2px; margin-bottom: 2px; }
 .wday b { font-size: 12px; }
@@ -743,3 +740,6 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .cm-mermaid { display: block; margin: 6px 0 12px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; text-align: center; color: var(--mute); font-size: 13px; }
 .cm-mermaid svg { max-width: 100%; height: auto; }
 .cm-mermaid-err { text-align: left; font-family: var(--mono); }
+.changelog { max-width: 70ch; }
+.changelog h2:not(.title) { font-size: 16px; margin: 22px 0 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.changelog h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); margin: 10px 0 2px; }

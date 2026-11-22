@@ -8,13 +8,13 @@ import { listProjects, type Project } from '../src/projects';
 import { findProject, parseQuickLine, type QuickLine } from '../src/quickline';
 import type { VaultStorage } from '../src/storage';
 import { loadTemplates, type Template } from '../src/templates';
-import { StaleError, type ChangeResult } from '../src/writeback';
+import { StaleError } from '../src/writeback';
 import { hasPermission, loadHandle, saveHandle } from './handle-store';
 import { browserCache } from './index-cache';
 
 export const SAMPLE_DAY = '2026-11-21';
 
-export type ScreenId = 'home' | 'review' | 'insight' | 'recent' | 'today' | 'calendar' | 'people' | 'projects' | 'board' | 'notes' | 'explore' | 'search' | 'health' | 'rename' | 'guide';
+export type ScreenId = 'home' | 'review' | 'insight' | 'recent' | 'today' | 'calendar' | 'people' | 'projects' | 'board' | 'notes' | 'explore' | 'search' | 'health' | 'rename' | 'guide' | 'changelog';
 export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | 'followups' | 'projects';
 
 export type Modal =

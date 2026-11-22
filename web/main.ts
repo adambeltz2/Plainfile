@@ -4,6 +4,7 @@ import * as calendarScreen from './calendar';
 import * as cloudUi from './cloud';
 import * as explore from './explore';
 import * as guide from './guide';
+import * as changelogScreen from './changelog';
 import * as health from './health';
 import * as homeScreen from './home';
 import * as reviewScreen from './review';
@@ -116,7 +117,7 @@ function footer(): string {
   return (
     '<footer class="foot">' +
     `<span class="mono">Plainfile v${esc(__APP_VERSION__)}</span>` +
-    `<a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">What is new</a>` +
+    '<button class="link" data-nav="changelog">What is new</button>' +
     `<a href="${REPO}" target="_blank" rel="noopener noreferrer">GitHub</a>` +
     (state.index ? '<button class="link" data-nav="guide">Cheat sheet</button>' : '') +
     '</footer>'
@@ -239,6 +240,9 @@ function shell(): string {
       break;
     case 'guide':
       h += guide.html();
+      break;
+    case 'changelog':
+      h += changelogScreen.html();
       break;
     case 'explore':
       h += explore.html();

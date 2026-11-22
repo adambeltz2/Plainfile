@@ -12,6 +12,16 @@ links live in ordinary `.md` files with frontmatter. The app reads them and
 gives you one place to see everything. Nothing is stored anywhere else, so the
 folder is the whole repository and works with any editor or sync tool.
 
+## How it relates to SilverBullet and Obsidian
+
+Plainfile is plainly inspired by tools like <a href="https://silverbullet.md/" target="_blank" rel="noopener noreferrer">SilverBullet</a> and <a href="https://obsidian.md/" target="_blank" rel="noopener noreferrer">Obsidian</a>: your notes are a folder of markdown files you own, linked with `[[wikilinks]]`, edited live. The approach differs in a few ways:
+
+- **Tasks and projects are first-class, and still plain files.** A task can be an inline `- [ ]` line or its own note with a `status:`; projects are folders. Home, Today, the project hub and the weekly review are views over those files, not a second database.
+- **It reads other people's conventions without rewriting them.** `due:`, `📅`, Dataview `[due:: …]`, `#tags` and `[[links]]` all work, and writes touch the smallest piece of text possible.
+- **Nothing to install or run.** It is a static web page that opens a folder (or a Dropbox folder) directly in the browser. There is no server, database, account or plugin system, and the index is a cache you can delete.
+- **It shows its work.** After every write you see the exact before and after lines; deleting goes to a trash; every save keeps history.
+- **Black and white, on purpose.** State is shown with weight, borders and inversion, not color.
+
 ## What it looks like
 
 Screenshots are of the built-in sample vault, regenerated with `npm run screenshots`.

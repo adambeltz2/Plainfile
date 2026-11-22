@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.46.1] - 2026-11-22
+
+### Added
+- **What is new** in the footer opens the change log inside the app, by version and without dates, with a GitHub link. The README and that screen now say how Plainfile relates to SilverBullet and Obsidian.
+
+### Changed
+- Tidied: removed code and styles nothing used any more (the old "Pick up where you left off" helper, unused imports and CSS), and updated the project notes in `CLAUDE.md`.
+
 ## [0.46.0] - 2026-11-22
 
 ### Added

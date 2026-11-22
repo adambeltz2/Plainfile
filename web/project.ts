@@ -1,11 +1,10 @@
 import { fmtDate, localDateOf } from '../src/dates';
-import { dirname } from '../src/index';
-import { listProjects, projectDashboard } from '../src/projects';
+import { listProjects } from '../src/projects';
 import { portfolio } from '../src/hub';
 import * as hub from './hub';
 import { openTemplate } from './newmenu';
-import { render, justDone, state, today } from './store';
-import { logHtml, openTaskRow, row, toggleTask } from './tasks';
+import { render, state, today } from './store';
+import { openTaskRow, toggleTask } from './tasks';
 import { esc } from './util';
 
 /** The Projects screen: every project as a card, and for one project a dashboard of everything that belongs to it. */
@@ -70,10 +69,6 @@ function overview(): string {
     `<span class="pnum" aria-hidden="true">${p.number ?? '–'}</span><span class="ptitle">${esc(p.title)}</span><span class="pprev">${esc(p.preview) || '&nbsp;'}</span>` +
     `<span class="chips"><span class="chip">${p.openTasks} open task${p.openTasks === 1 ? '' : 's'}</span>${p.followups ? `<span class="chip">${p.followups} follow-up${p.followups === 1 ? '' : 's'}</span>` : ''}${p.active ? '' : '<span class="chip quiet">inactive</span>'}</span></button></li>`;
   return `${h}<ul class="pgrid">${all.map(card).join('')}</ul>`;
-}
-
-function section(title: string, count: number | string, body: string): string {
-  return `<section class="psec"><h3>${esc(title)} <span class="n">${count}</span></h3>${body}</section>`;
 }
 
 export function html(): string {

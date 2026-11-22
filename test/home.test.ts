@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysSince, fileItem, finish, pickUp, reschedule, slipped, triage, undated, waitingOn, weekAhead } from '../src/home';
+import { daysSince, fileItem, finish, reschedule, slipped, triage, undated, waitingOn, weekAhead } from '../src/home';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 
@@ -39,15 +39,6 @@ describe('Home helpers', () => {
     expect(undated(index).map((t) => t.item.title).sort()).toEqual(['A loose line', 'No date inline', 'Waiting thing']);
     expect(daysSince('2026-11-10', TODAY)).toBe(11);
     expect(daysSince(undefined, TODAY)).toBeUndefined();
-  });
-
-  it('pickUp lists recently changed notes and leaves out task notes', async () => {
-    const { index, store } = await setup();
-    store.external('projects/site/index.md', FILES['projects/site/index.md']! + '\nmore');
-    await index.scan();
-    const p = pickUp(index, 3).map((n) => n.path);
-    expect(p[0]).toBe('projects/site/index.md');
-    expect(p.some((x) => x.startsWith('tasks/'))).toBe(false);
   });
 
   it('fileItem changes only the project and tags, and nothing else in the note', async () => {

@@ -135,7 +135,7 @@ describe('task files', () => {
   });
 
   it('read people from the frontmatter as @names, like an inline task', async () => {
-    const { store, index } = await setup({ 'tasks/a.md': '---\nstatus: todo\npeople: [Dana, "Sam Lee"]\ncreated: 2026-11-20\n---\n' });
+    const { index } = await setup({ 'tasks/a.md': '---\nstatus: todo\npeople: [Dana, "Sam Lee"]\ncreated: 2026-11-20\n---\n' });
     expect(index.tasks()[0]).toMatchObject({ who: ['@dana', '@sam-lee'], created: '2026-11-20' });
   });
 });
