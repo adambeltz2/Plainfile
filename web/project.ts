@@ -5,7 +5,7 @@ import { portfolio } from '../src/hub';
 import * as hub from './hub';
 import { openTemplate } from './newmenu';
 import { render, justDone, state, today } from './store';
-import { logHtml, row, toggleTask } from './tasks';
+import { logHtml, openTaskRow, row, toggleTask } from './tasks';
 import { esc } from './util';
 
 /** The Projects screen: every project as a card, and for one project a dashboard of everything that belongs to it. */
@@ -105,6 +105,8 @@ export async function click(target: HTMLElement): Promise<boolean> {
     await toggleTask(tg);
     return true;
   }
+  // A click on a task in the project's list opens its note (in select mode the boxes are for choosing).
+  if (projectState.path && !hub.hubState.selectMode && (await openTaskRow(target))) return true;
   const act = target.closest<HTMLElement>('[data-act]');
   switch (act?.dataset.act) {
     case 'proj-back':

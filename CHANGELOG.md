@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.45.1] - 2026-11-22
+
+### Fixed
+- Clicking a task in a project's task list did nothing. It now opens the note at that line. A new browser test (`tests/e2e/clicks.spec.ts`) clicks a note or task row on every screen that lists them, so a dead click is caught by CI.
+
 ## [0.45.0] - 2026-11-22
 
 ### Added
