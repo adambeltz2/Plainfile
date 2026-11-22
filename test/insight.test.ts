@@ -53,3 +53,23 @@ describe('insight', () => {
     expect(folderSizes(empty)).toEqual([]);
   });
 });
+
+import { drillItems, notesChangedOn } from '../src/insight';
+import { localDateOf } from '../src/dates';
+describe('drill-down lists match the numbers', () => {
+  it('lists the notes and tasks behind each count', async () => {
+    const today = localDateOf(Date.now());
+    const store = new MemoryStorage({
+      'a.md': `---\ncreated: ${today}\n---\n- [ ] Late one due:2020-01-01\n- [ ] Fine due:2999-01-01\n`,
+      'b.md': '# B\n',
+    });
+    const index = new VaultIndex(store);
+    await index.scan();
+    const m = monthStats(index, today);
+    expect(drillItems(index, today, 'edited').length).toBe(m.edited);
+    expect(drillItems(index, today, 'notesCreated').map((x) => x.path)).toEqual(['a.md']);
+    expect(drillItems(index, today, 'open').length).toBe(m.open);
+    expect(drillItems(index, today, 'overdue').map((x) => x.title)).toEqual(['Late one']);
+    expect(notesChangedOn(index, localDateOf([...index.notes.values()][0]!.mtime)).length).toBe(2);
+  });
+});

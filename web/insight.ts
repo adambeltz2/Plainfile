@@ -1,6 +1,6 @@
 import { applyFieldFix, fieldIssues, type FieldIssue } from '../src/fields';
 import { fmtDate } from '../src/dates';
-import { activity, folderSizes, monthStats } from '../src/insight';
+import { activity, drillItems, folderSizes, monthStats, notesChangedOn, type Drill } from '../src/insight';
 import { buildPeople } from '../src/people';
 import { tagCounts } from '../src/vocabulary';
 import { errorMessage, getHealth, render, state, today } from './store';
@@ -8,7 +8,9 @@ import { logHtml } from './tasks';
 import { esc } from './util';
 
 /** Insight: a quiet look at your own files. When you wrote, what this month looked like, what you write about, and what needs tidying. */
-export const insight = { tidy: false, error: '' };
+export const insight = { tidy: false, error: '', drill: '' as '' | Drill | `day:${string}` };
+
+const DRILL_TITLES: Record<Drill, string> = { edited: 'Notes changed this month', notesCreated: 'Notes created this month', tasksCreated: 'Tasks created this month', tasksDone: 'Tasks finished this month (estimate)', open: 'Open tasks', overdue: 'Overdue tasks' };
 
 let issuesCache: { version: number; list: FieldIssue[] } | undefined;
 function tidyIssues(): FieldIssue[] {
@@ -39,13 +41,26 @@ export function html(): string {
   let h = '<div class="home insight"><h2 class="title">Insight</h2><p class="meta">Worked out from your own files, in this browser. Nothing is recorded anywhere.</p><div class="home-grid">';
   h += card(
     'Activity: notes changed per day, last 26 weeks',
-    `<div class="heat" role="img" aria-label="${a.total} notes changed on ${a.days} days in the last 26 weeks">${a.weeks.map((w) => `<div class="heat-col">${w.map((d) => `<i class="lv${d.level}" title="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed"></i>`).join('')}</div>`).join('')}</div>` +
+    `<div class="heat" role="img" aria-label="${a.total} notes changed on ${a.days} days in the last 26 weeks">${a.weeks.map((w) => `<div class="heat-col">${w.map((d) => (d.count ? `<button class="lv${d.level}" data-insight-day="${esc(d.date)}" aria-label="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed. Show them." title="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed"></button>` : `<i class="lv0" title="${esc(fmtDate(d.date))}: nothing changed"></i>`)).join('')}</div>`).join('')}</div>` +
       `<p class="small muted" style="margin:6px 0 0">${a.total} note${a.total === 1 ? '' : 's'} changed on ${a.days} day${a.days === 1 ? '' : 's'}${a.busiest ? `. Busiest: ${esc(fmtDate(a.busiest.date))}, ${a.busiest.count}.` : '.'} Darker is busier. Dates come from each file's modified time.</p>`,
     true,
   );
+  h += drillCard(idx, t);
   h += card(
     'This month',
-    `<table class="plain-table"><tbody><tr><td>Notes changed</td><td><b>${m.edited}</b></td></tr><tr><td>Notes created</td><td><b>${m.notesCreated}</b></td></tr><tr><td>Tasks created</td><td><b>${m.tasksCreated}</b></td></tr><tr><td>Tasks finished <span class="muted small">(estimate)</span></td><td><b>${m.tasksDone}</b></td></tr><tr><td>Open now</td><td><b>${m.open}</b></td></tr><tr><td>Overdue</td><td><b>${m.overdue}</b></td></tr></tbody></table>`,
+    `<table class="plain-table"><tbody>${(
+      [
+        ['edited', 'Notes changed', m.edited],
+        ['notesCreated', 'Notes created', m.notesCreated],
+        ['tasksCreated', 'Tasks created', m.tasksCreated],
+        ['tasksDone', 'Tasks finished <span class="muted small">(estimate)</span>', m.tasksDone],
+        ['open', 'Open now', m.open],
+        ['overdue', 'Overdue', m.overdue],
+      ] as [Drill, string, number][]
+    )
+      .map(([k, label, n]) => `<tr><td>${label}</td><td><button class="stat-n" data-insight-drill="${k}" aria-pressed="${insight.drill === k}" aria-label="Show the ${n} behind: ${esc(DRILL_TITLES[k])}"><b>${n}</b></button></td></tr>`)
+      .join('')}</tbody></table>`,
+
   );
   h += card(
     'Topics',
@@ -63,7 +78,7 @@ export function html(): string {
   const broken = health ? health.unresolved.length + health.ambiguous.length + health.missingEmbeds.length : 0;
   h += card(
     'Health',
-    `<table class="plain-table"><tbody><tr><td>Broken or unclear links</td><td><b>${broken}</b></td></tr><tr><td>Notes sharing a name</td><td><b>${health?.duplicates.length ?? 0}</b></td></tr><tr><td>Notes nothing links to</td><td><b>${health?.orphans.length ?? 0}</b></td></tr><tr><td>Unused attachments</td><td><b>${health?.unusedAttachments.length ?? 0}</b></td></tr><tr><td>Fields to tidy</td><td><b>${issues.length}</b></td></tr></tbody></table>` +
+    `<table class="plain-table"><tbody><tr><td>Broken or unclear links</td><td><button class="stat-n" data-nav="health"><b>${broken}</b></button></td></tr><tr><td>Notes sharing a name</td><td><button class="stat-n" data-nav="health"><b>${health?.duplicates.length ?? 0}</b></button></td></tr><tr><td>Notes nothing links to</td><td><button class="stat-n" data-nav="health"><b>${health?.orphans.length ?? 0}</b></button></td></tr><tr><td>Unused attachments</td><td><button class="stat-n" data-nav="health"><b>${health?.unusedAttachments.length ?? 0}</b></button></td></tr><tr><td>Fields to tidy</td><td><button class="stat-n" data-insight-tidy aria-expanded="${insight.tidy}"><b>${issues.length}</b></button></td></tr></tbody></table>` +
       '<div class="row-gap"><button class="btn small" data-nav="health">Open Vault health</button>' +
       `<button class="btn small" data-insight-tidy aria-expanded="${insight.tidy}">${insight.tidy ? 'Hide tidy list' : issues.length ? 'Review fields to tidy' : 'Fields are uniform'}</button></div>` +
       (insight.error ? `<div class="notice err small">${esc(insight.error)}</div>` : '') +
@@ -71,6 +86,22 @@ export function html(): string {
     true,
   );
   return `${h}</div>${logHtml() ? `<div class="plog">${logHtml()}</div>` : ''}</div>`;
+}
+
+function drillCard(idx: NonNullable<typeof state.index>, t: string): string {
+  const k = insight.drill;
+  if (!k) return '';
+  const day = k.startsWith('day:') ? k.slice(4) : '';
+  const items = day ? notesChangedOn(idx, day) : drillItems(idx, t, k as Drill);
+  const title = day ? `Notes changed on ${fmtDate(day)}` : DRILL_TITLES[k as Drill];
+  const shown = items.slice(0, 100);
+  return card(
+    `${title} · ${items.length}`,
+    (items.length
+      ? `<ul class="plain home-rows">${shown.map((x) => `<li><button class="item note-quick" data-open="${esc(x.path)}"${x.line ? ` data-line="${x.line}"` : ''}><span>${esc(x.title)}<span class="muted mono small" style="display:block">${esc(x.path)}</span></span><span class="muted mono small">${esc(x.hint ? (/^\d{4}-\d{2}-\d{2}$/.test(x.hint) ? fmtDate(x.hint) : x.hint) : '')}</span></button></li>`).join('')}${items.length > shown.length ? `<li class="muted small">and ${items.length - shown.length} more</li>` : ''}</ul>`
+      : '<p class="muted small" style="margin:0">Nothing here.</p>') + '<div class="row-gap"><button class="btn small" data-insight-drill="">Close</button></div>',
+    true,
+  );
 }
 
 function tidyList(issues: FieldIssue[]): string {
@@ -87,6 +118,14 @@ function tidyList(issues: FieldIssue[]): string {
 }
 
 export async function click(target: HTMLElement): Promise<boolean> {
+  const dr = target.closest<HTMLElement>('[data-insight-drill]');
+  const day = target.closest<HTMLElement>('[data-insight-day]')?.dataset.insightDay;
+  if (dr || day) {
+    const next = day ? (`day:${day}` as const) : ((dr?.dataset.insightDrill ?? '') as '' | Drill);
+    insight.drill = insight.drill === next ? '' : next;
+    render();
+    return true;
+  }
   if (target.closest('[data-insight-tidy]')) {
     insight.tidy = !insight.tidy;
     render();

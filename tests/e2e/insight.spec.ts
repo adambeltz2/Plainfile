@@ -21,8 +21,8 @@ test.describe('Insight', () => {
     await nav(page, 'Insight').click();
     await expect(page.locator('.title')).toHaveText('Insight');
     await expect(page.locator('.heat-col')).toHaveCount(26);
-    await expect(page.locator('.heat-col').first().locator('i')).toHaveCount(7);
-    await expect(page.locator('.heat i.lv3').first()).toBeVisible(); // today's files were all just written
+    await expect(page.locator('.heat-col').first().locator('i, button')).toHaveCount(7);
+    await expect(page.locator('.heat .lv3').first()).toBeVisible(); // today's files were all just written
     await expect(card(page, 'Activity')).toContainText('notes changed on 1 day');
     const month = card(page, 'This month');
     await expect(month).toContainText('Notes changed');
@@ -55,4 +55,16 @@ test.describe('Insight', () => {
     await expect(page.locator('.heat')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
+});
+
+test('a number on Insight opens the notes or tasks behind it', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { 'a.md': '- [ ] Late one due:2020-01-01\n', 'b.md': '# B\n' }, true, 'today');
+  await nav(page, 'Insight').click();
+  await page.getByRole('button', { name: /behind: Overdue tasks/ }).click();
+  await expect(page.locator('.home-card', { hasText: 'Overdue tasks · 1' })).toContainText('Late one');
+  await page.getByRole('button', { name: /behind: Notes changed this month/ }).click();
+  await expect(page.locator('.home-card h3', { hasText: 'Notes changed this month · 2' })).toBeVisible();
+  await page.locator('.heat button').last().click();
+  await expect(page.locator('.home-card h3', { hasText: /^Notes changed on/ })).toBeVisible();
 });

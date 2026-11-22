@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.45.0] - 2026-11-22
+
+### Added
+- **Insight numbers open the data behind them.** Click any This month number (changed, created, tasks created, finished, open, overdue) or a day on the activity grid to see the notes or tasks counted, and click one to open it. The Health numbers go to Vault health, and "Fields to tidy" opens the tidy list.
+
 ## [0.44.2] - 2026-11-22
 
 ### Added
