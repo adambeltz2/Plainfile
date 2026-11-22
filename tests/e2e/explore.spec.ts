@@ -53,7 +53,7 @@ test.describe('explore', () => {
     await expect(page.locator('.ed-head .title')).toHaveText('Kickoff call with Dana');
     await page.getByRole('button', { name: 'Open note' }).click();
     await expect(page.locator('.cm-content')).toBeVisible();
-    await expect(page.locator('.ed-head .title')).toHaveText('Kickoff call with Dana');
+    await expect(page.locator('.ed-head .title')).toHaveValue('Kickoff call with Dana');
   });
 
   test('2 hops draws more of the neighbourhood than 1 hop', async ({ page }) => {

@@ -15,7 +15,7 @@ test('Recent lists notes newest first and filters them', async ({ page }) => {
   await expect(page.locator('.recent-row')).toHaveCount(1);
   await expect(page.locator('.recent-row')).toContainText('notes');
   await page.locator('.recent-row').click();
-  await expect(page.locator('.title')).toContainText('Beta');
+  await expect(page.locator('#note-title')).toHaveValue('Beta');
 });
 
 test('Recent orders by last change, shows Show more past 60 notes, and says when a filter matches nothing', async ({ page }) => {

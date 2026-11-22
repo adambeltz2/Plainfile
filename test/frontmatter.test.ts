@@ -101,3 +101,15 @@ describe('a key with nothing after the colon', () => {
     expect(addFrontmatterListItem('---\nproject:x\n---\nB', 'project', 'y')).toBe('---\nproject: [x, y]\n---\nB');
   });
 });
+
+import { titleFrontmatter } from '../src/frontmatter';
+describe('titleFrontmatter', () => {
+  it('changes only the title line, quoting only when needed', () => {
+    const doc = '---\ntitle: AA\ncreated: 2026-11-21\n---\nBody\n';
+    expect(titleFrontmatter(doc, 'New name')).toBe('---\ntitle: New name\ncreated: 2026-11-21\n---\nBody\n');
+    expect(titleFrontmatter(doc, 'Plan: v2')).toBe('---\ntitle: "Plan: v2"\ncreated: 2026-11-21\n---\nBody\n');
+    expect(titleFrontmatter('---\ntitle: "Old"\n---\nB', 'Say "hi"')).toBe('---\ntitle: "Say \\"hi\\""\n---\nB');
+    expect(titleFrontmatter('---\r\ntitle: Old\r\n---\r\nB', 'New')).toBe('---\r\ntitle: New\r\n---\r\nB');
+    expect(titleFrontmatter('# Heading\nBody', 'Fresh')).toBe('---\ntitle: Fresh\n---\n# Heading\nBody');
+  });
+});

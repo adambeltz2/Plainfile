@@ -28,7 +28,7 @@ test.describe('landing', () => {
     await page.locator('.note-item', { hasText: /^Kickoff$/ }).click();
     await nav(page, 'Today').click();
     await nav(page, 'Notes').click();
-    await expect(page.locator('.ed-head .title')).toHaveText('Kickoff');
+    await expect(page.locator('.ed-head .title')).toHaveValue('Kickoff');
   });
 });
 
@@ -106,7 +106,7 @@ test.describe('command palette and keys', () => {
     await page.keyboard.type('kck');
     await expect(page.locator('.pal-item').first()).toContainText('Kickoff');
     await page.keyboard.press('Enter');
-    await expect(page.locator('.ed-head .title')).toHaveText('Kickoff');
+    await expect(page.locator('.ed-head .title')).toHaveValue('Kickoff');
     await expect(page.locator('.pal')).toHaveCount(0);
   });
 
@@ -189,7 +189,7 @@ test.describe('quick note', () => {
     await expect.poll(() => readFileOrEmpty(page, dir, path), { timeout: 5000 }).toMatch(
       new RegExp(`^---\\ntitle: "${stamp.slice(0, 10)} \\d\\d:\\d\\d"\\ncreated: ${stamp.slice(0, 10)}\\nproject:\\ntags: \\[\\]\\npeople: \\[\\]\\n---\\n\\nCalled Dana about the launch\\n$`),
     );
-    await expect(page.locator('.ed-head .title')).toContainText(stamp.slice(0, 10));
+    await expect(page.locator('.ed-head .title')).toHaveValue(new RegExp('^' + stamp.slice(0, 10)));
   });
 
   test('is also in the New menu, the Go to palette and on Alt+N, and two in a minute do not collide', async ({ page }) => {
@@ -256,4 +256,20 @@ test.describe('paste an image', () => {
     await expect(page.locator('.cm-content')).toContainText('x pasted words');
     await expect(page.locator('.cm-img-el')).toHaveCount(0);
   });
+});
+
+test('clicking the title changes it: Enter saves just the title line, Escape puts the old one back', async ({ page }) => {
+  const text = '---\ntitle: Alpha\ncreated: 2026-11-21\n---\nBody\n';
+  const dir = await openVault(page, { 'a.md': text });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Alpha')).click();
+  const title = page.locator('#note-title');
+  await expect(title).toHaveValue('Alpha');
+  await title.fill('Beta: the sequel');
+  await title.press('Escape');
+  await expect(title).toHaveValue('Alpha');
+  await title.fill('Beta: the sequel');
+  await title.press('Enter');
+  await expect.poll(() => readFile(page, dir, 'a.md')).toBe('---\ntitle: "Beta: the sequel"\ncreated: 2026-11-21\n---\nBody\n');
+  await expect(page.locator('.note-item', { hasText: 'Beta: the sequel' }).first()).toBeVisible();
 });

@@ -175,7 +175,7 @@ test.describe('search', () => {
     await page.locator('#search-q').fill('type:meeting');
     await page.locator('.res-btn', { hasText: 'Kickoff call with Dana' }).click();
     await expect(page.locator('.cm-content')).toBeVisible();
-    await expect(page.locator('.ed-head .title')).toHaveText('Kickoff call with Dana');
+    await expect(page.locator('.ed-head .title')).toHaveValue('Kickoff call with Dana');
   });
 
   test('facets narrow the query', async ({ page }) => {
@@ -281,7 +281,7 @@ test('a second note with the same title says so before creating, and is numbered
     await page.getByRole('button', { name: 'Create file' }).click();
     await expect(page.locator('.cm-content')).toBeVisible();
   }
-  await expect(page.locator('.ed-head .title')).toHaveText('Gift Shopping 2');
+  await expect(page.locator('.ed-head .title')).toHaveValue('Gift Shopping 2');
   expect(await readFile(page, dir, 'inbox/Gift Shopping.md')).toContain('title: Gift Shopping\n');
   expect(await readFile(page, dir, 'inbox/Gift Shopping 2.md')).toContain('title: "Gift Shopping 2"\n');
 });

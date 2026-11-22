@@ -530,6 +530,7 @@ app.addEventListener('focusin', (e) => suggest.onFocus(e));
 app.addEventListener('focusout', (e) => suggest.onBlur(e));
 
 app.addEventListener('keydown', (e) => {
+  if (state.screen === 'notes' && notes.titleKey(e)) return;
   if (suggest.onKeydown(e)) return;
   if (e.key === 'Escape' && state.modal) {
     newmenu.closeModal();

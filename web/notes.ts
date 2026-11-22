@@ -2,7 +2,7 @@ import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type De
 import { lineDiff, type LineChange } from '../src/diff';
 import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type Version } from '../src/history';
 import { bestLinkTarget } from '../src/fixes';
-import { frontmatterText, addDefaultFrontmatter, setFrontmatterField, setProjects } from '../src/frontmatter';
+import { frontmatterText, addDefaultFrontmatter, setFrontmatterField, setProjects, titleFrontmatter } from '../src/frontmatter';
 import { localDateOf } from '../src/dates';
 import { saveImage, mimeFor } from '../src/attachments';
 import { dirname, joinPath } from '../src/index';
@@ -675,7 +675,7 @@ export function html(): string {
   } else {
     const n = idx.notes.get(notes.path);
     main =
-      `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(n?.title ?? notes.path)}</h2><div class="mono muted small path">${esc(notes.path)}</div></div>` +
+      `<div class="ed-head"><div style="min-width:0"><input id="note-title" class="title title-input" type="text" value="${esc(n?.title ?? notes.path)}" aria-label="Note title (click to change)" title="Click to change the title" spellcheck="false" autocomplete="off"><div class="mono muted small path">${esc(notes.path)}</div></div>` +
       `<div class="ed-actions"><button class="btn only-narrow hide-in-focus" data-act="note-close">All notes</button>` +
       `<button class="btn" id="note-undo" data-act="note-undo" disabled>Undo</button><button class="btn" id="note-redo" data-act="note-redo" disabled>Redo</button>` +
       `<button class="btn" data-act="focus-toggle" aria-pressed="${notes.focus}">${notes.focus ? 'Exit focus' : 'Focus'}</button><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button>` +
@@ -726,6 +726,36 @@ export function applyProperty(key: string, value: string | null): void {
   if (!h) return;
   h.applyText(setFrontmatterField(h.getText(), key, value));
   refreshSide();
+}
+
+/** The title box above the note: Enter or leaving it saves the new title, Escape puts the old one back. */
+function commitTitle(el: HTMLInputElement): void {
+  const h = notes.handle;
+  const old = notes.path ? state.index?.notes.get(notes.path)?.title ?? '' : '';
+  const next = el.value.trim();
+  if (!h || !next || next === old) {
+    el.value = old;
+    return;
+  }
+  h.applyText(titleFrontmatter(h.getText(), next));
+  refreshSide();
+}
+
+export function titleKey(e: KeyboardEvent): boolean {
+  const el = e.target as HTMLInputElement;
+  if (el.id !== 'note-title') return false;
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    commitTitle(el);
+    notes.handle?.focus();
+    return true;
+  }
+  if (e.key === 'Escape') {
+    el.value = (notes.path ? state.index?.notes.get(notes.path)?.title : '') ?? '';
+    notes.handle?.focus();
+    return true;
+  }
+  return false;
 }
 
 export async function click(target: HTMLElement): Promise<boolean> {
@@ -894,6 +924,10 @@ export function input(e: Event): boolean {
 
 export function change(e: Event): boolean {
   const t = e.target as HTMLInputElement | HTMLSelectElement;
+  if (t.id === 'note-title') {
+    commitTitle(t as HTMLInputElement);
+    return true;
+  }
   if (t.id === 'prop-status') {
     applyProperty('status', t.value);
     return true;

@@ -89,7 +89,7 @@ test.describe('rename', () => {
     expect(await readFile(page, dir, 'people/dana.md')).toBe('Dana');
 
     await page.getByRole('button', { name: 'Open the renamed note' }).click();
-    await expect(page.locator('.ed-head .title')).toHaveText('Pricing research');
+    await expect(page.locator('.ed-head .title')).toHaveValue('Pricing research');
     await expect(page.locator('.ed-head .path')).toHaveText('notes/pricing-analysis.md');
   });
 

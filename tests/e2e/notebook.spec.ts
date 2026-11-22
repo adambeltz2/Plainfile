@@ -30,7 +30,7 @@ test('Projects shows numbered cards with previews and counts, like the first Not
   await expect(cards.nth(1).locator('.pnum')).toHaveText('2');
   await expect(cards.nth(1)).toContainText('1 task');
   await cards.nth(1).locator('.pbtn').click();
-  await expect(page.locator('.ed-head .title')).toHaveText('Tax 2026');
+  await expect(page.locator('.ed-head .title')).toHaveValue('Tax 2026');
 });
 
 test('inactive projects are kept, collapsed, and unnumbered; Notebook files work as they are', async ({ page }) => {

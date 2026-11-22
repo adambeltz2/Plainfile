@@ -66,13 +66,14 @@ export function itemsFor(path: string, inNote: boolean): (Item | '-')[] {
 export function html(): string {
   const m = menu.open;
   if (!m) return '';
-  const rows = itemsFor(m.path, m.inNote)
+  const list = itemsFor(m.path, m.inNote);
+  const rows = list
     .map((i) =>
       i === '-' ? '<hr>' : `<button role="menuitem" data-menu-act="${i.action}"><span>${esc(i.label)}</span><span class="k">${esc(KEYS[i.action] ?? '')}</span></button>`,
     )
     .join('');
   const left = Math.max(8, Math.min(m.x, window.innerWidth - 262));
-  const top = Math.max(8, Math.min(m.y, window.innerHeight - 380));
+  const top = Math.max(8, Math.min(m.y, window.innerHeight - (list.reduce((h, i) => h + (i === '-' ? 7 : 33), 0) + 44)));
   return `<div class="menu-back" data-menu-back><div class="ctx" role="menu" aria-label="Note actions" style="left:${left}px;top:${top}px"><div class="ctx-t">${esc(state.index?.notes.get(m.path)?.title ?? m.path)}</div>${rows}</div></div>`;
 }
 

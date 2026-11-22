@@ -137,3 +137,13 @@ export function setProjects(text: string, names: string[]): string {
   const q = (n: string): string => (/^[\w][\w ./-]*$/.test(n) && !/\s$/.test(n) ? n : `"${n.replace(/"/g, '\\"')}"`);
   return setFrontmatterField(text, 'project', unique.length === 1 ? q(unique[0] as string) : `[${unique.map(q).join(', ')}]`);
 }
+
+/** Write a new title into the frontmatter, quoting it only when the text needs it and keeping an existing quote style. */
+export function titleFrontmatter(text: string, title: string): string {
+  const quoted = /^title:[ \t]*(["'])/m.exec(text.split(/^---\r?$/m)[1] ?? '');
+  const q = quoted?.[1];
+  if (q === '"') return setFrontmatterField(text, 'title', title.replace(/\\/g, '\\\\').replace(/"/g, '\\"'));
+  if (q === "'") return setFrontmatterField(text, 'title', title.replace(/'/g, "''"));
+  const plain = !/^[\s\-?!&*|>%@`'"\[\]{},#]|[:#]\s|:$|\s$/.test(title);
+  return setFrontmatterField(text, 'title', plain ? title : JSON.stringify(title));
+}

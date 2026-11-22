@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.43.0] - 2026-11-22
+
+### Added
+- **Click the title to rename it.** The title above a note is now a box: type, then Enter (or click away) to save, Escape to cancel. Only the `title:` line changes, and it is quoted only when it needs to be. The file name stays the same; use ⋯ More, Rename to change that and fix links.
+
 ## [0.42.4] - 2026-11-22
 
 ### Changed
