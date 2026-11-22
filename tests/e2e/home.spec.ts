@@ -16,6 +16,12 @@ const VAULT: Record<string, string> = {
 };
 
 test.describe('Home', () => {
+  test('clicking a task on Home opens its note', async ({ page }) => {
+    await openVault(page, { 'tasks/Do things.md': `---\ntitle: Do things\nstatus: todo\ndue: ${TODAY}\n---\n\nBody text\n` }, true, 'home');
+    await card(page, 'Today').locator('li.task .t').click();
+    await expect(page.locator('.cm-content')).toContainText('Body text');
+  });
+
   test('is the first screen and shows capture, today, where you left off, filing, waiting, the week and projects', async ({ page }) => {
     await openVault(page, VAULT, true, 'home');
     await expect(page.locator('.home')).toBeVisible();

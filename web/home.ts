@@ -2,6 +2,7 @@ import { fmtDate, fmtDateLong } from '../src/dates';
 import { portfolio } from '../src/hub';
 import { triage, waitingOn, weekAhead } from '../src/home';
 import { todayView } from '../src/query';
+import { openNote } from './notes';
 import { justDone, render, state, today } from './store';
 import { logHtml, row, toggleTask } from './tasks';
 import { quick, quickPreview } from './today';
@@ -76,6 +77,13 @@ export async function click(target: HTMLElement): Promise<boolean> {
   const tg = target.closest<HTMLElement>('[data-toggle]')?.dataset.toggle;
   if (tg) {
     await toggleTask(tg);
+    return true;
+  }
+  // Home has no side panel, so a click on a task opens the note it lives in, at its line.
+  const id = target.closest<HTMLElement>('li.task[data-id]')?.dataset.id;
+  const task = id ? state.index?.getTask(id) : undefined;
+  if (task) {
+    await openNote(task.path, { line: task.line });
     return true;
   }
   return false;

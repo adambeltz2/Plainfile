@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.42.1] - 2026-11-22
+
+### Fixed
+- Clicking a task on Home did nothing, because Home has no side panel to show it in. It now opens the note, at the task's line.
+
 ## [0.42.0] - 2026-11-21
 
 ### Added
