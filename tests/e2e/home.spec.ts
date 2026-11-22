@@ -25,6 +25,16 @@ test.describe('Home', () => {
     await expect(page.locator('.cm-content')).toContainText('Intro');
   });
 
+  test('Home shows how many notes there are, and the count opens the Notes list', async ({ page }) => {
+    await openVault(page, { 'a.md': '# A\n', 'b.md': '# B\n', 'c.md': '# C\n' }, true, 'home');
+    await expect(page.locator('[data-count]')).toHaveText('3 notes');
+    await page.locator('[data-count]').click();
+    await expect(page.locator('.frame.notes')).toBeVisible();
+    await nav(page, 'Home').click();
+    await page.locator('.home-links').getByRole('button', { name: 'Explore' }).click();
+    await expect(page.locator('.finder')).toBeVisible();
+  });
+
   test('the one-line bar at the top adds a task file and Quick note starts a note', async ({ page }) => {
     const dir = await openVault(page, { 'a.md': '# A\n' }, true, 'home');
     await expect(page.locator('.home-top')).toContainText(/\w+day \d+ \w+/);

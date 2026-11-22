@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.44.2] - 2026-11-22
+
+### Added
+- Home shows the note count ("128 notes"); click it to open the Notes list. Search and Explore buttons sit beside it.
+
 ## [0.44.1] - 2026-11-22
 
 ### Fixed
