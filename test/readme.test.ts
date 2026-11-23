@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const readme = readFileSync('README.md', 'utf8');
+// The README is short; the feature list lives in docs/FEATURES.md. Together they must still cover every screen and operator.
+const readme = readFileSync('README.md', 'utf8') + readFileSync('docs/FEATURES.md', 'utf8');
 const main = readFileSync('web/main.ts', 'utf8');
 
 describe('README stays in step with the app', () => {

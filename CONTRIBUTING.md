@@ -30,7 +30,7 @@ Work on a branch and open a pull request; CI runs the format check, type check, 
 - **Small and focused.** One idea per pull request. A new idea you find on the way goes in `BACKLOG.md`.
 - **With tests.** Any change in behavior adds or updates a test. Anything that writes to a user's files must have a test showing the file is byte-identical apart from the intended edit. Any visible UI change updates a browser spec in `tests/e2e/`.
 - **Core in `src/`, screens in `web/`.** `src/` must not import from `web/`. Folder access goes through `VaultStorage`; a new storage adapter must pass `test/storage-contract.test.ts`.
-- **Docs.** Bump the version in `package.json` and add a `CHANGELOG.md` entry; update the README features list for visible changes (and regenerate screenshots with `npm run screenshots`).
+- **Docs.** Bump the version in `package.json` and add a `CHANGELOG.md` entry; update `docs/FEATURES.md` for visible changes (and regenerate screenshots with `npm run screenshots`).
 - **No new dependencies** unless the browser cannot do the job. Pin exact versions; a script loaded from a CDN needs a version and an integrity hash.
 
 ## Formatting

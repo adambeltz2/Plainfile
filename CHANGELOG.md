@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.1.2] - 2026-11-23
+
+### Changed
+- **The README is short.** It now has a three-step Get started, the SilverBullet and Obsidian comparison, screenshots, highlights and links. The feature list, principles, task formats and Dropbox setup moved to `docs/` (`FEATURES.md`, `DESIGN.md`, `TASK-FORMATS.md`, `DROPBOX.md`). The task formats page now lists every syntax Plainfile reads.
+
 ## [1.1.1] - 2026-11-23
 
 ### Added
