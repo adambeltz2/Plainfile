@@ -2,7 +2,8 @@ import { fmtDate, fmtDateLong } from '../src/dates';
 import { dirname, type TaskItem } from '../src/index';
 import { listFollowUps, listProjects } from '../src/projects';
 import { addDays, todayView } from '../src/query';
-import { loadContext, justDone, planQuickLine, quickAddLine, render, state, today, type TodayViewId } from './store';
+import { reschedule } from '../src/home';
+import { errorMessage, loadContext, justDone, planQuickLine, quickAddLine, render, rescan, state, today, writeFailure, type TodayViewId } from './store';
 import { openNote } from './notes';
 import { logHtml, row, toggleTask } from './tasks';
 import { esc } from './util';
@@ -114,6 +115,37 @@ function count(view: TodayViewId, tasks: TaskItem[]): number {
 
 /* ---------- rendering ---------- */
 
+/** Move the chosen task's due date with one click: tomorrow, next Monday, in a week, a date you pick, or none. */
+function rescheduleHtml(): string {
+  const t = state.selected ? state.index?.getTask(state.selected) : undefined;
+  if (!t || t.done) return '';
+  const d = today();
+  const dow = new Date(`${d}T00:00:00Z`).getUTCDay();
+  const nextMonday = addDays(d, (8 - dow) % 7 || 7);
+  const btn = (label: string, date: string): string => `<button class="btn small" data-resched="${date}">${label}</button>`;
+  return (
+    '<h2 style="margin-top:14px">Reschedule</h2><div class="row-gap" style="margin-top:0" role="group" aria-label="Reschedule this task">' +
+    `${btn('Tomorrow', addDays(d, 1))}${btn('Next Monday', nextMonday)}${btn('In a week', addDays(d, 7))}${btn('No date', '')}</div>` +
+    `<label class="small muted" style="display:block;margin-top:6px">Pick a date <input type="date" class="inp date" data-resched-pick value="${esc(t.due ?? '')}" aria-label="Pick a new due date"></label>`
+  );
+}
+
+async function moveDue(date: string): Promise<void> {
+  const { storage, index } = state;
+  const t = state.selected ? index?.getTask(state.selected) : undefined;
+  if (!storage || !index || !t) return;
+  try {
+    state.log = await reschedule(storage, index, t, date || null);
+  } catch (e) {
+    const friendly = writeFailure(e);
+    if (friendly) await rescan();
+    state.log = { message: friendly ?? `Could not save that change. ${errorMessage(e)}` };
+  }
+  // The task may now be due elsewhere, so its id (path:line) is unchanged but the lists are not.
+  if (state.selected) await loadContext(state.selected).catch(() => undefined);
+  render();
+}
+
 function source(): string {
   const c = state.context;
   let h = '<h2>Source on disk</h2>';
@@ -125,6 +157,7 @@ function source(): string {
       h += `<div class="ln${n === c.hi ? ' hi' : ''}"><span class="n">${n}</span><span>${esc(l) || ' '}</span></div>`;
     });
     h += `</div><div class="row-gap"><button class="btn small" data-open="${esc(c.path)}" data-line="${c.hi}">Open note</button></div>`;
+    h += rescheduleHtml();
   }
   h += logHtml();
   return h;
@@ -273,6 +306,11 @@ export async function submitQuick(): Promise<void> {
 }
 
 export async function click(target: HTMLElement): Promise<boolean> {
+  const rs = target.closest<HTMLElement>('[data-resched]');
+  if (rs) {
+    await moveDue(rs.dataset.resched ?? '');
+    return true;
+  }
   const tg = target.closest<HTMLElement>('[data-toggle]');
   if (tg?.dataset.toggle) {
     await toggleTask(tg.dataset.toggle);
@@ -307,6 +345,13 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   return false;
+}
+
+export function change(e: Event): boolean {
+  const t = e.target as HTMLInputElement;
+  if (!t.matches?.('[data-resched-pick]') || !t.value) return false;
+  void moveDue(t.value);
+  return true;
 }
 
 export function input(e: Event): boolean {
