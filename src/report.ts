@@ -4,6 +4,7 @@ import { hubTasks, summarize, type HubTask } from './hub';
 import type { VaultIndex } from './index';
 import { projectDashboard } from './projects';
 import { addDays } from './query';
+import { stripFrontmatter } from './render';
 
 /**
  * A status report for one project, as markdown, built from the hub's numbers: progress, phases, what is late,
@@ -64,4 +65,38 @@ export function statusReport(index: VaultIndex, projectPath: string, today: stri
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trimEnd()}\n`;
+}
+
+/** Move every heading down `by` levels (to at most 6), leaving code fences alone, so a note can sit as a chapter. */
+export function demoteHeadings(md: string, by: number): string {
+  let fence = false;
+  return md
+    .split('\n')
+    .map((l) => {
+      if (/^\s*(```|~~~)/.test(l)) fence = !fence;
+      if (fence) return l;
+      const m = /^(#{1,6})(\s.*)$/.exec(l);
+      return m ? `${'#'.repeat(Math.min(6, (m[1] as string).length + by))}${m[2]}` : l;
+    })
+    .join('\n');
+}
+
+/**
+ * All of a project's notes as one document: the project's title, a contents list, then each note as a chapter (its
+ * title as a heading, its headings moved down a level, its frontmatter left out). Task notes are not chapters; they
+ * are in the status report. A snapshot to hand over, built from the notes each time.
+ */
+export function projectBook(index: VaultIndex, projectPath: string): string | undefined {
+  const d = projectDashboard(index, projectPath, '1970-01-01');
+  if (!d?.note) return undefined;
+  const rest = d.notes.filter((n) => n.path !== d.note?.path && !n.fileTask).sort((a, b) => a.path.localeCompare(b.path));
+  const chapters = [d.note, ...rest];
+  const body = (text: string): string => demoteHeadings(stripFrontmatter(text), 1).trim();
+  let out = `# ${d.title}\n\n## Contents\n\n${chapters.map((n, i) => `${i + 1}. ${n.title}`).join('\n')}\n`;
+  for (const n of chapters) {
+    // The note's own first heading repeats its title, so it is dropped when it says the same thing.
+    const content = body(n.text).replace(new RegExp(`^##\\s+${n.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\n+`, 'i'), '');
+    out += `\n## ${n.title}\n\n${content}\n`;
+  }
+  return out;
 }

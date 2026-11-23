@@ -748,3 +748,20 @@ test('closing out can move the project folder to archive/ with every link update
   expect(await readFile(page, dir, 'projects/weekend/index.md')).toBe(FILES['projects/weekend/index.md']);
   expect((await listFiles(page, dir)).filter((f) => f.startsWith('archive/'))).toEqual([]);
 });
+
+test('Export notes turns a project into one document, to copy, download as Word, or save', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, {
+    'projects/site/index.md': '---\ntitle: Website\ntype: project\nactive: true\n---\n## Goal\nLaunch it.\n',
+    'projects/site/Kickoff.md': '---\ntitle: Kickoff call\nproject: site\n---\nAgenda here.\n',
+  });
+  await nav(page, 'Projects').click();
+  await page.locator('.pcard .pbtn').first().click();
+  await page.getByRole('button', { name: 'Export notes' }).first().click();
+  const dlg = page.getByRole('dialog', { name: 'All notes as one document' });
+  await expect(dlg).toContainText('Contents');
+  await expect(dlg.locator('.report-prev h2', { hasText: 'Kickoff call' })).toBeVisible();
+  await expect(dlg).toContainText('Agenda here.');
+  const [download] = await Promise.all([page.waitForEvent('download'), dlg.getByRole('button', { name: 'Download Word' }).click()]);
+  expect(download.suggestedFilename()).toBe('Website.docx');
+});

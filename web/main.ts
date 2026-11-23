@@ -385,8 +385,8 @@ app.addEventListener('click', (e) => {
     if (target.closest('[data-quick-note]') && state.index && !state.modal) return newmenu.quickNote();
     if (await palette.click(target)) return;
     if (await reportUi.click(target)) return;
-    const rp = target.closest<HTMLElement>('[data-report-open]')?.dataset.reportOpen;
-    if (rp) return reportUi.openReport(rp);
+    const rp = target.closest<HTMLElement>('[data-report-open]');
+    if (rp?.dataset.reportOpen) return reportUi.openReport(rp.dataset.reportOpen, rp.dataset.reportKind === 'book' ? 'book' : 'report');
     if (await move.click(target)) return;
     if (await menu.click(target)) return;
     if (state.modal && (await newmenu.click(target))) return;
