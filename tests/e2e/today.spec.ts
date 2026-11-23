@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { listFiles, localDate, openVault, readFile, readFileOrEmpty, writeFileExternally, nav } from './helpers';
+import { listFiles, localDate, openVault, readFile, readFileOrEmpty, writeFileExternally, nav, rescanApp } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -123,7 +123,7 @@ test('real folder: Rescan picks up a new file', async ({ page }) => {
     },
     { dir, text: `- [ ] Second due:${today}\n` },
   );
-  await page.getByRole('button', { name: 'Rescan' }).click();
+  await rescanApp(page);
   await expect(page.locator('.task')).toHaveCount(2);
 });
 

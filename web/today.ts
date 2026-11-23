@@ -169,7 +169,7 @@ async function movePriority(letter: string | null): Promise<void> {
 
 function source(): string {
   const c = state.context;
-  let h = '<h2>Source on disk</h2>';
+  let h = '<h2>In your file</h2>';
   if (!c)
     h +=
       '<p class="muted small" style="margin:0">Select a task to see the exact lines in its file. Tick the box and the change shows here. Click the selected task again, or press E, to open its note.</p>';

@@ -153,3 +153,9 @@ export async function noteItem(page: Page, hasText: string | RegExp): Promise<im
 export async function openHubTools(page: Page): Promise<void> {
   if (!(await page.locator('.hub-tools[open]').count())) await page.locator('.hub-tools > summary').click();
 }
+
+/** Read the folder again, from the header's ⋯ menu. */
+export async function rescanApp(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Folder actions' }).click();
+  await page.getByRole('menuitem', { name: /Check for changes/ }).click();
+}
