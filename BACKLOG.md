@@ -37,7 +37,7 @@ helper, per-screen event routing).
 - [ ] Export a project or several notes as one document
 - [ ] Images in the Word file
 - [ ] Load CodeMirror only when Notes opens
-- [ ] Performance tests with a synthetic 5,000-note vault
+- [x] Performance tests with a synthetic 5,000-note vault (1.13.1; a 20,000-note case and phone-speed throttling are still open)
 
 ## Refactors
 
@@ -344,7 +344,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   _Affected: `web/main.ts`, `scripts/build.mjs`._
 - `[DEBT]` Accessibility pass with automated checks (axe) in the browser tests, a contrast check in
   both themes, and focus handling after dialogs. _Affected: `tests/e2e/`._
-- `[DEBT]` Performance tests with a synthetic vault of 5,000 and 20,000 notes. _Affected: `test/`._
+- `[DEBT]` Extend the performance tests to 20,000 notes and to the rendering path (browser, throttled CPU). `test/perf.test.ts`, `scripts/perf.mjs`.
 - `[DEBT]` The app re-renders each screen with `innerHTML`. The editor and inputs are kept alive
   across redraws, but a proper view layer would be cleaner. _Affected: `web/main.ts`._
 - `[DEBT]` The note list is not virtualized and the whole index is rebuilt after each save. Fine for

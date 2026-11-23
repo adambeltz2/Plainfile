@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.13.1] - 2026-11-23
+
+### Added
+- **Performance budgets in the unit tests** (`test/perf.test.ts`): on a synthetic 5,000-note vault, opening, task listing, search, Today, All tasks and the health badge must each stay within a generous time limit, so a change that makes any of them several times slower fails CI. Measured here: scan about 0.5 s, search about 25 ms.
+
 ## [1.13.0] - 2026-11-23
 
 ### Added
