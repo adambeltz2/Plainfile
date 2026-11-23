@@ -232,3 +232,15 @@ test.describe('in fields', () => {
     expect(box!.x + box!.width).toBeLessThanOrEqual(390);
   });
 });
+
+test('typing + in the quick add offers the projects, so no project picker is needed', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, VAULT, true, 'home');
+  const box = page.locator('#quick-text');
+  await box.click();
+  await box.pressSequentially('Draft the plan +si');
+  await expect(page.locator('.suggest button')).toHaveText(['site']);
+  await page.locator('.suggest button').click();
+  await expect(box).toHaveValue('Draft the plan +site ');
+  await expect(page.locator('[data-quick-project]')).toHaveCount(0);
+});

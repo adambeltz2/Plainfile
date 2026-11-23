@@ -564,7 +564,6 @@ app.addEventListener('input', (e) => {
 
 app.addEventListener('change', (e) => {
   if (state.screen === 'projects' && projectScreen.change(e)) return;
-  if (todayScreen.change(e)) return;
   if (state.screen === 'review' && reviewScreen.change(e)) return;
   if (state.screen === 'calendar' && calendarScreen.change(e)) return;
   if (rename.change(e)) return;

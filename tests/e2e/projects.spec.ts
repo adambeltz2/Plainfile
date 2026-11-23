@@ -630,26 +630,6 @@ test('the Tasks tab adds a task from one line, like Home, and it shows up in the
   await expect(page.locator('#quick-text')).toHaveValue('');
 });
 
-test('a project picked beside the quick add files the task there, and a typed +Project wins', async ({ page }) => {
-  await page.goto('/');
-  const dir = await openVault(page, {
-    'projects/a/index.md': '---\ntitle: Alpha\ntype: project\nactive: true\n---\n',
-    'projects/b/index.md': '---\ntitle: Beta\ntype: project\nactive: true\n---\n',
-  });
-  await nav(page, 'Tasks').click();
-  await page.locator('[data-quick-project]').selectOption({ label: 'Alpha' });
-  await page.locator('#quick-text').fill('Picked job');
-  await expect(page.locator('#quick-preview')).toContainText('Alpha');
-  await page.locator('#quick-text').press('Enter');
-  await expect.poll(async () => (await listFiles(page, dir)).includes('projects/a/tasks/Picked job.md')).toBe(true);
-  // The choice stays for the next one; a +Project in the line overrides it.
-  await expect(page.locator('#quick-text')).toHaveValue(''); // the first add has finished
-  await expect(page.locator('[data-quick-project]')).toHaveValue('projects/a/index.md');
-  await page.locator('#quick-text').fill('Typed job +Beta');
-  await page.locator('#quick-text').press('Enter');
-  await expect.poll(async () => (await listFiles(page, dir)).includes('projects/b/tasks/Typed job.md')).toBe(true);
-});
-
 test('Export CSV and JSON on the Tasks tab download what the filters show', async ({ page }) => {
   await page.goto('/');
   await openVault(page, { 'a.md': '- [ ] First job due:2999-01-01 #x\n- [ ] Second job\n' });
