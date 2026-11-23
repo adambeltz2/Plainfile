@@ -25,7 +25,9 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   and it shows in Today, the Board and your Inbox.
 - **One-line quick add:** `Call Dana +Website @dana #launch due:tomorrow`. Natural dates (`today`,
   `tomorrow`, `mon`, `next-week`, `+3d`), a preview before you save, and type-ahead for people, tags
-  and projects, and `due:` day words. Every task gets a created date.
+  and projects, and `due:` day words. A date in plain words at the end of the line works too: `Call Dana
+  tomorrow`, `Send report next fri`, `Renew in 3 days`, `Pay rent end of month` (an explicit `due:`
+  wins). Every task gets a created date.
 - **Projects:** a hub per project built for hundreds of tasks: a project rail, tabs (Tasks, Board, Timeline,
   Notes, Activity), grouping by due date, status, person, phase or tag, filter chips, a status column,
   bulk changes with a preview and Undo, and a sortable portfolio table. A project is a folder with an `index.md`; notes elsewhere

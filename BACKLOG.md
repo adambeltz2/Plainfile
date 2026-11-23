@@ -4,13 +4,40 @@ Deferred features, bugs, and debt, per `CLAUDE.md` §4. Tags: `[BUG]`, `[FEATURE
 `[REFACTOR]`, `[DEBT]`. Items are grouped by area and written to be picked up on their own.
 Nothing here is a promise of order. Remove an item when it ships.
 
-## Suggested next
+## Work order (autonomous batch, no feedback needed)
 
-1. Edit tasks in place (status, due, name) and drag Board cards and Timeline bars.
-2. Recurring tasks, and a review note saved when the weekly review finishes.
-3. Move several notes at once, a folder tree in the Notes list, and rename or move a folder.
-4. OneDrive adapter, then Google Drive; read offline from the saved copy.
-5. Split `web/notes.ts` and give each screen its own click handling (`web/main.ts` ordering).
+Grouped by ease and logic. Each item is its own pull request and release; tick it here when it ships. If work is
+interrupted, pick up at the first unticked item. Anything not listed needs a decision first (recurring tasks,
+priorities, stamping `done:` on ticks, a settings file, cloud adapters that need accounts, deleting features such as
+Empty trash, first-run folder setup, Home customisation) or is large and risky (splitting `web/notes.ts`, the render
+helper, per-screen event routing).
+
+**Tier 1: small and additive**
+- [x] Plain-words dates in quick add (1.6.2)
+- [ ] More template variables (`{{weekday}}` and friends)
+- [ ] An Install button (browser install prompt)
+- [ ] Show the line each back-link sits on in the Notes panel
+- [ ] Paste a URL over selected text to make a link
+- [ ] Tab and Shift+Tab indent list items; move a line up or down
+- [ ] Recent searches
+- [ ] Create a note from a broken link in Vault health
+- [ ] PWA shortcuts (New task, Search, Today)
+
+**Tier 2: moderate, self-contained**
+- [ ] Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]`
+- [ ] Keyboard-first Today (`j`/`k`/`x`/`e`)
+- [ ] Insight: choose a time range
+- [ ] Reschedule buttons in Today (tomorrow, next Monday, pick a date)
+- [ ] Subtask progress ("3 of 5")
+- [ ] Daily journal: open today's note if it exists
+- [ ] Open a search result with the match highlighted
+- [ ] "Fix all" safe fixes in Vault health, with a preview
+
+**Tier 3: larger, still no decision needed**
+- [ ] Export a project or several notes as one document
+- [ ] Images in the Word file
+- [ ] Load CodeMirror only when Notes opens
+- [ ] Performance tests with a synthetic 5,000-note vault
 
 ## Refactors
 

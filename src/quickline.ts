@@ -1,5 +1,6 @@
 import { dirname } from './index';
 import type { Project } from './projects';
+import { trailingPlainDate } from './natural-date';
 import { addDays } from './query';
 
 /** What one typed line means: `Call Dana +Website @dana #launch due:tomorrow`. */
@@ -41,8 +42,16 @@ export function parseQuickLine(line: string, today: string): QuickLine {
   const out: QuickLine = { text: '', title: '', people: [], tags: [] };
   const kept: string[] = [];
   const words: string[] = [];
-  for (const tok of line.trim().split(/\s+/)) {
-    if (!tok) continue;
+  const toks = line.trim().split(/\s+/).filter(Boolean);
+  // A date in plain words at the end ("tomorrow", "next fri", "in 3 days"), unless a `due:` is there.
+  const plain = toks.some((t) => /^due:/i.test(t)) ? undefined : trailingPlainDate(toks, today);
+  const skip = new Set(plain?.positions ?? []);
+  if (plain) out.due = plain.iso;
+  for (const [i, tok] of toks.entries()) {
+    if (skip.has(i)) {
+      if (i === (plain?.positions[0] ?? -1)) kept.push(`due:${plain?.iso}`);
+      continue;
+    }
     const due = /^due:(.*)$/i.exec(tok);
     if (due) {
       // the date is not part of the title
