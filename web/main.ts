@@ -33,6 +33,7 @@ import {
   loading,
   paintProgress,
   loadVault,
+  onVaultChange,
   openFolder,
   openSample,
   render as requestRender,
@@ -720,6 +721,22 @@ window.__plainfile = {
 
 installDiagnostics();
 listenForInstall();
+
+// App shortcuts (the manifest's "New task", "Today", "Search") open the page with ?go=...: act on it once a folder is open.
+const goParam = new URLSearchParams(location.search).get('go');
+if (goParam && ['quick', 'today', 'search'].includes(goParam)) {
+  let done = false;
+  onVaultChange(() => {
+    if (done) return;
+    done = true;
+    history.replaceState(null, '', location.pathname);
+    window.setTimeout(() => {
+      void go(goParam === 'quick' ? 'home' : (goParam as ScreenId)).then(() =>
+        window.setTimeout(() => document.getElementById(goParam === 'quick' ? 'quick-text' : 'search-q')?.focus(), 60),
+      );
+    }, 0);
+  });
+}
 requestRender();
 void (async () => {
   if (await cloudUi.finishConnect()) return;

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { nav } from './helpers';
+import { nav, openVault } from './helpers';
 
 test('the page links a valid manifest whose icons exist', async ({ page, request }) => {
   await page.goto('/');
@@ -54,3 +54,25 @@ test('Chromium reports no reasons the app cannot be installed', async ({ page })
   const { installabilityErrors } = await cdp.send('Page.getInstallabilityErrors');
   expect(installabilityErrors, JSON.stringify(installabilityErrors)).toEqual([]);
 });
+
+test('the manifest offers New task, Today and Search shortcuts that open the app on those screens', async ({ page, request }) => {
+  await page.goto('/');
+  const href = await page.locator('link[rel="manifest"]').getAttribute('href');
+  const manifest = (await (await request.get(new URL(href!, page.url()).toString())).json()) as { shortcuts: { name: string; url: string }[] };
+  expect(manifest.shortcuts.map((s) => s.name)).toEqual(['New task', 'Today', 'Search']);
+  for (const s of manifest.shortcuts) expect(s.url).toMatch(/^\.\/\?go=(quick|today|search)$/);
+});
+
+for (const [go, check] of [
+  ['search', '#search-q'],
+  ['quick', '#quick-text'],
+  ['today', '.title:text("Today")'],
+] as const) {
+  test(`opening ?go=${go} lands on the right screen once a folder is open`, async ({ page }) => {
+    await page.goto(`/?go=${go}`);
+    await openVault(page, { 'a.md': '- [ ] A thing due:2999-01-01\n' }, true, 'home');
+    await expect(page.locator(check).first()).toBeVisible();
+    if (go !== 'today') await expect(page.locator(check).first()).toBeFocused();
+    expect(new URL(page.url()).search).toBe('');
+  });
+}
