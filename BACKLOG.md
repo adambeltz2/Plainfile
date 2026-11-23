@@ -370,3 +370,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - [DEBT] Add direct tests for `setTaskStatus` transitions, if the existing writeback and board tests leave gaps. `test/writeback.test.ts`.
 - [FEATURE] Treat remote (`https:`) embeds separately from local ones in `resolveEmbed`. `src/index.ts`.
 - [FEATURE] Lint (ESLint) once typescript-eslint supports TypeScript 7, and a pre-commit check that runs `npm run format:check`. Repo root.
+
+## Principle from use (2026-11-23)
+- Folders, `status` and `active` are all things the user can change at any time, in any editor. The app reads them as they are and never assumes a location or an archive means a task is finished. An open task shows wherever it lives (shipped 1.16.2). Apply the same thinking to every new view and filter: decide by the task's own state, not by where its file sits.
+- [FEATURE] Optional: a one-line note when a task is added to a project that is closed out ("Weekend Work is archived") with a Reopen button. Not needed now that open tasks always show; build only if wanted. Affected: web/today.ts, web/store.ts.
