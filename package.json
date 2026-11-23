@@ -1,6 +1,11 @@
 {
   "name": "plainfile",
-  "version": "1.2.0",
+  "version": "1.2.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adambeltz2/Plainfile.git"
+  },
+  "homepage": "https://adambeltz2.github.io/Plainfile/",
   "private": true,
   "description": "A productivity hub over a plain folder of markdown files.",
   "type": "module",

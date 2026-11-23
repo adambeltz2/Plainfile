@@ -4,7 +4,7 @@
 
 <a href="https://www.buymeacoffee.com/adambeltz" target="_blank" rel="noopener noreferrer"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy me a coffee" height="36" /></a>
 
-**Live app: <https://adambeltz2.github.io/Simple-Productivity/>** (open it in Chrome, Edge or Brave to use a
+**Live app: <https://adambeltz2.github.io/Plainfile/>** (open it in Chrome, Edge or Brave to use a
 local folder, or connect Dropbox in any browser, including iPhone).
 
 A productivity hub over a plain folder of markdown files. Tasks, notes, tags and
@@ -14,7 +14,7 @@ folder is the whole repository and works with any editor or sync tool.
 
 ## Get started
 
-1. Open the **[live app](https://adambeltz2.github.io/Simple-Productivity/)**. Choose **Open folder** (Chrome, Edge or Brave), **Connect Dropbox** (any browser, including iPhone), or **Try the sample vault**.
+1. Open the **[live app](https://adambeltz2.github.io/Plainfile/)**. Choose **Open folder** (Chrome, Edge or Brave), **Connect Dropbox** (any browser, including iPhone), or **Try the sample vault**.
 2. On **Home**, type a task in the box at the top: `Call Dana +Website @dana due:friday`. It becomes its own note.
 3. Open **Tasks** to see everything across every project, **Notes** to write, and press **?** for the cheat sheet and quick keys.
 

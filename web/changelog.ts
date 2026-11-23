@@ -1,7 +1,7 @@
 import { changelogByVersion } from '../src/changelog';
 import { toHtml } from '../src/render';
 
-const REPO = 'https://github.com/adambeltz2/Simple-Productivity';
+const REPO = 'https://github.com/adambeltz2/Plainfile';
 
 /** What is new: every version, newest first, without dates. The full file with dates is on GitHub. */
 export function html(): string {

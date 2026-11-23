@@ -8,4 +8,4 @@ if (!notes) {
   console.error(`CHANGELOG.md has no entry for ${version}`);
   process.exit(1);
 }
-console.log(`${notes}\n\nSee the [full change log](https://github.com/adambeltz2/Simple-Productivity/blob/main/CHANGELOG.md).`);
+console.log(`${notes}\n\nSee the [full change log](https://github.com/adambeltz2/Plainfile/blob/main/CHANGELOG.md).`);
