@@ -231,3 +231,10 @@ test.describe('reschedule from Today', () => {
     await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent due:${localDate(3)}\n`);
   });
 });
+
+test('a task with checkboxes nested under it shows how many are done', async ({ page }) => {
+  await page.goto('/');
+  const T = localDate(0);
+  await openVault(page, { 'a.md': `- [ ] Plan the trip due:${T}\n  - [x] Book flights\n  - [ ] Book hotel\n  - [ ] Pack\n` });
+  await expect(page.locator('li.task', { hasText: 'Plan the trip' }).locator('.chip', { hasText: '1 of 3' })).toBeVisible();
+});

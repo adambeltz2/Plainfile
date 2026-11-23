@@ -99,3 +99,25 @@ describe('parseNote', () => {
     expect(n.tasks[0]).toMatchObject({ line: 4, title: 'Task one' });
   });
 });
+
+describe('subtask progress', () => {
+  const sub = (md: string) => parseNote('n.md', md, { mtime: 0, size: 0 }).tasks.map((t) => [t.title, t.sub?.done ?? null, t.sub?.total ?? null]);
+  it('counts nested checkboxes at any depth under their parent only', () => {
+    expect(sub('- [ ] Parent\n  - [x] one\n  - [ ] two\n    - [x] deep\n- [ ] Sibling\n  - [ ] mine\n')).toEqual([
+      ['Parent', 2, 3],
+      ['one', null, null],
+      ['two', 1, 1],
+      ['deep', null, null],
+      ['Sibling', 0, 1],
+      ['mine', null, null],
+    ]);
+  });
+  it('stops at a line that is not indented further, and ignores plain bullets and blank lines', () => {
+    expect(sub('- [ ] A\n  - plain note\n    - [x] under plain\n\n  - [ ] after blank\ntext\n  - [x] not a child\n')).toEqual([
+      ['A', 1, 2],
+      ['under plain', null, null],
+      ['after blank', null, null],
+      ['not a child', null, null],
+    ]);
+  });
+});

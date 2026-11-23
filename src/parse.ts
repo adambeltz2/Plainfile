@@ -30,6 +30,8 @@ export interface InlineTask {
   created?: string;
   who: string[];
   tags: string[];
+  /** Checkboxes nested under this one, at any depth: how many, and how many are ticked. */
+  sub?: { done: number; total: number };
 }
 
 /** A note that is itself a task: frontmatter has `status` and it lives in a tasks/ folder or has type: task. */
@@ -196,6 +198,8 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
   const previewLines: string[] = [];
   const headings: Note['headings'] = [];
   let inFence = false;
+  /** Open ancestors of the line being read, by indent, so nested checkboxes can be counted under them. */
+  const open: { task: InlineTask; indent: number }[] = [];
 
   for (let i = bodyStart; i < lines.length; i++) {
     const line = lines[i] ?? '';
@@ -227,6 +231,10 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
     for (const g of lineTags) tags.add(g);
 
     const t = TASK_LINE.exec(line);
+    if (line.trim()) {
+      const indent = (/^[ \t]*/.exec(line)?.[0] ?? '').replace(/\t/g, '    ').length;
+      while (open.length && (open[open.length - 1]?.indent ?? 0) >= indent) open.pop();
+    }
     if (t) {
       const rest = t[4] ?? '';
       const taskTags = [...rest.matchAll(TAG)].map((x) => (x[2] ?? '').toLowerCase());
@@ -242,6 +250,13 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         who: [...rest.matchAll(WHO)].map((x) => `@${(x[2] ?? '').toLowerCase()}`),
         tags: taskTags,
       });
+      const mine = tasks[tasks.length - 1] as InlineTask;
+      for (const a of open) {
+        a.task.sub = a.task.sub ?? { done: 0, total: 0 };
+        a.task.sub.total++;
+        if (mine.state === 'x') a.task.sub.done++;
+      }
+      open.push({ task: mine, indent: (/^[ \t]*/.exec(line)?.[0] ?? '').replace(/\t/g, '    ').length });
     } else if (!h && lineTags.includes('followup')) {
       followups.push({ line: lineNo, title: cleanTitle(line.replace(/^\s*(?:[-*+]|\d+[.)])\s+/, '')) });
     }

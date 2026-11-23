@@ -8,6 +8,7 @@ import { esc } from './util';
 /** A task as a list row, shared by Today and the project page: tick box, title, and its chips. */
 function chips(t: TaskItem): string {
   const out: string[] = [];
+  if (t.sub?.total) out.push(`<span class="chip" title="${t.sub.done} of ${t.sub.total} subtasks done">${t.sub.done} of ${t.sub.total}</span>`);
   if (t.due) {
     const late = t.due < today() && !t.done;
     out.push(`<span class="chip${late ? ' late' : ''}">${late ? 'Overdue · ' : ''}${esc(fmtDate(t.due))}</span>`);
