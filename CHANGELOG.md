@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.2.0] - 2026-11-23
+
+### Added
+- **Export Insight as CSV or JSON.** Links at the top of the Insight screen download the activity per day, this month's numbers, topics, people and folders. The CSV is one flat table with a `section` column; the JSON keeps the structure.
+
 ## [1.1.3] - 2026-11-23
 
 ### Changed

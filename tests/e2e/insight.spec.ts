@@ -74,3 +74,21 @@ test('a number on Insight opens the notes or tasks behind it', async ({ page }) 
   await page.locator('.heat button').last().click();
   await expect(page.locator('.home-card h3', { hasText: /^Notes changed on/ })).toBeVisible();
 });
+
+test('Insight exports its numbers as CSV and JSON', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { 'a.md': '---\ntags: [launch]\n---\n- [ ] Call @dana\n' });
+  await nav(page, 'Insight').click();
+  const [csv] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export CSV' }).click()]);
+  expect(csv.suggestedFilename()).toMatch(/^insight-\d{4}-\d{2}-\d{2}\.csv$/);
+  const read = async (d: import('@playwright/test').Download): Promise<string> => {
+    const chunks: Buffer[] = [];
+    for await (const c of await d.createReadStream()) chunks.push(c as Buffer);
+    return Buffer.concat(chunks).toString('utf8');
+  };
+  expect((await read(csv)).replace(/^﻿/, '')).toContain('section,name,value,detail');
+  const [json] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export JSON' }).click()]);
+  const data = JSON.parse(await read(json)) as { topics: { tag: string }[]; month: { open: number } };
+  expect(data.topics[0]!.tag).toBe('launch');
+  expect(data.month.open).toBe(1);
+});

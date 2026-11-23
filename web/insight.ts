@@ -1,6 +1,8 @@
 import { applyFieldFix, fieldIssues, type FieldIssue } from '../src/fields';
 import { fmtDate } from '../src/dates';
-import { activity, drillItems, folderSizes, monthStats, notesChangedOn, type Drill } from '../src/insight';
+import { save } from './export';
+import { insightToCsv } from '../src/export';
+import { activity, drillItems, insightReport, folderSizes, monthStats, notesChangedOn, type Drill } from '../src/insight';
 import { buildPeople } from '../src/people';
 import { tagCounts } from '../src/vocabulary';
 import { errorMessage, getHealth, render, state, today } from './store';
@@ -46,7 +48,7 @@ export function html(): string {
   const maxFolder = folders[0]?.notes ?? 1;
 
   let h =
-    '<div class="home insight"><h2 class="title">Insight</h2><p class="meta">Worked out from your own files, in this browser. Nothing is recorded anywhere.</p><div class="home-grid">';
+    '<div class="home insight"><h2 class="title">Insight</h2><p class="meta">Worked out from your own files, in this browser. Nothing is recorded anywhere. <button class="link" data-insight-export="csv">Export CSV</button> · <button class="link" data-insight-export="json">Export JSON</button></p><div class="home-grid">';
   h += card(
     'Activity: notes changed per day, last 26 weeks',
     `<div class="heat" role="img" aria-label="${a.total} notes changed on ${a.days} days in the last 26 weeks">${a.weeks.map((w) => `<div class="heat-col">${w.map((d) => (d.count ? `<button class="lv${d.level}" data-insight-day="${esc(d.date)}" aria-label="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed. Show them." title="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed"></button>` : `<i class="lv0" title="${esc(fmtDate(d.date))}: nothing changed"></i>`)).join('')}</div>`).join('')}</div>` +
@@ -137,6 +139,13 @@ function tidyList(issues: FieldIssue[]): string {
 }
 
 export async function click(target: HTMLElement): Promise<boolean> {
+  const exp = target.closest<HTMLElement>('[data-insight-export]')?.dataset.insightExport;
+  if (exp && state.index) {
+    const r = insightReport(state.index, today());
+    if (exp === 'csv') save('\ufeff' + insightToCsv(r), `insight-${today()}.csv`, 'text/csv;charset=utf-8');
+    else save(JSON.stringify(r, null, 2), `insight-${today()}.json`, 'application/json');
+    return true;
+  }
   const dr = target.closest<HTMLElement>('[data-insight-drill]');
   const day = target.closest<HTMLElement>('[data-insight-day]')?.dataset.insightDay;
   if (dr || day) {

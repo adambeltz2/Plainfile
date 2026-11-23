@@ -12,6 +12,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   a Word file, or print it to PDF, cleanly (no frontmatter or tags). A project **Report** builds a status snapshot
   you can copy, download or save as a note.
 - **Tasks (all projects):** the Tasks tab, a place to start the day and add tasks from one line, opens the project hub over every task, from every project and from notes outside any; group by Project, person, status or date, filter, and use the board and timeline as usual.
+- **Insight export:** the activity grid, month numbers, topics, people and folders download as CSV or JSON.
 - **Home and the weekly review:** a landing screen (capture, today, what needs filing, what
   you are waiting on, the week ahead, project progress) and a four-step review that files, reschedules and plans
   with small guarded edits to your own notes.
