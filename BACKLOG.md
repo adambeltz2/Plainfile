@@ -28,7 +28,7 @@ helper, per-screen event routing).
 - [x] Keyboard-first Today (`j`/`k`/`x`/`e`) (1.8.1; `d` to set a date is still open)
 - [x] Insight: choose a time range (1.9.0)
 - [x] Reschedule buttons in Today (1.10.0)
-- [ ] Subtask progress ("3 of 5")
+- [x] Subtask progress (1.11.0; project cards do not show it yet)
 - [ ] Daily journal: open today's note if it exists
 - [ ] Open a search result with the match highlighted
 - [ ] "Fix all" safe fixes in Vault health, with a preview
@@ -179,8 +179,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   `src/writeback.ts`, `web/today.ts`._
 - `[FEATURE]` Show the heading a task lives under (for example "Action items") and the note's title
   on every task row. _Affected: `src/parse.ts`, `web/today.ts`._
-- `[FEATURE]` Subtask progress: `3 of 5` on notes and project cards from nested checkboxes.
-  _Affected: `src/projects.ts`._
+- `[FEATURE]` Show subtask progress on project cards and in the Notes list too. _Affected: `web/project.ts`, `web/notes.ts`._
 - `[FEATURE]` Task dependencies: `blocked by [[note]]`, with blocked tasks hidden from Today until
   the other is done. _Affected: `src/parse.ts`, `src/query.ts`._
 - `[FEATURE]` Time estimates and a day planner: drag tasks into today's plan and see the total.

@@ -17,6 +17,8 @@ export interface TaskItem {
   who: string[];
   tags: string[];
   status?: string;
+  /** For an inline task with checkboxes nested under it: how many, and how many are ticked. */
+  sub?: { done: number; total: number };
 }
 
 export interface Resolution {
@@ -87,7 +89,7 @@ export interface IndexCache {
 }
 
 /** Bump when parsing changes in a way that makes saved notes wrong, so every cache is dropped. */
-export const PARSER_VERSION = 1;
+export const PARSER_VERSION = 2; // 2: inline tasks carry nested-checkbox counts
 
 export class VaultIndex {
   /** Increases every time the index changes, so derived results can be cached. */
@@ -383,5 +385,6 @@ function inlineItem(n: Note, t: InlineTask): TaskItem {
     created: t.created,
     who: t.who,
     tags: t.tags,
+    sub: t.sub,
   };
 }

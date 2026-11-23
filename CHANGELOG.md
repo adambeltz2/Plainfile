@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.11.0] - 2026-11-23
+
+### Added
+- **Subtask progress.** A task with checkboxes nested under it (at any depth) shows "1 of 3" on its row in Today, Tasks and the project hub. The saved index is rebuilt once after updating.
+
 ## [1.10.0] - 2026-11-23
 
 ### Added
