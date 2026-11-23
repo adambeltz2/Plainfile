@@ -17,8 +17,8 @@ helper, per-screen event routing).
 - [x] More template variables (1.6.3)
 - [x] An Install button (1.6.4)
 - [x] Show the line each back-link sits on in the Notes panel (1.6.5)
-- [ ] Paste a URL over selected text to make a link
-- [ ] Tab and Shift+Tab indent list items; move a line up or down
+- [x] Paste a URL over selected text to make a link (1.7.0)
+- [x] Tab and Shift+Tab indent list items; move a line up or down (1.7.0, Alt+Up/Down already moved lines)
 - [ ] Recent searches
 - [ ] Create a note from a broken link in Vault health
 - [ ] PWA shortcuts (New task, Search, Today)
@@ -222,10 +222,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` Hold Alt to see the raw markdown, as the mockup showed. _Affected: `web/editor.ts`._
 - `[FEATURE]` Render italics (`*x*`), strikethrough, blockquotes, horizontal rules, tables in place,
   and numbered lists that continue. _Affected: `web/editor.ts`._
-- `[FEATURE]` Tab and Shift Tab to indent list items, and move a line up or down. _Affected:
-  `web/editor.ts`._
-- `[FEATURE]` Paste a URL over selected text to make a link, and fetch a title for a bare URL.
-  _Affected: `web/editor.ts`._
+- `[FEATURE]` Fetch a title for a bare pasted URL. _Affected: `web/editor.ts`._
 - `[FEATURE]` Hover a `[[link]]` to preview the note. _Affected: `web/editor.ts`._
 - `[FEATURE]` Outline panel from headings, fold sections, and find in note (Ctrl F). _Affected:
   `web/editor.ts`, `web/notes.ts`._

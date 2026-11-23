@@ -1,7 +1,7 @@
 import { linkAt, type LinkAt } from '../src/linknote';
 import { isMermaidOpen } from '../src/diagrams'; // MERMAID
 import { MermaidWidget } from './mermaid-widget'; // MERMAID
-import { defaultKeymap, history, historyKeymap, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, indentLess, indentMore, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { parseDueWord } from '../src/quickline';
 import { acceptCompletion, autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
 import { markdown } from '@codemirror/lang-markdown';
@@ -489,6 +489,12 @@ async function insertImages(view: EditorView, files: File[], save: (f: File) => 
 const imagesIn = (list: FileList | DataTransferItemList | null | undefined): File[] =>
   [...((list as FileList | undefined) ?? [])].filter((f): f is File => f instanceof File && f.type.startsWith('image/'));
 
+/** Whether the cursor is on a bullet, numbered or task line, where Tab and Shift+Tab change the nesting. */
+function onListLine(view: EditorView): boolean {
+  const line = view.state.doc.lineAt(view.state.selection.main.head).text;
+  return /^\s*(?:[-*+]|\d+[.)])\s/.test(line);
+}
+
 export function createEditor(o: {
   openLink?: (link: LinkAt) => void;
   text: string;
@@ -511,7 +517,9 @@ export function createEditor(o: {
       history(),
       keymap.of([
         // Tab finishes the highlighted suggestion. With no list open it is left alone, so Tab still moves focus on.
-        { key: 'Tab', run: acceptCompletion },
+        { key: 'Tab', run: (view) => acceptCompletion(view) || (onListLine(view) && indentMore(view)) },
+        // On a list or task line, Shift+Tab takes an item back out a level. Elsewhere it moves focus on, as usual.
+        { key: 'Shift-Tab', run: (view) => onListLine(view) && indentLess(view) },
         {
           key: 'Mod-s',
           run: () => {
@@ -526,6 +534,15 @@ export function createEditor(o: {
       EditorView.lineWrapping,
       EditorView.domEventHandlers({
         paste(ev, view) {
+          // A web address pasted over selected text makes a link of it: [selected](address).
+          const sel = view.state.selection.main;
+          const pasted = ev.clipboardData?.getData('text/plain')?.trim() ?? '';
+          if (!sel.empty && /^https?:\/\/\S+$/i.test(pasted) && !view.state.sliceDoc(sel.from, sel.to).includes('\n')) {
+            ev.preventDefault();
+            const text = `[${view.state.sliceDoc(sel.from, sel.to)}](${pasted})`;
+            view.dispatch({ changes: { from: sel.from, to: sel.to, insert: text }, selection: { anchor: sel.from + text.length }, userEvent: 'input.paste' });
+            return true;
+          }
           const files = imagesIn(ev.clipboardData?.files);
           if (!files.length || !o.pasteImage) return false;
           ev.preventDefault();
