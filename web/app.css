@@ -786,3 +786,7 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .edge-left { left: 0; border-left: 0; border-radius: 0 6px 6px 0; }
 .edge-right { right: 0; border-right: 0; border-radius: 6px 0 0 6px; }
 @media (max-width: 960px) { .pane-hide, .edge-tab { display: none; } }
+
+/* The icon that says what kind of note this is: project, person, task, meeting, journal or note. */
+.kind { flex: none; margin-right: 6px; vertical-align: -2px; opacity: 0.85; }
+.note-item[aria-current='true'] .kind, .item[aria-current='true'] .kind { opacity: 1; }

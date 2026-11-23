@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.17.4] - 2026-11-23
+
+### Added
+- Every note in the Notes list (and in Pinned and Recent) has a small icon for what it is: a folder for a project, a head for a person, a tick box for a task, a speech bubble for a meeting, a calendar for a journal, and a page for any other note. The kind is read from the note itself (its `type`, its fields or its folder), so it follows whatever you change, and it is named for screen readers.
+
 ## [1.17.3] - 2026-11-23
 
 ### Added

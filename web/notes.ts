@@ -13,6 +13,7 @@ import {
   titleFrontmatter,
 } from '../src/frontmatter';
 import { listOf } from '../src/fields';
+import { kindIcon } from './kind-icon';
 import { localDateOf } from '../src/dates';
 import { saveImage, mimeFor } from '../src/attachments';
 import { dirname, joinPath } from '../src/index';
@@ -355,7 +356,7 @@ function onChange(): void {
 const idxNotes = (): Note[] => [...(state.index?.notes.values() ?? [])];
 
 const noteBtn = (path: string, title: string, cls: string, extra = ''): string =>
-  `<button class="${cls}" data-note="${esc(path)}" aria-current="${path === notes.path}"><span>${esc(title)}</span>${extra}</button>`;
+  `<button class="${cls}" data-note="${esc(path)}" aria-current="${path === notes.path}"><span>${kindIcon(state.index?.notes.get(path))}${esc(title)}</span>${extra}</button>`;
 
 function pinnedNotes(): Note[] {
   return [...(state.index?.notes.values() ?? [])]
@@ -430,7 +431,7 @@ function listHtml(): string {
       folder = d;
       h += `<div class="folder mono">${esc(d ? `${d}/` : '(top level)')}</div>`;
     }
-    h += `<button class="item note-item" data-note="${esc(n.path)}" aria-current="${n.path === notes.path}"><span>${esc(n.title)}</span></button>`;
+    h += `<button class="item note-item" data-note="${esc(n.path)}" aria-current="${n.path === notes.path}"><span>${kindIcon(n)}${esc(n.title)}</span></button>`;
   }
   if (all.length > notes.listLimit) {
     h += `<p class="muted small" style="margin:10px 0 4px">Showing ${Math.min(notes.listLimit, all.length)} of ${all.length} notes. Type in the filter to narrow them.</p><button class="btn small" data-act="notes-more">Show 300 more</button>`;
