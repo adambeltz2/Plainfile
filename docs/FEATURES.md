@@ -27,6 +27,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Today:** open tasks that are late, due today or due this week, plus Upcoming, Inbox, Waiting on,
   All open, Follow-ups and Projects views. Ticking a box changes one character in the file and shows
   the exact before and after lines.
+- **New task form:** + New > Task, and + Task on a project page (project fixed, you stay on the page), take a task line with `(A)`, `@people`, `#tags` and `due:` as well as a priority list, due-date picks, people and tags fields.
 - **Every task is its own note** (`tasks/<title>.md`, or inside its project), so it has room for details,
   and it shows in Today, the Board and your Inbox.
 - **One-line quick add:** `Call Dana +Website @dana #launch due:tomorrow`. Natural dates (`today`,

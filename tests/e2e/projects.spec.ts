@@ -116,13 +116,16 @@ test.describe('new project', () => {
       .click();
 
     await page.locator('.pcard').getByRole('button', { name: '+ Task' }).click();
-    await page.locator('#tpl-title').fill('Order cabinets');
-    await expect(page.locator('#tpl-path')).toHaveText('projects/kitchen-remodel/tasks/Order cabinets.md');
-    await expect(page.locator('#tpl-preview')).toContainText('project: kitchen-remodel');
-    await page.getByRole('button', { name: 'Create file' }).click();
-    await expect(page.locator('.cm-content')).toBeVisible();
+    // The same form as + New > Task: the task line takes @people, #tags, due: and (A), and the project is fixed.
+    await expect(page.locator('.modal')).toContainText('kitchen-remodel');
+    await page.locator('#new-task-text').fill('(A) Order cabinets @dana #kitchen due:2026-11-28');
+    await page.getByRole('button', { name: 'Add task' }).click();
+    await expect(page.locator('.modal')).toHaveCount(0);
+    await expect.poll(() => listFiles(page, dir)).toContain('projects/kitchen-remodel/tasks/Order cabinets.md');
     const task = await readFile(page, dir, 'projects/kitchen-remodel/tasks/Order cabinets.md');
-    expect(task).toContain(`created: ${TODAY()}\nproject: kitchen-remodel\ntags: []\npeople: []`);
+    expect(task).toBe(
+      `---\ntitle: Order cabinets\nstatus: todo\ndue: 2026-11-28\npriority: A\ncreated: ${TODAY()}\nproject: kitchen-remodel\ntags: [kitchen]\npeople: [dana]\n---\n\n`,
+    );
 
     await nav(page, 'Today').click();
     await page
@@ -280,7 +283,8 @@ test.describe('project dashboard', () => {
     await expect(page.locator('#tpl-preview')).toContainText('project: site');
     await page.locator('.modal').getByRole('button', { name: 'Close' }).click();
     await page.getByRole('button', { name: '+ Task' }).click();
-    await expect(page.locator('#tpl-path')).toContainText('projects/site/tasks/');
+    await expect(page.locator('.modal')).toContainText('Project');
+    await expect(page.locator('.modal')).toContainText('site'); // the project is fixed, so it is shown, not asked
   });
 
   test('fits a phone without sideways scrolling', async ({ page }) => {

@@ -3,7 +3,7 @@ import { addDays } from '../src/query';
 import { kindForPrompt } from '../src/vocabulary';
 import { openNote } from './notes';
 import { listProjects } from '../src/projects';
-import { findProject } from '../src/quickline';
+import { findProject, parseQuickLine } from '../src/quickline';
 import { errorMessage, quickAddTask, render, state, today, words } from './store';
 import { esc } from './util';
 
@@ -28,6 +28,12 @@ export function openNew(): void {
 }
 
 /** Open a template's form. `extras` are values the app already knows, such as which project a task belongs to. */
+/** The New task form, for a task made from a project's page: the project is fixed, and you stay on the page afterwards. */
+export function openProjectTask(projectName: string): void {
+  state.modal = { step: 'task', text: '', due: '', tags: '', people: '', project: projectName, priority: '', locked: true, error: '' };
+  render();
+}
+
 export function openTemplate(name: string, extras: Record<string, string> = {}): void {
   const t = state.templates.find((x) => x.name === name);
   if (!t) return;
@@ -85,8 +91,16 @@ export function html(): string {
       '</ul><p class="muted small" style="margin:10px 0 0">Add your own templates as markdown files in <code>.plainfile/templates/</code>.</p>';
   } else if (m.step === 'task') {
     body =
-      '<h2>New task</h2><p class="muted small" style="margin:0 0 10px">Made as its own note in <code>tasks/</code> (or the project\'s <code>tasks/</code> folder), dated today. It also shows in your Inbox until it is filed in a project. You can type the same thing on one line in the box on Today.</p>' +
-      `<div class="fld"><label for="new-task-text">Task</label><input id="new-task-text" class="inp" type="text" autocomplete="off" value="${esc(m.text)}" placeholder="Call Dana about the logo files"></div>` +
+      '<h2>New task</h2><p class="muted small" style="margin:0 0 10px">Made as its own note in <code>tasks/</code> (or the project\'s <code>tasks/</code> folder), dated today. It also shows in your Inbox until it is filed in a project. Everything below can also be typed in the task line itself: <code>(A) Call Dana @dana #launch due:friday</code>.</p>' +
+      `<div class="fld"><label for="new-task-text">Task</label><input id="new-task-text" class="inp" type="text" autocomplete="off" data-suggest="line" value="${esc(m.text)}" placeholder="Call Dana about the logo files @dana due:friday"></div>` +
+      `<div class="fld"><label for="new-task-priority">Priority (optional)</label><select id="new-task-priority" class="inp">${[
+        ['', 'None'],
+        ['A', 'A (first)'],
+        ['B', 'B'],
+        ['C', 'C'],
+      ]
+        .map(([v, l]) => `<option value="${v}"${m.priority === v ? ' selected' : ''}>${l}</option>`)
+        .join('')}</select></div>` +
       `<div class="fld"><label for="new-task-due">Due date (optional)</label><div class="qdue"><input id="new-task-due" class="inp date" type="date" value="${esc(m.due)}"><span class="qpicks">${[
         ['Today', 0],
         ['Tomorrow', 1],
@@ -98,10 +112,12 @@ export function html(): string {
         )
         .join('')}</span></div></div>` +
       `<div class="fld"><label for="new-task-people">People (optional)</label><input id="new-task-people" class="inp" type="text" autocomplete="off" data-suggest="people" placeholder="@dana @sam" value="${esc(m.people)}"></div>` +
-      `<div class="fld"><label for="new-task-project">Project (optional)</label><input id="new-task-project" class="inp" type="text" autocomplete="off" data-suggest="projects" placeholder="website-relaunch" value="${esc(m.project)}"></div>` +
+      (m.locked
+        ? `<div class="fld"><label>Project</label><div><b>${esc(m.project)}</b></div></div>`
+        : `<div class="fld"><label for="new-task-project">Project (optional)</label><input id="new-task-project" class="inp" type="text" autocomplete="off" data-suggest="projects" placeholder="website-relaunch" value="${esc(m.project)}"></div>`) +
       `<div class="fld"><label for="new-task-tags">Tags (optional)</label><input id="new-task-tags" class="inp" type="text" autocomplete="off" data-suggest="tags" placeholder="#launch #home" value="${esc(m.tags)}"></div>` +
       (m.error ? `<div class="notice err small">${esc(m.error)}</div>` : '') +
-      `<div class="row-gap"><button class="btn primary" data-act="create-task"${m.busy ? ' disabled' : ''}>${m.busy ? 'Adding…' : 'Add task'}</button><button class="btn" data-act="modal-back"${m.busy ? ' disabled' : ''}>Back</button></div>`;
+      `<div class="row-gap"><button class="btn primary" data-act="create-task"${m.busy ? ' disabled' : ''}>${m.busy ? 'Adding…' : 'Add task'}</button><button class="btn" data-act="${m.locked ? 'modal-close' : 'modal-back'}"${m.busy ? ' disabled' : ''}>${m.locked ? 'Cancel' : 'Back'}</button></div>`;
   } else {
     const t = currentTemplate();
     if (!t) return '';
@@ -134,7 +150,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   if (target.closest('[data-new-task]')) {
-    state.modal = { step: 'task', text: '', due: '', tags: '', people: '', project: '', error: '' };
+    state.modal = { step: 'task', text: '', due: '', tags: '', people: '', project: '', priority: '', error: '' };
     render();
     return true;
   }
@@ -164,20 +180,33 @@ export async function click(target: HTMLElement): Promise<boolean> {
     m.error = '';
     render();
     await paint();
-    const wanted = m.project.trim();
+    // The task line can carry @people, #tags, due: and (A) as well, the way the quick add does; the fields add to it.
+    const line = parseQuickLine(m.text, today());
+    const wanted = (m.project.trim() || line.project || '').trim();
     const project = wanted && state.index ? findProject(listProjects(state.index), wanted.replace(/^\+/, '')) : undefined;
-    const err =
-      wanted && !project
+    const err = line.badDue
+      ? `Could not read "due:${line.badDue}". Try due:today, due:tomorrow, due:mon or due:2026-11-30.`
+      : wanted && !project
         ? `No project called "${wanted}".`
-        : await quickAddTask({ title: m.text, due: m.due, tags: words(m.tags), people: words(m.people), project });
+        : await quickAddTask({
+            title: line.title || line.text,
+            due: m.due || line.due,
+            priority: m.priority || line.priority,
+            tags: [...new Set([...line.tags, ...words(m.tags)])],
+            people: [...new Set([...line.people, ...words(m.people)])],
+            project,
+          });
     if (err) {
       m.busy = false;
       m.error = err;
       render();
     } else {
+      const stay = m.locked;
       state.modal = undefined;
-      state.screen = 'today';
-      state.view = 'inbox';
+      if (!stay) {
+        state.screen = 'today';
+        state.view = 'inbox';
+      }
       render();
     }
     return true;
@@ -214,6 +243,7 @@ export function input(e: Event): boolean {
     else if (t.id === 'new-task-people') m.people = t.value;
     else if (t.id === 'new-task-project') m.project = t.value;
     else if (t.id === 'new-task-tags') m.tags = t.value;
+    else if (t.id === 'new-task-priority') m.priority = t.value;
     else return false;
     return true;
   }

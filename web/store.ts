@@ -36,7 +36,18 @@ export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | '
 
 export type Modal =
   | { step: 'menu' }
-  | { step: 'task'; text: string; due: string; tags: string; people: string; project: string; error: string; busy?: boolean }
+  | {
+      step: 'task';
+      text: string;
+      due: string;
+      tags: string;
+      people: string;
+      project: string;
+      priority: string;
+      /** Made from a project's page: the project is fixed and you stay on that page. */ locked?: boolean;
+      error: string;
+      busy?: boolean;
+    }
   | { step: 'template'; name: string; values: Record<string, string>; extras: Record<string, string>; error: string; busy?: boolean };
 
 export interface Context {

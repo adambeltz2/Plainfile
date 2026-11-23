@@ -469,7 +469,8 @@ app.addEventListener('click', (e) => {
         if (!n) return;
         const dir = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
         const projectName = n.name.toLowerCase() === 'index' && dir ? (dir.split('/').pop() as string) : n.name;
-        return newmenu.openTemplate(act === 'proj-task' ? 'Project task' : 'Project note', { projectDir: dir, projectName });
+        if (act === 'proj-task') return newmenu.openProjectTask(projectName);
+        return newmenu.openTemplate('Project note', { projectDir: dir, projectName });
       }
       case 'explore-note':
         return void (notes.notes.path && explore.focus(notes.notes.path));
@@ -712,7 +713,7 @@ palette.setRunner(async (item) => {
     case 'quick-note':
       return newmenu.quickNote();
     case 'new-task':
-      state.modal = { step: 'task', text: '', due: '', tags: '', people: '', project: '', error: '' };
+      state.modal = { step: 'task', text: '', due: '', tags: '', people: '', project: '', priority: '', error: '' };
       return requestRender();
     default:
       return;
