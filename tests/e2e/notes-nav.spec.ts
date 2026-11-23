@@ -410,3 +410,46 @@ test('Linked from shows each linking note by title with the line the link is on,
   await list.getByRole('button', { name: 'First source' }).click();
   await expect(page.locator('#note-title')).toHaveValue('First source');
 });
+
+test.describe('editor keys and paste', () => {
+  async function open(page: import('@playwright/test').Page, text: string): Promise<string> {
+    const dir = await openVault(page, { 'n.md': text });
+    await nav(page, 'Notes').click();
+    await page.locator('.note-item', { hasText: /^n$/ }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    return dir;
+  }
+
+  test('Tab and Shift+Tab nest and un-nest a list item, and leave other lines to move focus', async ({ page }) => {
+    await page.goto('/');
+    const dir = await open(page, '- one\n- two\n\nplain\n');
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+Home');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Tab');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'n.md')).toBe('- one\n  - two\n\nplain\n');
+    await page.keyboard.press('Shift+Tab');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'n.md')).toBe('- one\n- two\n\nplain\n');
+    // On a plain line Tab does not type an indent.
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Tab');
+    await page.waitForTimeout(1200);
+    expect(await readFileOrEmpty(page, dir, 'n.md')).toBe('- one\n- two\n\nplain\n');
+  });
+
+  test('pasting a web address over selected text makes a link of it', async ({ page }) => {
+    await page.goto('/');
+    const dir = await open(page, 'See the docs here\n');
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+Home');
+    for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight'); // after "See "
+    await page.keyboard.press('Shift+Control+ArrowRight'); // selects "the"
+    await page.evaluate(() => {
+      const dt = new DataTransfer();
+      dt.setData('text/plain', 'https://example.com/docs');
+      document.querySelector('.cm-content')!.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+    });
+    await expect.poll(() => readFileOrEmpty(page, dir, 'n.md')).toBe('See [the](https://example.com/docs) docs here\n');
+  });
+});

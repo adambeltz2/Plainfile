@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.7.0] - 2026-11-23
+
+### Added
+- **Tab and Shift+Tab nest list items.** On a bullet, numbered or task line, Tab indents the item and Shift+Tab takes it back out. On any other line they move focus as before. (Alt+Up and Alt+Down already move a line.)
+- **Paste a web address over selected text to make a link:** select a word, paste `https://…`, and it becomes `[word](https://…)`.
+
 ## [1.6.5] - 2026-11-23
 
 ### Changed
