@@ -142,12 +142,11 @@ function footer(): string {
     '<a href="?go=changelog" target="_blank" rel="noopener noreferrer">What is new</a>' +
     installButton() +
     `<a href="${REPO}" target="_blank" rel="noopener noreferrer">GitHub</a>` +
-    '<a href="?go=guide" target="_blank" rel="noopener noreferrer">Cheat sheet</a>' +
     '</footer>'
   );
 }
 
-/** A page opened from the footer (What is new, Cheat sheet) in its own tab, before any folder is open. */
+/** A page opened in its own tab (What is new from the footer, or ?go=guide) in its own tab, before any folder is open. */
 const standalone = ((): '' | 'changelog' | 'guide' => {
   const g = new URLSearchParams(location.search).get('go');
   return g === 'changelog' || g === 'guide' ? g : '';
