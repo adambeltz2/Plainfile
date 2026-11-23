@@ -466,6 +466,8 @@ export interface EditorHandle {
   /** Save image files (from a file picker) beside the note and put them in at the cursor, as if pasted. */
   insertImageFiles(files: File[]): Promise<void>;
   goToOffset(offset: number): void;
+  /** Select the first place `word` appears (on `line` if given, else anywhere), ignoring case, and scroll to it. */
+  selectFirst(word: string, line?: number): void;
   /** Replace the whole text with `next` using the smallest change, so undo and the cursor survive. */
   applyText(next: string): void;
   destroy(): void;
@@ -636,6 +638,19 @@ export function createEditor(o: {
       const line = view.state.doc.line(Math.max(1, Math.min(n, view.state.doc.lines)));
       view.dispatch({ selection: { anchor: line.from }, effects: EditorView.scrollIntoView(line.from, { y: 'center' }) });
       view.focus();
+    },
+    selectFirst(word, line) {
+      if (!word) return;
+      const doc = view.state.doc;
+      const scan = (from: number, text: string): boolean => {
+        const i = text.toLowerCase().indexOf(word.toLowerCase());
+        if (i < 0) return false;
+        view.dispatch({ selection: { anchor: from + i, head: from + i + word.length }, effects: EditorView.scrollIntoView(from + i, { y: 'center' }) });
+        view.focus();
+        return true;
+      };
+      if (line && line >= 1 && line <= doc.lines && scan(doc.line(line).from, doc.line(line).text)) return;
+      scan(0, doc.sliceString(0, doc.length));
     },
     goToOffset(offset) {
       const at = Math.max(0, Math.min(offset, view.state.doc.length));

@@ -30,7 +30,7 @@ helper, per-screen event routing).
 - [x] Reschedule buttons in Today (1.10.0)
 - [x] Subtask progress (1.11.0; project cards do not show it yet)
 - [x] Daily journal: open today's note if it exists (1.11.1)
-- [ ] Open a search result with the match highlighted
+- [x] Open a search result with the match highlighted (1.12.0)
 - [ ] "Fix all" safe fixes in Vault health, with a preview
 
 **Tier 3: larger, still no decision needed**
@@ -293,8 +293,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` Saved (named) searches. _Affected: `web/search.ts`._
 - `[FEATURE]` Find and replace across the vault with a full preview and per-line checkboxes.
   _Affected: new `src/replace.ts`, `web/search.ts`._
-- `[FEATURE]` Open a search result with the match highlighted in the editor. _Affected:
-  `web/notes.ts`._
 - `[DEBT]` Search is a substring match over every note held in memory. Move to a ranked index once
   vaults get large. _Affected: `src/query.ts`._
 

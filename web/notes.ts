@@ -22,6 +22,8 @@ import { esc } from './util';
 interface At {
   line?: number;
   offset?: number;
+  /** A word to select once the note is open, such as the one a search matched. */
+  find?: string;
 }
 
 function loadPanes(): { list: boolean; details: boolean } {
@@ -801,7 +803,10 @@ export function afterRender(refocus: boolean): void {
   slot.appendChild(h.host);
   const p = notes.pending;
   notes.pending = {};
-  if (p.line) h.goToLine(p.line);
+  if (p.find) {
+    if (p.line) h.goToLine(p.line);
+    h.selectFirst(p.find, p.line);
+  } else if (p.line) h.goToLine(p.line);
   else if (p.offset !== undefined) h.goToOffset(p.offset);
   else if (refocus) h.focus();
   h.setXray(notes.xray);

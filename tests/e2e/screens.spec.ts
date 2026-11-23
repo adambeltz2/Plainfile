@@ -405,3 +405,16 @@ test.describe('daily journal', () => {
     await expect.poll(() => listFiles(page, dir)).toContain(`journal/${day}.md`);
   });
 });
+
+test('opening a search result selects the word that matched, and scrolls to it', async ({ page }) => {
+  await page.goto('/');
+  const filler = Array.from({ length: 60 }, (_, i) => `Filler line ${i}`).join('\n');
+  await openVault(page, { 'plan.md': `# Plan\n${filler}\nThe launch date is fixed.\n${filler}\n` });
+  await nav(page, 'Search').click();
+  await page.locator('#search-q').fill('launch');
+  await page.locator('.res-btn').first().click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  const picked = await page.evaluate(() => window.getSelection()?.toString() ?? '');
+  expect(picked.toLowerCase()).toBe('launch');
+  await expect(page.locator('.cm-line', { hasText: 'The launch date is fixed.' })).toBeInViewport();
+});

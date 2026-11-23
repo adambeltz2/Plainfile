@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.12.0] - 2026-11-23
+
+### Added
+- **A search result opens with the match selected.** Clicking a result opens the note scrolled to the first place your first search word appears (on the task's line for a task), with that word selected.
+
 ## [1.11.1] - 2026-11-23
 
 ### Changed
