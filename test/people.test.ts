@@ -49,3 +49,24 @@ describe('people', () => {
     expect(personPage(p, 'nobody', TODAY)).toBeUndefined();
   });
 });
+
+describe('person notes without a type', () => {
+  it('counts a note in a people/ folder as that person, so they are listed with or without mentions', async () => {
+    const { VaultIndex } = await import('../src/index');
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const index = new VaultIndex(
+      new MemoryStorage({
+        'people/Ken Moore.md': '---\ntitle: Ken Moore\ntags: [people]\n---\nRuns data.\n',
+        'journal/1x1.md': '---\ntitle: 1x1\npeople: [ken-moore]\n---\nTalked.\n',
+        'crm/Dana.md': '---\ntitle: Dana\ntype: person\n---\n',
+        'ideas/Topic.md': '---\ntitle: Topic\ntags: [people]\n---\nA note about people in general.\n',
+      }),
+    );
+    await index.scan();
+    const people = buildPeople(index, '2026-11-23');
+    expect(people.people.map((p) => p.name).sort()).toEqual(['Dana', 'Ken Moore']);
+    const ken = people.people.find((p) => p.name === 'Ken Moore')!;
+    expect(ken.note?.path).toBe('people/Ken Moore.md');
+    expect(ken.notes).toBe(1); // the 1x1 that names them, not their own note
+  });
+});

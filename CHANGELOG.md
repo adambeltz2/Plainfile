@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.22.1] - 2026-11-23
+
+### Fixed
+- Choosing People in the header now shows the list of everyone, not the last person you looked at. After opening one person (or renaming one), the People tab kept showing that person's page, so it looked as if nobody else was there. "All people" and the tab both go to the list.
+- A note in a `people/` folder with no `type:` line now counts as a person note too. A note elsewhere that is only tagged #people does not.
+
 ## [1.22.0] - 2026-11-23
 
 ### Added

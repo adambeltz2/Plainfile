@@ -13,6 +13,9 @@ export const KIND_LABEL: Record<NoteKind, string> = {
   note: 'Note',
 };
 
+/** A person's own note: `type: person`, or a note with no type that sits in a `people/` folder. */
+export const isPersonNote = (n: Note): boolean => noteKind(n) === 'person';
+
 export function noteKind(n: Note): NoteKind {
   const type = (n.type ?? '').toLowerCase();
   if (isProjectNote(n)) return 'project';
