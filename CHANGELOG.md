@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.18.1] - 2026-11-23
+
+### Fixed
+- **+ Task** on a project page now opens the same New task form as + New, instead of a bare title and due date. It has a priority, people, tags and a due date (with Today, Tomorrow and Next week), the project is fixed to the one you are on, and you stay on the project page afterwards.
+- The task line in that form (and in + New > Task) understands the one-line quick add: `(A) Call Dana @dana #launch due:friday` sets the priority, person, tag and date, and keeps them out of the title. Before, `@ada` was saved as part of the title.
+
 ## [1.18.0] - 2026-11-23
 
 ### Added
