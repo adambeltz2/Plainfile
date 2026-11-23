@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.3.1] - 2026-11-23
+
+### Removed
+- **The project drop-down beside the quick add.** Typing `+` already offers your projects as you type (`+Home` finishes to `+home-lab`), so the box was a second way to do the same thing, and a remembered choice could file the next task in the wrong place.
+
 ## [1.3.0] - 2026-11-23
 
 ### Changed

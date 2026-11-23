@@ -6,19 +6,15 @@ import { loadContext, justDone, planQuickLine, quickAddLine, render, state, toda
 import { logHtml, row, toggleTask } from './tasks';
 import { esc } from './util';
 
-export const quick = { text: '', error: '', /** Path of the project picked beside the box, or ''. Kept between adds. */ project: '' };
+export const quick = { text: '', error: '' };
 
 /**
  * The one-line quick add used on Home and on the Tasks tab: the form (with a Quick note button), a live preview of
  * how the line will be filed, and the last error. Home puts the form beside the date, so the parts come separately.
  */
 export function quickBar(cls = '', compact = false): { form: string; below: string } {
-  const projects = state.index ? listProjects(state.index).filter((p) => p.active) : [];
-  const picker = projects.length
-    ? `<select class="inp quick-project" data-quick-project aria-label="Project for this task"><option value="">No project</option>${projects.map((p) => `<option value="${esc(p.path)}"${p.path === quick.project ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</select>`
-    : '';
   return {
-    form: `<form class="quick ${cls}" data-quick><label class="sr" for="quick-text">Add a task</label><input id="quick-text" class="inp" type="text" autocomplete="off" data-suggest="line" placeholder="Quick add: Call Dana +Website @dana #launch due:friday" value="${esc(quick.text)}">${picker}<button class="btn primary" type="submit">Add</button><button class="btn" type="button" data-quick-note>Quick note</button></form>`,
+    form: `<form class="quick ${cls}" data-quick><label class="sr" for="quick-text">Add a task</label><input id="quick-text" class="inp" type="text" autocomplete="off" data-suggest="line" placeholder="Quick add: Call Dana +Website @dana #launch due:friday" value="${esc(quick.text)}"><button class="btn primary" type="submit">Add</button><button class="btn" type="button" data-quick-note>Quick note</button></form>`,
     below: `<div id="quick-preview" class="qprev small muted" aria-live="polite">${compact && !quick.text.trim() ? '' : quickPreview(quick.text)}</div>${quick.error ? `<div class="notice err small">${esc(quick.error)}</div>` : ''}`,
   };
 }
@@ -27,7 +23,7 @@ export function quickBar(cls = '', compact = false): { form: string; below: stri
 export function quickPreview(line: string): string {
   if (!line.trim())
     return '<span class="qhint">One line is enough: <code>Email Sam +Project @sam #tag due:tomorrow</code>. It becomes a task note, shown in your Inbox (or filed in the project), dated today.</span>';
-  const { parsed, project, error } = planQuickLine(line, quick.project);
+  const { parsed, project, error } = planQuickLine(line);
   if (error) return `<span class="err-text">${esc(error)}</span>`;
   const bits = [`Task note "${esc(parsed.title || parsed.text)}" in <b>${esc(project ? project.title : 'Inbox')}</b>`];
   if (parsed.due) bits.push(`due <b>${esc(fmtDate(parsed.due))}</b>`);
@@ -250,7 +246,7 @@ async function select(id: string): Promise<void> {
 
 export async function submitQuick(): Promise<void> {
   const due = planQuickLine(quick.text).parsed.due;
-  const err = await quickAddLine(quick.text, quick.project);
+  const err = await quickAddLine(quick.text);
   quick.error = err ?? '';
   if (!err) {
     quick.text = '';
@@ -297,15 +293,6 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   return false;
-}
-
-export function change(e: Event): boolean {
-  const t = e.target as HTMLSelectElement;
-  if (!t.matches?.('[data-quick-project]')) return false;
-  quick.project = t.value;
-  const prev = document.getElementById('quick-preview');
-  if (prev) prev.innerHTML = quickPreview(quick.text);
-  return true;
 }
 
 export function input(e: Event): boolean {

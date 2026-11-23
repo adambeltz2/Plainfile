@@ -306,11 +306,9 @@ export async function quickAddTask(input: { title: string; due?: string; tags?: 
 }
 
 /** Where a typed line will go, and what it means, so the preview and the save agree. */
-export function planQuickLine(line: string, chosen = ''): { parsed: QuickLine; project?: Project; error?: string } {
+export function planQuickLine(line: string): { parsed: QuickLine; project?: Project; error?: string } {
   const parsed = parseQuickLine(line, today());
-  // A +Project typed in the line wins; otherwise the project picked beside the box, if any.
-  let project: Project | undefined =
-    parsed.project === undefined && chosen && state.index ? listProjects(state.index).find((p) => p.path === chosen) : undefined;
+  let project: Project | undefined;
   if (parsed.project !== undefined && state.index) {
     project = findProject(listProjects(state.index), parsed.project);
     if (!project) return { parsed, error: `No project called "${parsed.project}". Make it from + New, or leave off the +.` };
@@ -320,9 +318,9 @@ export function planQuickLine(line: string, chosen = ''): { parsed: QuickLine; p
 }
 
 /** Add one typed line such as "Call Dana +Website @dana due:friday" as a task note. Returns an error message, or null on success. */
-export async function quickAddLine(line: string, chosen = ''): Promise<string | null> {
+export async function quickAddLine(line: string): Promise<string | null> {
   if (!state.storage || !state.index) return 'Open a folder first.';
-  const plan = planQuickLine(line, chosen);
+  const plan = planQuickLine(line);
   if (plan.error) return plan.error;
   const { parsed, project } = plan;
   return quickAddTask({ title: parsed.title || parsed.text, due: parsed.due, tags: parsed.tags, people: parsed.people, project });
