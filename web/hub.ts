@@ -5,6 +5,7 @@ import { applyBulk, planBulk, type BulkAction, type BulkPlan } from '../src/bulk
 import { applyFieldFix, fieldIssues, STATUSES, type FieldIssue, type Status } from '../src/fields';
 import { applyFilters, groupTasks, hubTasks, newFilters, summarize, type Filters, type GroupBy, type HubTask } from '../src/hub';
 import { dirname } from '../src/index';
+import { applyFolderMove, planFolderMove } from '../src/folder-move';
 import { ALL_PROJECTS, listProjects, projectDashboard, projectNotes, setProjectActive, type ProjectDashboard } from '../src/projects';
 import { addDays } from '../src/query';
 import { setTaskStatus } from '../src/writeback';
@@ -36,6 +37,12 @@ export const hubState = {
   toolsOpen: false,
   /** The close-out confirmation is showing. */
   closing: false,
+  /** Reopen is asking whether to move the folder back. */
+  reopening: false,
+  closeMove: true,
+  closeTo: '',
+  reopenMove: true,
+  reopenTo: '',
   statusOpen: false,
   selectMode: false,
   /** Task ids ticked for a bulk change. */
@@ -86,6 +93,11 @@ export function resetFor(path: string): void {
     facetsOpen: false,
     toolsOpen: false,
     closing: false,
+    reopening: false,
+    closeMove: true,
+    closeTo: '',
+    reopenMove: true,
+    reopenTo: '',
     statusOpen: false,
     selectMode: false,
     selected: new Set<string>(),
@@ -156,16 +168,62 @@ function statusButton(d: ProjectDashboard): string {
   return d.active ? '<button class="btn" data-hub-close>Close out</button>' : '<button class="btn" data-hub-reopen>Reopen</button>';
 }
 
+/** A project that is a folder with an index.md can move as a folder. Returns that folder, or '' for a single-file project. */
+function projectFolder(path: string): string {
+  const n = state.index?.notes.get(path);
+  return n && n.name.toLowerCase() === 'index' ? dirname(n.path) : '';
+}
+const folderName = (dir: string): string => dir.split('/').pop() ?? dir;
+const archiveDir = (dir: string): string => `archive/${folderName(dir)}`;
+const restoreDir = (dir: string): string => `projects/${folderName(dir)}`;
+
+/** What moving the folder would do, in words, or why it cannot. */
+function movePreview(dir: string, to: string): { html: string; ok: boolean } {
+  const idx = state.index;
+  if (!idx) return { html: '', ok: false };
+  try {
+    const plan = planFolderMove(idx, dir, to);
+    const warn = plan.warnings.map((w) => `<div class="small">${esc(w)}</div>`).join('');
+    return {
+      ok: true,
+      html: `${plan.files.length} file${plan.files.length === 1 ? '' : 's'} will move to <b>${esc(plan.to)}</b>${plan.edits.length ? `; ${plan.edits.length} link line${plan.edits.length === 1 ? '' : 's'} in ${new Set(plan.edits.map((e) => e.path)).size} note${new Set(plan.edits.map((e) => e.path)).size === 1 ? '' : 's'} will be updated so nothing breaks` : ''}. Nothing is deleted.${warn}`,
+    };
+  } catch (e) {
+    return { ok: false, html: `<span class="err-text">${esc(errorMessage(e))}</span>` };
+  }
+}
+
+/** The move-the-folder option, shared by the close-out and reopen confirmations. */
+function moveOption(kind: 'close' | 'reopen', dir: string): string {
+  const on = kind === 'close' ? hubState.closeMove : hubState.reopenMove;
+  const to = (kind === 'close' ? hubState.closeTo : hubState.reopenTo) || (kind === 'close' ? archiveDir(dir) : restoreDir(dir));
+  const prev = on ? movePreview(dir, to) : { html: '', ok: true };
+  return (
+    `<div class="mv-opt"><label class="check"><input type="checkbox" id="${kind}-move"${on ? ' checked' : ''}> Also move the project folder (<code>${esc(dir)}</code>) to </label> ` +
+    `<input id="${kind}-to" class="inp" type="text" value="${esc(to)}" aria-label="Folder to move the project to" autocomplete="off"${on ? '' : ' disabled'}>` +
+    `<div id="${kind}-preview" class="small muted" aria-live="polite">${prev.html}</div></div>`
+  );
+}
+
 /** The close-out confirmation, a nudge when every task is done, or a note that the project is archived. */
 function projectBanner(d: ProjectDashboard, open: number, total: number): string {
+  const dir = d.note ? projectFolder(d.note.path) : '';
   if (!d.active) {
-    return `<div class="notice small" role="status"><b>Archived.</b> This project is closed out${d.completed ? ` (${esc(fmtDate(d.completed))})` : ''}. It is kept out of Home and the Tasks tab. Its files are untouched. <button class="btn small" data-hub-reopen>Reopen</button></div>`;
+    if (hubState.reopening) {
+      return (
+        `<div class="notice" role="group" aria-label="Reopen this project"><b>Reopen “${esc(d.title)}”?</b> It goes back on Home and the Tasks tab. Only the project note changes (<code>active: true</code>, <code>completed:</code> removed).` +
+        (dir ? moveOption('reopen', dir) : '') +
+        ' <button class="btn primary small" data-hub-reopen-go>Reopen</button> <button class="btn small" data-hub-close-cancel>Cancel</button></div>'
+      );
+    }
+    return `<div class="notice small" role="status"><b>Archived.</b> This project is closed out${d.completed ? ` (${esc(fmtDate(d.completed))})` : ''}. It is kept out of Home and the Tasks tab. <button class="btn small" data-hub-reopen>Reopen</button></div>`;
   }
   if (hubState.closing) {
     return (
       `<div class="notice" role="group" aria-label="Close out this project"><b>Close out “${esc(d.title)}”?</b> It moves to the Archive: ${open ? `its ${open} open task${open === 1 ? '' : 's'} leave the Tasks tab and Home, and stay in the files. ` : ''}` +
-      'Only the project note changes (<code>active: false</code> and <code>completed:</code>). You can reopen it any time. ' +
-      '<button class="btn primary small" data-hub-close-go>Close out</button> <button class="btn small" data-hub-close-cancel>Cancel</button></div>'
+      'The project note gets <code>active: false</code> and <code>completed:</code>. You can reopen it any time.' +
+      (dir ? moveOption('close', dir) : '') +
+      ' <button class="btn primary small" data-hub-close-go>Close out</button> <button class="btn small" data-hub-close-cancel>Cancel</button></div>'
     );
   }
   if (total > 0 && open === 0) {
@@ -549,11 +607,21 @@ async function undoLast(): Promise<void> {
   render();
 }
 
-/** Close out the open project, or reopen it, then show the exact line that changed. */
+/** Hooks the project screen sets, so it follows the project when its folder moves. */
+export const hubHooks: { moved?: (newPath: string) => void } = {};
+
+/**
+ * Close out the open project, or reopen it, then (if asked) move its folder. The note is written first, so if the
+ * move fails the project is still correctly closed or reopened, and the message says what did not happen.
+ */
 async function setActive(active: boolean): Promise<void> {
   const { storage, index } = state;
   if (!storage || !index || !hubState.project) return;
   hubState.closing = false;
+  hubState.reopening = false;
+  const dir = projectFolder(hubState.project);
+  const wantMove = dir && (active ? hubState.reopenMove : hubState.closeMove);
+  const to = (active ? hubState.reopenTo || restoreDir(dir) : hubState.closeTo || archiveDir(dir)).trim();
   try {
     state.log = await setProjectActive(storage, index, hubState.project, active, today());
     hubState.error = '';
@@ -561,6 +629,23 @@ async function setActive(active: boolean): Promise<void> {
     const friendly = writeFailure(e);
     if (friendly) await rescan();
     hubState.error = friendly ?? `Could not save that change. ${errorMessage(e)}`;
+    render();
+    return;
+  }
+  if (wantMove) {
+    try {
+      const r = await applyFolderMove(storage, index, planFolderMove(index, dir, to));
+      const links = new Set(r.changes.map((c) => c.path)).size;
+      hubState.project = `${r.to}/${hubState.project.split('/').pop() as string}`;
+      hubHooks.moved?.(hubState.project);
+      state.log = {
+        message: `Moved ${r.moved} file${r.moved === 1 ? '' : 's'} to ${r.to}${r.changes.length ? ` and updated ${r.changes.length} link line${r.changes.length === 1 ? '' : 's'} in ${links} note${links === 1 ? '' : 's'}` : ''}.`,
+      };
+    } catch (e) {
+      const friendly = writeFailure(e);
+      if (friendly) await rescan();
+      hubState.error = `The project is ${active ? 'reopened' : 'closed out'}, but its folder was not moved. ${friendly ?? errorMessage(e)}`;
+    }
   }
   render();
 }
@@ -620,16 +705,27 @@ export async function click(target: HTMLElement): Promise<boolean> {
   }
   if (q('data-hub-close') !== undefined) {
     hubState.closing = true;
+    hubState.closeTo = '';
     render();
+    return true;
+  }
+  if (q('data-hub-reopen') !== undefined) {
+    // A folder under archive/ may be moved back, so ask; any other project just reopens.
+    if (projectFolder(hubState.project).startsWith('archive/')) {
+      hubState.reopening = true;
+      hubState.reopenTo = '';
+      render();
+    } else await setActive(true);
     return true;
   }
   if (q('data-hub-close-cancel') !== undefined) {
     hubState.closing = false;
+    hubState.reopening = false;
     render();
     return true;
   }
-  if (q('data-hub-close-go') !== undefined || q('data-hub-reopen') !== undefined) {
-    await setActive(q('data-hub-reopen') !== undefined);
+  if (q('data-hub-close-go') !== undefined || q('data-hub-reopen-go') !== undefined) {
+    await setActive(q('data-hub-reopen-go') !== undefined);
     return true;
   }
   const stat = q('data-hub-stat');
@@ -769,6 +865,15 @@ export async function click(target: HTMLElement): Promise<boolean> {
 
 export function input(e: Event): boolean {
   const t = e.target as HTMLInputElement;
+  if (t.id === 'close-to' || t.id === 'reopen-to') {
+    const close = t.id === 'close-to';
+    if (close) hubState.closeTo = t.value;
+    else hubState.reopenTo = t.value;
+    const dir = projectFolder(hubState.project);
+    const prev = document.getElementById(close ? 'close-preview' : 'reopen-preview');
+    if (prev && dir) prev.innerHTML = movePreview(dir, t.value.trim() || (close ? archiveDir(dir) : restoreDir(dir))).html;
+    return true;
+  }
   const field: Record<string, 'due' | 'person' | 'tag'> = { 'bulk-due': 'due', 'bulk-person': 'person', 'bulk-tag': 'tag' };
   if (field[t.id]) {
     hubState.inputs[field[t.id] as 'due' | 'person' | 'tag'] = t.value;
@@ -785,6 +890,12 @@ export function input(e: Event): boolean {
 
 export function change(e: Event): boolean {
   const t = e.target as HTMLInputElement | HTMLSelectElement;
+  if (t.id === 'close-move' || t.id === 'reopen-move') {
+    if (t.id === 'close-move') hubState.closeMove = (t as HTMLInputElement).checked;
+    else hubState.reopenMove = (t as HTMLInputElement).checked;
+    render();
+    return true;
+  }
   if (t.id === 'bulk-status') {
     hubState.inputs.status = t.value;
     return true;

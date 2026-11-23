@@ -35,7 +35,8 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 - `[FEATURE]` **Folder tree in the Notes list**, with drag a note onto a folder to move it. Affects `web/notes.ts`, `web/move.ts`.
 - `[FEATURE]` **Move several notes at once** (tick notes in the list). Affects `web/notes.ts`, `src/move.ts`.
-- `[FEATURE]` **Rename a folder** and move a whole folder, rewriting links. Affects `src/move.ts`.
+- `[FEATURE]` **Move or rename any folder from the Notes list** (a "Move folder…" action). The core is `src/folder-move.ts`, used today only when closing out a project. `web/notes.ts`, `web/move.ts`.
+- `[DEBT]` `removeEmptyFolders` is implemented for the disk and browser-folder adapters only; Dropbox leaves the emptied folder behind. `src/dropbox-storage.ts`.
 - `[DEBT]` **A move can change which note a short link means** when two notes share a name and one was chosen because it sat in the same folder; today only full-path links are rewritten in that case. Affects `src/move.ts`.
 
 ## Insight
@@ -167,7 +168,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 - `[FEATURE]` Move a task or note into a project (and out of one) with every link updated.
   _Affected: `src/rename.ts`, `web/today.ts`._
-- `[FEATURE]` Offer to also move a closed-out project's folder to `archive/` (needs folder moves). `src/move.ts`, `web/hub.ts`.
   _Affected: `src/frontmatter.ts`, `web/notes.ts`._
 - `[FEATURE]` Reorder projects by dragging cards, writing `sortOrder` for each. _Affected:
   `web/today.ts`._

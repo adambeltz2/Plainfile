@@ -51,6 +51,11 @@ export interface VaultStorage {
    * mtime differs from `expectedMtime`, so an edit made elsewhere is never overwritten.
    */
   write(path: string, content: string, expectedMtime: number): Promise<FileEntry>;
+  /**
+   * Optional. Remove a folder and any folders under it, but only the ones that are completely empty, so nothing is
+   * ever deleted. Used after a folder's files have moved elsewhere. Adapters whose folders are implicit leave it out.
+   */
+  removeEmptyFolders?(dir: string): Promise<void>;
 }
 
 export class ConflictError extends Error {

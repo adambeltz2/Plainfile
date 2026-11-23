@@ -10,6 +10,11 @@ import { esc } from './util';
 /** The Projects screen: every project as a card, and for one project a dashboard of everything that belongs to it. */
 export const projectState = { path: '', view: 'cards' as 'cards' | 'table', sort: 'number' as string, desc: false };
 
+// When closing out or reopening moves the project's folder, keep showing the project at its new place.
+hub.hubHooks.moved = (newPath) => {
+  projectState.path = newPath;
+};
+
 export function openProject(path: string): void {
   projectState.path = path;
   state.screen = 'projects';

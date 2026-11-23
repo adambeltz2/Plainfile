@@ -54,6 +54,25 @@ export class NodeStorage implements VaultStorage {
     await fs.unlink(this.abs(path));
   }
 
+  async removeEmptyFolders(dir: string): Promise<void> {
+    const prune = async (d: string): Promise<boolean> => {
+      let entries;
+      try {
+        entries = await fs.readdir(d, { withFileTypes: true });
+      } catch {
+        return false;
+      }
+      let empty = true;
+      for (const e of entries) {
+        if (e.isDirectory() && (await prune(join(d, e.name)))) continue;
+        empty = false;
+      }
+      if (empty) await fs.rmdir(d);
+      return empty;
+    };
+    await prune(this.abs(dir));
+  }
+
   async create(path: string, content: string): Promise<FileEntry> {
     const target = this.abs(path);
     await fs.mkdir(dirname(target), { recursive: true });
