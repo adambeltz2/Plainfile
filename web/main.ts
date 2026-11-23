@@ -565,6 +565,7 @@ app.addEventListener('input', (e) => {
   if (move.input(e)) return;
   if (state.modal && newmenu.input(e)) return;
   if (state.screen === 'projects' && projectScreen.input(e)) return;
+  if (state.screen === 'people' && peopleScreen.input(e)) return;
   if (state.screen === 'review' && reviewScreen.input(e)) return;
   if (state.screen === 'calendar' && calendarScreen.input(e)) return;
   if (todayScreen.input(e)) return;

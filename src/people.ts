@@ -50,7 +50,8 @@ function aliasMap(index: VaultIndex): Map<string, string> {
 function namesIn(n: Note): string[] {
   const out = new Set<string>();
   for (const k of ['people', 'attendees', 'owner', 'assignee']) for (const p of listOf(n.frontmatter[k])) out.add(p);
-  const text = n.text.replace(/^---[\s\S]*?\n---/, '');
+  // Not the frontmatter (read above), and not code: an `@handle` in a code block is not a person.
+  const text = n.text.replace(/^---[\s\S]*?\n---/, '').replace(/^([ \t]*)(```|~~~)[^\n]*\n[\s\S]*?\n[ \t]*\2[^\n]*$/gm, '');
   for (const m of text.matchAll(MENTION)) out.add(m[1] as string);
   return [...out];
 }

@@ -6,6 +6,8 @@ import { VaultIndex } from '../src/index';
 import { DropboxStorage } from '../src/dropbox-storage';
 import { addTaskNote } from '../src/capture';
 import { setPriority } from '../src/home';
+import { buildPeople } from '../src/people';
+import { applyPersonRename, planPersonRename, undoPersonRename } from '../src/people-rename';
 import { MemoryStorage } from '../src/memory-storage';
 import { applyMove, planMove } from '../src/move';
 import { NodeStorage } from '../src/node-storage';
@@ -190,6 +192,13 @@ for (const { name, make } of ADAPTERS) {
       );
       expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @dana due:2026-11-23');
       expect((await s.read(made.path)).includes('priority')).toBe(false);
+
+      // Renaming a person rewrites the @mention on that one line, and Undo puts it back.
+      const rp = await planPersonRename(s, index, buildPeople(index, '2026-11-23'), 'dana', 'Dana Lee');
+      await applyPersonRename(s, index, rp, { keepAlias: false });
+      expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @Dana-Lee due:2026-11-23');
+      await undoPersonRename(s, index, rp);
+      expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @dana due:2026-11-23');
 
       const mv = planMove(index, 'inbox/Kickoff.md', 'projects/site');
       await applyMove(s, index, mv, new Set(mv.inbound.map((e) => e.id)));
