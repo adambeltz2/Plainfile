@@ -12,14 +12,14 @@ export const quick = { text: '', error: '', /** Path of the project picked besid
  * The one-line quick add used on Home and on the Tasks tab: the form (with a Quick note button), a live preview of
  * how the line will be filed, and the last error. Home puts the form beside the date, so the parts come separately.
  */
-export function quickBar(cls = ''): { form: string; below: string } {
+export function quickBar(cls = '', compact = false): { form: string; below: string } {
   const projects = state.index ? listProjects(state.index).filter((p) => p.active) : [];
   const picker = projects.length
     ? `<select class="inp quick-project" data-quick-project aria-label="Project for this task"><option value="">No project</option>${projects.map((p) => `<option value="${esc(p.path)}"${p.path === quick.project ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</select>`
     : '';
   return {
     form: `<form class="quick ${cls}" data-quick><label class="sr" for="quick-text">Add a task</label><input id="quick-text" class="inp" type="text" autocomplete="off" data-suggest="line" placeholder="Quick add: Call Dana +Website @dana #launch due:friday" value="${esc(quick.text)}">${picker}<button class="btn primary" type="submit">Add</button><button class="btn" type="button" data-quick-note>Quick note</button></form>`,
-    below: `<div id="quick-preview" class="qprev small muted" aria-live="polite">${quickPreview(quick.text)}</div>${quick.error ? `<div class="notice err small">${esc(quick.error)}</div>` : ''}`,
+    below: `<div id="quick-preview" class="qprev small muted" aria-live="polite">${compact && !quick.text.trim() ? '' : quickPreview(quick.text)}</div>${quick.error ? `<div class="notice err small">${esc(quick.error)}</div>` : ''}`,
   };
 }
 

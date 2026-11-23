@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { listFiles, localDate, openVault, readFile, readFileOrEmpty, nav } from './helpers';
+import { listFiles, localDate, nav, openHubTools, openVault, readFile, readFileOrEmpty } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -251,7 +251,7 @@ test.describe('project dashboard', () => {
     await expect(page.locator('.psummary')).toHaveText('Launch by Dec 8');
     await expect(page.locator('.pstat').nth(0)).toContainText('2'); // open
     await expect(page.locator('.pstat').nth(1)).toContainText('1'); // overdue
-    await expect(page.locator('.pprog')).toContainText('1 of 3 tasks done');
+    await expect(page.locator('.hub-status')).toContainText('1 of 3 done');
     await expect(page.locator('.grp.late')).toContainText('Overdue');
     await expect(page.locator('.hub-content')).toContainText('Pick a host');
     await expect(page.locator('.hub-content')).toContainText('Write copy');
@@ -391,6 +391,7 @@ test.describe('project hub', () => {
     await page.locator('#hub-q').fill('Task 007');
     await expect(page.locator('.hub-content .task')).toHaveCount(1);
     await page.locator('#hub-q').fill('');
+    await openHubTools(page);
     await page.locator('.hub-facets summary').click();
     await page
       .locator('.hub-facets')
@@ -500,6 +501,9 @@ test.describe('project hub', () => {
     };
     await nav(page, 'Projects').click();
     await page.locator('.pcard .pbtn').click();
+    await expect(page.getByRole('checkbox', { name: 'Select: Inline one' })).toBeHidden(); // one box per task until Select tasks is on
+    await openHubTools(page);
+    await page.getByRole('button', { name: 'Select tasks' }).click();
     await page.getByRole('checkbox', { name: 'Select: Inline one' }).check();
     await page.getByRole('checkbox', { name: 'Select: Inline two' }).check();
     await page.getByRole('checkbox', { name: 'Select: A task' }).check();
@@ -526,6 +530,7 @@ test.describe('project hub', () => {
   test('bulk Done, assign and tag work too, and Select all shown selects what the filters show', async ({ page }) => {
     const dir = await openBig(page);
     await page.locator('#hub-q').fill('Task 00');
+    await openHubTools(page);
     await page.getByRole('button', { name: 'Select all shown' }).click();
     await expect(page.locator('.hub-bulk')).toContainText('10 selected');
     await page.locator('#bulk-tag').fill('batch');
@@ -535,30 +540,13 @@ test.describe('project hub', () => {
     await expect(page.locator('.hub-content .notice.ok')).toContainText('changed 10 notes'); // wait for every write to finish
     await expect.poll(() => readFileOrEmpty(page, dir, 'projects/big/tasks/Task 003.md')).toContain('tags: [misc, batch]');
     await page.locator('#hub-q').fill('Task 001');
+    await openHubTools(page);
     await page.getByRole('button', { name: 'Select all shown' }).click();
     await page.getByRole('button', { name: 'Done', exact: true }).click();
     await page.getByRole('button', { name: 'Apply' }).click();
     await expect.poll(() => readFileOrEmpty(page, dir, 'projects/big/tasks/Task 001.md')).toContain('status: done');
   });
 
-  test('a view (grouping plus filters) is saved in the folder and brought back by name', async ({ page }) => {
-    const dir = await openBig(page);
-    await page.locator('#hub-group').selectOption('person');
-    await page.getByRole('button', { name: 'Overdue', exact: true }).click();
-    await page.locator('#hub-view-name').fill('Late by person');
-    await page.getByRole('button', { name: 'Save view' }).click();
-    await expect.poll(() => readFileOrEmpty(page, dir, '.plainfile/views/late-by-person.json')).toContain('"groupBy": "person"');
-    await page.getByRole('button', { name: 'Clear all' }).click();
-    await page.locator('#hub-group').selectOption('phase');
-    await expect(page.locator('.hub-active')).toHaveCount(0);
-    await page.locator('#hub-views').selectOption('Late by person');
-    await expect(page.locator('#hub-group')).toHaveValue('person');
-    await expect(page.locator('.hub-active')).toContainText('Overdue');
-    await expect(page.locator('.hub-content .task')).toHaveCount(1);
-  });
-});
-
-test.describe('portfolio table', () => {
   test('Projects can be shown as a sortable table with progress, open, overdue and next due', async ({ page }) => {
     await openVault(page, {
       'projects/a/index.md': '---\ntitle: Alpha\nactive: true\nsortOrder: 1\n---\n- [x] Done one\n- [ ] Late one due:2026-01-01\n',
@@ -597,6 +585,7 @@ test.describe('portfolio table', () => {
     await page.locator('.hub-tools > summary').click();
     await page.locator('#hub-group').selectOption('person');
     await expect(page.locator('.hub-tools')).toHaveAttribute('open', ''); // stays open while you work in it
+    await openHubTools(page);
     await page.getByRole('button', { name: 'Select tasks' }).click();
     await expect(page.locator('.selbox').first()).toBeVisible();
     await page.getByRole('button', { name: 'Stop selecting' }).click();
@@ -620,7 +609,7 @@ test('All tasks shows every task from every project and the notes outside any, g
   });
   await nav(page, 'Tasks').click();
   await expect(page.locator('.title')).toHaveText('All tasks');
-  await expect(page.locator('.nav [aria-current="true"]')).toHaveText('Tasks');
+  await expect(page.locator('.nav [aria-current="true"]')).toContainText('Tasks');
   for (const t of ['Alpha job', 'Beta job', 'Shared job', 'Loose job']) await expect(page.locator('.hub-content')).toContainText(t);
   await page.locator('#hub-group').selectOption('project');
   await expect(page.locator('.hub-group .grp', { hasText: 'Alpha' })).toBeVisible();
@@ -665,6 +654,7 @@ test('Export CSV and JSON on the Tasks tab download what the filters show', asyn
   await page.goto('/');
   await openVault(page, { 'a.md': '- [ ] First job due:2999-01-01 #x\n- [ ] Second job\n' });
   await nav(page, 'Tasks').click();
+  await openHubTools(page);
   const [csv] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export CSV' }).click()]);
   expect(csv.suggestedFilename()).toMatch(/^tasks-all-\d{4}-\d{2}-\d{2}\.csv$/);
   const text = (await readStream(csv)).replace(/^﻿/, '');
@@ -683,3 +673,24 @@ async function readStream(d: import('@playwright/test').Download): Promise<strin
   for await (const c of stream) chunks.push(c as Buffer);
   return Buffer.concat(chunks).toString('utf8');
 }
+
+test('the Tasks tab shows the open count, and each number on a hub opens what it counts', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, {
+    'projects/a/index.md': '---\ntitle: Alpha\ntype: project\nactive: true\n---\n- [ ] Late one due:2020-01-01\n- [ ] Fine one\n- [x] Finished one\n',
+  });
+  await expect(page.locator('.nav [data-nav="tasks"] .badge')).toHaveText('2');
+  await nav(page, 'Tasks').click();
+  await page.getByRole('button', { name: /Show the 1 overdue/ }).click();
+  await expect(page.locator('.hub-content li.task')).toHaveCount(1);
+  await expect(page.locator('.hub-content')).toContainText('Late one');
+  await page.getByRole('button', { name: /Show the 1 done/ }).click();
+  await expect(page.locator('.hub-content li.task')).toHaveCount(1);
+  await expect(page.locator('.hub-content')).toContainText('Finished one');
+  await page.getByRole('button', { name: /Show the 2 open/ }).click();
+  await expect(page.locator('.hub-content li.task')).toHaveCount(2);
+  // One box per task, until Select tasks is on.
+  await expect(page.locator('.hub-content li.task .selbox').first()).toBeHidden();
+  await page.getByRole('button', { name: /Show the \d+ notes/ }).click();
+  await expect(page.locator('.tab.on')).toContainText('Notes');
+});

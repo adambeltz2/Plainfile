@@ -4,6 +4,19 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.3.0] - 2026-11-23
+
+### Changed
+- **A calmer Tasks screen and project hub.**
+  - The five numbers (open, overdue, done, notes, follow-ups) are buttons: each shows what it counts.
+  - Filter, view and export controls are folded under **Filter & group**; the search box and Group by stay on top.
+  - The long summary and the duplicate progress bar are gone, and the quick-add hint only appears while you type.
+  - Each task row has one tick box; the select box only appears after **Select tasks**.
+- **A small number on the Tasks tab** shows how many tasks are open.
+
+### Removed
+- **Saved views** (the View menu and Name this view / Save view). They were not wanted. Files already in `.plainfile/views/` are left alone and ignored.
+
 ## [1.2.1] - 2026-11-23
 
 ### Changed

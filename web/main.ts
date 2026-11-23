@@ -9,7 +9,6 @@ import * as health from './health';
 import * as homeScreen from './home';
 import * as reviewScreen from './review';
 import * as reportUi from './report';
-import * as hub from './hub';
 import * as newmenu from './newmenu';
 import * as menu from './menu';
 import * as move from './move';
@@ -214,12 +213,14 @@ function tabbar(hc: number): string {
 
 function shell(): string {
   const hc = healthCount();
+  /** Open tasks, for the small number on the Tasks tab. */
+  const openTasks = state.index ? state.index.tasks().filter((t) => !t.done).length : 0;
   const focusing = state.screen === 'notes' && notes.notes.focus && !!notes.notes.path;
   let h = `<div class="wrap${focusing ? ' focus' : ''}${state.screen === 'notes' ? ' notes-wide' : ''}"><header class="bar"><h1>Plainfile</h1>`;
   h += `<span class="tag-pill${state.demo ? '' : ' inv'}" title="${esc(state.name)}">${esc(state.name)}</span>`;
   h += '<nav class="nav" aria-label="Screens">';
   for (const n of NAV) {
-    h += `<button class="navbtn" data-nav="${n.id}" aria-current="${isCurrent(n.id)}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
+    h += `<button class="navbtn" data-nav="${n.id}" aria-current="${isCurrent(n.id)}">${n.label}${n.id === 'tasks' && openTasks ? ` <span class="badge" title="${openTasks} open task${openTasks === 1 ? '' : 's'}" aria-label="${openTasks} open task${openTasks === 1 ? '' : 's'}">${openTasks}</span>` : ''}</button>`;
   }
   const inMore = NAV_MORE.some((n) => isCurrent(n.id));
   h +=
@@ -538,9 +539,6 @@ app.addEventListener('submit', (e) => {
   } else if (form.matches('[data-cal-add]')) {
     e.preventDefault();
     void calendarScreen.submitAdd();
-  } else if (form.matches('[data-hub-saveview]')) {
-    e.preventDefault();
-    void hub.saveCurrentView();
   } else if (form.matches('[data-proj-add]')) {
     e.preventDefault();
     notes.addProject();
