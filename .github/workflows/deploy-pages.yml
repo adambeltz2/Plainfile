@@ -84,3 +84,35 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  release:
+    # Tags and publishes a GitHub release the first time a version reaches main, with its notes from CHANGELOG.md.
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Publish the release if this version has none
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "v$VERSION already has a release"
+          else
+            npx tsx scripts/release-notes.ts > release-notes.md
+            gh release create "v$VERSION" --title "v$VERSION" --notes-file release-notes.md --target "$GITHUB_SHA"
+          fi

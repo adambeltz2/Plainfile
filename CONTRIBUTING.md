@@ -21,6 +21,10 @@ npm run test:e2e     # browser tests (Playwright); run `npx playwright install c
 
 CI runs the format check, type check, unit tests and browser tests on every push. A red run is fixed before merging.
 
+## Branches, pull requests and releases
+
+Work on a branch and open a pull request; CI runs the format check, type check, unit tests and browser tests on it. Merging to `main` deploys the site and, if the version in `package.json` is new, publishes a GitHub release with that version's section of `CHANGELOG.md`. So every change that should ship bumps the version and adds a changelog entry.
+
 ## What a good change looks like
 
 - **Small and focused.** One idea per pull request. A new idea you find on the way goes in `BACKLOG.md`.

@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.1.1] - 2026-11-23
+
+### Added
+- **GitHub releases.** When a new version reaches `main`, CI tags it (`v1.1.1`) and publishes a GitHub release with that version's notes from this file. Changes now go in through pull requests.
+
 ## [1.1.0] - 2026-11-23
 
 ### Added
