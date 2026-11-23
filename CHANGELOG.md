@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.5.0] - 2026-11-23
+
+### Added
+- **A friendly error bar.** If something unexpected throws, a bar appears with what happened, **Copy details** (version, browser, screen size and the error, to paste into a bug report), **Reload** and **Dismiss**. Nothing is sent anywhere or collected.
+
 ## [1.4.2] - 2026-11-23
 
 ### Added

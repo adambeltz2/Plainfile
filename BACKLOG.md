@@ -347,8 +347,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   for pull requests. _Affected: `.github/workflows/`._
 - `[FEATURE]` Screenshot comparison tests for the main screens in both themes. _Affected:
   `tests/e2e/`._
-- `[FEATURE]` A friendly error screen with a "copy diagnostics" button. No usage data is collected.
-  _Affected: `web/main.ts`._
 
 ## Mermaid (experimental)
 - [FEATURE] Draw Mermaid diagrams in Word/PDF/copy export. `src/render.ts`, `src/docx.ts`, `web/export.ts`.
