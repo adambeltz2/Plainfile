@@ -111,11 +111,58 @@ function cells(line: string): string[] {
     .map((c) => c.trim().replace(/\\\|/g, '|'));
 }
 
+/**
+ * The markdown without its HTML comments (`<!-- a note to yourself -->`, on one line or several). A comment inside a
+ * fenced code block is code, so it stays. Other readers do not show comments either.
+ */
+export function stripComments(md: string): string {
+  const out: string[] = [];
+  let fence = '';
+  let inComment = false;
+  for (const line of md.split('\n')) {
+    const f = /^\s*(```|~~~)/.exec(line);
+    if (!inComment && f) {
+      fence = fence ? (fence === f[1] ? '' : fence) : (f[1] as string);
+      out.push(line);
+      continue;
+    }
+    if (fence) {
+      out.push(line);
+      continue;
+    }
+    let rest = line;
+    let kept = '';
+    let touched = inComment;
+    for (;;) {
+      if (inComment) {
+        const end = rest.indexOf('-->');
+        if (end < 0) {
+          rest = '';
+          break;
+        }
+        rest = rest.slice(end + 3);
+        inComment = false;
+      } else {
+        const start = rest.indexOf('<!--');
+        if (start < 0) break;
+        kept += rest.slice(0, start);
+        rest = rest.slice(start + 4);
+        inComment = true;
+        touched = true;
+      }
+    }
+    // A line that was only a comment goes away entirely, so the lines around it stay one paragraph.
+    if (touched && !(kept + rest).trim()) continue;
+    out.push(kept + rest);
+  }
+  return out.join('\n');
+}
+
 /** The note's markdown as blocks. */
 export function parseBlocks(md: string, o: RenderOptions = {}): Block[] {
   const clean = (s: string): string => (o.keepMarkers ? s : hideMarkers(s));
   const inl = (s: string): Inline[] => parseInline(clean(s), o);
-  const body = o.keepMarkers ? md : stripFrontmatter(md);
+  const body = stripComments(o.keepMarkers ? md : stripFrontmatter(md));
   const lines = body.replace(/\r\n?/g, '\n').split('\n');
   const blocks: Block[] = [];
 

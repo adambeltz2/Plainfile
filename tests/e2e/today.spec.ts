@@ -218,7 +218,7 @@ test.describe('reschedule from Today', () => {
       .first()
       .click()
       .catch(() => undefined);
-    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.t').click();
+    // The task is still selected, so its panel is still there (clicking it again would open its note).
     await page.getByRole('group', { name: 'Reschedule this task' }).getByRole('button', { name: 'No date' }).click();
     await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent\n- [ ] Other due:${TODAY}\n`);
   });
@@ -317,4 +317,21 @@ test('status:doing on a checkbox line shows as a status, stays out of the title,
   await expect(row.locator('.chip', { hasText: /^doing$/ })).toBeVisible();
   await page.getByRole('button', { name: 'Mark done: Draft the memo' }).click();
   await expect.poll(() => readFile(page, dir, 'work.md')).toBe(NOTE.replace('- [ ] Draft the memo status:doing due', '- [x] Draft the memo due'));
+});
+
+test('clicking a task selects it, and clicking the selected task again (or double-clicking) opens its note at that line', async ({ page }) => {
+  await openVault(page, {
+    'work.md': `# Work\nIntro line\n- [ ] Draft the memo due:${localDate(0)}\n- [ ] Second job due:${localDate(0)}\n`,
+    'other.md': '# Other\n',
+  });
+  await nav(page, 'Today').click();
+  await page.locator('li.task', { hasText: 'Draft the memo' }).locator('.t').click();
+  await expect(page.locator('.source')).toContainText('work.md');
+  await expect(page.locator('.cm-content')).toHaveCount(0); // the first click only selects
+  await page.locator('li.task', { hasText: 'Draft the memo' }).locator('.t').click();
+  await expect(page.locator('.cm-content')).toContainText('Draft the memo');
+  // A double-click on another task does both in one go.
+  await nav(page, 'Today').click();
+  await page.locator('li.task', { hasText: 'Second job' }).locator('.t').dblclick();
+  await expect(page.locator('.cm-content')).toContainText('Second job');
 });

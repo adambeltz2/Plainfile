@@ -185,6 +185,7 @@ function build(view: EditorView): { all: DecorationSet; atomic: DecorationSet } 
   const items: Range<Decoration>[] = [];
   const atomic: Range<Decoration>[] = [];
   let inFence = false;
+  let inComment = false; // inside an HTML comment: <!-- ... -->, which is a note to yourself and is not shown when exported
   let diagram: string[] | undefined; // MERMAID: the lines of the diagram block being read
 
   for (let n = 1; n <= doc.lines; n++) {
@@ -205,6 +206,12 @@ function build(view: EditorView): { all: DecorationSet; atomic: DecorationSet } 
     if (inFence) {
       diagram?.push(text); // MERMAID
       items.push(Decoration.line({ class: 'cm-code' }).range(line.from));
+      continue;
+    }
+    const startsComment: boolean = !inComment && text.trimStart().startsWith('<!--');
+    if (inComment || startsComment) {
+      items.push(Decoration.line({ class: 'cm-comment' }).range(line.from));
+      inComment = !(startsComment ? text.slice(text.indexOf('<!--') + 4) : text).includes('-->');
       continue;
     }
     const isActive = active.has(n);

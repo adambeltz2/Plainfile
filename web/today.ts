@@ -168,7 +168,9 @@ async function movePriority(letter: string | null): Promise<void> {
 function source(): string {
   const c = state.context;
   let h = '<h2>Source on disk</h2>';
-  if (!c) h += '<p class="muted small" style="margin:0">Select a task to see the exact lines in its file. Tick the box and the change shows here.</p>';
+  if (!c)
+    h +=
+      '<p class="muted small" style="margin:0">Select a task to see the exact lines in its file. Tick the box and the change shows here. Click the selected task again, or press E, to open its note.</p>';
   else {
     h += `<div class="path">${esc(c.path)}</div><div class="lines">`;
     c.lines.forEach((l, i) => {
@@ -360,6 +362,13 @@ export async function click(target: HTMLElement): Promise<boolean> {
   }
   const row = target.closest<HTMLElement>('[data-id]');
   if (row?.dataset.id) {
+    // The first click selects the task (its lines show on the right); clicking the selected task again opens its note.
+    // A double-click does both, because the list is redrawn after the first click.
+    const t = state.index?.getTask(row.dataset.id);
+    if (t && row.dataset.id === state.selected && !target.closest('button, input, select, a')) {
+      await openNote(t.path, { line: t.line });
+      return true;
+    }
     await select(row.dataset.id);
     return true;
   }

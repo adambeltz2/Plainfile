@@ -849,3 +849,27 @@ test('closing out shows a working state straight away while the files are writte
   await expect(page.locator('.hub-main .notice', { hasText: 'Archived.' })).toBeVisible({ timeout: 20000 });
   await expect(page.locator('.hub-main .notice.loading')).toHaveCount(0);
 });
+
+test('the how-to comment in a new project note is quiet in the editor and left out of the copy', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { 'a.md': '# A\n' });
+  await newProject(page, 'Quiet project');
+  await expect(page.locator('.cm-content .cm-comment').first()).toBeVisible();
+  await expect(page.locator('.cm-comment')).toHaveCount(5); // <!--, three lines of text, -->
+  await expect(page.locator('.cm-comment').first()).toHaveCSS('font-style', 'italic');
+});
+
+test('on a wide screen the project page uses the width, and an empty Board column stays slimmer than one with cards', async ({ page }) => {
+  await page.setViewportSize({ width: 1900, height: 900 });
+  await page.goto('/');
+  await openVault(page, {
+    'projects/p/index.md': '---\ntitle: P\ntype: project\nactive: true\n---\n- [ ] One\n- [ ] Two\n- [ ] Three\n',
+  });
+  await nav(page, 'Projects').click();
+  await page.locator('.pcard .pbtn').click();
+  await page.getByRole('tab', { name: 'Board' }).click();
+  expect((await page.locator('.wrap').boundingBox())!.width).toBeGreaterThan(1500);
+  const todo = (await page.locator('.hub-col[data-col="todo"]').boundingBox())!.width;
+  const doing = (await page.locator('.hub-col[data-col="doing"]').boundingBox())!.width;
+  expect(todo).toBeGreaterThan(doing * 1.5);
+});

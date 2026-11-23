@@ -132,3 +132,15 @@ describe('line breaks inside a paragraph', () => {
     expect(toHtml('Call Dana #launch\nthen Sam')).toBe('<p>Call Dana<br>then Sam</p>');
   });
 });
+
+describe('HTML comments', () => {
+  it('are left out of the pasted HTML, plain text and blocks, on one line or several', () => {
+    const md = 'Before\n<!-- a note to myself -->\nAfter <!-- inline --> done\n<!--\nmany lines\nof notes\n-->\nLast\n';
+    expect(toHtml(md)).toBe('<p>Before<br>After done<br>Last</p>');
+    expect(toPlain(md)).not.toContain('note to myself');
+    expect(toPlain(md)).not.toContain('many lines');
+  });
+  it('are kept inside a fenced code block, where they are code', () => {
+    expect(toHtml('```\n<!-- keep -->\n```\n')).toContain('&lt;!-- keep --&gt;');
+  });
+});
