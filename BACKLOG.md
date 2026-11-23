@@ -31,7 +31,7 @@ helper, per-screen event routing).
 - [x] Subtask progress (1.11.0; project cards do not show it yet)
 - [x] Daily journal: open today's note if it exists (1.11.1)
 - [x] Open a search result with the match highlighted (1.12.0)
-- [ ] "Fix all" safe fixes in Vault health, with a preview
+- [x] "Fix all" safe fixes in Vault health, with a preview (1.13.0; broken links only)
 
 **Tier 3: larger, still no decision needed**
 - [ ] Export a project or several notes as one document
@@ -313,7 +313,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   differ only by case, mixed line endings, very large attachments, and open tasks older than 90
   days. _Affected: `src/health.ts`._
 - `[FEATURE]` An ignore list for checks, in `.plainfile/config.md`. _Affected: `src/health.ts`._
-- `[FEATURE]` "Fix all" for safe fixes, with a preview. _Affected: `web/health.ts`._
+- `[FEATURE]` "Fix all" for the other health checks too (duplicate names, missing images) where a safe fix exists. _Affected: `web/health.ts`._
 
 ## Interface and settings
 

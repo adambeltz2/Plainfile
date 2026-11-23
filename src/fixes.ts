@@ -8,6 +8,12 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** The line with one wiki link's target replaced, or undefined if the link is not on it. */
+export function wikiRetargetText(body: string, oldTarget: string, newTarget: string): string | undefined {
+  const re = new RegExp(`\\[\\[${escapeRegExp(oldTarget)}(?=[\\]|#])`, 'g');
+  return re.test(body) ? body.replace(re, () => `[[${newTarget}`) : undefined;
+}
+
 /**
  * Change where one wiki link points, editing only that link's target text and
  * nothing else on the line. [[old|shown]] becomes [[new|shown]]. Guarded the same
@@ -77,4 +83,53 @@ export function bestLinkTarget(index: VaultIndex, sourcePath: string, targetPath
     if (r.path === targetPath) return target.name;
   }
   return targetPath.replace(/\.md$/i, '');
+}
+
+/** One broken link that has a close match, and the exact line before and after fixing it. */
+export interface LinkFix {
+  kind: 'wiki' | 'md';
+  from: string;
+  line: number;
+  oldTarget: string;
+  /** For a wiki link, the new link text; for a markdown link, the path of the note it will point at. */
+  newTarget: string;
+  before: string;
+  after: string;
+}
+
+/** The safe fixes: every broken link that has a close match. Nothing is written; the lines are shown first. */
+export function planLinkFixes(
+  index: VaultIndex,
+  unresolved: { from: string; line: number; target: string; kind: 'wiki' | 'md'; suggestionPath?: string }[],
+): LinkFix[] {
+  const out: LinkFix[] = [];
+  for (const u of unresolved) {
+    if (!u.suggestionPath) continue;
+    const text = index.notes.get(u.from)?.text.split('\n')[u.line - 1];
+    if (text === undefined) continue;
+    const before = text.replace(/\r$/, '');
+    const newTarget = u.kind === 'wiki' ? bestLinkTarget(index, u.from, u.suggestionPath) : u.suggestionPath;
+    const after = u.kind === 'wiki' ? wikiRetargetText(before, u.target, newTarget) : retarget(before, u.target, relativePath(dirname(u.from), newTarget));
+    if (after !== undefined && after !== before) out.push({ kind: u.kind, from: u.from, line: u.line, oldTarget: u.target, newTarget, before, after });
+  }
+  return out;
+}
+
+/** Apply the planned fixes one at a time, each guarded. A fix that no longer fits is skipped and counted, not forced. */
+export async function applyLinkFixes(storage: VaultStorage, index: VaultIndex, fixes: LinkFix[]): Promise<{ changes: ChangeResult[]; skipped: number }> {
+  const changes: ChangeResult[] = [];
+  let skipped = 0;
+  for (const f of fixes) {
+    try {
+      changes.push(
+        f.kind === 'wiki'
+          ? await retargetWikiLink(storage, index, f.from, f.line, f.oldTarget, f.newTarget)
+          : await retargetMarkdownLink(storage, index, f.from, f.line, f.oldTarget, f.newTarget),
+      );
+    } catch (e) {
+      if (e instanceof StaleError) skipped++;
+      else throw e;
+    }
+  }
+  return { changes, skipped };
 }

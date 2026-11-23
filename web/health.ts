@@ -1,4 +1,4 @@
-import { bestLinkTarget, retargetMarkdownLink, retargetWikiLink } from '../src/fixes';
+import { applyLinkFixes, bestLinkTarget, planLinkFixes, retargetMarkdownLink, retargetWikiLink } from '../src/fixes';
 import { newNoteForLink } from '../src/linknote';
 import { ExistsError } from '../src/storage';
 import { errorMessage, getHealth, rescan, render, state, today, writeFailure, type Log } from './store';
@@ -6,7 +6,7 @@ import { esc } from './util';
 
 type Cat = 'links' | 'dups' | 'orphans' | 'embeds' | 'attachments';
 
-export const healthState = { cat: 'links' as Cat, log: undefined as Log | undefined };
+export const healthState = { cat: 'links' as Cat, log: undefined as Log | undefined, previewAll: false };
 
 interface Section {
   id: Cat;
@@ -100,6 +100,24 @@ function sections(): Section[] {
   ];
 }
 
+/** The safe fixes (broken links with a close match) in one go: a button, then the exact lines for approval. */
+function fixAllHtml(): string {
+  const r = getHealth(true);
+  const idx = state.index;
+  if (!r || !idx) return '';
+  const fixes = planLinkFixes(idx, r.unresolved);
+  if (fixes.length < 2) return '';
+  if (!healthState.previewAll) {
+    return `<div class="row-gap" style="margin:0 0 10px"><button class="btn" data-fixall-preview>Fix all ${fixes.length} with a close match…</button></div>`;
+  }
+  const shown = fixes.slice(0, 40);
+  return (
+    `<div class="notice" role="group" aria-label="Fix all links with a close match"><b>${fixes.length} links will change.</b> Only the link address is edited, on exactly these lines. Each write is guarded, and a line that has changed since is skipped.` +
+    `<div class="fixall-list">${shown.map((f) => `<div class="small"><span class="mono muted">${esc(f.from)}:${f.line}</span><div class="del"><span class="sg">−</span><span>${esc(f.before)}</span></div><div class="add"><span class="sg">+</span><span>${esc(f.after)}</span></div></div>`).join('')}${fixes.length > shown.length ? `<div class="small muted">and ${fixes.length - shown.length} more</div>` : ''}</div>` +
+    `<button class="btn primary small" data-fixall-apply>Apply all ${fixes.length}</button> <button class="btn small" data-fixall-cancel>Cancel</button></div>`
+  );
+}
+
 export function html(): string {
   const secs = sections();
   const r = getHealth(true);
@@ -113,6 +131,7 @@ export function html(): string {
   h += `</ul></div><div class="stat">${state.index?.notes.size ?? 0} notes</div></aside><section class="main"><h2 class="title">Vault health</h2>`;
   h += `<p class="meta">${total ? `${total} thing${total === 1 ? '' : 's'} worth a look. None of them stop anything from working.` : 'All checks are clear.'}</p>`;
   h += `<div class="grp" style="margin-top:0">${esc(cur.name)}</div><p class="muted small" style="margin:0 0 6px">${esc(cur.help)}</p>`;
+  if (cur.id === 'links') h += fixAllHtml();
   h += cur.count ? `<ul class="plain">${cur.items}</ul>` : '<div class="empty">Nothing to fix here.</div>';
   const log = healthState.log;
   if (log) {
@@ -133,6 +152,30 @@ export async function click(target: HTMLElement): Promise<boolean> {
   if (cat) {
     healthState.cat = cat;
     healthState.log = undefined;
+    render();
+    return true;
+  }
+  if (target.closest('[data-fixall-preview]') || target.closest('[data-fixall-cancel]')) {
+    healthState.previewAll = !!target.closest('[data-fixall-preview]');
+    render();
+    return true;
+  }
+  if (target.closest('[data-fixall-apply]')) {
+    const { storage, index } = state;
+    const r = getHealth(true);
+    if (!storage || !index || !r) return true;
+    healthState.previewAll = false;
+    try {
+      const { changes, skipped } = await applyLinkFixes(storage, index, planLinkFixes(index, r.unresolved));
+      const last = changes[changes.length - 1];
+      healthState.log = last ?? { message: 'Nothing was changed.' };
+      if (skipped) healthState.log = { message: `Fixed ${changes.length}; ${skipped} had changed since and were left alone.` };
+    } catch (e) {
+      const friendly = writeFailure(e);
+      if (friendly) await rescan();
+      healthState.log = { message: friendly ?? `Could not save that change. ${errorMessage(e)}` };
+    }
+    await rescan();
     render();
     return true;
   }
