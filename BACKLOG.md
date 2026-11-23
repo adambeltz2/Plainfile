@@ -35,7 +35,7 @@ helper, per-screen event routing).
 
 **Tier 3: larger, still no decision needed**
 - [x] Export a project or several notes as one document (1.15.0; a project today, not an arbitrary selection)
-- [ ] Images in the Word file
+- [x] Images in the Word file (1.16.0)
 - [x] Load CodeMirror only when Notes opens (1.14.0)
 - [x] Performance tests with a synthetic 5,000-note vault (1.13.1; a 20,000-note case and phone-speed throttling are still open)
 
@@ -54,7 +54,7 @@ helper, per-screen event routing).
 
 ## Sharing and export
 
-- `[FEATURE]` **Images in the Word file** (they are in copies and print, but the .docx shows a description). Affects `src/docx.ts`.
+- `[FEATURE]` WebP and SVG images in the Word file (converted to PNG in the browser). `src/docx.ts`, `web/export.ts`.
 - `[FEATURE]` **Export any chosen notes or a folder as one document** (a project is done). `src/report.ts` (`projectBook`), `web/export.ts`.
 - `[FEATURE]` **Export presets and a custom report template** kept in `.plainfile/`. Affects `src/report.ts`.
 

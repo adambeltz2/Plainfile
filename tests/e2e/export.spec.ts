@@ -172,3 +172,25 @@ test.describe('project status report', () => {
     expect(text).toContain('project: big');
   });
 });
+
+test('a note with a pasted screenshot downloads as Word with the picture inside', async ({ page }) => {
+  await page.goto('/');
+  const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  await openVault(page, { 'Shots.md': '# Shots\n\nBelow is the picture.\n' });
+  await nav(page, 'Notes').click();
+  await page.locator('.note-item', { hasText: /^Shots$/ }).click();
+  await page.locator('.cm-content').click();
+  await page.keyboard.press('Control+End');
+  await page.evaluate(async (b64) => {
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    dt.items.add(new File([bytes], 'image.png', { type: 'image/png' }));
+    document.querySelector('.cm-content')!.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+  }, PNG);
+  await expect(page.locator('.cm-img-el')).toBeVisible();
+  const [download] = await Promise.all([page.waitForEvent('download'), noteMenu(page, /^Download as Word/)]);
+  const text = readFileSync((await download.path())!).toString('latin1');
+  expect(text).toContain('word/media/image1.png');
+  expect(text).toContain('<w:drawing>');
+  expect(text).toContain('Below is the picture.');
+});
