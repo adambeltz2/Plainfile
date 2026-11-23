@@ -29,6 +29,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 | | |
 |---|---|
 | **Home**: a one-line capture bar, week bars and projects at the top, today, filing, waiting, the week | ![Home](docs/screenshots/home.png) |
+| **Tasks**: every task from every project, one place to start the day (grouped by due date; or by project) | ![Tasks](docs/screenshots/tasks.png) |
 | **Recent**: every note by when it last changed, grouped by day, with a filter | ![Recent](docs/screenshots/recent.png) |
 | **Calendar**: tasks and dated notes by day, drag to reschedule | ![Calendar](docs/screenshots/calendar.png) |
 | **Insight**: activity, this month, topics, people, health | ![Insight](docs/screenshots/insight.png) |
@@ -58,7 +59,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 - **Share outside markdown:** copy a note (or a selection) as formatted text for Word, Docs or email, download it as
   a Word file, or print it to PDF, cleanly (no frontmatter or tags). A project **Report** builds a status snapshot
   you can copy, download or save as a note.
-- **All tasks across all projects:** Projects → All tasks (or the button on Home) opens the project hub over every task, from every project and from notes outside any; group by Project, person, status or date, filter, and use the board and timeline as usual.
+- **Tasks (all projects):** the Tasks tab, a place to start the day, opens the project hub over every task, from every project and from notes outside any; group by Project, person, status or date, filter, and use the board and timeline as usual.
 - **Home and the weekly review:** a landing screen (capture, today, what needs filing, what
   you are waiting on, the week ahead, project progress) and a four-step review that files, reschedules and plans
   with small guarded edits to your own notes.

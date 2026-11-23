@@ -14,7 +14,7 @@ import { browserCache } from './index-cache';
 
 export const SAMPLE_DAY = '2026-11-21';
 
-export type ScreenId = 'home' | 'review' | 'insight' | 'recent' | 'today' | 'calendar' | 'people' | 'projects' | 'board' | 'notes' | 'explore' | 'search' | 'health' | 'rename' | 'guide' | 'changelog';
+export type ScreenId = 'home' | 'review' | 'insight' | 'recent' | 'today' | 'calendar' | 'people' | 'projects' | 'board' | 'notes' | 'explore' | 'search' | 'health' | 'rename' | 'guide' | 'changelog' | 'tasks';
 export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | 'followups' | 'projects';
 
 export type Modal =

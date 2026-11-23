@@ -551,9 +551,9 @@ test('All tasks shows every task from every project and the notes outside any, g
     'tasks/Shared.md': '---\ntitle: Shared job\nstatus: todo\nproject: [alpha, beta]\n---\n',
     'loose.md': '- [ ] Loose job\n',
   });
-  await nav(page, 'Projects').click();
-  await page.getByRole('button', { name: 'All tasks' }).click();
+  await nav(page, 'Tasks').click();
   await expect(page.locator('.title')).toHaveText('All tasks');
+  await expect(page.locator('.nav [aria-current="true"]')).toHaveText('Tasks');
   for (const t of ['Alpha job', 'Beta job', 'Shared job', 'Loose job']) await expect(page.locator('.hub-content')).toContainText(t);
   await page.locator('#hub-group').selectOption('project');
   await expect(page.locator('.hub-group .grp', { hasText: 'Alpha' })).toBeVisible();

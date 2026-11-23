@@ -20,6 +20,7 @@ export type PaletteItem =
 const SCREENS: [string, string][] = [
   ['home', 'Home'],
   ['today', 'Today'],
+  ['tasks', 'Tasks (all projects)'],
   ['calendar', 'Calendar'],
   ['people', 'People'],
   ['review', 'Weekly review'],

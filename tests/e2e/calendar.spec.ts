@@ -39,7 +39,9 @@ test.describe('Calendar', () => {
     await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toContain(`- [ ] Pay invoice due:${tomorrow}\n`);
     expect(await readFile(page, dir, 'a.md')).toBe(`- [ ] Pay invoice due:${tomorrow}\n- [x] Book flights due:${TODAY}\n- [ ] Far off due:2999-05-05\n`);
 
-    // Drag the task note to a day two ahead, when that day is in view.
+    // Drag the task note to a day two ahead, when that day is in view. Wait for the grid to show the first change.
+    await expect(page.locator(`.cal-cell[data-cal-day="${tomorrow}"] .cal-ev`, { hasText: 'Pay invoice' })).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, 0)); // filling the date box above scrolled the grid up out of view
     const target = localDate(2);
     const dest = page.locator(`.cal-cell[data-cal-day="${target}"]`);
     if (await dest.count()) {

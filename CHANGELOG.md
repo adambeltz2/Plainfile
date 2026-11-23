@@ -7,7 +7,7 @@ deploy-intended change, together with an entry here.
 ## [0.47.0] - 2026-11-23
 
 ### Added
-- **All tasks.** Projects → All tasks, or the All tasks button on Home, opens the project hub over every task in every project and in notes that belong to none. Group by the new **Project** option to see them side by side; a task in several projects appears under each. Tasks, board, timeline, filters and saved views work as in a project. No file moves: a task belongs to a project by link, wherever it lives.
+- **Tasks tab: everything, in one place.** A new Tasks tab (and the All tasks button on Home and in Projects) opens the project hub over every task in every project and in notes that belong to none. Group by the new **Project** option to see them side by side; a task in several projects appears under each. Tasks, board, timeline, filters and saved views work as in a project. No file moves: a task belongs to a project by link, wherever it lives.
 
 ## [0.46.1] - 2026-11-22
 

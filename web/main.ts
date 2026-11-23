@@ -19,6 +19,7 @@ import * as notes from './notes';
 import * as peopleScreen from './people';
 import * as palette from './palette';
 import * as projectScreen from './project';
+import { ALL_PROJECTS } from '../src/projects';
 import * as rename from './rename';
 import * as search from './search';
 import * as suggest from './suggest';
@@ -81,11 +82,20 @@ function themeControl(): string {
   );
 }
 
+/** Which header tab is the current one. Tasks and Projects are both the project screen; the path tells them apart. */
+function isCurrent(id: ScreenId): boolean {
+  const onAll = state.screen === 'projects' && projectScreen.projectState.path === ALL_PROJECTS;
+  if (id === 'tasks') return onAll;
+  if (id === 'projects') return state.screen === 'projects' && !onAll;
+  return state.screen === id || (id === 'search' && state.screen === 'explore');
+}
+
 /* ---------- screens ---------- */
 
 const NAV: { id: ScreenId; label: string }[] = [
   { id: 'home', label: 'Home' },
   { id: 'today', label: 'Today' },
+  { id: 'tasks', label: 'Tasks' },
   { id: 'calendar', label: 'Calendar' },
   { id: 'projects', label: 'Projects' },
   { id: 'people', label: 'People' },
@@ -99,6 +109,8 @@ const NAV: { id: ScreenId; label: string }[] = [
 
 async function go(screen: ScreenId): Promise<void> {
   await notes.flush();
+  // Tasks is the project hub over everything: every task from every project, the place to start the day.
+  if (screen === 'tasks') return projectScreen.openProject(ALL_PROJECTS);
   if (screen === 'review' && state.screen !== 'review') reviewScreen.startReview();
   state.error = '';
   state.screen = screen;
@@ -162,10 +174,10 @@ const SIDE_LABEL: Record<string, string> = { today: 'Views and filters', notes: 
 
 /** The bottom tab bar for phones: the screens used all day, with the rest under More. */
 function tabbar(hc: number): string {
-  const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${state.screen === id}">${label}</button>`;
+  const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${isCurrent(id)}">${label}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
-      ['recent:Recent', 'search:Search', 'calendar:Calendar', 'people:People', 'board:Board', 'review:Weekly review', 'insight:Insight', 'health:Vault health', 'guide:Cheat sheet']
+      ['tasks:Tasks', 'recent:Recent', 'search:Search', 'calendar:Calendar', 'people:People', 'board:Board', 'review:Weekly review', 'insight:Insight', 'health:Vault health', 'guide:Cheat sheet']
         .map((x) => {
           const [id, label] = x.split(':') as [ScreenId, string];
           return `<button class="btn" data-nav="${id}" data-more-item>${label}${id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
@@ -185,7 +197,7 @@ function shell(): string {
   h += `<span class="tag-pill${state.demo ? '' : ' inv'}" title="${esc(state.name)}">${esc(state.name)}</span>`;
   h += '<nav class="nav" aria-label="Screens">';
   for (const n of NAV) {
-    h += `<button class="navbtn" data-nav="${n.id}" aria-current="${state.screen === n.id || (n.id === 'search' && state.screen === 'explore')}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
+    h += `<button class="navbtn" data-nav="${n.id}" aria-current="${isCurrent(n.id)}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
   }
   h += '</nav><span class="grow"></span>';
   h += '<button class="btn" data-act="palette-open" title="Open a note or run an action" aria-label="Go to a note or action">Go to…</button>';
