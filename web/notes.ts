@@ -58,6 +58,8 @@ export const notes = {
   status: '',
   diff: undefined as LineChange | undefined,
   xray: false,
+  /** In focus mode, the side panel that is showing over the note, if any. */
+  peek: undefined as undefined | 'list' | 'details',
   yaml: false,
   filter: '',
   pending: {} as At,
@@ -812,14 +814,14 @@ export function html(): string {
       `<div class="ed-head"><div style="min-width:0"><input id="note-title" class="title title-input" type="text" value="${esc(n?.title ?? notes.path)}" aria-label="Note title (click to change)" title="Click to change the title" spellcheck="false" autocomplete="off"><div class="mono muted small path">${esc(notes.path)}</div><div id="note-stats" class="muted small">${statsText()}</div></div>` +
       `<div class="ed-actions"><button class="btn only-narrow hide-in-focus" data-act="note-close">All notes</button>` +
       `<button class="btn" id="note-undo" data-act="note-undo" disabled>Undo</button><button class="btn" id="note-redo" data-act="note-redo" disabled>Redo</button>` +
-      `<button class="btn only-wide" data-act="pane-list" aria-pressed="${notes.panes.list}" title="Show or hide the list of notes">Notes list</button><button class="btn only-wide" data-act="pane-details" aria-pressed="${notes.panes.details}" title="Show or hide properties, links and history">Details</button>` +
-      `<button class="btn" data-act="focus-toggle" aria-pressed="${notes.focus}">${notes.focus ? 'Exit focus' : 'Focus'}</button><button class="btn" data-act="xray" aria-pressed="${notes.xray}">X-ray</button>` +
+      `<button class="btn only-wide" data-act="pane-list" aria-pressed="${notes.focus ? notes.peek === 'list' : notes.panes.list}" title="Show or hide the list of notes">Notes list</button><button class="btn only-wide" data-act="pane-details" aria-pressed="${notes.focus ? notes.peek === 'details' : notes.panes.details}" title="Show or hide properties, links and history">Details</button>` +
+      `<button class="btn" data-act="focus-toggle" aria-pressed="${notes.focus}">${notes.focus ? 'Exit focus' : 'Focus'}</button>` +
       `<button class="btn hide-in-focus" data-act="note-menu" aria-haspopup="menu" aria-label="More actions" title="Move, rename, duplicate, pin, delete and more">⋯ More</button>` +
       `<span id="note-status" class="status" role="status">${esc(notes.status)}</span></div></div>` +
       `<div id="note-banner">${bannerHtml()}</div><div id="editor-slot" class="editor-slot"></div>`;
   }
   return (
-    `<div class="frame notes${notes.path ? ' has-note' : ''}${notes.panes.list ? '' : ' no-list'}${notes.panes.details ? '' : ' no-details'}">` +
+    `<div class="frame notes${notes.path ? ' has-note' : ''}${notes.panes.list ? '' : ' no-list'}${notes.panes.details ? '' : ' no-details'}${notes.focus && notes.peek ? ` peek-${notes.peek}` : ''}">` +
     (notes.panes.list
       ? ''
       : '<button class="edge-tab edge-left only-wide" data-act="pane-list" aria-label="Expand left pane" title="Show the list of notes">»</button>') +
@@ -972,6 +974,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
       return true;
     case 'focus-toggle':
       notes.focus = !notes.focus;
+      notes.peek = undefined;
       notes.wantFocus = true;
       render();
       return true;
@@ -1044,6 +1047,13 @@ export async function click(target: HTMLElement): Promise<boolean> {
     }
     case 'pane-list':
     case 'pane-details': {
+      if (notes.focus) {
+        // In focus mode the panels are hidden, so these buttons show one over the note, and a second press closes it.
+        const want = act.dataset.act === 'pane-list' ? 'list' : 'details';
+        notes.peek = notes.peek === want ? undefined : want;
+        render();
+        return true;
+      }
       if (act.dataset.act === 'pane-list') notes.panes.list = !notes.panes.list;
       else notes.panes.details = !notes.panes.details;
       try {

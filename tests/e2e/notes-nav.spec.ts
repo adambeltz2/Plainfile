@@ -33,10 +33,10 @@ test.describe('landing', () => {
 });
 
 test.describe('the ⋯ More menu', () => {
-  test('holds the actions, keeps Undo, Redo, Focus and X-ray in the header, and Esc closes it', async ({ page }) => {
+  test('holds the actions, keeps Undo, Redo and Focus in the header, and Esc closes it', async ({ page }) => {
     await openVault(page, VAULT);
     await open(page, 'Kickoff');
-    for (const n of ['Undo', 'Redo', 'Focus', 'X-ray']) await expect(page.locator('.ed-actions').getByRole('button', { name: n, exact: true })).toBeVisible();
+    for (const n of ['Undo', 'Redo', 'Focus']) await expect(page.locator('.ed-actions').getByRole('button', { name: n, exact: true })).toBeVisible();
     await expect(page.locator('.ed-actions').getByRole('button', { name: 'Rename', exact: true })).toHaveCount(0);
     await page.locator('.ed-actions').getByRole('button', { name: /More/ }).click();
     for (const l of ['X-ray', 'Explore related', 'History', 'Move to…', 'Rename', 'Duplicate', 'Pin to top', 'Copy link', 'Delete…'])
@@ -140,7 +140,7 @@ test.describe('command palette and keys', () => {
     await openVault(page, VAULT);
     await open(page, 'Kickoff');
     await page.keyboard.press('Control+Shift+X');
-    await expect(page.locator('.ed-actions').getByRole('button', { name: 'X-ray', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.cm-content.cm-xray')).toHaveCount(1);
     await page.keyboard.press('Control+Shift+X');
     await page.keyboard.press('Control+Shift+M');
     await expect(page.locator('.modal')).toContainText('Move');
@@ -492,4 +492,25 @@ test('the notes list shows an icon for what each note is, with its name for scre
   await icon('Call Dana', 'Task');
   await icon('2026-11-23', 'Journal');
   await icon('Brand', 'Note');
+});
+
+test('in focus mode, Details and Notes list open their panel over the note, and a second press closes it', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openVault(page, { 'a.md': '---\ntitle: Alpha\n---\nBody\n', 'b.md': '# Beta\n' });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Alpha')).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  await page.getByRole('button', { name: 'Focus', exact: true }).click();
+  await expect(page.locator('#note-side')).toBeHidden();
+  await page.getByRole('button', { name: 'Details', exact: true }).click();
+  await expect(page.locator('#note-side')).toBeVisible();
+  await expect(page.locator('#note-side')).toContainText('Properties');
+  await page.getByRole('button', { name: 'Details', exact: true }).click();
+  await expect(page.locator('#note-side')).toBeHidden();
+  await page.getByRole('button', { name: 'Notes list', exact: true }).click();
+  await expect(page.locator('.frame.notes > .side')).toBeVisible();
+  await page.getByRole('button', { name: 'Exit focus' }).click();
+  await expect(page.locator('.frame.notes > .side')).toBeVisible(); // back to the normal layout, nothing left open over the note
+  await expect(page.locator('.frame.notes.peek-list')).toHaveCount(0);
 });

@@ -51,7 +51,7 @@ export function hideMarkers(s: string): string {
     .replace(/(^|[\s(])#[\p{L}][\p{L}\p{N}_/-]*/gu, '$1')
     .replace(/(^|[\s(])@[\p{L}\p{N}_][\p{L}\p{N}_-]*/gu, '$1')
     .replace(/[ \t]{2,}/g, ' ')
-    .replace(/[ \t]+$/g, '');
+    .replace(/[ \t]+$/gm, '');
 }
 
 /** Pairs of the inline syntaxes, tried in this order at each point. */
@@ -181,7 +181,8 @@ export function parseBlocks(md: string, o: RenderOptions = {}): Block[] {
     const buf: string[] = [l.trim()];
     i++;
     while (i < lines.length && (lines[i] as string).trim() && !isStart(lines[i] as string, lines[i + 1])) buf.push((lines[i++] as string).trim());
-    blocks.push({ k: 'p', c: inl(buf.join(' ')) });
+    // A line break inside a paragraph stays a line break, the way the editor shows it.
+    blocks.push({ k: 'p', c: inl(buf.join('\n')) });
   }
   return blocks;
 }
@@ -253,7 +254,7 @@ function inlineHtml(inl: Inline[], o: RenderOptions): string {
     .map((x): string => {
       switch (x.t) {
         case 'text':
-          return esc(x.s);
+          return esc(x.s).replace(/\n/g, '<br>');
         case 'b':
           return `<b>${inlineHtml(x.c, o)}</b>`;
         case 'i':

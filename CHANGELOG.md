@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.17.5] - 2026-11-23
+
+### Fixed
+- Line breaks inside a paragraph are kept when you copy a note as formatted text, download it as Word or HTML, print it, or copy plain text. Lines such as a list of codes, one per line, used to run together into one long line.
+- In focus mode, Details and Notes list now work: each opens its panel over the note, and a second press closes it. Before, they did nothing because the panels are hidden in focus mode.
+
+### Changed
+- The X-ray button is no longer in the note header. It is still in the ⋯ More menu as "X-ray (show raw markdown)", and on Ctrl/Cmd+Shift+X.
+
 ## [1.17.4] - 2026-11-23
 
 ### Added

@@ -61,7 +61,13 @@ interface Item {
 
 export function itemsFor(path: string, inNote: boolean): (Item | '-')[] {
   const items: (Item | '-')[] = [];
-  if (inNote) items.push({ action: 'xray', label: 'X-ray' }, { action: 'explore', label: 'Explore related' }, { action: 'history', label: 'History' }, '-');
+  if (inNote)
+    items.push(
+      { action: 'xray', label: 'X-ray (show raw markdown)' },
+      { action: 'explore', label: 'Explore related' },
+      { action: 'history', label: 'History' },
+      '-',
+    );
   else items.push({ action: 'open', label: 'Open' }, '-');
   items.push(
     { action: 'move', label: 'Move to…' },

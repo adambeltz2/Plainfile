@@ -172,7 +172,7 @@ interface Style {
 function run(text: string, st: Style): string {
   if (!text) return '';
   const pr = `${st.b ? '<w:b/>' : ''}${st.i ? '<w:i/>' : ''}${st.s ? '<w:strike/>' : ''}${st.code ? '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/>' : ''}`;
-  return `<w:r>${pr ? `<w:rPr>${pr}</w:rPr>` : ''}<w:t xml:space="preserve">${x(text)}</w:t></w:r>`;
+  return `<w:r>${pr ? `<w:rPr>${pr}</w:rPr>` : ''}<w:t xml:space="preserve">${text.split('\n').map(x).join('</w:t><w:br/><w:t xml:space="preserve">')}</w:t></w:r>`;
 }
 
 function runs(inl: Inline[], st: Style = {}): string {

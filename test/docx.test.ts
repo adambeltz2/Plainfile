@@ -147,3 +147,12 @@ describe('docx pictures', () => {
     expect(new TextDecoder().decode(files.get('[Content_Types].xml'))).not.toContain('image/');
   });
 });
+
+describe('line breaks inside a paragraph', () => {
+  it('become Word line breaks, not one run of words', () => {
+    const files = unzip(toDocx('Losers:\nA000196963\nA000197040\n'));
+    const doc = new TextDecoder().decode(files.get('word/document.xml'));
+    expect(doc).toContain('Losers:</w:t><w:br/><w:t xml:space="preserve">A000196963</w:t><w:br/><w:t xml:space="preserve">A000197040');
+    expect(doc.match(/<w:p>/g)?.length).toBe(1);
+  });
+});
