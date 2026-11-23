@@ -26,7 +26,7 @@ helper, per-screen event routing).
 **Tier 2: moderate, self-contained**
 - [x] Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]` (1.8.0)
 - [x] Keyboard-first Today (`j`/`k`/`x`/`e`) (1.8.1; `d` to set a date is still open)
-- [ ] Insight: choose a time range
+- [x] Insight: choose a time range (1.9.0)
 - [ ] Reschedule buttons in Today (tomorrow, next Monday, pick a date)
 - [ ] Subtask progress ("3 of 5")
 - [ ] Daily journal: open today's note if it exists
@@ -68,7 +68,6 @@ helper, per-screen event routing).
 
 ## Insight
 
-- `[FEATURE]` **Choose a time range** for the heatmap and month stats, and compare months. Affects `src/insight.ts`, `web/insight.ts`.
 - `[FEATURE]` **Tasks finished per week** from the review history if a review note is saved. Affects `src/insight.ts`.
 
 ## Calendar

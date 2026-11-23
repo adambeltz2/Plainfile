@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.9.0] - 2026-11-23
+
+### Added
+- **Insight time range.** Choose 13, 26 or 52 weeks for the activity grid, and step back through earlier months in the month card (‹ ›), where each count shows the change since the month before (+3, −1). The drill-down lists follow the month you are looking at.
+
 ## [1.8.1] - 2026-11-23
 
 ### Added
