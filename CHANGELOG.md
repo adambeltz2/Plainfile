@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.20.1] - 2026-11-23
+
+### Added
+- A web address in a note is now a link in the editor, whether it is bare (`https://example.com/page`), in `<angle brackets>`, or written as `[text](https://example.com)`. Clicking it opens a new tab (with `noopener`). Nothing is written into your file, which stays plain markdown: no HTML tag is added. The full stop or bracket at the end of a sentence is not part of the link, and a click at the end of the line still just places the cursor.
+- Links in copied formatted text, Word-friendly HTML and printed pages open in a new tab too, and bare web addresses become links there as well.
+
 ## [1.20.0] - 2026-11-23
 
 ### Added

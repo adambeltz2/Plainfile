@@ -1,4 +1,4 @@
-import { linkAt, type LinkAt } from '../src/linknote';
+import { BARE_URL, linkAt, trimUrl, type LinkAt } from '../src/linknote';
 import { isMermaidOpen } from '../src/diagrams'; // MERMAID
 import { MermaidWidget } from './mermaid-widget'; // MERMAID
 import { defaultKeymap, history, historyKeymap, indentLess, indentMore, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
@@ -156,6 +156,10 @@ function inline(text: string, base: number, start: number, items: Range<Decorati
     hideRange(s, s + 1);
     items.push(mark('cm-link').range(base + s + 1, base + s + 1 + label.length));
     hideRange(s + 1 + label.length, e);
+  });
+  // A web address in the text is a link too, wherever it is not already part of one.
+  scan(new RegExp(BARE_URL.source, 'g'), (m, s) => {
+    items.push(mark('cm-link').range(base + s, base + s + trimUrl(m[0]).length));
   });
   scan(/\*\*([^*\n]+)\*\*/g, (_m, s, e) => {
     hideRange(s, s + 2);

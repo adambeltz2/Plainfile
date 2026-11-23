@@ -43,6 +43,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   belong to it when their `project:` names it. Notebook projects (`active`, `sortOrder`) still work.
 - **Uniform fields without requiring them:** frontmatter is read tolerantly; a Tidy panel offers one-line
   fixes to the standard field names and values.
+- **Web links:** a web address in a note is a link (bare, `<angle>` or `[text](https://…)`); clicking it opens a new tab and nothing is added to the file. Exports and printed pages open links in a new tab too.
 - **Notes:** click a link in a note to go to it (or to create it, if it does not exist yet); hide the list and details panes to use the whole window on a wide screen (a Hide button in each panel, or the Notes list and Details buttons; an edge tab brings a hidden panel back).
 - **Note kinds:** an icon beside each note in the list says what it is: project (folder), person (head), task (tick box), meeting (speech bubble), journal (calendar) or note (page), read from its `type`, fields or folder.
 - **Notes:** reopens where you left off, or shows a home with pinned, modified-today and recent notes.

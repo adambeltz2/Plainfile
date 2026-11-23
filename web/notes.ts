@@ -219,6 +219,15 @@ export function lastOpened(): string | undefined {
 
 /** A click on a link in the editor: open the note it points to, or offer to create it. */
 async function openLink(link: LinkAt): Promise<void> {
+  if (link.kind === 'url') {
+    // A web address opens in a new tab. Nothing is written to the note: the file stays plain markdown.
+    const a = document.createElement('a');
+    a.href = link.target;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.click();
+    return;
+  }
   const { index, storage } = state;
   const from = notes.path ? index?.notes.get(notes.path) : undefined;
   if (!index || !storage || !from || !notes.path) return;
