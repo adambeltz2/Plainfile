@@ -416,7 +416,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - [DECISION] A task belongs to projects by link (`project:` can list several), not by folder, so assigning a project never moves the file. Do not build "move into project folder". Open question: tasks created with `+Project` are written into that project's `tasks/` folder; with several projects that location is arbitrary, so consider always creating in `tasks/`. `src/capture.ts` (addTaskNote).
 
 ## From an outside review (checked against the code)
-- [DEBT] Add ESLint and Prettier; there is only `tsc` today. `package.json`, new config files.
+- [DEBT] ESLint is blocked: typescript-eslint 8 supports TypeScript below 6.1, and this project is on TypeScript 7. Revisit when typescript-eslint supports 7. Meanwhile `tsconfig.json` turns on noUnusedLocals, noUnusedParameters, noImplicitReturns and noFallthroughCasesInSwitch. Prettier is not wanted: it would reformat every file, which the project avoids.
 - [DEBT] Generate API docs from the JSDoc (typedoc) and add a short `CONTRIBUTING.md`. `src/`, `docs/`.
 - [FEATURE] `plainfile check --json` (and a non-zero exit when problems are found) so Vault health can run in CI. `src/cli.ts`, `src/health.ts`.
 - [FEATURE] Shell completions for the CLI; `--help` already exists. `src/cli.ts`.

@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.48.0] - 2026-11-23
+
+### Added
+- **`plainfile check --json` and `--strict`.** `--json` prints the Vault health report as JSON (with a `broken` count); `--strict` exits with status 1 if any link or embed is broken or ambiguous, so a CI job can fail on it. Without `--strict` it only reports.
+
+### Changed
+- The type check is stricter: unused variables and parameters, missing returns and switch fall-through are now errors. One unused parameter was removed. ESLint could not be added because typescript-eslint does not support TypeScript 7 yet (logged in the backlog).
+
 ## [0.47.3] - 2026-11-23
 
 ### Fixed

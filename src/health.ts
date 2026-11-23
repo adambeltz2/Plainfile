@@ -10,6 +10,11 @@ export interface HealthReport {
   unusedAttachments: string[];
 }
 
+/** How many links and embeds are broken or unclear. Orphans, duplicates and unused attachments are advice, not breakage. */
+export function brokenCount(r: HealthReport): number {
+  return r.unresolved.length + r.ambiguous.length + r.missingEmbeds.length;
+}
+
 const ATTACHMENT = /\.(png|jpe?g|gif|webp|svg|pdf|heic|mp3|m4a|mp4|mov)$/i;
 
 /**

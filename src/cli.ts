@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { fmtDate, localToday } from './dates';
-import { checkHealth } from './health';
+import { brokenCount, checkHealth } from './health';
 import { VaultIndex, type TaskItem } from './index';
 import { NodeStorage } from './node-storage';
 import { search, todayView } from './query';
@@ -12,7 +12,10 @@ const USAGE = `plainfile <command> [--vault <folder>] [--today YYYY-MM-DD]
   tasks            Every open task
   search <query>   Words plus tag: folder: type: is: due: @name operators
   backlinks <path> Notes that link to a note
-  check            Vault health: broken links, duplicates, orphans, attachments
+  check [--json] [--strict]
+                   Vault health: broken links, duplicates, orphans, attachments.
+                   --json prints the report as JSON; --strict exits 1 if any link or
+                   embed is broken or ambiguous, for use in CI
   scan             What changed since the folder was last read
   done <id>        Tick a task. The id is path:line, as printed by today and tasks
   undo <id>        Untick a task`;
@@ -35,6 +38,14 @@ async function main(): Promise<void> {
     if (i < 0) return undefined;
     return args.splice(i, 2)[1];
   };
+  const bool = (name: string): boolean => {
+    const i = args.indexOf(`--${name}`);
+    if (i < 0) return false;
+    args.splice(i, 1);
+    return true;
+  };
+  const json = bool('json');
+  const strict = bool('strict');
   const vault = flag('vault') ?? process.cwd();
   const today = flag('today') ?? localToday();
   const [cmd, ...rest] = args;
@@ -77,6 +88,11 @@ async function main(): Promise<void> {
     }
     case 'check': {
       const r = checkHealth(index);
+      if (strict && brokenCount(r)) process.exitCode = 1;
+      if (json) {
+        console.log(JSON.stringify({ ...r, broken: brokenCount(r) }, null, 2));
+        break;
+      }
       const block = (title: string, lines: string[]): void => {
         console.log(`\n${title} (${lines.length})`);
         for (const l of lines) console.log(`  ${l}`);

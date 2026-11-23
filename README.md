@@ -168,6 +168,7 @@ npm run test:e2e                 # browser tests, including a real folder
 npm run screenshots              # regenerate docs/screenshots (needs the server running)
 npm run plainfile -- today --vault sample-vault --today 2026-11-21
 npm run plainfile -- check --vault sample-vault
+npm run plainfile -- check --json --strict --vault sample-vault   # for CI: JSON report, exit 1 if a link is broken
 npm run plainfile -- search "is:open tag:launch" --vault sample-vault
 ```
 
