@@ -202,3 +202,32 @@ test.describe('keys on the Today list', () => {
     await expect(page.locator('li.task.sel')).toHaveCount(0);
   });
 });
+
+test.describe('reschedule from Today', () => {
+  const TODAY = localDate(0);
+  test("buttons and a date box move one task's due date, writing only that date", async ({ page }) => {
+    await page.goto('/');
+    const text = `- [ ] Pay rent due:${TODAY}\n- [ ] Other due:${TODAY}\n`;
+    const dir = await openVault(page, { 'a.md': text });
+    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.t').click();
+    const panel = page.getByRole('group', { name: 'Reschedule this task' });
+    await panel.getByRole('button', { name: 'Tomorrow' }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent due:${localDate(1)}\n- [ ] Other due:${TODAY}\n`);
+    await page
+      .getByRole('button', { name: 'Upcoming' })
+      .first()
+      .click()
+      .catch(() => undefined);
+    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.t').click();
+    await page.getByRole('group', { name: 'Reschedule this task' }).getByRole('button', { name: 'No date' }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent\n- [ ] Other due:${TODAY}\n`);
+  });
+
+  test('the date box sets any date', async ({ page }) => {
+    await page.goto('/');
+    const dir = await openVault(page, { 'a.md': `- [ ] Pay rent due:${TODAY}\n` });
+    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.t').click();
+    await page.locator('[data-resched-pick]').fill(localDate(3));
+    await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent due:${localDate(3)}\n`);
+  });
+});

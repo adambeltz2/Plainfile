@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.10.0] - 2026-11-23
+
+### Added
+- **Reschedule from Today.** Choosing a task shows a Reschedule box beside it: Tomorrow, Next Monday, In a week, No date, or a date picker. Only the task's due date changes, and the exact line is shown.
+
 ## [1.9.0] - 2026-11-23
 
 ### Added

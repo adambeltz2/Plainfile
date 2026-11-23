@@ -27,7 +27,7 @@ helper, per-screen event routing).
 - [x] Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]` (1.8.0)
 - [x] Keyboard-first Today (`j`/`k`/`x`/`e`) (1.8.1; `d` to set a date is still open)
 - [x] Insight: choose a time range (1.9.0)
-- [ ] Reschedule buttons in Today (tomorrow, next Monday, pick a date)
+- [x] Reschedule buttons in Today (1.10.0)
 - [ ] Subtask progress ("3 of 5")
 - [ ] Daily journal: open today's note if it exists
 - [ ] Open a search result with the match highlighted
@@ -167,8 +167,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 - `[FEATURE]` **Recurring tasks** (`repeat: weekly`, `🔁 every monday`): completing one creates the
   next, with a readout of what was written. _Affected: `src/writeback.ts`, `src/parse.ts`._
-- `[FEATURE]` Reschedule from Today: buttons for tomorrow, next Monday, and pick a date, each a
-  one-token edit. _Affected: `src/writeback.ts`, `web/today.ts`._
 - `[FEATURE]` Completed dates: stamp `done:2026-11-21` when ticking, and add a Done this week view.
   _Affected: `src/writeback.ts`, `web/today.ts`._
 - `[FEATURE]` Priorities (`!high`, `priority: 2`) with sorting and grouping. _Affected:
