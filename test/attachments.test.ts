@@ -11,7 +11,7 @@ describe('attachments', () => {
     expect(pastedName('image/jpeg', NOW)).toBe('pasted-2026-11-21-143512.jpg');
     expect(pastedName('application/x-weird', NOW)).toBe('pasted-2026-11-21-143512.png');
   });
-  it('keeps a dropped file\'s own name when it has one worth keeping', () => {
+  it("keeps a dropped file's own name when it has one worth keeping", () => {
     expect(safeName('My Screenshot (3).PNG')).toBe('My-Screenshot-3.PNG');
     expect(safeName('image.png')).toBe('');
     expect(safeName('')).toBe('');

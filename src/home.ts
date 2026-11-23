@@ -34,7 +34,8 @@ export function triage(index: VaultIndex): TriageItem[] {
   const out: TriageItem[] = [];
   for (const n of index.notes.values()) {
     if (isTaskNote(n)) {
-      if (!n.fileTask?.done && !hasProject(n) && !/(^|\/)projects\//.test(n.path)) out.push({ kind: 'task', path: n.path, title: n.title, id: `${n.path}:${n.fileTask?.statusLine}`, created: n.fileTask?.created });
+      if (!n.fileTask?.done && !hasProject(n) && !/(^|\/)projects\//.test(n.path))
+        out.push({ kind: 'task', path: n.path, title: n.title, id: `${n.path}:${n.fileTask?.statusLine}`, created: n.fileTask?.created });
       continue;
     }
     if (/^inbox\//i.test(n.path) && n.name.toLowerCase() !== 'inbox' && !hasProject(n) && n.tags.length === 0) {

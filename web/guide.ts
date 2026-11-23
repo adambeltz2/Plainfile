@@ -93,7 +93,10 @@ const SHORTCUTS: [string, string][] = [
   ['Ctrl/Cmd + K', 'Search'],
   ['Ctrl/Cmd + S', 'Save the open note now (it also saves by itself)'],
   ['Ctrl/Cmd + V on an image', 'Paste a screenshot into the open note: it is saved in _attachments and shown inline'],
-  ['⋯ More, then Copy as formatted text', 'Copy the note (or the selection) cleanly for Word, Docs or email. Also under Download as Word and Print or save as PDF'],
+  [
+    '⋯ More, then Copy as formatted text',
+    'Copy the note (or the selection) cleanly for Word, Docs or email. Also under Download as Word and Print or save as PDF',
+  ],
   ['Alt + N', 'Quick note: titled with the date and time, ready to type'],
   ['F2', 'Rename the open note'],
   ['Ctrl/Cmd + Shift + M', 'Move the open note to another folder'],
@@ -167,10 +170,16 @@ export function html(): string {
     ['vault', 'Your vault'],
   ];
   let h = '<div class="frame" style="grid-template-columns:minmax(0,1fr)"><section class="main guide">';
-  h += '<h2 class="title">Cheat sheet</h2><p class="meta">How to write notes so Plainfile can use them. Everything here is plain text in your files. Nothing is required.</p>';
+  h +=
+    '<h2 class="title">Cheat sheet</h2><p class="meta">How to write notes so Plainfile can use them. Everything here is plain text in your files. Nothing is required.</p>';
   h += `<nav class="toc" aria-label="Sections">${toc.map(([id, l]) => `<button class="chip" data-scroll="sec-${id}">${esc(l)}</button>`).join('')}</nav>`;
 
-  h += section('note', 'A note', '<p>A note is a markdown file. While you type, <code>[[</code>, <code>#</code>, <code>@</code> and frontmatter values such as <code>project:</code> offer what already exists. The block between the two <code>---</code> lines at the top is the <b>frontmatter</b>: properties as <code>key: value</code>. Everything under it is the note.</p>' + block('note', 'A meeting note', EX.note));
+  h += section(
+    'note',
+    'A note',
+    '<p>A note is a markdown file. While you type, <code>[[</code>, <code>#</code>, <code>@</code> and frontmatter values such as <code>project:</code> offer what already exists. The block between the two <code>---</code> lines at the top is the <b>frontmatter</b>: properties as <code>key: value</code>. Everything under it is the note.</p>' +
+      block('note', 'A meeting note', EX.note),
+  );
 
   h += section(
     'keys',
@@ -180,20 +189,46 @@ export function html(): string {
       '</tbody></table></div>',
   );
 
-  h += section('tags', 'Tags', '<p>Tags are not case sensitive. They can use letters, numbers, <code>-</code>, <code>_</code> and <code>/</code> for nesting, and need at least one letter, so <code>#2026</code> is not a tag.</p>' + block('tags', 'Three ways to tag', EX.tags));
+  h += section(
+    'tags',
+    'Tags',
+    '<p>Tags are not case sensitive. They can use letters, numbers, <code>-</code>, <code>_</code> and <code>/</code> for nesting, and need at least one letter, so <code>#2026</code> is not a tag.</p>' +
+      block('tags', 'Three ways to tag', EX.tags),
+  );
 
-  h +=
-    section('tasks', 'Tasks', '<p>A task is a checkbox line in any note, or a note of its own. Typing <code>- [ ] </code> turns into a checkbox as you type, and a typed <code>*</code> is saved as <code>-</code>.</p>' + block('quick', 'Quick add: one line in the box on Today', EX.quick) + block('task', 'A task inside a note', EX.task) + block('taskfile', 'A task as its own file (in a tasks/ folder)', EX.taskfile) + '<p>Dates are read in several styles, and written the first way:</p>' + block('dates', 'Due dates', EX.dates));
+  h += section(
+    'tasks',
+    'Tasks',
+    '<p>A task is a checkbox line in any note, or a note of its own. Typing <code>- [ ] </code> turns into a checkbox as you type, and a typed <code>*</code> is saved as <code>-</code>.</p>' +
+      block('quick', 'Quick add: one line in the box on Today', EX.quick) +
+      block('task', 'A task inside a note', EX.task) +
+      block('taskfile', 'A task as its own file (in a tasks/ folder)', EX.taskfile) +
+      '<p>Dates are read in several styles, and written the first way:</p>' +
+      block('dates', 'Due dates', EX.dates),
+  );
 
-  h += section('links', 'Links', '<p>Links are worked out from your files, so back-links are never stored. Rename a note in Plainfile and every link to it is rewritten.</p>' + block('links', 'Linking', EX.links));
+  h += section(
+    'links',
+    'Links',
+    '<p>Links are worked out from your files, so back-links are never stored. Rename a note in Plainfile and every link to it is rewritten.</p>' +
+      block('links', 'Linking', EX.links),
+  );
 
-  h +=
-    section('notebook', 'Follow-ups and projects', '<p>From the first Notebook app, still supported. Any line tagged <code>#followup</code> appears in Follow-ups. A note with <code>active</code> or <code>sortOrder</code> becomes a numbered card in Projects. Make one with <b>+ New</b> then <b>Project</b>: it creates a folder with an index note, and the + Task and + Note buttons on its card file new things inside it.</p>' + block('follow', 'A follow-up', EX.follow) + block('project', 'A project note', EX.project));
+  h += section(
+    'notebook',
+    'Follow-ups and projects',
+    '<p>From the first Notebook app, still supported. Any line tagged <code>#followup</code> appears in Follow-ups. A note with <code>active</code> or <code>sortOrder</code> becomes a numbered card in Projects. Make one with <b>+ New</b> then <b>Project</b>: it creates a folder with an index note, and the + Task and + Note buttons on its card file new things inside it.</p>' +
+      block('follow', 'A follow-up', EX.follow) +
+      block('project', 'A project note', EX.project),
+  );
 
-  h +=
-    section('search', 'Search', '<p>Words search titles, text, paths and tags. Add operators to narrow them. Press Ctrl or Cmd K anywhere.</p><div class="table-wrap"><table><tbody>' +
+  h += section(
+    'search',
+    'Search',
+    '<p>Words search titles, text, paths and tags. Add operators to narrow them. Press Ctrl or Cmd K anywhere.</p><div class="table-wrap"><table><tbody>' +
       OPERATORS.map(([o, d]) => `<tr><td class="mono small">${esc(o)}</td><td>${esc(d)}</td></tr>`).join('') +
-      '</tbody></table></div>');
+      '</tbody></table></div>',
+  );
 
   h += section(
     'fields',
@@ -217,7 +252,12 @@ export function html(): string {
       '</tbody></table></div>',
   );
 
-  h += section('templates', 'Templates', '<p>A template is a markdown file in <code>.plainfile/templates/</code>. Its <code>plainfile:</code> block names it and says where the new note goes, and is removed from the note it makes. Each <code>{{name}}</code> becomes a question when you use it. <code>{{date}}</code>, <code>{{date+7d}}</code> and <code>{{cursor}}</code> are built in.</p>' + block('template', '.plainfile/templates/weekly-review.md', EX.template));
+  h += section(
+    'templates',
+    'Templates',
+    '<p>A template is a markdown file in <code>.plainfile/templates/</code>. Its <code>plainfile:</code> block names it and says where the new note goes, and is removed from the note it makes. Each <code>{{name}}</code> becomes a question when you use it. <code>{{date}}</code>, <code>{{date+7d}}</code> and <code>{{cursor}}</code> are built in.</p>' +
+      block('template', '.plainfile/templates/weekly-review.md', EX.template),
+  );
 
   h += section('vault', 'In your vault', `<p class="muted">Bigger tags are on more notes. Click one to search it.</p>${vault()}`);
   return `${h}</section></div>`;

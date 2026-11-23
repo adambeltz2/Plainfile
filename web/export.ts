@@ -54,7 +54,11 @@ async function options(md: string, notePath: string): Promise<RenderOptions> {
   return { keepMarkers: keepMarkers(), images: await imageMap(md, notePath) };
 }
 
-const safeName = (title: string): string => title.replace(/[\\/:*?"<>|]+/g, '-').trim().slice(0, 80) || 'note';
+const safeName = (title: string): string =>
+  title
+    .replace(/[\\/:*?"<>|]+/g, '-')
+    .trim()
+    .slice(0, 80) || 'note';
 
 /** Put the text on the clipboard as formatted text (and as plain text). Returns a short message about how it went. */
 export async function copyFormatted(md: string, notePath: string): Promise<string> {
@@ -63,7 +67,9 @@ export async function copyFormatted(md: string, notePath: string): Promise<strin
   const plain = toPlain(md, o);
   try {
     if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([plain], { type: 'text/plain' }) })]);
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([plain], { type: 'text/plain' }) }),
+      ]);
       return 'Copied as formatted text. Paste it into Word, Docs or an email.';
     }
     await navigator.clipboard.writeText(plain);

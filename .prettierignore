@@ -1,0 +1,12 @@
+dist/
+node_modules/
+docs/
+sample-vault/
+test-results/
+playwright-report/
+*.md
+*.css
+*.html
+*.json
+*.svg
+web/sw.js

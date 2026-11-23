@@ -9,7 +9,24 @@ const at = (iso: string): number => new Date(`${iso}T12:00:00`).getTime();
 
 function fake(notes: { path: string; text: string; mtime: string }[]): VaultIndex {
   const map = new Map(notes.map((n) => [n.path, parseNote(n.path, n.text, { mtime: at(n.mtime), size: n.text.length })]));
-  return { notes: map, tasks: () => [...map.values()].flatMap((n) => n.tasks.map((t) => ({ id: `${n.path}:${t.line}`, kind: 'inline' as const, path: n.path, line: t.line, title: t.title, done: t.state === 'x', due: t.due, created: t.created, who: t.who, tags: [] as string[] }))) } as unknown as VaultIndex;
+  return {
+    notes: map,
+    tasks: () =>
+      [...map.values()].flatMap((n) =>
+        n.tasks.map((t) => ({
+          id: `${n.path}:${t.line}`,
+          kind: 'inline' as const,
+          path: n.path,
+          line: t.line,
+          title: t.title,
+          done: t.state === 'x',
+          due: t.due,
+          created: t.created,
+          who: t.who,
+          tags: [] as string[],
+        })),
+      ),
+  } as unknown as VaultIndex;
 }
 
 describe('insight', () => {

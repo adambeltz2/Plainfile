@@ -18,7 +18,9 @@ test.describe('quick add and New menu', () => {
     await page.locator('#quick-text').fill('Call Dana due:today');
     await page.locator('#quick-text').press('Enter');
     await expect(page.locator('.diff .add')).toHaveText('+title: Call Dana');
-    await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Call Dana.md')).toBe(`---\ntitle: Call Dana\nstatus: todo\ndue: ${today}\ncreated: ${today}\ntags: []\npeople: []\n---\n\n`);
+    await expect
+      .poll(() => readFileOrEmpty(page, dir, 'tasks/Call Dana.md'))
+      .toBe(`---\ntitle: Call Dana\nstatus: todo\ndue: ${today}\ncreated: ${today}\ntags: []\npeople: []\n---\n\n`);
     await expect(page.locator('.task .t', { hasText: 'Call Dana' })).toBeVisible();
 
     await page.locator('#quick-text').fill('Second one');
@@ -32,7 +34,10 @@ test.describe('quick add and New menu', () => {
   test('+ New from a template shows a live preview, creates the file, and opens it in the editor', async ({ page }) => {
     const dir = await openVault(page, { 'a.md': '# A\n' });
     await page.getByRole('button', { name: '+ New' }).click();
-    await page.locator('.modal').getByRole('button', { name: /^Meeting/ }).click();
+    await page
+      .locator('.modal')
+      .getByRole('button', { name: /^Meeting/ })
+      .click();
     await page.locator('#tpl-title').fill('Kickoff');
     await page.locator('#tpl-attendees').fill('dana, sam');
     await page.locator('#tpl-project').fill('site');
@@ -144,7 +149,10 @@ test.describe('live editor', () => {
   });
 
   test('the text cursor is visible in dark mode and in light mode', async ({ page }) => {
-    for (const [scheme, rgb] of [['dark', 'rgb(255, 255, 255)'], ['light', 'rgb(0, 0, 0)']] as const) {
+    for (const [scheme, rgb] of [
+      ['dark', 'rgb(255, 255, 255)'],
+      ['light', 'rgb(0, 0, 0)'],
+    ] as const) {
       await page.emulateMedia({ colorScheme: scheme });
       await page.goto('/');
       await openVault(page, { 'n.md': 'Some text' });
@@ -307,7 +315,8 @@ test.describe('phone navigation', () => {
     // More holds Board, Vault health, the cheat sheet, Rescan and the theme.
     await bar.getByRole('button', { name: /^More/ }).click();
     const sheet = page.locator('.more-sheet');
-    for (const n of ['Search', 'Board', 'Weekly review', /^Vault health/, 'Cheat sheet', 'Rescan', 'Light', 'Dark', 'Auto']) await expect(sheet.getByRole('button', { name: n })).toBeVisible();
+    for (const n of ['Search', 'Board', 'Weekly review', /^Vault health/, 'Cheat sheet', 'Rescan', 'Light', 'Dark', 'Auto'])
+      await expect(sheet.getByRole('button', { name: n })).toBeVisible();
     await sheet.getByRole('button', { name: 'Board' }).click();
     await expect(page.locator('.more-sheet')).toHaveCount(0);
     await expect(page.locator('.title')).toContainText('Board');

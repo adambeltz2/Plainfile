@@ -36,7 +36,10 @@ await page.getByRole('tab', { name: 'Tasks' }).click();
 await nav(page, 'Board');
 await shot(page, 'board');
 await nav(page, 'Notes');
-await page.locator('.notes-home').waitFor().catch(() => undefined);
+await page
+  .locator('.notes-home')
+  .waitFor()
+  .catch(() => undefined);
 await shot(page, 'notes-home');
 await page.locator('.note-item', { hasText: 'Kickoff' }).first().click();
 await page.locator('.cm-content').waitFor();
@@ -64,9 +67,16 @@ await shot(page, 'recent');
 await nav(page, 'Insight');
 await shot(page, 'insight');
 await nav(page, 'Search');
-await page.locator('.finder').getByRole('button', { name: /^Explore/ }).click();
+await page
+  .locator('.finder')
+  .getByRole('button', { name: /^Explore/ })
+  .click();
 await shot(page, 'explore');
-await page.getByRole('button', { name: 'Dark' }).first().click().catch(() => undefined);
+await page
+  .getByRole('button', { name: 'Dark' })
+  .first()
+  .click()
+  .catch(() => undefined);
 await nav(page, 'Today');
 await shot(page, 'today-dark');
 await page.context().close();

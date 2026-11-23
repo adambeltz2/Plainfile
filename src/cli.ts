@@ -97,11 +97,23 @@ async function main(): Promise<void> {
         console.log(`\n${title} (${lines.length})`);
         for (const l of lines) console.log(`  ${l}`);
       };
-      block('Unresolved links', r.unresolved.map((u) => `${u.from}:${u.line}  [[${u.target}]]${u.suggestion ? `  did you mean ${u.suggestion}?` : ''}`));
-      block('Ambiguous links', r.ambiguous.map((u) => `${u.from}:${u.line}  [[${u.target}]]  matches ${u.candidates.join(', ')}`));
-      block('Duplicate names', r.duplicates.map((d) => `${d.name}: ${d.paths.join(', ')}`));
+      block(
+        'Unresolved links',
+        r.unresolved.map((u) => `${u.from}:${u.line}  [[${u.target}]]${u.suggestion ? `  did you mean ${u.suggestion}?` : ''}`),
+      );
+      block(
+        'Ambiguous links',
+        r.ambiguous.map((u) => `${u.from}:${u.line}  [[${u.target}]]  matches ${u.candidates.join(', ')}`),
+      );
+      block(
+        'Duplicate names',
+        r.duplicates.map((d) => `${d.name}: ${d.paths.join(', ')}`),
+      );
       block('Orphan notes', r.orphans);
-      block('Missing images and files', r.missingEmbeds.map((m) => `${m.from}:${m.line}  ${m.target}`));
+      block(
+        'Missing images and files',
+        r.missingEmbeds.map((m) => `${m.from}:${m.line}  ${m.target}`),
+      );
       block('Unused attachments', r.unusedAttachments);
       console.log(`\n${r.untyped.length} notes have no type. They work fine as they are.`);
       break;

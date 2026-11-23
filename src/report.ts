@@ -12,7 +12,8 @@ import { addDays } from './query';
  */
 const name = (p: string): string => p.charAt(0).toUpperCase() + p.slice(1);
 const who = (t: HubTask): string => (t.people.length ? t.people.map(name).join(', ') : '');
-const line = (t: HubTask, extra: string): string => `- ${t.item.title}${[extra, who(t)].filter(Boolean).length ? ` (${[extra, who(t)].filter(Boolean).join(', ')})` : ''}`;
+const line = (t: HubTask, extra: string): string =>
+  `- ${t.item.title}${[extra, who(t)].filter(Boolean).length ? ` (${[extra, who(t)].filter(Boolean).join(', ')})` : ''}`;
 
 export function statusReport(index: VaultIndex, projectPath: string, today: string, nowMs = Date.now()): string | undefined {
   const d = projectDashboard(index, projectPath, today);
@@ -34,11 +35,33 @@ export function statusReport(index: VaultIndex, projectPath: string, today: stri
     for (const p of s.phases) out.push(`| ${p.name} | ${p.done} | ${p.total} | ${p.total ? Math.round((p.done / p.total) * 100) : 0}% |`);
     out.push('');
   }
-  if (overdue.length) out.push('## Overdue', '', ...overdue.slice(0, 25).map((t) => line(t, `due ${fmtDate(t.due as string)}`)), ...(overdue.length > 25 ? [`- and ${overdue.length - 25} more`] : []), '');
-  out.push('## Due in the next 14 days', '', ...(soon.length ? soon.slice(0, 25).map((t) => line(t, fmtDate(t.due as string))) : ['Nothing is due.']), ...(soon.length > 25 ? [`- and ${soon.length - 25} more`] : []), '');
-  if (waiting.length) out.push('## Waiting on', '', ...waiting.slice(0, 15).map((t) => line(t, daysSince(t.item.created, today) !== undefined ? `${daysSince(t.item.created, today)} days` : '')), '');
+  if (overdue.length)
+    out.push(
+      '## Overdue',
+      '',
+      ...overdue.slice(0, 25).map((t) => line(t, `due ${fmtDate(t.due as string)}`)),
+      ...(overdue.length > 25 ? [`- and ${overdue.length - 25} more`] : []),
+      '',
+    );
+  out.push(
+    '## Due in the next 14 days',
+    '',
+    ...(soon.length ? soon.slice(0, 25).map((t) => line(t, fmtDate(t.due as string))) : ['Nothing is due.']),
+    ...(soon.length > 25 ? [`- and ${soon.length - 25} more`] : []),
+    '',
+  );
+  if (waiting.length)
+    out.push(
+      '## Waiting on',
+      '',
+      ...waiting.slice(0, 15).map((t) => line(t, daysSince(t.item.created, today) !== undefined ? `${daysSince(t.item.created, today)} days` : '')),
+      '',
+    );
   if (undated.length) out.push(`## Not yet scheduled`, '', `${undated.length} open task${undated.length === 1 ? ' has' : 's have'} no date.`, '');
   if (d.followups.length) out.push('## Follow-ups', '', ...d.followups.slice(0, 10).map((f) => `- ${f.title}`), '');
   if (d.notes.length) out.push('## Recent notes', '', ...d.notes.slice(0, 8).map((n) => `- ${n.title}`), '');
-  return `${out.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd()}\n`;
+  return `${out
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trimEnd()}\n`;
 }

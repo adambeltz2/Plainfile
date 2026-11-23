@@ -18,7 +18,12 @@ describe('vocabulary', () => {
       'd.md': 'no frontmatter',
     });
     const keys = frontmatterKeys(index);
-    expect(keys.map((k) => [k.key, k.count])).toEqual([['status', 3], ['title', 3], ['due', 1], ['tags', 1]]);
+    expect(keys.map((k) => [k.key, k.count])).toEqual([
+      ['status', 3],
+      ['title', 3],
+      ['due', 1],
+      ['tags', 1],
+    ]);
     expect(keys[0]!.samples).toEqual(['todo', 'done']);
     expect(keys.find((k) => k.key === 'tags')!.samples).toEqual(['[x, y]']);
   });
@@ -46,7 +51,11 @@ const VAULT = {
 
 describe('suggestions', () => {
   it('knows the people already in the vault, from tasks, frontmatter and person notes', async () => {
-    const index = await (async () => { const i = new VaultIndex(new MemoryStorage(VAULT)); await i.scan(); return i; })();
+    const index = await (async () => {
+      const i = new VaultIndex(new MemoryStorage(VAULT));
+      await i.scan();
+      return i;
+    })();
     const names = peopleNames(index).map((p) => p.name);
     expect(names).toEqual(expect.arrayContaining(['dana', 'sam', 'sam-lee', 'pat']));
     expect(names[0]).toBe('dana'); // most mentioned first
@@ -69,12 +78,22 @@ describe('suggestions', () => {
     expect(t.find((x) => x.label === 'Dana Ortiz')).toMatchObject({ insert: 'dana', detail: 'people/dana.md' });
     expect(t.find((x) => x.label === 'Dana')).toMatchObject({ insert: 'Dana', detail: 'alias of Dana Ortiz' });
     // Two notes called y: the folder is needed to tell them apart.
-    expect(t.filter((x) => x.label === 'y').map((x) => x.insert).sort()).toEqual(['x/y', 'z/y']);
+    expect(
+      t
+        .filter((x) => x.label === 'y')
+        .map((x) => x.insert)
+        .sort(),
+    ).toEqual(['x/y', 'z/y']);
     expect(t.some((x) => x.detail === 'projects/kitchen.md')).toBe(false);
   });
 
   it('matches what was typed: starts first, then contains, skipping what is already used', () => {
-    const opts = [{ name: 'launch', count: 3 }, { name: 'later', count: 2 }, { name: 'relaunch', count: 1 }, { name: 'home', count: 1 }];
+    const opts = [
+      { name: 'launch', count: 3 },
+      { name: 'later', count: 2 },
+      { name: 'relaunch', count: 1 },
+      { name: 'home', count: 1 },
+    ];
     expect(matchSuggestions(opts, 'la')).toEqual(['launch', 'later', 'relaunch']);
     expect(matchSuggestions(opts, '#LA', ['launch'])).toEqual(['later', 'relaunch']);
     expect(matchSuggestions(opts, '')).toEqual(['launch', 'later', 'relaunch', 'home']);

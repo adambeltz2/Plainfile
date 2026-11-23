@@ -7,16 +7,12 @@ export function localToday(): string {
 
 /** "Mon 23 Nov" */
 export function fmtDate(iso: string): string {
-  return new Date(`${iso}T00:00:00Z`)
-    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
-    .replace(',', '');
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).replace(',', '');
 }
 
 /** "Saturday 21 November" */
 export function fmtDateLong(iso: string): string {
-  return new Date(`${iso}T00:00:00Z`)
-    .toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
-    .replace(',', '');
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).replace(',', '');
 }
 
 /** The local calendar day (YYYY-MM-DD) of a time in ms since 1970. */

@@ -5,10 +5,16 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const card = (page: import('@playwright/test').Page, heading: string) => page.locator('.home-card').filter({ has: page.locator('h3', { hasText: new RegExp(`^${heading}`) }) });
+const card = (page: import('@playwright/test').Page, heading: string) =>
+  page.locator('.home-card').filter({ has: page.locator('h3', { hasText: new RegExp(`^${heading}`) }) });
 
 const FILES: Record<string, string> = {
-  'projects/a.md': '---\ntitle: A\ntags: [launch, pricing]\ncreated: ' + localDate(0) + '\n---\n- [ ] Late @dana due:2020-01-01 created:' + localDate(0) + '\n- [x] Done thing\n',
+  'projects/a.md':
+    '---\ntitle: A\ntags: [launch, pricing]\ncreated: ' +
+    localDate(0) +
+    '\n---\n- [ ] Late @dana due:2020-01-01 created:' +
+    localDate(0) +
+    '\n- [x] Done thing\n',
   'projects/b.md': '---\ntitle: B\ntags: [launch]\n---\nSee [[A]]',
   'tasks/Messy.md': '---\ntitle: Messy\nstatus: In Progress\ndeadline: Nov 23 2026\n---\n',
   'people/dana.md': '---\ntitle: Dana\ntype: person\n---\n',

@@ -6,7 +6,8 @@ import { MemoryStorage } from '../src/memory-storage';
 
 const TODAY = '2026-11-21';
 const FILES: Record<string, string> = {
-  'projects/site/index.md': '---\ntitle: Website\ntype: project\nactive: true\n---\n# Website\n## Goal\nLaunch\n## Phase 1\n- [ ] Pick a host @sam due:2026-11-20\n- [x] Buy domain @dana\n## Phase 2\n- [ ] Write copy @dana #launch due:2026-11-23\n- [ ] Waiting for legal #waiting\n## Tasks\n- [ ] Loose task\n',
+  'projects/site/index.md':
+    '---\ntitle: Website\ntype: project\nactive: true\n---\n# Website\n## Goal\nLaunch\n## Phase 1\n- [ ] Pick a host @sam due:2026-11-20\n- [x] Buy domain @dana\n## Phase 2\n- [ ] Write copy @dana #launch due:2026-11-23\n- [ ] Waiting for legal #waiting\n## Tasks\n- [ ] Loose task\n',
   'projects/site/tasks/Logo.md': '---\ntitle: Logo\nstatus: doing\ndue: 2026-11-25\nphase: Phase 1\npeople: [Dana]\ntags: [brand]\n---\n',
   'projects/site/tasks/Old.md': '---\ntitle: Old one\nstatus: Done\n---\n',
   'meetings/Kickoff.md': '---\ntitle: Kickoff\nproject: site\n---\n- [ ] Send notes @pat due:2026-12-30\n',
@@ -34,10 +35,19 @@ describe('field normalisation', () => {
 });
 
 describe('hubTasks', () => {
-  it('collects the project\'s tasks from its folder and from notes naming it, with phases from headings or frontmatter', async () => {
+  it("collects the project's tasks from its folder and from notes naming it, with phases from headings or frontmatter", async () => {
     const tasks = await hubTasks(await setup(), 'projects/site/index.md');
     const t = (title: string) => tasks.find((x) => x.item.title === title)!;
-    expect(tasks.map((x) => x.item.title).sort()).toEqual(['Buy domain', 'Logo', 'Loose task', 'Old one', 'Pick a host', 'Send notes', 'Waiting for legal', 'Write copy']);
+    expect(tasks.map((x) => x.item.title).sort()).toEqual([
+      'Buy domain',
+      'Logo',
+      'Loose task',
+      'Old one',
+      'Pick a host',
+      'Send notes',
+      'Waiting for legal',
+      'Write copy',
+    ]);
     expect(t('Pick a host')).toMatchObject({ phase: 'Phase 1', status: 'todo', people: ['sam'], due: '2026-11-20' });
     expect(t('Write copy')).toMatchObject({ phase: 'Phase 2', tags: ['launch'] });
     expect(t('Waiting for legal').status).toBe('waiting');
@@ -49,7 +59,10 @@ describe('hubTasks', () => {
 
   it('filters by person, tag, status, date and text, and hides done by default', async () => {
     const all = await hubTasks(await setup(), 'projects/site/index.md');
-    const f = (p: object) => applyFilters(all, { ...NO_FILTERS, ...p }, undefined, TODAY).map((t) => t.item.title).sort();
+    const f = (p: object) =>
+      applyFilters(all, { ...NO_FILTERS, ...p }, undefined, TODAY)
+        .map((t) => t.item.title)
+        .sort();
     expect(f({})).not.toContain('Buy domain');
     expect(f({ hideDone: false })).toContain('Buy domain');
     expect(f({ people: ['dana'] })).toEqual(['Logo', 'Write copy']);
@@ -106,7 +119,11 @@ describe('tidying frontmatter', () => {
   it('finds what differs from the standard and offers a fix only where it is safe', async () => {
     const index = await setup(MESSY);
     const issues = fieldIssues(index, [...index.notes.values()]);
-    const by = (path: string) => issues.filter((i) => i.path === `projects/site/tasks/${path}.md`).map((i) => `${i.kind}${i.fix ? '+fix' : ''}`).sort();
+    const by = (path: string) =>
+      issues
+        .filter((i) => i.path === `projects/site/tasks/${path}.md`)
+        .map((i) => `${i.kind}${i.fix ? '+fix' : ''}`)
+        .sort();
     expect(by('a')).toEqual(['status-value+fix']);
     expect(by('b')).toEqual(['unknown-status+fix']);
     expect(by('c')).toEqual(['alias-key+fix', 'alias-key+fix', 'alias-key+fix']);

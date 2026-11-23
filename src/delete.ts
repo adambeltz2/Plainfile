@@ -64,7 +64,10 @@ export function planDelete(index: VaultIndex, path: string, stamp: string): Dele
     title: note.title,
     linkedFrom,
     openTasks: index.tasks().filter((t) => t.path === path && !t.done).length,
-    isProjectIndex: note.name.toLowerCase() === 'index' && !!dir && (note.type === 'project' || note.frontmatter.active !== undefined || note.frontmatter.sortOrder !== undefined),
+    isProjectIndex:
+      note.name.toLowerCase() === 'index' &&
+      !!dir &&
+      (note.type === 'project' || note.frontmatter.active !== undefined || note.frontmatter.sortOrder !== undefined),
     trashPath: `${TRASH_DIR}/${trashName(path, stamp)}`,
     mtime: note.mtime,
   };

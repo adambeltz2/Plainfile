@@ -178,7 +178,11 @@ export class DropboxStorage implements VaultStorage {
   async listDir(dir: string): Promise<FileEntry[]> {
     try {
       const out: FileEntry[] = [];
-      let page = await this.rpc<{ entries: Meta[]; cursor: string; has_more: boolean }>('/files/list_folder', { path: this.full(dir), recursive: false, limit: 2000 });
+      let page = await this.rpc<{ entries: Meta[]; cursor: string; has_more: boolean }>('/files/list_folder', {
+        path: this.full(dir),
+        recursive: false,
+        limit: 2000,
+      });
       for (;;) {
         for (const m of page.entries) if (m['.tag'] === 'file') out.push(this.entry(dir ? `${dir}/${m.name}` : m.name, m));
         if (!page.has_more) return out;

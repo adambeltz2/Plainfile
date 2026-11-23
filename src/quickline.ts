@@ -31,7 +31,7 @@ export function parseDueWord(word: string, today: string): string | undefined {
   const day = DAYS.findIndex((d, i) => w === d || w === FULL[i]);
   if (day >= 0) {
     const now = new Date(`${today}T00:00:00Z`).getUTCDay();
-    return addDays(today, ((day - now + 7) % 7) || 7);
+    return addDays(today, (day - now + 7) % 7 || 7);
   }
   return undefined;
 }
@@ -73,7 +73,11 @@ export function parseQuickLine(line: string, today: string): QuickLine {
   return out;
 }
 
-const slug = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const slug = (s: string): string =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 /** Which project a `+word` names: by title, folder name or file name, ignoring case and punctuation. */
 export function findProject(projects: Project[], word: string): Project | undefined {

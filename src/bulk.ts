@@ -138,7 +138,12 @@ export async function planBulk(storage: VaultStorage, index: VaultIndex, ids: st
 }
 
 /** Write the edits. A note that is no longer what was planned stops everything after it, and nothing is overwritten. */
-export async function applyBulk(storage: VaultStorage, index: VaultIndex, edits: FileEdit[], direction: 'forward' | 'back' = 'forward'): Promise<ChangeResult[]> {
+export async function applyBulk(
+  storage: VaultStorage,
+  index: VaultIndex,
+  edits: FileEdit[],
+  direction: 'forward' | 'back' = 'forward',
+): Promise<ChangeResult[]> {
   const out: ChangeResult[] = [];
   for (const e of edits) {
     const want = direction === 'forward' ? e.before : e.after;

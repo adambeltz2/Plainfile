@@ -95,7 +95,16 @@ describe('checkHealth', () => {
   it('reports unresolved links with a suggestion, duplicates and unused attachments', async () => {
     const { index } = await build();
     const r = checkHealth(index);
-    expect(r.unresolved).toEqual([{ from: 'projects/a/kickoff.md', line: 5, target: 'pricing-reserach', kind: 'wiki', suggestion: 'pricing-research', suggestionPath: 'projects/a/pricing-research.md' }]);
+    expect(r.unresolved).toEqual([
+      {
+        from: 'projects/a/kickoff.md',
+        line: 5,
+        target: 'pricing-reserach',
+        kind: 'wiki',
+        suggestion: 'pricing-research',
+        suggestionPath: 'projects/a/pricing-research.md',
+      },
+    ]);
     expect(r.duplicates).toEqual([{ name: 'index', paths: ['projects/a/index.md', 'projects/b/index.md'] }]);
     expect(r.unusedAttachments).toEqual(['_attachments/unused.png', '_attachments/used.png']);
   });

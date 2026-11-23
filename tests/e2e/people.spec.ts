@@ -22,9 +22,15 @@ test.describe('People', () => {
     await expect(rows.first().locator('td').nth(1)).toHaveText('2'); // Send logos, and the one she holds for Review copy
     await expect(rows.first().locator('.chip.late')).toHaveText('1');
     await expect(rows.filter({ hasText: 'sam' }).locator('.chip.quiet')).toHaveText('no note');
-    await page.locator('.portfolio').getByRole('button', { name: /^Person/ }).click();
+    await page
+      .locator('.portfolio')
+      .getByRole('button', { name: /^Person/ })
+      .click();
     await expect(rows.first()).toContainText('Dana Ortiz'); // A to Z
-    await page.locator('.portfolio').getByRole('button', { name: /^Person/ }).click();
+    await page
+      .locator('.portfolio')
+      .getByRole('button', { name: /^Person/ })
+      .click();
     await expect(rows.first()).toContainText('sam'); // Z to A
   });
 

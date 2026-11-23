@@ -39,7 +39,8 @@ test.describe('the ⋯ More menu', () => {
     for (const n of ['Undo', 'Redo', 'Focus', 'X-ray']) await expect(page.locator('.ed-actions').getByRole('button', { name: n, exact: true })).toBeVisible();
     await expect(page.locator('.ed-actions').getByRole('button', { name: 'Rename', exact: true })).toHaveCount(0);
     await page.locator('.ed-actions').getByRole('button', { name: /More/ }).click();
-    for (const l of ['X-ray', 'Explore related', 'History', 'Move to…', 'Rename', 'Duplicate', 'Pin to top', 'Copy link', 'Delete…']) await expect(page.locator('.ctx').getByRole('menuitem', { name: l })).toBeVisible();
+    for (const l of ['X-ray', 'Explore related', 'History', 'Move to…', 'Rename', 'Duplicate', 'Pin to top', 'Copy link', 'Delete…'])
+      await expect(page.locator('.ctx').getByRole('menuitem', { name: l })).toBeVisible();
     await expect(page.locator('.ctx')).not.toContainText('Add default frontmatter'); // it has some
     await page.keyboard.press('Escape');
     await expect(page.locator('.ctx')).toHaveCount(0);
@@ -145,7 +146,13 @@ test.describe('command palette and keys', () => {
     await expect(page.locator('.modal')).toContainText('Move');
     await page.keyboard.press('Escape');
     await page.keyboard.press('F2');
-    await expect(page.locator('#rn-name, .rn-name, input[name="rn"]').first().or(page.getByRole('heading', { name: /Rename/ })).first()).toBeVisible();
+    await expect(
+      page
+        .locator('#rn-name, .rn-name, input[name="rn"]')
+        .first()
+        .or(page.getByRole('heading', { name: /Rename/ }))
+        .first(),
+    ).toBeVisible();
     await nav(page, 'Today').click();
     await page.keyboard.press('?');
     await expect(page.locator('.guide')).toBeVisible();
@@ -186,16 +193,23 @@ test.describe('quick note', () => {
     expect(path).toMatch(/^inbox\/\d{4}-\d{2}-\d{2} \d{4}\.md$/);
     await page.keyboard.type('Called Dana about the launch');
     const stamp = path.replace('inbox/', '').replace('.md', '');
-    await expect.poll(() => readFileOrEmpty(page, dir, path), { timeout: 5000 }).toMatch(
-      new RegExp(`^---\\ntitle: "${stamp.slice(0, 10)} \\d\\d:\\d\\d"\\ncreated: ${stamp.slice(0, 10)}\\nproject:\\ntags: \\[\\]\\npeople: \\[\\]\\n---\\n\\nCalled Dana about the launch\\n$`),
-    );
+    await expect
+      .poll(() => readFileOrEmpty(page, dir, path), { timeout: 5000 })
+      .toMatch(
+        new RegExp(
+          `^---\\ntitle: "${stamp.slice(0, 10)} \\d\\d:\\d\\d"\\ncreated: ${stamp.slice(0, 10)}\\nproject:\\ntags: \\[\\]\\npeople: \\[\\]\\n---\\n\\nCalled Dana about the launch\\n$`,
+        ),
+      );
     await expect(page.locator('.ed-head .title')).toHaveValue(new RegExp('^' + stamp.slice(0, 10)));
   });
 
   test('is also in the New menu, the Go to palette and on Alt+N, and two in a minute do not collide', async ({ page }) => {
     await openVault(page, VAULT);
     await page.getByRole('button', { name: '+ New' }).click();
-    await page.locator('.modal').getByRole('button', { name: /^Quick note/ }).click();
+    await page
+      .locator('.modal')
+      .getByRole('button', { name: /^Quick note/ })
+      .click();
     await expect(page.locator('.cm-content')).toBeVisible();
     const first = await page.locator('.ed-head .path').textContent();
     await page.keyboard.press('Alt+n');

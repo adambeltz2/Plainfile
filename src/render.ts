@@ -70,7 +70,8 @@ function parseInline(src: string, o: RenderOptions): Inline[] {
     },
     {
       re: /\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/,
-      make: (m) => (/^(https?:|mailto:)/i.test(m[2] as string) ? { t: 'link', href: m[2] as string, c: parseInline(m[1] as string, o) } : parseInline(m[1] as string, o)),
+      make: (m) =>
+        /^(https?:|mailto:)/i.test(m[2] as string) ? { t: 'link', href: m[2] as string, c: parseInline(m[1] as string, o) } : parseInline(m[1] as string, o),
     },
     { re: /\*\*([^*]+)\*\*|__([^_]+)__/, make: (m) => ({ t: 'b', c: parseInline((m[1] ?? m[2]) as string, o) }) },
     { re: /~~([^~]+)~~/, make: (m) => ({ t: 's', c: parseInline(m[1] as string, o) }) },
@@ -103,7 +104,11 @@ const LIST = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
 const TABLE_SEP = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/;
 
 function cells(line: string): string[] {
-  return line.trim().replace(/^\||\|$/g, '').split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, '|'));
+  return line
+    .trim()
+    .replace(/^\||\|$/g, '')
+    .split(/(?<!\\)\|/)
+    .map((c) => c.trim().replace(/\\\|/g, '|'));
 }
 
 /** The note's markdown as blocks. */
@@ -114,9 +119,15 @@ export function parseBlocks(md: string, o: RenderOptions = {}): Block[] {
   const lines = body.replace(/\r\n?/g, '\n').split('\n');
   const blocks: Block[] = [];
 
-  const isStart = (l: string, next?: string): boolean => /^\s{0,3}#{1,6}\s/.test(l) || HR.test(l) || FENCE.test(l) || /^\s{0,3}>/.test(l) || LIST.test(l) || (l.includes('|') && next !== undefined && TABLE_SEP.test(next));
+  const isStart = (l: string, next?: string): boolean =>
+    /^\s{0,3}#{1,6}\s/.test(l) ||
+    HR.test(l) ||
+    FENCE.test(l) ||
+    /^\s{0,3}>/.test(l) ||
+    LIST.test(l) ||
+    (l.includes('|') && next !== undefined && TABLE_SEP.test(next));
 
-  for (let i = 0; i < lines.length; ) {
+  for (let i = 0; i < lines.length;) {
     const l = lines[i] as string;
     if (!l.trim()) {
       i++;
@@ -287,7 +298,9 @@ function blockHtml(b: Block, o: RenderOptions): string {
 }
 
 export function toHtml(md: string, o: RenderOptions = {}): string {
-  return parseBlocks(md, o).map((b) => blockHtml(b, o)).join('\n');
+  return parseBlocks(md, o)
+    .map((b) => blockHtml(b, o))
+    .join('\n');
 }
 
 /* ---------- plain text ---------- */
@@ -316,18 +329,28 @@ function blockText(b: Block, depth = 0): string {
     case 'code':
       return b.s;
     case 'quote':
-      return b.c.map((x) => blockText(x)).join('\n').split('\n').map((l) => `> ${l}`).join('\n');
+      return b.c
+        .map((x) => blockText(x))
+        .join('\n')
+        .split('\n')
+        .map((l) => `> ${l}`)
+        .join('\n');
     case 'table':
       return [b.head, ...b.rows].map((r) => r.map(inlineText).join('\t')).join('\n');
     case 'list':
       return b.items
-        .map((i, n) => `${pad}${i.task ? (i.task === 'x' ? '☑ ' : '☐ ') : b.ordered ? `${n + 1}. ` : '- '}${inlineText(i.c)}${i.children.length ? `\n${i.children.map((c) => blockText(c, depth + 1)).join('\n')}` : ''}`)
+        .map(
+          (i, n) =>
+            `${pad}${i.task ? (i.task === 'x' ? '☑ ' : '☐ ') : b.ordered ? `${n + 1}. ` : '- '}${inlineText(i.c)}${i.children.length ? `\n${i.children.map((c) => blockText(c, depth + 1)).join('\n')}` : ''}`,
+        )
         .join('\n');
   }
 }
 
 export function toPlain(md: string, o: RenderOptions = {}): string {
-  return `${parseBlocks(md, o).map((b) => blockText(b)).join('\n\n')}\n`;
+  return `${parseBlocks(md, o)
+    .map((b) => blockText(b))
+    .join('\n\n')}\n`;
 }
 
 /** A print-ready page around the HTML, so the browser's Save as PDF gives a clean document. */

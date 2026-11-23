@@ -158,7 +158,13 @@ export async function applyMove(storage: VaultStorage, index: VaultIndex, plan: 
     changes.push({ path: plan.to, line: e.line, before: e.before, after: e.after, written: true });
   }
   await storage.create(plan.to, lines.join('\n'));
-  changes.push(...(await applyEdits(storage, index, plan.inbound.filter((e) => include.has(e.id)))));
+  changes.push(
+    ...(await applyEdits(
+      storage,
+      index,
+      plan.inbound.filter((e) => include.has(e.id)),
+    )),
+  );
   await storage.remove(plan.from, oldStat.mtime);
   await index.scan();
   return { from: plan.from, to: plan.to, changes };
@@ -171,7 +177,12 @@ export async function duplicateNote(storage: VaultStorage, index: VaultIndex, fr
   const dir = dirname(from);
   const base = (from.split('/').pop() as string).replace(/\.md$/i, '');
   let text = await storage.read(from);
-  if (frontmatterText(text)?.split('\n').some((l) => /^title\s*:/.test(l))) text = setFrontmatterField(text, 'title', JSON.stringify(`${note.title} copy`));
+  if (
+    frontmatterText(text)
+      ?.split('\n')
+      .some((l) => /^title\s*:/.test(l))
+  )
+    text = setFrontmatterField(text, 'title', JSON.stringify(`${note.title} copy`));
   for (let n = 1; n < 200; n++) {
     const path = `${dir ? `${dir}/` : ''}${base} copy${n > 1 ? ` ${n}` : ''}.md`;
     try {

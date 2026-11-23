@@ -43,7 +43,10 @@ function sections(): Section[] {
         `${esc(u.from)}:${u.line} · matches ${u.candidates.length} notes. Pick one:`,
         (u.kind === 'wiki'
           ? u.candidates
-              .map((c) => `<button class="btn small" data-fix-from="${esc(u.from)}" data-fix-line="${u.line}" data-fix-old="${esc(u.target)}" data-fix-to="${esc(c.replace(/\.md$/i, ''))}">${esc(c)}</button>`)
+              .map(
+                (c) =>
+                  `<button class="btn small" data-fix-from="${esc(u.from)}" data-fix-line="${u.line}" data-fix-old="${esc(u.target)}" data-fix-to="${esc(c.replace(/\.md$/i, ''))}">${esc(c)}</button>`,
+              )
               .join('')
           : '') + openBtn(u.from, u.line),
       ),
@@ -62,7 +65,11 @@ function sections(): Section[] {
       name: 'Duplicate names',
       help: 'Two notes share a name, so a link by name is ambiguous. Links will include the folder.',
       count: r.duplicates.length,
-      items: r.duplicates.map((d) => item(esc(d.name), esc(d.paths.join(', ')), d.paths.map((p) => openBtn(p, undefined, `Open ${esc(p.split('/').slice(-2).join('/'))}`)).join(''))).join(''),
+      items: r.duplicates
+        .map((d) =>
+          item(esc(d.name), esc(d.paths.join(', ')), d.paths.map((p) => openBtn(p, undefined, `Open ${esc(p.split('/').slice(-2).join('/'))}`)).join('')),
+        )
+        .join(''),
     },
     {
       id: 'orphans',

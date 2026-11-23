@@ -126,7 +126,6 @@ export function addDefaultFrontmatter(text: string, title: string, created: stri
   return block + text;
 }
 
-
 /**
  * Write the `project:` value for a list of project names: removed when empty, `project: site` for one,
  * and `project: [site, kitchen]` for several. Nothing else in the file changes.

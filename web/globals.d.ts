@@ -10,5 +10,8 @@ declare const __DROPBOX_APP_KEY__: string;
 interface Window {
   showDirectoryPicker(options?: { mode?: 'read' | 'readwrite' }): Promise<FileSystemDirectoryHandle>;
   /** Test hook: open any FileSystemDirectoryHandle as the vault. */
-  __plainfile?: { openHandle(h: FileSystemDirectoryHandle, name?: string): Promise<void>; /** Test hook: where to load Mermaid from, without the integrity check. */ mermaidUrl?: string };
+  __plainfile?: {
+    openHandle(h: FileSystemDirectoryHandle, name?: string): Promise<void>;
+    /** Test hook: where to load Mermaid from, without the integrity check. */ mermaidUrl?: string;
+  };
 }

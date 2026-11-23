@@ -51,7 +51,9 @@ function currentTemplate(): Template | undefined {
 function preview(t: Template, values: Record<string, string>, extras: Record<string, string>): string {
   const r = renderTemplate(t, { ...(state.index ? templateExtras(state.index) : {}), ...extras, ...values }, today());
   const free = state.index ? freePath(state.index.files, r.path) : { path: r.path, taken: false };
-  const warn = free.taken ? `<div class="notice small" id="tpl-taken" style="margin:0 0 6px">A note named <span class="mono">${esc(r.path)}</span> already exists. This one will be saved as <span class="mono">${esc(free.path)}</span> and titled with the same number, so nothing is overwritten.</div>` : '';
+  const warn = free.taken
+    ? `<div class="notice small" id="tpl-taken" style="margin:0 0 6px">A note named <span class="mono">${esc(r.path)}</span> already exists. This one will be saved as <span class="mono">${esc(free.path)}</span> and titled with the same number, so nothing is overwritten.</div>`
+    : '';
   return `${warn}<div class="mono small" id="tpl-path" style="overflow-wrap:anywhere;margin-bottom:6px">${esc(r.path)}</div><pre class="code" id="tpl-preview">${esc(r.content.trimEnd())}</pre>`;
 }
 
@@ -66,14 +68,26 @@ export function html(): string {
       '<li><button class="menu-item" data-new-task><b>Task</b><span>A task with its own note. It shows in Today, the Board and your Inbox.</span></button></li>' +
       state.templates
         .filter((t) => !t.hidden && t.name !== 'Quick note')
-        .map((t) => `<li><button class="menu-item" data-tpl="${esc(t.name)}"><b>${esc(t.name)}</b><span>${esc(t.description || (t.source === 'built-in' ? '' : 'Your template'))}</span></button></li>`)
+        .map(
+          (t) =>
+            `<li><button class="menu-item" data-tpl="${esc(t.name)}"><b>${esc(t.name)}</b><span>${esc(t.description || (t.source === 'built-in' ? '' : 'Your template'))}</span></button></li>`,
+        )
         .join('') +
       '</ul><p class="muted small" style="margin:10px 0 0">Add your own templates as markdown files in <code>.plainfile/templates/</code>.</p>';
   } else if (m.step === 'task') {
     body =
       '<h2>New task</h2><p class="muted small" style="margin:0 0 10px">Made as its own note in <code>tasks/</code> (or the project\'s <code>tasks/</code> folder), dated today. It also shows in your Inbox until it is filed in a project. You can type the same thing on one line in the box on Today.</p>' +
       `<div class="fld"><label for="new-task-text">Task</label><input id="new-task-text" class="inp" type="text" autocomplete="off" value="${esc(m.text)}" placeholder="Call Dana about the logo files"></div>` +
-      `<div class="fld"><label for="new-task-due">Due date (optional)</label><div class="qdue"><input id="new-task-due" class="inp date" type="date" value="${esc(m.due)}"><span class="qpicks">${[['Today', 0], ['Tomorrow', 1], ['Next week', 7]].map(([l, n]) => `<button type="button" class="chip qpick" data-mdue="${addDays(today(), n as number)}" aria-pressed="${m.due === addDays(today(), n as number)}">${l}</button>`).join('')}</span></div></div>` +
+      `<div class="fld"><label for="new-task-due">Due date (optional)</label><div class="qdue"><input id="new-task-due" class="inp date" type="date" value="${esc(m.due)}"><span class="qpicks">${[
+        ['Today', 0],
+        ['Tomorrow', 1],
+        ['Next week', 7],
+      ]
+        .map(
+          ([l, n]) =>
+            `<button type="button" class="chip qpick" data-mdue="${addDays(today(), n as number)}" aria-pressed="${m.due === addDays(today(), n as number)}">${l}</button>`,
+        )
+        .join('')}</span></div></div>` +
       `<div class="fld"><label for="new-task-people">People (optional)</label><input id="new-task-people" class="inp" type="text" autocomplete="off" data-suggest="people" placeholder="@dana @sam" value="${esc(m.people)}"></div>` +
       `<div class="fld"><label for="new-task-project">Project (optional)</label><input id="new-task-project" class="inp" type="text" autocomplete="off" data-suggest="projects" placeholder="website-relaunch" value="${esc(m.project)}"></div>` +
       `<div class="fld"><label for="new-task-tags">Tags (optional)</label><input id="new-task-tags" class="inp" type="text" autocomplete="off" data-suggest="tags" placeholder="#launch #home" value="${esc(m.tags)}"></div>` +
@@ -143,7 +157,10 @@ export async function click(target: HTMLElement): Promise<boolean> {
     await paint();
     const wanted = m.project.trim();
     const project = wanted && state.index ? findProject(listProjects(state.index), wanted.replace(/^\+/, '')) : undefined;
-    const err = wanted && !project ? `No project called "${wanted}".` : await quickAddTask({ title: m.text, due: m.due, tags: words(m.tags), people: words(m.people), project });
+    const err =
+      wanted && !project
+        ? `No project called "${wanted}".`
+        : await quickAddTask({ title: m.text, due: m.due, tags: words(m.tags), people: words(m.people), project });
     if (err) {
       m.busy = false;
       m.error = err;

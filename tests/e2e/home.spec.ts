@@ -6,7 +6,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 const TODAY = localDate(0);
-const card = (page: import('@playwright/test').Page, heading: string) => page.locator('.home-card').filter({ has: page.locator('h3', { hasText: new RegExp(`^${heading}`) }) });
+const card = (page: import('@playwright/test').Page, heading: string) =>
+  page.locator('.home-card').filter({ has: page.locator('h3', { hasText: new RegExp(`^${heading}`) }) });
 const VAULT: Record<string, string> = {
   'projects/site/index.md': '---\ntitle: Website\ntype: project\nactive: true\n---\n# Website\n- [ ] Overdue inline due:2020-01-01\n- [ ] Undated inline\n',
   'inbox/2026-11-21 1420.md': `---\ntitle: "2026-11-21 14:20"\ncreated: ${TODAY}\nproject:\ntags: []\npeople: []\n---\n\nCalled Dana\n`,
@@ -109,7 +110,9 @@ test.describe('Weekly review', () => {
     await quick.locator('select').selectOption('site');
     await quick.locator('input').fill('#meeting');
     await quick.getByRole('button', { name: 'File' }).click();
-    await expect.poll(() => readFileOrEmpty(page, dir, 'inbox/2026-11-21 1420.md')).toBe(`---\ntitle: "2026-11-21 14:20"\ncreated: ${TODAY}\nproject: site\ntags: [meeting]\npeople: []\n---\n\nCalled Dana\n`);
+    await expect
+      .poll(() => readFileOrEmpty(page, dir, 'inbox/2026-11-21 1420.md'))
+      .toBe(`---\ntitle: "2026-11-21 14:20"\ncreated: ${TODAY}\nproject: site\ntags: [meeting]\npeople: []\n---\n\nCalled Dana\n`);
     await expect(page.locator('.rv-item', { hasText: '2026-11-21 14:20' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Next' }).click();
 

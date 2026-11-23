@@ -10,7 +10,11 @@ export interface Tokens {
   refresh: string;
 }
 
-const b64url = (bytes: Uint8Array): string => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64url = (bytes: Uint8Array): string =>
+  btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 
 export function randomString(bytes = 32): string {
   return b64url(crypto.getRandomValues(new Uint8Array(bytes)));
@@ -52,8 +56,15 @@ async function tokenRequest(body: Record<string, string>, f: typeof fetch): Prom
   return json;
 }
 
-export async function exchangeCode(p: { appKey: string; code: string; verifier: string; redirectUri: string }, f: typeof fetch = (...a) => fetch(...a), now = Date.now()): Promise<Tokens> {
-  const j = await tokenRequest({ grant_type: 'authorization_code', code: p.code, client_id: p.appKey, code_verifier: p.verifier, redirect_uri: p.redirectUri }, f);
+export async function exchangeCode(
+  p: { appKey: string; code: string; verifier: string; redirectUri: string },
+  f: typeof fetch = (...a) => fetch(...a),
+  now = Date.now(),
+): Promise<Tokens> {
+  const j = await tokenRequest(
+    { grant_type: 'authorization_code', code: p.code, client_id: p.appKey, code_verifier: p.verifier, redirect_uri: p.redirectUri },
+    f,
+  );
   if (!j.refresh_token) throw new Error('Dropbox did not return a refresh token. Check the app was set up for offline access.');
   return { access: j.access_token as string, refresh: j.refresh_token, expiresAt: now + (j.expires_in ?? 14400) * 1000 };
 }
@@ -76,7 +87,11 @@ export class TokenSource {
     this.pending ??= (async () => {
       try {
         const j = await tokenRequest({ grant_type: 'refresh_token', refresh_token: this.tokens.refresh, client_id: this.appKey }, this.f);
-        this.tokens = { access: j.access_token as string, refresh: j.refresh_token ?? this.tokens.refresh, expiresAt: this.clock() + (j.expires_in ?? 14400) * 1000 };
+        this.tokens = {
+          access: j.access_token as string,
+          refresh: j.refresh_token ?? this.tokens.refresh,
+          expiresAt: this.clock() + (j.expires_in ?? 14400) * 1000,
+        };
         this.onChange(this.tokens);
         return this.tokens.access;
       } finally {

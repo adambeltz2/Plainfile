@@ -67,7 +67,7 @@ describe('addDefaultFrontmatter', () => {
     expect(out).toBe(`---\ntitle: Plan\ncreated: 2026-11-21\ntags: []\n---\n${body}`);
     expect(out.endsWith(body)).toBe(true);
   });
-  it('uses the note\'s own line endings and quotes a title that needs it', () => {
+  it("uses the note's own line endings and quotes a title that needs it", () => {
     const out = addDefaultFrontmatter('Line one\r\nLine two\r\n', 'Q3: plan', '2026-11-21');
     expect(out).toBe('---\r\ntitle: "Q3: plan"\r\ncreated: 2026-11-21\r\ntags: []\r\n---\r\nLine one\r\nLine two\r\n');
   });

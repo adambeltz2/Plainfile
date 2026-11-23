@@ -52,7 +52,24 @@ export interface Group {
 }
 
 /** Headings that organise a note but are not a phase of the work. */
-const GENERIC = new Set(['goal', 'goals', 'notes', 'note', 'tasks', 'task', 'task list', 'to do', 'todo', 'overview', 'summary', 'links', 'log', 'agenda', 'decisions', 'action items']);
+const GENERIC = new Set([
+  'goal',
+  'goals',
+  'notes',
+  'note',
+  'tasks',
+  'task',
+  'task list',
+  'to do',
+  'todo',
+  'overview',
+  'summary',
+  'links',
+  'log',
+  'agenda',
+  'decisions',
+  'action items',
+]);
 
 /** The nearest heading above a line, as the phase of an inline task. Headings of level 1 are the title and do not count. */
 function headingAbove(n: Note, line: number): string | undefined {
@@ -119,22 +136,58 @@ export function applyFilters(tasks: HubTask[], f: Filters, keep?: ReadonlySet<st
   });
 }
 
-const byDue = (a: HubTask, b: HubTask): number => (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.item.title.localeCompare(b.item.title) || a.item.path.localeCompare(b.item.path) || a.item.line - b.item.line;
+const byDue = (a: HubTask, b: HubTask): number =>
+  (a.due ?? '9999').localeCompare(b.due ?? '9999') ||
+  a.item.title.localeCompare(b.item.title) ||
+  a.item.path.localeCompare(b.item.path) ||
+  a.item.line - b.item.line;
 
 /** `keep` lists task ids just ticked, which stay in their place (struck through) instead of jumping to Done. */
 export function groupTasks(tasks: HubTask[], by: GroupBy, today: string, keep?: ReadonlySet<string>): Group[] {
   const week = addDays(today, 7);
-  const make = (key: string, title: string, items: HubTask[], late = false): Group => ({ key, title, items: [...items].sort(byDue), total: items.length, done: items.filter((t) => t.status === 'done').length, late });
+  const make = (key: string, title: string, items: HubTask[], late = false): Group => ({
+    key,
+    title,
+    items: [...items].sort(byDue),
+    total: items.length,
+    done: items.filter((t) => t.status === 'done').length,
+    late,
+  });
   const open = (t: HubTask): boolean => t.status !== 'done' || !!keep?.has(t.item.id);
   let groups: Group[];
   if (by === 'due') {
     groups = [
-      make('overdue', 'Overdue', tasks.filter((t) => open(t) && t.due && t.due < today), true),
-      make('today', 'Due today', tasks.filter((t) => open(t) && t.due === today)),
-      make('week', 'This week', tasks.filter((t) => open(t) && t.due && t.due > today && t.due <= week)),
-      make('later', 'Later', tasks.filter((t) => open(t) && t.due && t.due > week)),
-      make('none', 'No date', tasks.filter((t) => open(t) && !t.due)),
-      make('done', 'Done', tasks.filter((t) => !open(t))),
+      make(
+        'overdue',
+        'Overdue',
+        tasks.filter((t) => open(t) && t.due && t.due < today),
+        true,
+      ),
+      make(
+        'today',
+        'Due today',
+        tasks.filter((t) => open(t) && t.due === today),
+      ),
+      make(
+        'week',
+        'This week',
+        tasks.filter((t) => open(t) && t.due && t.due > today && t.due <= week),
+      ),
+      make(
+        'later',
+        'Later',
+        tasks.filter((t) => open(t) && t.due && t.due > week),
+      ),
+      make(
+        'none',
+        'No date',
+        tasks.filter((t) => open(t) && !t.due),
+      ),
+      make(
+        'done',
+        'Done',
+        tasks.filter((t) => !open(t)),
+      ),
     ];
   } else {
     const m = new Map<string, HubTask[]>();
@@ -148,7 +201,23 @@ export function groupTasks(tasks: HubTask[], by: GroupBy, today: string, keep?: 
       else put(t.item.path, t);
     }
     const title = (k: string): string =>
-      by === 'status' ? ({ todo: 'To do', doing: 'Doing', waiting: 'Waiting', done: 'Done' } as Record<string, string>)[k] ?? k : by === 'person' ? (k ? `@${k}` : 'Unassigned') : by === 'tag' ? (k ? `#${k}` : 'No tag') : by === 'phase' ? k || 'No phase' : by === 'project' ? (k ? tasks.flatMap((t) => t.projects ?? []).find((p) => p.toLowerCase() === k) ?? k : 'No project') : tasks.find((t) => t.item.path === k)?.note.title ?? k;
+      by === 'status'
+        ? (({ todo: 'To do', doing: 'Doing', waiting: 'Waiting', done: 'Done' } as Record<string, string>)[k] ?? k)
+        : by === 'person'
+          ? k
+            ? `@${k}`
+            : 'Unassigned'
+          : by === 'tag'
+            ? k
+              ? `#${k}`
+              : 'No tag'
+            : by === 'phase'
+              ? k || 'No phase'
+              : by === 'project'
+                ? k
+                  ? (tasks.flatMap((t) => t.projects ?? []).find((p) => p.toLowerCase() === k) ?? k)
+                  : 'No project'
+                : (tasks.find((t) => t.item.path === k)?.note.title ?? k);
     const order = (k: string): number => (by === 'status' ? ['todo', 'doing', 'waiting', 'done'].indexOf(k) : k === '' ? 1 : 0);
     groups = [...m].sort((a, b) => order(a[0]) - order(b[0]) || title(a[0]).localeCompare(title(b[0]))).map(([k, v]) => make(k, title(k), v));
   }
@@ -193,9 +262,15 @@ export function summarize(all: HubTask[], today: string, nowMs: number): HubSumm
     done: all.length - open.length,
     open: open.length,
     overdue: open.filter((t) => t.due && t.due < today).length,
-    phases: [...phases].filter(([k]) => k !== '' || phases.size > 1).map(([name, v]) => ({ name: name || 'No phase', ...v })).sort((a, b) => (a.name === 'No phase' ? 1 : 0) - (b.name === 'No phase' ? 1 : 0)),
+    phases: [...phases]
+      .filter(([k]) => k !== '' || phases.size > 1)
+      .map(([name, v]) => ({ name: name || 'No phase', ...v }))
+      .sort((a, b) => (a.name === 'No phase' ? 1 : 0) - (b.name === 'No phase' ? 1 : 0)),
     people: [...people].map(([name, n]) => ({ name, open: n })).sort((a, b) => b.open - a.open || a.name.localeCompare(b.name)),
-    tags: [...tags].map(([tag, n]) => ({ tag, open: n })).sort((a, b) => b.open - a.open || a.tag.localeCompare(b.tag)).slice(0, 12),
+    tags: [...tags]
+      .map(([tag, n]) => ({ tag, open: n }))
+      .sort((a, b) => b.open - a.open || a.tag.localeCompare(b.tag))
+      .slice(0, 12),
     next: [...open].sort(byDue).slice(0, 3),
     weekly,
   };
@@ -227,7 +302,10 @@ export function portfolio(index: VaultIndex, today: string): PortfolioRow[] {
       done: mine.length - open.length,
       open: open.length,
       overdue: open.filter((t) => t.due && t.due < today).length,
-      nextDue: open.map((t) => t.due).filter((d): d is string => !!d).sort()[0],
+      nextDue: open
+        .map((t) => t.due)
+        .filter((d): d is string => !!d)
+        .sort()[0],
       lastChange: covered.reduce((m, n) => Math.max(m, n.mtime), 0),
     };
   });

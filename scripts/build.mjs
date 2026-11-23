@@ -30,7 +30,12 @@ await build({
   target: 'es2022',
   minify: !process.env.NO_MINIFY, // set NO_MINIFY=1 to keep function names for profiling
   sourcemap: true,
-  define: { __SAMPLE_VAULT__: JSON.stringify(readTree(sampleRoot)), __APP_VERSION__: JSON.stringify(version), __CHANGELOG__: JSON.stringify(readFileSync(join(root, 'CHANGELOG.md'), 'utf8')), __DROPBOX_APP_KEY__: JSON.stringify(process.env.DROPBOX_APP_KEY ?? '') },
+  define: {
+    __SAMPLE_VAULT__: JSON.stringify(readTree(sampleRoot)),
+    __APP_VERSION__: JSON.stringify(version),
+    __CHANGELOG__: JSON.stringify(readFileSync(join(root, 'CHANGELOG.md'), 'utf8')),
+    __DROPBOX_APP_KEY__: JSON.stringify(process.env.DROPBOX_APP_KEY ?? ''),
+  },
   logLevel: 'info',
 });
 

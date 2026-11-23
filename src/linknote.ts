@@ -28,7 +28,12 @@ export function linkAt(line: string, col: number): LinkAt | undefined {
 /** Where a missing linked note should be made, and its starting text. It goes beside the note that links to it. */
 export function newNoteForLink(from: string, link: LinkAt, today: string): { path: string; content: string; title: string } {
   const clean = link.target.replace(/\.md$/i, '').replace(/^\/+/, '');
-  const path = link.kind === 'md' ? joinPath(dirname(from), link.target.replace(/\.md$/i, '') + '.md') : clean.includes('/') ? `${clean}.md` : joinPath(dirname(from), `${clean}.md`);
+  const path =
+    link.kind === 'md'
+      ? joinPath(dirname(from), link.target.replace(/\.md$/i, '') + '.md')
+      : clean.includes('/')
+        ? `${clean}.md`
+        : joinPath(dirname(from), `${clean}.md`);
   const base = path.split('/').pop()!.replace(/\.md$/, '');
   const title = base.replace(/"/g, '');
   return { path, title, content: `---\ntitle: ${/[:#]/.test(title) ? JSON.stringify(title) : title}\ncreated: ${today}\n---\n\n` };

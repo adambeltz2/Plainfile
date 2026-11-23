@@ -344,7 +344,9 @@ const noteBtn = (path: string, title: string, cls: string, extra = ''): string =
   `<button class="${cls}" data-note="${esc(path)}" aria-current="${path === notes.path}"><span>${esc(title)}</span>${extra}</button>`;
 
 function pinnedNotes(): Note[] {
-  return [...(state.index?.notes.values() ?? [])].filter((n) => n.frontmatter.pinned === true || String(n.frontmatter.pinned).toLowerCase() === 'true').sort((a, b) => a.title.localeCompare(b.title));
+  return [...(state.index?.notes.values() ?? [])]
+    .filter((n) => n.frontmatter.pinned === true || String(n.frontmatter.pinned).toLowerCase() === 'true')
+    .sort((a, b) => a.title.localeCompare(b.title));
 }
 
 /** What the Notes screen shows when no note is open: where you can go next. */
@@ -360,16 +362,27 @@ function homeHtml(): string {
     const top = n.path.includes('/') ? (n.path.split('/')[0] as string) : '';
     if (top) tops.set(top, (tops.get(top) ?? 0) + 1);
   }
-  const list = (ns: Note[]): string => `<ul class="plain home-list">${ns.map((n) => `<li>${noteBtn(n.path, n.title, 'item note-quick', `<span class="muted mono small">${esc(dirname(n.path) || '(top level)')}</span>`)}</li>`).join('')}</ul>`;
+  const list = (ns: Note[]): string =>
+    `<ul class="plain home-list">${ns.map((n) => `<li>${noteBtn(n.path, n.title, 'item note-quick', `<span class="muted mono small">${esc(dirname(n.path) || '(top level)')}</span>`)}</li>`).join('')}</ul>`;
   let h =
-    '<div class="notes-home"><h2 class="title">Notes</h2><p class="meta">Notes are plain markdown files. Press <kbd>' + MOD + 'P</kbd> to jump to any note by name, or right-click a note for its actions.</p>' +
+    '<div class="notes-home"><h2 class="title">Notes</h2><p class="meta">Notes are plain markdown files. Press <kbd>' +
+    MOD +
+    'P</kbd> to jump to any note by name, or right-click a note for its actions.</p>' +
     '<div class="row-gap" style="margin:0 0 8px"><button class="btn primary" data-quick-note>Quick note</button><button class="btn" data-act="new-note">+ New note</button><button class="btn" data-act="palette-open">Go to a note…</button></div>';
   if (pinned.length) h += `<h3 class="grp">Pinned</h3>${list(pinned)}`;
-  h += `<h3 class="grp">Modified today <span>${changed.length}</span></h3>` + (changed.length ? list(changed) : '<p class="muted small">Nothing changed today yet.</p>');
+  h +=
+    `<h3 class="grp">Modified today <span>${changed.length}</span></h3>` +
+    (changed.length ? list(changed) : '<p class="muted small">Nothing changed today yet.</p>');
   const rest = byTime.filter((n) => !changed.includes(n)).slice(0, 6);
   if (rest.length) h += `<h3 class="grp">Recent</h3>${list(rest)}`;
   if (tops.size) {
-    h += '<h3 class="grp">Folders</h3><div class="chips">' + [...tops].sort((a, b) => a[0].localeCompare(b[0])).map(([f, c]) => `<button class="chip" data-folder-filter="${esc(f)}">${esc(f)}/ <span class="muted">${c}</span></button>`).join('') + '</div>';
+    h +=
+      '<h3 class="grp">Folders</h3><div class="chips">' +
+      [...tops]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([f, c]) => `<button class="chip" data-folder-filter="${esc(f)}">${esc(f)}/ <span class="muted">${c}</span></button>`)
+        .join('') +
+      '</div>';
   }
   return `${h}</div>`;
 }
@@ -389,7 +402,10 @@ function listHtml(): string {
   let h = '';
   if (!q) {
     const pins = pinnedNotes();
-    const recent = [...idxNotes()].sort((a, b) => b.mtime - a.mtime).slice(0, 5).filter((n) => !pins.includes(n));
+    const recent = [...idxNotes()]
+      .sort((a, b) => b.mtime - a.mtime)
+      .slice(0, 5)
+      .filter((n) => !pins.includes(n));
     if (pins.length) h += `<div class="folder mono">Pinned</div>${pins.map((n) => noteBtn(n.path, n.title, 'item note-quick')).join('')}`;
     if (recent.length) h += `<div class="folder mono">Recent</div>${recent.map((n) => noteBtn(n.path, n.title, 'item note-quick')).join('')}`;
   }
@@ -559,7 +575,8 @@ function propsHtml(): string {
   const fm = n.frontmatter;
   let out = '';
   if (frontmatterText(text) === null) {
-    out += '<div class="notice small" style="margin:0 0 8px">This note has no frontmatter. Add a starter block with its title, today as the created date, and empty tags. The text of the note is not changed.' +
+    out +=
+      '<div class="notice small" style="margin:0 0 8px">This note has no frontmatter. Add a starter block with its title, today as the created date, and empty tags. The text of the note is not changed.' +
       '<div class="row-gap"><button class="btn primary small" data-act="add-frontmatter">Add default frontmatter</button></div></div>';
   }
   if (n.frontmatterError) out += `<div class="notice err small">The frontmatter has a problem: ${esc(n.frontmatterError)}</div>`;
@@ -573,7 +590,9 @@ function propsHtml(): string {
   }
   if (hasDue) {
     const d = n.fileTask?.due ?? String(fm.due);
-    rows.push(`<dt><label for="prop-due">due</label></dt><dd><input id="prop-due" class="inp" type="date" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(d) ? d : '')}"></dd>`);
+    rows.push(
+      `<dt><label for="prop-due">due</label></dt><dd><input id="prop-due" class="inp" type="date" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(d) ? d : '')}"></dd>`,
+    );
   }
   for (const [k, v] of Object.entries(fm)) {
     if (k === 'status' || k === 'due' || k === 'project') continue;
@@ -588,7 +607,9 @@ function propsHtml(): string {
         const p = state.index ? findProject(known, name) : undefined;
         return `<span class="chip projchip">${p ? `<button class="plain-btn" data-open-project="${esc(p.path)}" title="Open the project dashboard">${esc(name)}</button>` : `<span title="No project with this name yet">${esc(name)}</span>`}<button class="plain-btn x" data-act="project-remove" data-name="${esc(name)}" aria-label="Remove from ${esc(name)}">×</button></span>`;
       })
-      .join('')}<form data-proj-add class="projadd"><input id="prop-project" class="inp" type="text" autocomplete="off" data-suggest="projects" placeholder="${mine.length ? '+ Another project' : '+ Add to a project'}" aria-label="Add to a project"><button class="btn small" type="submit">Add</button></form></dd>`,
+      .join(
+        '',
+      )}<form data-proj-add class="projadd"><input id="prop-project" class="inp" type="text" autocomplete="off" data-suggest="projects" placeholder="${mine.length ? '+ Another project' : '+ Add to a project'}" aria-label="Add to a project"><button class="btn small" type="submit">Add</button></form></dd>`,
   );
   out += rows.length ? `<dl class="props">${rows.join('')}</dl>` : '<p class="muted small" style="margin:0 0 6px">No properties yet.</p>';
   const add: string[] = [];
@@ -627,7 +648,8 @@ function sizeOf(n: number): string {
 function historyHtml(): string {
   const n = notes.versions.length;
   let h = `<h2 style="margin-top:16px">History <button class="btn small" data-act="history-toggle" aria-expanded="${notes.historyOpen}">${n} saved</button></h2>`;
-  if (!n) return `${h}<p class="muted small" style="margin:0">Earlier versions of this note appear here after you edit and save it, so a mistake can be undone even after you close it.</p>`;
+  if (!n)
+    return `${h}<p class="muted small" style="margin:0">Earlier versions of this note appear here after you edit and save it, so a mistake can be undone even after you close it.</p>`;
   if (!notes.historyOpen) return h;
   const cur = notes.handle?.getText() ?? '';
   h += '<ul class="plain small">';
@@ -689,10 +711,19 @@ function sideHtml(): string {
     h += `<div class="row-gap" style="margin-top:0"><button class="btn small" data-act="proj-task" data-path="${esc(notes.path)}">+ Task</button><button class="btn small" data-act="proj-note" data-path="${esc(notes.path)}">+ Note</button></div>`;
     h += `<p class="muted small" style="margin:8px 0 4px">${c.tasks.length} open task${c.tasks.length === 1 ? '' : 's'}, ${c.notes.length} note${c.notes.length === 1 ? '' : 's'}</p>`;
     if (c.tasks.length) {
-      h += `<ul class="plain small">${c.tasks.slice(0, 8).map((t) => `<li><button class="link" data-open="${esc(t.path)}" data-line="${t.line}">${esc(t.title)}</button>${t.due ? ` <span class="muted">${esc(t.due)}</span>` : ''}</li>`).join('')}</ul>`;
+      h += `<ul class="plain small">${c.tasks
+        .slice(0, 8)
+        .map(
+          (t) =>
+            `<li><button class="link" data-open="${esc(t.path)}" data-line="${t.line}">${esc(t.title)}</button>${t.due ? ` <span class="muted">${esc(t.due)}</span>` : ''}</li>`,
+        )
+        .join('')}</ul>`;
     }
     if (c.notes.length) {
-      h += `<ul class="plain small" style="margin-top:6px">${c.notes.slice(0, 10).map((n) => `<li><button class="link" data-open="${esc(n.path)}">${esc(n.title)}</button></li>`).join('')}</ul>`;
+      h += `<ul class="plain small" style="margin-top:6px">${c.notes
+        .slice(0, 10)
+        .map((n) => `<li><button class="link" data-open="${esc(n.path)}">${esc(n.title)}</button></li>`)
+        .join('')}</ul>`;
     }
   }
   return h + historyHtml() + diffHtml();
@@ -717,8 +748,7 @@ export function html(): string {
     main =
       (notes.lastDeleted
         ? `<div class="notice ok" role="status">Deleted “${esc(notes.lastDeleted.title)}”. ${notes.lastDeleted.trashPath ? 'It is in the trash. <button class="btn small" data-act="undo-delete">Undo</button>' : 'It was removed permanently.'}</div>`
-        : '') +
-      homeHtml();
+        : '') + homeHtml();
   } else {
     const n = idx.notes.get(notes.path);
     main =
@@ -779,7 +809,7 @@ export function applyProperty(key: string, value: string | null): void {
 /** The title box above the note: Enter or leaving it saves the new title, Escape puts the old one back. */
 function commitTitle(el: HTMLInputElement): void {
   const h = notes.handle;
-  const old = notes.path ? state.index?.notes.get(notes.path)?.title ?? '' : '';
+  const old = notes.path ? (state.index?.notes.get(notes.path)?.title ?? '') : '';
   const next = el.value.trim();
   if (!h || !next || next === old) {
     el.value = old;
@@ -841,7 +871,12 @@ export async function click(target: HTMLElement): Promise<boolean> {
       const h = notes.handle;
       if (!h || !notes.path) return true;
       const now = noteProjects(parseNote(notes.path, h.getText(), { mtime: 0, size: 0 }));
-      h.applyText(setProjects(h.getText(), now.filter((x) => x.toLowerCase() !== (act.dataset.name ?? '').toLowerCase())));
+      h.applyText(
+        setProjects(
+          h.getText(),
+          now.filter((x) => x.toLowerCase() !== (act.dataset.name ?? '').toLowerCase()),
+        ),
+      );
       refreshSide();
       return true;
     }

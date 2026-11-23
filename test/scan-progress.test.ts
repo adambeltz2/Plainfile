@@ -133,6 +133,13 @@ describe('summary of what a scan saw', () => {
     const index = new VaultIndex(store);
     await index.scan();
     expect(index.notes.has(deep)).toBe(true);
-    expect(index.summary()).toMatchObject({ files: 4, depth: 11, types: [['md', 2], ['png', 2]] });
+    expect(index.summary()).toMatchObject({
+      files: 4,
+      depth: 11,
+      types: [
+        ['md', 2],
+        ['png', 2],
+      ],
+    });
   });
 });

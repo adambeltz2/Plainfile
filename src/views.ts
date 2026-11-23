@@ -14,7 +14,11 @@ export interface SavedView {
 }
 
 const GROUPS: GroupBy[] = ['due', 'status', 'person', 'tag', 'phase', 'note'];
-const slug = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'view';
+const slug = (s: string): string =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'view';
 
 export function viewPath(name: string): string {
   return `${VIEWS_DIR}/${slug(name)}.json`;

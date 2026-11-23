@@ -15,7 +15,10 @@ function fakeIndex(): VaultIndex {
     mk('d-last-month.md', 'D', at('2026-10-05')),
   ];
   const map = new Map(notes.map((n) => [n.path, n]));
-  return { notes: map, tasks: () => [...map.values()].flatMap((n) => n.tasks.map((t) => ({ ...t, path: n.path, id: `${n.path}:${t.line}`, done: t.state === 'x', tags: [] }))) } as unknown as VaultIndex;
+  return {
+    notes: map,
+    tasks: () => [...map.values()].flatMap((n) => n.tasks.map((t) => ({ ...t, path: n.path, id: `${n.path}:${t.line}`, done: t.state === 'x', tags: [] }))),
+  } as unknown as VaultIndex;
 }
 
 describe('modified: and created:', () => {

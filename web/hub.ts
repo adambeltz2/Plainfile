@@ -76,7 +76,21 @@ function tasksOf(idx: NonNullable<typeof state.index>, path: string): HubTask[] 
 /** Start fresh for a project: the filters of one project make no sense in another. */
 export function resetFor(path: string): void {
   if (hubState.project === path) return;
-  Object.assign(hubState, { project: path, filters: newFilters(), toggled: new Set<string>(), limits: new Map<string, number>(), tidy: false, facetsOpen: false, toolsOpen: false, statusOpen: false, selectMode: false, selected: new Set<string>(), preview: undefined, last: undefined, error: '' });
+  Object.assign(hubState, {
+    project: path,
+    filters: newFilters(),
+    toggled: new Set<string>(),
+    limits: new Map<string, number>(),
+    tidy: false,
+    facetsOpen: false,
+    toolsOpen: false,
+    statusOpen: false,
+    selectMode: false,
+    selected: new Set<string>(),
+    preview: undefined,
+    last: undefined,
+    error: '',
+  });
 }
 
 const ago = (ms: number): string => {
@@ -90,26 +104,34 @@ const ago = (ms: number): string => {
 
 function activeChips(): string {
   const f = hubState.filters;
-  const chip = (kind: string, value: string, label: string): string => `<span class="chip fchip">${esc(label)}<button class="plain-btn x" data-hub-filter="${kind}:${esc(value)}" aria-label="Remove filter ${esc(label)}">×</button></span>`;
+  const chip = (kind: string, value: string, label: string): string =>
+    `<span class="chip fchip">${esc(label)}<button class="plain-btn x" data-hub-filter="${kind}:${esc(value)}" aria-label="Remove filter ${esc(label)}">×</button></span>`;
   const out: string[] = [];
   for (const p of f.people) out.push(chip('people', p, `@${p}`));
   for (const g of f.tags) out.push(chip('tags', g, `#${g}`));
   for (const s of f.statuses) out.push(chip('statuses', s, s));
   for (const p of f.phases) out.push(chip('phases', p, p || 'No phase'));
-  if (f.due) out.push(`<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'week' ? 'Due this week' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`);
+  if (f.due)
+    out.push(
+      `<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'week' ? 'Due this week' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`,
+    );
   return out.length ? `<div class="chips hub-active">${out.join('')}<button class="btn small" data-hub-clear>Clear all</button></div>` : '';
 }
 
 function toolbar(all: HubTask[]): string {
   const f = hubState.filters;
   const facet = (title: string, kind: string, items: [string, string, number][], on: string[]): string =>
-    items.length ? `<div class="hub-facet"><h4>${title}</h4><div class="chips">${items.map(([v, l, n]) => `<button class="chip${on.includes(v) ? ' on' : ''}" data-hub-filter="${kind}:${esc(v)}" aria-pressed="${on.includes(v)}">${esc(l)} <span class="muted">${n}</span></button>`).join('')}</div></div>` : '';
-  const count = (xs: string[]): [string, number][] => [...xs.reduce((m, x) => m.set(x, (m.get(x) ?? 0) + 1), new Map<string, number>())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    items.length
+      ? `<div class="hub-facet"><h4>${title}</h4><div class="chips">${items.map(([v, l, n]) => `<button class="chip${on.includes(v) ? ' on' : ''}" data-hub-filter="${kind}:${esc(v)}" aria-pressed="${on.includes(v)}">${esc(l)} <span class="muted">${n}</span></button>`).join('')}</div></div>`
+      : '';
+  const count = (xs: string[]): [string, number][] =>
+    [...xs.reduce((m, x) => m.set(x, (m.get(x) ?? 0) + 1), new Map<string, number>())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   const people = count(all.flatMap((t) => t.people)).map(([v, n]): [string, string, number] => [v, `@${v}`, n]);
   const tags = count(all.flatMap((t) => t.tags)).map(([v, n]): [string, string, number] => [v, `#${v}`, n]);
   const phases = count(all.map((t) => t.phase ?? '')).map(([v, n]): [string, string, number] => [v, v || 'No phase', n]);
   const statuses = count(all.map((t) => t.status)).map(([v, n]): [string, string, number] => [v, v, n]);
-  const quick = (k: 'overdue' | 'week' | 'none', l: string): string => `<button class="chip${f.due === k ? ' on' : ''}" data-hub-due="${k}" aria-pressed="${f.due === k}">${l}</button>`;
+  const quick = (k: 'overdue' | 'week' | 'none', l: string): string =>
+    `<button class="chip${f.due === k ? ' on' : ''}" data-hub-due="${k}" aria-pressed="${f.due === k}">${l}</button>`;
   const narrow = isNarrow();
   const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + (f.due ? 1 : 0);
   return (
@@ -117,9 +139,13 @@ function toolbar(all: HubTask[]): string {
     `<details class="hub-tools"${!narrow || hubState.toolsOpen ? ' open' : ''}><summary class="small">Filter &amp; group${active ? ` · ${active} on` : ''}</summary>` +
     '<div class="hub-bar">' +
     `<label class="hub-sel"><span class="small muted">View</span><select id="hub-views" class="inp" aria-label="Saved views"><option value="">${hubState.views.length ? 'Saved views…' : 'No saved views'}</option>${hubState.views.map((v) => `<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('')}${hubState.views.length ? '<option value="__delete">Delete a view…</option>' : ''}</select></label>` +
-    (hubState.tab !== 'tasks' ? '' : `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` +
-    `<label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>`) +
-    (hubState.tab === 'tasks' ? `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button>` : '') +
+    (hubState.tab !== 'tasks'
+      ? ''
+      : `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` +
+        `<label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>`) +
+    (hubState.tab === 'tasks'
+      ? `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button>`
+      : '') +
     '</div>' +
     `<div class="chips hub-quick">${quick('overdue', 'Overdue')}${quick('week', 'Due this week')}${quick('none', 'No date')}<form class="hub-saveview" data-hub-saveview><input id="hub-view-name" class="inp" autocomplete="off" placeholder="Name this view" aria-label="Name for this view" value="${esc(hubState.viewName)}"><button class="btn small" type="submit">Save view</button></form></div>` +
     `<details class="hub-facets"${hubState.facetsOpen || f.people.length || f.tags.length || f.phases.length || f.statuses.length ? ' open' : ''}><summary class="small">More filters: people, tags, phases, status</summary>${facet('People', 'people', people, f.people)}${facet('Tags', 'tags', tags, f.tags)}${facet('Phases', 'phases', phases, f.phases)}${facet('Status', 'statuses', statuses, f.statuses)}</details>` +
@@ -139,8 +165,12 @@ function groupsHtml(visible: HubTask[]): string {
       const pct = g.total ? Math.round((g.done / g.total) * 100) : 0;
       let h = `<section class="hub-group"><button class="grp${g.late ? ' late' : ''}" data-hub-collapse="${esc(key)}" aria-expanded="${!collapsed}"><span>${collapsed ? '▸' : '▾'} ${esc(g.title)} <span class="n">${g.items.length}</span></span><span class="gprog" title="${g.done} of ${g.total} done"><i style="width:${pct}%"></i></span></button>`;
       if (!collapsed) {
-        h += `<ul class="tasks">${g.items.slice(0, limit).map((t) => row(t.item, { on: hubState.selected.has(t.item.id) })).join('')}</ul>`;
-        if (g.items.length > limit) h += `<button class="btn small" data-hub-more="${esc(key)}">Show ${Math.min(PAGE, g.items.length - limit)} more of ${g.items.length - limit}</button>`;
+        h += `<ul class="tasks">${g.items
+          .slice(0, limit)
+          .map((t) => row(t.item, { on: hubState.selected.has(t.item.id) }))
+          .join('')}</ul>`;
+        if (g.items.length > limit)
+          h += `<button class="btn small" data-hub-more="${esc(key)}">Show ${Math.min(PAGE, g.items.length - limit)} more of ${g.items.length - limit}</button>`;
       }
       return `${h}</section>`;
     })
@@ -151,17 +181,26 @@ function bulkHtml(): string {
   const n = hubState.selected.size;
   const p = hubState.preview;
   let h = '';
-  if (hubState.last && !p) h += `<div class="notice ok small" role="status">${esc(hubState.last.label)} <button class="btn small" data-hub-undo>Undo</button></div>`;
+  if (hubState.last && !p)
+    h += `<div class="notice ok small" role="status">${esc(hubState.last.label)} <button class="btn small" data-hub-undo>Undo</button></div>`;
   if (hubState.error) h += `<div class="notice err small">${esc(hubState.error)}</div>`;
   if (p) {
     const e = p.plan.edits;
-    h += `<div class="hub-preview card" role="dialog" aria-label="Review the change"><b>${esc(p.label)}</b><p class="small muted" style="margin:2px 0 6px">${e.length ? `${e.length} note${e.length === 1 ? '' : 's'} will change. Nothing is written until you press Apply.` : 'Nothing would change.'}${p.plan.skipped ? ` ${p.plan.skipped} selected task${p.plan.skipped === 1 ? '' : 's'} cannot take this change and ${p.plan.skipped === 1 ? 'is' : 'are'} left alone.` : ''}</p>` +
-      `<ul class="plain small">${e.slice(0, 8).map((x) => `<li><div class="mono muted">${esc(x.path)}:${x.line}</div><div class="diff"><div class="del"><span class="sg">−</span><span>${esc(x.was) || ' '}</span></div><div class="add"><span class="sg">+</span><span>${esc(x.now) || ' '}</span></div></div></li>`).join('')}${e.length > 8 ? `<li class="muted">and ${e.length - 8} more notes</li>` : ''}</ul>` +
+    h +=
+      `<div class="hub-preview card" role="dialog" aria-label="Review the change"><b>${esc(p.label)}</b><p class="small muted" style="margin:2px 0 6px">${e.length ? `${e.length} note${e.length === 1 ? '' : 's'} will change. Nothing is written until you press Apply.` : 'Nothing would change.'}${p.plan.skipped ? ` ${p.plan.skipped} selected task${p.plan.skipped === 1 ? '' : 's'} cannot take this change and ${p.plan.skipped === 1 ? 'is' : 'are'} left alone.` : ''}</p>` +
+      `<ul class="plain small">${e
+        .slice(0, 8)
+        .map(
+          (x) =>
+            `<li><div class="mono muted">${esc(x.path)}:${x.line}</div><div class="diff"><div class="del"><span class="sg">−</span><span>${esc(x.was) || ' '}</span></div><div class="add"><span class="sg">+</span><span>${esc(x.now) || ' '}</span></div></div></li>`,
+        )
+        .join('')}${e.length > 8 ? `<li class="muted">and ${e.length - 8} more notes</li>` : ''}</ul>` +
       `<div class="row-gap"><button class="btn primary" data-hub-apply${e.length ? '' : ' disabled'}>Apply</button><button class="btn" data-hub-cancel>Cancel</button></div></div>`;
   }
   if (n && !p) {
     const i = hubState.inputs;
-    h += `<div class="hub-bulk" role="toolbar" aria-label="Change the selected tasks"><b>${n} selected</b>` +
+    h +=
+      `<div class="hub-bulk" role="toolbar" aria-label="Change the selected tasks"><b>${n} selected</b>` +
       '<button class="btn small" data-hub-bulk="done">Done</button><button class="btn small" data-hub-bulk="reopen">Reopen</button>' +
       `<select id="bulk-status" class="inp" aria-label="Status">${STATUSES.map((s) => `<option${s === i.status ? ' selected' : ''}>${s}</option>`).join('')}</select><button class="btn small" data-hub-bulk="status">Set status</button>` +
       `<input id="bulk-due" class="inp date" type="date" aria-label="Due date" value="${esc(i.due)}"><button class="btn small" data-hub-bulk="due">Set due</button><button class="btn small" data-hub-bulk="nodue">Clear due</button>` +
@@ -178,7 +217,9 @@ function boardHtml(all: HubTask[]): string {
   return (
     '<div class="hub-cols">' +
     COLS.map(([key, label], ci) => {
-      const cards = vis.filter((t) => t.status === key).sort((a, b) => (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.item.title.localeCompare(b.item.title));
+      const cards = vis
+        .filter((t) => t.status === key)
+        .sort((a, b) => (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.item.title.localeCompare(b.item.title));
       return (
         `<div class="hub-col" data-col="${key}"><h3>${label} <span class="n">${cards.length}</span></h3>` +
         cards
@@ -211,7 +252,14 @@ function timelineHtml(all: HubTask[]): string {
   const vis = applyFilters(all, hubState.filters, justDone, today());
   const t0 = monday(today());
   const weeks = Array.from({ length: 8 }, (_, i) => addDays(t0, i * 7));
-  const bucket = (t: HubTask): number => (!t.due ? 9 : t.due < t0 ? 0 : t.due >= addDays(t0, 56) ? 10 : 1 + Math.floor((Date.parse(`${t.due}T00:00:00Z`) - Date.parse(`${t0}T00:00:00Z`)) / (7 * 86400000)));
+  const bucket = (t: HubTask): number =>
+    !t.due
+      ? 9
+      : t.due < t0
+        ? 0
+        : t.due >= addDays(t0, 56)
+          ? 10
+          : 1 + Math.floor((Date.parse(`${t.due}T00:00:00Z`) - Date.parse(`${t0}T00:00:00Z`)) / (7 * 86400000));
   const phases = [...new Set(vis.map((t) => t.phase ?? ''))].sort((a, b) => (a === '' ? 1 : b === '' ? -1 : a.localeCompare(b)));
   const heads = ['Overdue', ...weeks.map((w) => fmtDate(w).replace(/^\w+ /, '')), 'No date', 'Later'];
   const order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -220,7 +268,13 @@ function timelineHtml(all: HubTask[]): string {
     h += `<div class="rowh">${esc(p || 'No phase')}</div>`;
     for (const b of order) {
       const cell = vis.filter((t) => (t.phase ?? '') === p && bucket(t) === b).sort((a, c) => (a.due ?? '').localeCompare(c.due ?? ''));
-      h += `<div class="cell${b === 0 && cell.length ? ' late' : ''}">${cell.slice(0, 4).map((t) => `<button class="tlitem${t.status === 'done' ? ' done' : ''}" data-open="${esc(t.item.path)}" data-line="${t.item.line}" title="${esc(t.item.title)}${t.due ? ` · ${esc(fmtDate(t.due))}` : ''}">${esc(t.item.title)}</button>`).join('')}${cell.length > 4 ? `<span class="muted small">+${cell.length - 4} more</span>` : ''}</div>`;
+      h += `<div class="cell${b === 0 && cell.length ? ' late' : ''}">${cell
+        .slice(0, 4)
+        .map(
+          (t) =>
+            `<button class="tlitem${t.status === 'done' ? ' done' : ''}" data-open="${esc(t.item.path)}" data-line="${t.item.line}" title="${esc(t.item.title)}${t.due ? ` · ${esc(fmtDate(t.due))}` : ''}">${esc(t.item.title)}</button>`,
+        )
+        .join('')}${cell.length > 4 ? `<span class="muted small">+${cell.length - 4} more</span>` : ''}</div>`;
     }
   }
   return `${h}</div>${phases.length ? '' : '<div class="empty">No tasks match.</div>'}`;
@@ -231,7 +285,9 @@ function tidyHtml(issues: FieldIssue[]): string {
   const fixable = issues.filter((i) => i.fix);
   return (
     `<p class="small muted" style="margin:0 0 6px">Your notes can be written any way. These would make them uniform. Each fix changes one line in one note, and nothing is changed until you press it.</p>` +
-    (fixable.length ? `<div class="row-gap" style="margin:0 0 8px"><button class="btn small primary" data-hub-fixall>Fix all ${fixable.length}</button></div>` : '') +
+    (fixable.length
+      ? `<div class="row-gap" style="margin:0 0 8px"><button class="btn small primary" data-hub-fixall>Fix all ${fixable.length}</button></div>`
+      : '') +
     `<ul class="plain tidy">${issues
       .slice(0, 60)
       .map(
@@ -254,8 +310,18 @@ function statusColumn(all: HubTask[], issues: FieldIssue[]): string {
     (s.phases.length
       ? `<h3>Phases</h3>${s.phases.map((p) => `<button class="hub-phase${f.phases.includes(p.name === 'No phase' ? '' : p.name) ? ' on' : ''}" data-hub-filter="phases:${esc(p.name === 'No phase' ? '' : p.name)}"><span>${esc(p.name)}</span><b>${p.done}/${p.total}</b><span class="prog"><i style="width:${p.total ? Math.round((p.done / p.total) * 100) : 0}%"></i></span></button>`).join('')}`
       : '') +
-    (s.people.length ? `<h3>Who has what</h3><div class="chips">${s.people.slice(0, 10).map((p) => `<button class="chip mono${p.name && f.people.includes(p.name) ? ' on' : ''}" ${p.name ? `data-hub-filter="people:${esc(p.name)}"` : 'disabled'}>${p.name ? `@${esc(p.name)}` : 'nobody'} ${p.open}</button>`).join('')}</div>` : '') +
-    (s.next.length ? `<h3>Next up</h3><ol class="small hub-next">${s.next.map((t) => `<li><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button>${t.due ? ` <span class="muted">${esc(fmtDate(t.due))}</span>` : ''}</li>`).join('')}</ol>` : '') +
+    (s.people.length
+      ? `<h3>Who has what</h3><div class="chips">${s.people
+          .slice(0, 10)
+          .map(
+            (p) =>
+              `<button class="chip mono${p.name && f.people.includes(p.name) ? ' on' : ''}" ${p.name ? `data-hub-filter="people:${esc(p.name)}"` : 'disabled'}>${p.name ? `@${esc(p.name)}` : 'nobody'} ${p.open}</button>`,
+          )
+          .join('')}</div>`
+      : '') +
+    (s.next.length
+      ? `<h3>Next up</h3><ol class="small hub-next">${s.next.map((t) => `<li><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button>${t.due ? ` <span class="muted">${esc(fmtDate(t.due))}</span>` : ''}</li>`).join('')}</ol>`
+      : '') +
     `<h3>Done per week <span class="muted" title="Worked out from when each note was last changed">(estimate)</span></h3><div class="spark" aria-label="Tasks finished in each of the last six weeks">${s.weekly.map((n) => `<i style="height:${Math.max(6, Math.round((n / spark) * 100))}%" title="${n} done"></i>`).join('')}</div>` +
     `<h3 style="margin-top:12px">Tidy <span class="n">${issues.length}</span></h3><button class="btn small" data-hub-tidy aria-expanded="${hubState.tidy}">${hubState.tidy ? 'Hide' : issues.length ? 'Review' : 'All uniform'}</button>${hubState.tidy ? `<div class="hub-tidy">${tidyHtml(issues)}</div>` : ''}` +
     '</details></aside>'
@@ -266,10 +332,21 @@ function rail(path: string): string {
   const idx = state.index;
   if (!idx) return '';
   const all = listProjects(idx);
-  const item = (p: (typeof all)[number]): string => `<button class="hub-rail-item${p.path === path ? ' on' : ''}" data-open-project="${esc(p.path)}" aria-current="${p.path === path}"><span>${p.number ?? '–'} ${esc(p.title)}</span><span class="n">${p.openTasks}</span></button>`;
+  const item = (p: (typeof all)[number]): string =>
+    `<button class="hub-rail-item${p.path === path ? ' on' : ''}" data-open-project="${esc(p.path)}" aria-current="${p.path === path}"><span>${p.number ?? '–'} ${esc(p.title)}</span><span class="n">${p.openTasks}</span></button>`;
   const allOpen = tasksOf(idx, ALL_PROJECTS).filter((t) => t.status !== 'done').length;
   const allBtn = `<button class="hub-rail-item${path === ALL_PROJECTS ? ' on' : ''}" data-open-project="${ALL_PROJECTS}" aria-current="${path === ALL_PROJECTS}"><span>All tasks</span><span class="n">${allOpen}</span></button>`;
-  return `<nav class="hub-rail" aria-label="Projects"><h3>Projects</h3>${allBtn}${all.filter((p) => p.active).map(item).join('')}${all.some((p) => !p.active) ? `<h3 class="muted">Inactive</h3>${all.filter((p) => !p.active).map(item).join('')}` : ''}<button class="btn small" data-act="proj-back" style="margin-top:8px">All projects</button></nav>`;
+  return `<nav class="hub-rail" aria-label="Projects"><h3>Projects</h3>${allBtn}${all
+    .filter((p) => p.active)
+    .map(item)
+    .join('')}${
+    all.some((p) => !p.active)
+      ? `<h3 class="muted">Inactive</h3>${all
+          .filter((p) => !p.active)
+          .map(item)
+          .join('')}`
+      : ''
+  }<button class="btn small" data-act="proj-back" style="margin-top:8px">All projects</button></nav>`;
 }
 
 export function html(path: string): string {
@@ -298,7 +375,15 @@ export function html(path: string): string {
   else if (hubState.tab === 'timeline') body = `${toolbar(all)}<div id="hub-body" class="hub-scroll">${timelineHtml(all)}</div>`;
   else if (hubState.tab === 'notes')
     body = d.notes.length
-      ? `<ul class="plain pnotes">${d.notes.slice(0, 80).map((n) => `<li><button class="res-btn" data-open="${esc(n.path)}"><span class="rt">${esc(n.title)}</span><span class="chips"><span class="chip quiet">${esc(fmtDate(localDateOf(n.mtime)))}</span>${n.type ? `<span class="chip">${esc(n.type)}</span>` : ''}<span class="chip src mono">${esc(n.path)}</span></span></button></li>`).join('')}</ul>${d.followups.length ? `<h3 class="grp">Follow-ups <span>${d.followups.length}</span></h3><ul class="tasks">${d.followups.map((f) => `<li class="task" tabindex="-1"><div class="body"><div class="t">${esc(f.title)}</div><div class="chips"><button class="chip src mono" data-open="${esc(f.path)}" data-line="${f.line}">${esc(f.from)} · line ${f.line}</button></div></div></li>`).join('')}</ul>` : ''}`
+      ? `<ul class="plain pnotes">${d.notes
+          .slice(0, 80)
+          .map(
+            (n) =>
+              `<li><button class="res-btn" data-open="${esc(n.path)}"><span class="rt">${esc(n.title)}</span><span class="chips"><span class="chip quiet">${esc(fmtDate(localDateOf(n.mtime)))}</span>${n.type ? `<span class="chip">${esc(n.type)}</span>` : ''}<span class="chip src mono">${esc(n.path)}</span></span></button></li>`,
+          )
+          .join(
+            '',
+          )}</ul>${d.followups.length ? `<h3 class="grp">Follow-ups <span>${d.followups.length}</span></h3><ul class="tasks">${d.followups.map((f) => `<li class="task" tabindex="-1"><div class="body"><div class="t">${esc(f.title)}</div><div class="chips"><button class="chip src mono" data-open="${esc(f.path)}" data-line="${f.line}">${esc(f.from)} · line ${f.line}</button></div></div></li>`).join('')}</ul>` : ''}`
       : '<div class="empty">No notes yet. Add one with <b>+ Note</b> or <b>+ Meeting</b>.</div>';
   else {
     const recent = [...covered].sort((a, b) => b.mtime - a.mtime).slice(0, 30);
@@ -307,11 +392,17 @@ export function html(path: string): string {
   const log = logHtml();
   return (
     `<div class="hubwrap${hubState.selectMode || hubState.selected.size ? ' sel-on' : ''}">${rail(path)}<div class="hub-main">` +
-    `<label class="hub-pick small"><span class="muted">Project</span><select id="hub-pick" class="inp"><option value="${ALL_PROJECTS}"${everything ? ' selected' : ''}>All tasks</option>${listProjects(idx).map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</select><button class="btn small" data-act="proj-back">All projects</button></label>` +
+    `<label class="hub-pick small"><span class="muted">Project</span><select id="hub-pick" class="inp"><option value="${ALL_PROJECTS}"${everything ? ' selected' : ''}>All tasks</option>${listProjects(
+      idx,
+    )
+      .map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${esc(p.title)}</option>`)
+      .join('')}</select><button class="btn small" data-act="proj-back">All projects</button></label>` +
     `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${everything ? 'Every project' : d.active ? 'Active' : 'Inactive'}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
-    (everything ? '</div>' : `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
-    `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></span>` +
-    `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>`) +
+    (everything
+      ? '</div>'
+      : `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
+        `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></span>` +
+        `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>`) +
     (everything ? `${quickBar('hub-quick').form}${quickBar().below}` : '') +
     (d.summary ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
     `<div class="pstats"><div class="pstat"><b>${openCount}</b><span>open</span></div><div class="pstat${d.overdue ? ' late' : ''}"><b>${d.overdue}</b><span>overdue</span></div><div class="pstat"><b>${all.length - openCount}</b><span>done</span></div><div class="pstat"><b>${d.notes.length}</b><span>notes</span></div><div class="pstat"><b>${d.followups.length}</b><span>follow-ups</span></div></div>` +
@@ -348,7 +439,12 @@ function refreshBody(): void {
   const el = document.getElementById('hub-body');
   if (!idx || !el) return render();
   const all = tasksOf(idx, hubState.project);
-  el.innerHTML = hubState.tab === 'board' ? boardHtml(all) : hubState.tab === 'timeline' ? timelineHtml(all) : groupsHtml(applyFilters(all, hubState.filters, justDone, today()));
+  el.innerHTML =
+    hubState.tab === 'board'
+      ? boardHtml(all)
+      : hubState.tab === 'timeline'
+        ? timelineHtml(all)
+        : groupsHtml(applyFilters(all, hubState.filters, justDone, today()));
 }
 
 function toggleFilter(kind: string, value: string): void {

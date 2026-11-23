@@ -115,7 +115,10 @@ export async function goTo(page: Page, name: RegExp | string): Promise<void> {
   // Explore lives under Search now: go to Search, then switch.
   if (name === 'Explore') {
     await goTo(page, 'Search');
-    return page.locator('.finder').getByRole('button', { name: /^Explore/ }).click();
+    return page
+      .locator('.finder')
+      .getByRole('button', { name: /^Explore/ })
+      .click();
   }
   const top = page.locator('.nav').getByRole('button', { name });
   if (await top.isVisible()) return top.click();

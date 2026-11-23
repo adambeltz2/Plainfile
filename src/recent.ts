@@ -17,7 +17,14 @@ export function recentNotes(index: VaultIndex, query = ''): RecentItem[] {
   for (const n of index.notes.values()) {
     if (q && !n.title.toLowerCase().includes(q) && !n.path.toLowerCase().includes(q)) continue;
     const p = n.frontmatter.project;
-    out.push({ path: n.path, title: n.title, mtime: n.mtime, date: localDateOf(n.mtime), task: !!n.fileTask, project: typeof p === 'string' && p ? p : undefined });
+    out.push({
+      path: n.path,
+      title: n.title,
+      mtime: n.mtime,
+      date: localDateOf(n.mtime),
+      task: !!n.fileTask,
+      project: typeof p === 'string' && p ? p : undefined,
+    });
   }
   return out.sort((a, b) => b.mtime - a.mtime || a.path.localeCompare(b.path));
 }

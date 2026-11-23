@@ -32,7 +32,15 @@ export class FakeDropbox {
   }
 
   private meta(f: F): Meta {
-    return { '.tag': 'file', name: f.display.split('/').pop() as string, path_lower: f.display.toLowerCase(), path_display: f.display, server_modified: new Date(f.modified).toISOString().replace('.000Z', 'Z'), rev: f.rev.toString(16).padStart(9, '0') + 'abc', size: f.bytes ? f.bytes.length : new TextEncoder().encode(f.content).length };
+    return {
+      '.tag': 'file',
+      name: f.display.split('/').pop() as string,
+      path_lower: f.display.toLowerCase(),
+      path_display: f.display,
+      server_modified: new Date(f.modified).toISOString().replace('.000Z', 'Z'),
+      rev: f.rev.toString(16).padStart(9, '0') + 'abc',
+      size: f.bytes ? f.bytes.length : new TextEncoder().encode(f.content).length,
+    };
   }
 
   private json(body: unknown, status = 200): Response {
@@ -89,7 +97,9 @@ export class FakeDropbox {
         const since = Number(c.slice(2));
         const latest = new Map<string, (typeof this.log)[number]>();
         for (const e of this.log) if (e.seq >= since) latest.set(e.lower, e);
-        const entries = [...latest.values()].map((e) => (e.meta ? e.meta : { '.tag': 'deleted' as const, name: e.display.split('/').pop() as string, path_lower: e.lower, path_display: e.display }));
+        const entries = [...latest.values()].map((e) =>
+          e.meta ? e.meta : { '.tag': 'deleted' as const, name: e.display.split('/').pop() as string, path_lower: e.lower, path_display: e.display },
+        );
         return this.json({ entries, cursor: `L:${this.seq}`, has_more: false });
       }
       const p = this.cursors.get(c) ?? { rest: [], snap: this.seq };

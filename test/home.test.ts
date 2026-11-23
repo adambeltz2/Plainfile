@@ -12,7 +12,8 @@ const FILES: Record<string, string> = {
   'tasks/Call Dana.md': '---\ntitle: Call Dana\nstatus: todo\ndue: 2026-11-19\ncreated: 2026-11-10\n---\n',
   'tasks/Waiting thing.md': '---\ntitle: Waiting thing\nstatus: waiting\ncreated: 2026-11-10\n---\n',
   'tasks/Done thing.md': '---\ntitle: Done thing\nstatus: done\n---\n',
-  'projects/site/index.md': '---\ntitle: Site\ntype: project\nactive: true\n---\n- [ ] Overdue inline due:2026-11-01\n- [ ] Tomorrow inline due:2026-11-22\n- [ ] No date inline\n',
+  'projects/site/index.md':
+    '---\ntitle: Site\ntype: project\nactive: true\n---\n- [ ] Overdue inline due:2026-11-01\n- [ ] Tomorrow inline due:2026-11-22\n- [ ] No date inline\n',
   'projects/site/tasks/Filed.md': '---\ntitle: Filed\nstatus: todo\nproject: site\ndue: 2026-11-25\n---\n',
 };
 async function setup() {
@@ -36,7 +37,11 @@ describe('Home helpers', () => {
     expect(week).toHaveLength(7);
     expect(week[1]).toMatchObject({ date: '2026-11-22', open: 1 });
     expect(week[4]).toMatchObject({ date: '2026-11-25', open: 1 });
-    expect(undated(index).map((t) => t.item.title).sort()).toEqual(['A loose line', 'No date inline', 'Waiting thing']);
+    expect(
+      undated(index)
+        .map((t) => t.item.title)
+        .sort(),
+    ).toEqual(['A loose line', 'No date inline', 'Waiting thing']);
     expect(daysSince('2026-11-10', TODAY)).toBe(11);
     expect(daysSince(undefined, TODAY)).toBeUndefined();
   });
@@ -45,7 +50,9 @@ describe('Home helpers', () => {
     const { store, index } = await setup();
     const r = await fileItem(store, index, 'inbox/2026-11-21 1420.md', { project: 'site', tags: ['#meeting', 'launch'] });
     expect(r.written).toBe(true);
-    expect(await store.read('inbox/2026-11-21 1420.md')).toBe('---\ntitle: "2026-11-21 14:20"\ncreated: 2026-11-21\nproject: site\ntags: [meeting, launch]\npeople: []\n---\n\nCalled Dana\n');
+    expect(await store.read('inbox/2026-11-21 1420.md')).toBe(
+      '---\ntitle: "2026-11-21 14:20"\ncreated: 2026-11-21\nproject: site\ntags: [meeting, launch]\npeople: []\n---\n\nCalled Dana\n',
+    );
     expect(triage(index).map((t) => t.title)).not.toContain('2026-11-21 14:20');
     const again = await fileItem(store, index, 'inbox/2026-11-21 1420.md', { project: 'SITE', tags: ['meeting'] });
     expect(again.written).toBe(false);

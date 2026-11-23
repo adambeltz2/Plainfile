@@ -79,7 +79,10 @@ test.describe('Calendar', () => {
     await nav(page, 'Calendar').click();
     await expect(page.locator('.cal-cell.today .cal-count')).toBeVisible();
     await expect(page.locator('.cal-cell.today .cal-ev').first()).toBeHidden();
-    await page.locator(`.cal-cell[data-cal-day="${localDate(3)}"] .cal-num`).click().catch(() => undefined);
+    await page
+      .locator(`.cal-cell[data-cal-day="${localDate(3)}"] .cal-num`)
+      .click()
+      .catch(() => undefined);
     await page.locator('.cal-cell.today .cal-num').click();
     await expect(page.locator('.cal-day')).toContainText('Pay invoice');
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);

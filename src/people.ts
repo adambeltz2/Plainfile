@@ -9,7 +9,13 @@ import type { Note } from './parse';
  * of `type: person`. A person note (title, file name and `aliases:`) joins the different spellings of a name
  * into one person. Nothing is stored and nothing has to be set up.
  */
-export const slugName = (s: string): string => s.trim().replace(/^@/, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
+export const slugName = (s: string): string =>
+  s
+    .trim()
+    .replace(/^@/, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
 
 const MENTION = /(?:^|[\s(])@([\p{L}\p{N}_][\p{L}\p{N}_-]*)/gu;
 
@@ -130,7 +136,9 @@ export function personPage(p: PeopleIndex, key: string, today: string): PersonPa
   const last = person.lastSeen ? new Date(person.lastSeen).toISOString().slice(0, 10) : undefined;
   return {
     person,
-    open: ts.filter((t) => t.status !== 'done' && t.status !== 'waiting').sort((a, b) => (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.item.title.localeCompare(b.item.title)),
+    open: ts
+      .filter((t) => t.status !== 'done' && t.status !== 'waiting')
+      .sort((a, b) => (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.item.title.localeCompare(b.item.title)),
     waiting: ts.filter((t) => t.status === 'waiting'),
     done: ts.filter((t) => t.status === 'done').length,
     meetings,

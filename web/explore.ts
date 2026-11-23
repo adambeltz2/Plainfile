@@ -32,7 +32,14 @@ function chip(why: string): string {
 function row(title: string, path: string, extra: string, snippet = '', terms: string[] = []): string {
   return (
     `<li class="xrow"><div class="xmain"><button class="link xtitle" data-focus="${esc(path)}">${esc(title)}</button>` +
-    `${extra}${snippet ? `<div class="sn small">${highlight(snippet, terms.map((t) => t.toLowerCase()))}</div>` : ''}` +
+    `${extra}${
+      snippet
+        ? `<div class="sn small">${highlight(
+            snippet,
+            terms.map((t) => t.toLowerCase()),
+          )}</div>`
+        : ''
+    }` +
     `<div class="mono muted small">${esc(path)}</div></div><button class="btn small" data-open="${esc(path)}">Open</button></li>`
   );
 }
@@ -66,7 +73,8 @@ function graphSvg(path: string): string {
   for (const e of g.edges) {
     const a = by.get(e.from);
     const b = by.get(e.to);
-    if (a && b) s += `<line class="${e.kind === 'related' ? 'ge rel' : 'ge'}" x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}"/>`;
+    if (a && b)
+      s += `<line class="${e.kind === 'related' ? 'ge rel' : 'ge'}" x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}"/>`;
   }
   for (const n of placed) {
     const label = n.title.length > 26 ? `${n.title.slice(0, 25)}…` : n.title;
@@ -113,7 +121,8 @@ export function html(): string {
   const path = exploreState.path;
   const note = path ? idx.notes.get(path) : undefined;
   if (!path || !note) {
-    h += '<h2 class="title">Explore</h2><p class="meta" style="max-width:60ch">Pick a note to see what it links to, what links to it, other notes that share its tags or words, and notes that mention it without linking. Start with a well connected note on the left, or press Explore on any note.</p>';
+    h +=
+      '<h2 class="title">Explore</h2><p class="meta" style="max-width:60ch">Pick a note to see what it links to, what links to it, other notes that share its tags or words, and notes that mention it without linking. Start with a well connected note on the left, or press Explore on any note.</p>';
     if (!idx.notes.size) h += '<div class="empty">There are no notes yet.</div>';
     return `${h}</section></div>`;
   }
@@ -130,7 +139,8 @@ export function html(): string {
   h += `<button class="btn primary" data-open="${esc(path)}">Open note</button></div></div>`;
 
   h += `<div class="graph-wrap">${graphSvg(path)}</div>`;
-  h += '<p class="legend small muted"><span class="key solid"></span> a link &nbsp; <span class="key dash"></span> related by tags or words, not linked &nbsp; Click a note to explore from it.</p>';
+  h +=
+    '<p class="legend small muted"><span class="key solid"></span> a link &nbsp; <span class="key dash"></span> related by tags or words, not linked &nbsp; Click a note to explore from it.</p>';
 
   h += '<div class="xgrid">';
   h += `<div><h3>Links to <span class="muted">${links.out.length}</span></h3>${links.out.length ? `<ul class="plain">${links.out.map((r) => row(r.title, r.path, '', r.context)).join('')}</ul>` : '<p class="muted small">This note does not link to another note.</p>'}</div>`;

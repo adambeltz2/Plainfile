@@ -86,7 +86,8 @@ describe('projectContents', () => {
 
 describe('projectDashboard', () => {
   const FILES = {
-    'projects/site/index.md': '---\ntitle: Website relaunch\ntype: project\nactive: true\ncreated: 2026-11-01\n---\n## Goal\nLaunch the new site by Dec 8\n\n- [ ] Pick a host @sam due:2026-11-20\n- [x] Buy domain @dana\n- Ask legal about terms #followup\n',
+    'projects/site/index.md':
+      '---\ntitle: Website relaunch\ntype: project\nactive: true\ncreated: 2026-11-01\n---\n## Goal\nLaunch the new site by Dec 8\n\n- [ ] Pick a host @sam due:2026-11-20\n- [x] Buy domain @dana\n- Ask legal about terms #followup\n',
     'projects/site/tasks/Write copy.md': '---\ntitle: Write copy\nstatus: todo\ndue: 2026-11-25\ntags: [launch]\n---\n',
     'projects/site/notes.md': '# Notes\n#launch',
     'meetings/2026-11-17 Kickoff.md': '---\ntitle: Kickoff\nproject: Website relaunch\npeople: [dana, sam]\n---\n- [ ] Send logos @dana\n',

@@ -44,7 +44,7 @@ test.describe('in the editor', () => {
     await expect.poll(() => readFileOrEmpty(page, dir, 'draft.md'), { timeout: 5000 }).toBe('Draft\n[[pricing-research]]');
   });
 
-  test('a note\'s alias is offered too, and links to a nested note use the shortest name', async ({ page }) => {
+  test("a note's alias is offered too, and links to a nested note use the shortest name", async ({ page }) => {
     await openVault(page, VAULT);
     await open(page, 'draft');
     await typeAtEnd(page, '\n[[Dan');
@@ -92,7 +92,9 @@ test.describe('in the editor', () => {
     await expect(options(page).filter({ hasText: 'launch' })).toBeVisible();
     await settle(page);
     await page.keyboard.press('Enter');
-    await expect.poll(() => readFileOrEmpty(page, dir, 'fm.md'), { timeout: 5000 }).toBe('---\ntitle: X\nproject: site\ntype: project\nstatus: waiting\ntags: [launch\n---\nbody');
+    await expect
+      .poll(() => readFileOrEmpty(page, dir, 'fm.md'), { timeout: 5000 })
+      .toBe('---\ntitle: X\nproject: site\ntype: project\nstatus: waiting\ntags: [launch\n---\nbody');
   });
 
   test('suggestions do not appear where they would get in the way', async ({ page }) => {
@@ -195,13 +197,18 @@ test.describe('in fields', () => {
     // With nothing highlighted, Enter submits as before.
     await box.press('Enter');
     await expect(page.locator('.diff .add')).toContainText('title: Call');
-    await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Call.md')).toBe(`---\ntitle: Call\nstatus: todo\ncreated: ${localDate(0)}\ntags: [launch]\npeople: [sam]\n---\n\n`);
+    await expect
+      .poll(() => readFileOrEmpty(page, dir, 'tasks/Call.md'))
+      .toBe(`---\ntitle: Call\nstatus: todo\ncreated: ${localDate(0)}\ntags: [launch]\npeople: [sam]\n---\n\n`);
   });
 
   test('template fields suggest too, joined with commas, for example attendees', async ({ page }) => {
     const dir = await openVault(page, VAULT);
     await page.getByRole('button', { name: '+ New' }).click();
-    await page.locator('.modal').getByRole('button', { name: /^Meeting/ }).click();
+    await page
+      .locator('.modal')
+      .getByRole('button', { name: /^Meeting/ })
+      .click();
     await page.locator('#tpl-attendees').click();
     await expect(page.locator('.suggest button').first()).toBeVisible();
     await page.locator('.suggest button', { hasText: 'dana' }).click();

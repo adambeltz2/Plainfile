@@ -49,7 +49,19 @@ function theme(): Record<string, string> {
   const fg = v('--fg', '#000');
   const bg = v('--bg', '#fff');
   const soft = v('--soft', '#eee');
-  return { background: bg, primaryColor: soft, primaryTextColor: fg, primaryBorderColor: fg, lineColor: fg, secondaryColor: soft, tertiaryColor: bg, textColor: fg, nodeBorder: fg, clusterBkg: bg, edgeLabelBackground: bg };
+  return {
+    background: bg,
+    primaryColor: soft,
+    primaryTextColor: fg,
+    primaryBorderColor: fg,
+    lineColor: fg,
+    secondaryColor: soft,
+    tertiaryColor: bg,
+    textColor: fg,
+    nodeBorder: fg,
+    clusterBkg: bg,
+    edgeLabelBackground: bg,
+  };
 }
 
 export type Drawn = { svg: string } | { error: string };
@@ -68,6 +80,6 @@ export async function drawMermaid(source: string): Promise<Drawn> {
     cache.set(key, svg);
     return { svg };
   } catch (e) {
-    return { error: e instanceof Error ? e.message.split('\n')[0] ?? 'Could not draw this diagram.' : 'Could not draw this diagram.' };
+    return { error: e instanceof Error ? (e.message.split('\n')[0] ?? 'Could not draw this diagram.') : 'Could not draw this diagram.' };
   }
 }

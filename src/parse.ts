@@ -122,7 +122,11 @@ function maskCode(line: string): string {
 
 function toStringList(v: unknown): string[] {
   if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
-  if (typeof v === 'string') return v.split(/[,\s]+/).map((x) => x.trim()).filter(Boolean);
+  if (typeof v === 'string')
+    return v
+      .split(/[,\s]+/)
+      .map((x) => x.trim())
+      .filter(Boolean);
   return [];
 }
 

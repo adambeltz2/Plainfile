@@ -14,7 +14,24 @@ import { browserCache } from './index-cache';
 
 export const SAMPLE_DAY = '2026-11-21';
 
-export type ScreenId = 'home' | 'review' | 'insight' | 'recent' | 'today' | 'calendar' | 'people' | 'projects' | 'board' | 'notes' | 'explore' | 'search' | 'health' | 'rename' | 'guide' | 'changelog' | 'tasks';
+export type ScreenId =
+  | 'home'
+  | 'review'
+  | 'insight'
+  | 'recent'
+  | 'today'
+  | 'calendar'
+  | 'people'
+  | 'projects'
+  | 'board'
+  | 'notes'
+  | 'explore'
+  | 'search'
+  | 'health'
+  | 'rename'
+  | 'guide'
+  | 'changelog'
+  | 'tasks';
 export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | 'followups' | 'projects';
 
 export type Modal =
@@ -253,7 +270,10 @@ export function healthCount(): number {
 /** Quick add a task to the Inbox. Returns an error message, or null on success. */
 /** Split "launch, home #work" into ["launch", "home", "work"]. */
 export function words(s: string): string[] {
-  return s.split(/[\s,]+/).map((x) => x.replace(/^[#@]/, '')).filter(Boolean);
+  return s
+    .split(/[\s,]+/)
+    .map((x) => x.replace(/^[#@]/, ''))
+    .filter(Boolean);
 }
 
 /** The name a project goes by in `project:`, and the folder its task notes are filed in. */
@@ -268,7 +288,14 @@ export async function quickAddTask(input: { title: string; due?: string; tags?: 
   const { storage, index } = state;
   if (!storage || !index) return 'Open a folder first.';
   try {
-    const r = await addTaskNote(storage, index, { title: input.title, due: input.due || undefined, created: today(), tags: input.tags, people: input.people, project: input.project ? projectRef(input.project) : undefined });
+    const r = await addTaskNote(storage, index, {
+      title: input.title,
+      due: input.due || undefined,
+      created: today(),
+      tags: input.tags,
+      people: input.people,
+      project: input.project ? projectRef(input.project) : undefined,
+    });
     state.log = r;
     state.selected = r.taskId;
     state.context = undefined;
@@ -282,7 +309,8 @@ export async function quickAddTask(input: { title: string; due?: string; tags?: 
 export function planQuickLine(line: string, chosen = ''): { parsed: QuickLine; project?: Project; error?: string } {
   const parsed = parseQuickLine(line, today());
   // A +Project typed in the line wins; otherwise the project picked beside the box, if any.
-  let project: Project | undefined = parsed.project === undefined && chosen && state.index ? listProjects(state.index).find((p) => p.path === chosen) : undefined;
+  let project: Project | undefined =
+    parsed.project === undefined && chosen && state.index ? listProjects(state.index).find((p) => p.path === chosen) : undefined;
   if (parsed.project !== undefined && state.index) {
     project = findProject(listProjects(state.index), parsed.project);
     if (!project) return { parsed, error: `No project called "${parsed.project}". Make it from + New, or leave off the +.` };

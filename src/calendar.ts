@@ -25,12 +25,21 @@ export interface CalEvent {
 export function eventsBetween(index: VaultIndex, from: string, to: string): CalEvent[] {
   const out: CalEvent[] = [];
   for (const t of allTasks(index)) {
-    if (t.due && t.due >= from && t.due <= to) out.push({ date: t.due, kind: 'task', title: t.item.title, path: t.item.path, line: t.item.line, id: t.item.id, done: t.status === 'done' });
+    if (t.due && t.due >= from && t.due <= to)
+      out.push({ date: t.due, kind: 'task', title: t.item.title, path: t.item.path, line: t.item.line, id: t.item.id, done: t.status === 'done' });
   }
   for (const n of index.notes.values()) {
     if (n.fileTask) continue; // a task note is already there as a task, by its due date
     const d = normalizeDate(n.frontmatter.date);
-    if (d && d >= from && d <= to) out.push({ date: d, kind: 'note', title: n.title, path: n.path, done: false, type: typeof n.frontmatter.type === 'string' ? n.frontmatter.type : undefined });
+    if (d && d >= from && d <= to)
+      out.push({
+        date: d,
+        kind: 'note',
+        title: n.title,
+        path: n.path,
+        done: false,
+        type: typeof n.frontmatter.type === 'string' ? n.frontmatter.type : undefined,
+      });
   }
   return out.sort((a, b) => a.date.localeCompare(b.date) || Number(a.kind === 'note') - Number(b.kind === 'note') || a.title.localeCompare(b.title));
 }

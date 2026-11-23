@@ -4,7 +4,10 @@ import type { VaultStorage } from './storage';
 
 /** The file no longer looks the way the index last saw it. Rescan and try again. */
 export class StaleError extends Error {
-  constructor(public path: string, public line: number) {
+  constructor(
+    public path: string,
+    public line: number,
+  ) {
     super(`${path}:${line} changed since the last scan`);
     this.name = 'StaleError';
   }
@@ -71,13 +74,7 @@ function replaceStatus(body: string, value: string): string {
  * Tick or untick a task by editing the smallest possible piece of text:
  * one character for a checkbox line, one value for a task file's `status:` line.
  */
-export async function setTaskDone(
-  storage: VaultStorage,
-  index: VaultIndex,
-  id: string,
-  done: boolean,
-  opts: TaskStatusOptions = {},
-): Promise<ChangeResult> {
+export async function setTaskDone(storage: VaultStorage, index: VaultIndex, id: string, done: boolean, opts: TaskStatusOptions = {}): Promise<ChangeResult> {
   const task = index.getTask(id);
   if (!task) throw new Error(`no such task: ${id}`);
 
@@ -103,7 +100,7 @@ export async function setTaskDone(
     (n) => n.fileTask?.statusRaw,
     (body, n) => {
       if (n.fileTask?.done === done) return null;
-      return replaceStatus(body, done ? opts.doneStatus ?? 'done' : opts.reopenStatus ?? 'todo');
+      return replaceStatus(body, done ? (opts.doneStatus ?? 'done') : (opts.reopenStatus ?? 'todo'));
     },
   );
 }

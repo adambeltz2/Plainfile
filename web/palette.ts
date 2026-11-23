@@ -35,7 +35,15 @@ const SCREENS: [string, string][] = [
   ['guide', 'Cheat sheet'],
 ];
 
-const VERBS: Record<string, NoteAction> = { move: 'move', rename: 'rename', duplicate: 'duplicate', delete: 'delete', pin: 'pin', open: 'open', explore: 'explore' };
+const VERBS: Record<string, NoteAction> = {
+  move: 'move',
+  rename: 'rename',
+  duplicate: 'duplicate',
+  delete: 'delete',
+  pin: 'pin',
+  open: 'open',
+  explore: 'explore',
+};
 
 /** How well a note matches what was typed: lower is better, undefined is no match. Letters in order also count. */
 function score(title: string, path: string, q: string): number | undefined {
@@ -55,7 +63,11 @@ function matchNotes(q: string, limit: number): { title: string; path: string }[]
   const idx = state.index;
   if (!idx) return [];
   const all = [...idx.notes.values()];
-  if (!q) return all.sort((a, b) => b.mtime - a.mtime).slice(0, limit).map((n) => ({ title: n.title, path: n.path }));
+  if (!q)
+    return all
+      .sort((a, b) => b.mtime - a.mtime)
+      .slice(0, limit)
+      .map((n) => ({ title: n.title, path: n.path }));
   return all
     .map((n) => ({ n, s: score(n.title, n.path, q) }))
     .filter((x): x is { n: (typeof all)[number]; s: number } => x.s !== undefined)
@@ -72,9 +84,21 @@ export function items(): PaletteItem[] {
   const out: PaletteItem[] = [];
   const verb = /^(\w+)\s+(.+)$/.exec(q);
   const verbAction = verb ? VERBS[verb[1] as string] : undefined;
-  const label = (a: NoteAction, title: string): string => ({ move: `Move “${title}” to a folder…`, rename: `Rename “${title}”`, duplicate: `Duplicate “${title}”`, delete: `Delete “${title}”…`, pin: `${'Pin or unpin'} “${title}”`, open: `Open “${title}”`, explore: `Explore “${title}”` } as Record<string, string>)[a] ?? title;
+  const label = (a: NoteAction, title: string): string =>
+    (
+      ({
+        move: `Move “${title}” to a folder…`,
+        rename: `Rename “${title}”`,
+        duplicate: `Duplicate “${title}”`,
+        delete: `Delete “${title}”…`,
+        pin: `${'Pin or unpin'} “${title}”`,
+        open: `Open “${title}”`,
+        explore: `Explore “${title}”`,
+      }) as Record<string, string>
+    )[a] ?? title;
   if (verbAction && verb) {
-    for (const n of matchNotes(verb[2] as string, 3)) out.push({ kind: 'action', action: verbAction, path: n.path, label: label(verbAction, n.title), hint: n.path });
+    for (const n of matchNotes(verb[2] as string, 3))
+      out.push({ kind: 'action', action: verbAction, path: n.path, label: label(verbAction, n.title), hint: n.path });
   }
   const cur = notes.path;
   if (cur && q) {
@@ -92,12 +116,14 @@ export function items(): PaletteItem[] {
       ['print', 'Print this note or save it as PDF'],
       ['delete', 'Delete this note…'],
     ];
-    for (const [a, l] of acts) if (l.toLowerCase().includes(q) || a.includes(q)) out.push({ kind: 'action', action: a, path: cur, label: l, hint: KEYS[a] ?? t });
+    for (const [a, l] of acts)
+      if (l.toLowerCase().includes(q) || a.includes(q)) out.push({ kind: 'action', action: a, path: cur, label: l, hint: KEYS[a] ?? t });
   }
   for (const n of matchNotes(q, q ? 8 : 6)) out.push({ kind: 'note', label: n.title, hint: n.path, path: n.path });
   if (!q || 'quick note'.includes(q) || (q.length > 1 && 'quick note'.startsWith(q))) out.push({ kind: 'quick-note', label: 'Quick note', hint: 'Alt+N' });
   if (!q || 'new task'.includes(q) || 'task'.includes(q)) out.push({ kind: 'new-task', label: 'New task…', hint: 'Quick add' });
-  for (const [id, name] of SCREENS) if (!q || `go to ${name}`.toLowerCase().includes(q)) out.push({ kind: 'screen', screen: id, label: `Go to ${name}`, hint: '' });
+  for (const [id, name] of SCREENS)
+    if (!q || `go to ${name}`.toLowerCase().includes(q)) out.push({ kind: 'screen', screen: id, label: `Go to ${name}`, hint: '' });
   const made = raw && !idx.notes.has(raw) && ![...idx.notes.values()].some((n) => n.title.toLowerCase() === q);
   if (made) out.push({ kind: 'create', label: `New note “${raw}”`, hint: 'Create it', title: raw });
   return out.slice(0, 14);
@@ -111,7 +137,10 @@ export function html(): string {
     '<div class="modal-back pal-back" data-pal-backdrop><div class="modal pal" role="dialog" aria-modal="true" aria-label="Go to">' +
     `<input id="pal-q" class="inp" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="pal-list" placeholder="Open a note, make one, or run an action" value="${esc(pal.q)}">` +
     `<ul id="pal-list" class="plain pal-list" role="listbox">${list
-      .map((it, i) => `<li><button role="option" class="pal-item" data-pal="${i}" aria-selected="${i === pal.sel}"><b>${esc(it.label)}</b><span class="mono small">${esc(it.hint)}</span></button></li>`)
+      .map(
+        (it, i) =>
+          `<li><button role="option" class="pal-item" data-pal="${i}" aria-selected="${i === pal.sel}"><b>${esc(it.label)}</b><span class="mono small">${esc(it.hint)}</span></button></li>`,
+      )
       .join('')}${list.length ? '' : '<li class="muted small" style="padding:8px">Nothing matches.</li>'}</ul>` +
     '<p class="muted small" style="margin:8px 0 0">↑ ↓ to choose, Enter to run, Esc to close.</p></div></div>'
   );

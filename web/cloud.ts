@@ -52,10 +52,12 @@ export function html(): string {
   const saved = load();
   let h = '<div class="cloud"><h2>Dropbox</h2>';
   if (saved) {
-    h += `<p class="muted small" style="margin:0 0 8px">Signed in. Folder: <span class="mono">${esc(rootLabel(saved.root))}</span></p>` +
+    h +=
+      `<p class="muted small" style="margin:0 0 8px">Signed in. Folder: <span class="mono">${esc(rootLabel(saved.root))}</span></p>` +
       '<div class="row"><button class="btn primary" data-act="dropbox-open">Open Dropbox</button><button class="btn" data-act="dropbox-signout">Sign out</button></div>';
   } else if (!cloud.open) {
-    h += '<p class="muted small" style="margin:0 0 8px">Works in any browser, including iPhone and Safari. Files stay in your Dropbox.</p><button class="btn" data-act="dropbox-form">Connect Dropbox</button>';
+    h +=
+      '<p class="muted small" style="margin:0 0 8px">Works in any browser, including iPhone and Safari. Files stay in your Dropbox.</p><button class="btn" data-act="dropbox-form">Connect Dropbox</button>';
   } else {
     h +=
       `<div class="fld"><label for="db-root">Folder (optional)</label><input id="db-root" class="inp" autocomplete="off" spellcheck="false" placeholder="/Notes, or leave empty" value="${esc(cloud.root)}"></div>` +

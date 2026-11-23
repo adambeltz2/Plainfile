@@ -40,10 +40,15 @@ test('Recent orders by last change, shows Show more past 60 notes, and says when
 });
 
 test('tasks can be opened from Calendar and People, not only from Today', async ({ page }) => {
-  await openVault(page, {
-    'projects/site/index.md': '---\ntitle: Website\ntype: project\nactive: true\n---\n# Website\n',
-    'tasks/Fix footer.md': `---\ntitle: Fix footer\nstatus: todo\nproject: site\npeople: [dana]\ndue: ${new Date().toLocaleDateString('en-CA')}\n---\n\nFooter body text\n`,
-  }, true, 'today');
+  await openVault(
+    page,
+    {
+      'projects/site/index.md': '---\ntitle: Website\ntype: project\nactive: true\n---\n# Website\n',
+      'tasks/Fix footer.md': `---\ntitle: Fix footer\nstatus: todo\nproject: site\npeople: [dana]\ndue: ${new Date().toLocaleDateString('en-CA')}\n---\n\nFooter body text\n`,
+    },
+    true,
+    'today',
+  );
   await nav(page, 'Calendar').click();
   await page.locator('.cal-trow li.task .t, .tasks li.task .t').filter({ hasText: 'Fix footer' }).first().click();
   await expect(page.locator('.cm-content')).toContainText('Footer body text');

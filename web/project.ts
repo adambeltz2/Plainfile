@@ -37,9 +37,18 @@ function portfolioTable(idx: NonNullable<typeof state.index>): string {
     const c = typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y));
     return projectState.desc ? -c : c;
   });
-  const th = (id: string, label: string): string => `<th><button class="plain-btn" data-port-sort="${id}" aria-sort="${projectState.sort === id ? (projectState.desc ? 'descending' : 'ascending') : 'none'}">${label}${projectState.sort === id ? (projectState.desc ? ' ▾' : ' ▴') : ''}</button></th>`;
+  const th = (id: string, label: string): string =>
+    `<th><button class="plain-btn" data-port-sort="${id}" aria-sort="${projectState.sort === id ? (projectState.desc ? 'descending' : 'ascending') : 'none'}">${label}${projectState.sort === id ? (projectState.desc ? ' ▾' : ' ▴') : ''}</button></th>`;
   return (
-    '<div class="table-wrap"><table class="portfolio"><thead><tr>' + th('number', '#') + th('project', 'Project') + th('progress', 'Progress') + th('open', 'Open') + th('overdue', 'Overdue') + th('next', 'Next due') + th('changed', 'Last change') + '</tr></thead><tbody>' +
+    '<div class="table-wrap"><table class="portfolio"><thead><tr>' +
+    th('number', '#') +
+    th('project', 'Project') +
+    th('progress', 'Progress') +
+    th('open', 'Open') +
+    th('overdue', 'Overdue') +
+    th('next', 'Next due') +
+    th('changed', 'Last change') +
+    '</tr></thead><tbody>' +
     rows
       .map(
         (r) =>
@@ -57,7 +66,8 @@ function overview(): string {
   const all = listProjects(idx);
   let h = '<h2 class="title">Projects</h2>';
   h += `<p class="meta">${all.filter((p) => p.active).length} active · pick one to see its tasks, notes, people and follow-ups in one place</p>`;
-  h += '<div class="row-gap" style="margin:0 0 12px"><button class="btn primary" data-act="proj-new">+ New project</button><button class="btn" data-open-project="*">All tasks</button></div>';
+  h +=
+    '<div class="row-gap" style="margin:0 0 12px"><button class="btn primary" data-act="proj-new">+ New project</button><button class="btn" data-open-project="*">All tasks</button></div>';
   if (!all.length) {
     return `${h}<div class="empty">No projects yet. Make one with <b>+ New project</b>. A project is a folder with an <code>index.md</code> (<code>type: project</code>), or any note with <code>active</code> or <code>sortOrder</code> in its frontmatter.</div>`;
   }

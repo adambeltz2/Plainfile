@@ -196,7 +196,8 @@ function build(view: EditorView): { all: DecorationSet; atomic: DecorationSet } 
     }
     if (FENCE.test(text)) {
       inFence = !inFence;
-      if (inFence) diagram = isMermaidOpen(text) ? [] : undefined; // MERMAID
+      if (inFence)
+        diagram = isMermaidOpen(text) ? [] : undefined; // MERMAID
       else if (diagram) items.push(Decoration.widget({ widget: new MermaidWidget(diagram.join('\n')), side: 1 }).range(line.to)); // MERMAID
       items.push(Decoration.line({ class: 'cm-code' }).range(line.from));
       continue;
@@ -319,7 +320,7 @@ function openDateMenu(view: EditorView, chip: HTMLElement, today: () => string):
   const range = found;
   const t = today();
   const dow = new Date(`${t}T00:00:00Z`).getUTCDay();
-  const nextMon = addDays(t, ((8 - dow) % 7) || 7);
+  const nextMon = addDays(t, (8 - dow) % 7 || 7);
   const options: [string, string][] = [
     ['Today', t],
     ['Tomorrow', addDays(t, 1)],
@@ -486,7 +487,17 @@ async function insertImages(view: EditorView, files: File[], save: (f: File) => 
 const imagesIn = (list: FileList | DataTransferItemList | null | undefined): File[] =>
   [...((list as FileList | undefined) ?? [])].filter((f): f is File => f instanceof File && f.type.startsWith('image/'));
 
-export function createEditor(o: { openLink?: (link: LinkAt) => void; text: string; crlf: boolean; today: () => string; onChange(): void; onSave(): void; suggest?: Suggester; pasteImage?: (f: File) => Promise<string | null>; loadImage?: (rel: string) => Promise<string | undefined> }): EditorHandle {
+export function createEditor(o: {
+  openLink?: (link: LinkAt) => void;
+  text: string;
+  crlf: boolean;
+  today: () => string;
+  onChange(): void;
+  onSave(): void;
+  suggest?: Suggester;
+  pasteImage?: (f: File) => Promise<string | null>;
+  loadImage?: (rel: string) => Promise<string | undefined>;
+}): EditorHandle {
   const mode = new Compartment();
   const host = document.createElement('div');
   host.className = 'editor-host';

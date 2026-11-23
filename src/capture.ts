@@ -20,7 +20,13 @@ export function cleanTaskText(text: string): string {
 export async function addTask(
   storage: VaultStorage,
   index: VaultIndex,
-  input: { text: string; due?: string; /** Today, written as `created:` so you can see when it was added. */ created?: string; tags?: string[]; people?: string[] },
+  input: {
+    text: string;
+    due?: string;
+    /** Today, written as `created:` so you can see when it was added. */ created?: string;
+    tags?: string[];
+    people?: string[];
+  },
   path: string = INBOX_FILE,
 ): Promise<ChangeResult> {
   const text = cleanTaskText(input.text);
@@ -61,11 +67,17 @@ export async function addTask(
 
 /** A file name for a task note: the title, without characters file systems refuse, and not too long. */
 export function taskFileName(title: string): string {
-  const clean = title.replace(/[\\/:?*"<>|#\[\]^]/g, '-').replace(/\s+/g, ' ').replace(/^[.\s-]+|[\s.-]+$/g, '').slice(0, 80).trim();
+  const clean = title
+    .replace(/[\\/:?*"<>|#\[\]^]/g, '-')
+    .replace(/\s+/g, ' ')
+    .replace(/^[.\s-]+|[\s.-]+$/g, '')
+    .slice(0, 80)
+    .trim();
   return clean || 'Task';
 }
 
-const yamlText = (v: string): string => (/^[\w][^:#]*$/.test(v) && !/^(true|false|null|yes|no|~)$/i.test(v) && !/\s$/.test(v) ? v : `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+const yamlText = (v: string): string =>
+  /^[\w][^:#]*$/.test(v) && !/^(true|false|null|yes|no|~)$/i.test(v) && !/\s$/.test(v) ? v : `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 const flow = (xs: string[]): string => `[${xs.map((x) => (/^[\w][\w./-]*$/.test(x) ? x : `"${x.replace(/"/g, '\\"')}"`)).join(', ')}]`;
 
 export interface TaskNoteInput {
@@ -87,7 +99,9 @@ export interface TaskNoteInput {
 export async function addTaskNote(storage: VaultStorage, index: VaultIndex, input: TaskNoteInput): Promise<ChangeResult & { taskId: string }> {
   const title = input.title.replace(/\s+/g, ' ').trim();
   if (!title) throw new Error('Type something for the task first.');
-  const clean = (xs: string[] | undefined, re: RegExp): string[] => [...new Set((xs ?? []).map((x) => x.trim().replace(re, '').replace(/\s+/g, '-')).filter(Boolean))];
+  const clean = (xs: string[] | undefined, re: RegExp): string[] => [
+    ...new Set((xs ?? []).map((x) => x.trim().replace(re, '').replace(/\s+/g, '-')).filter(Boolean)),
+  ];
   const build = (shown: string): string[] => {
     const fm = [`title: ${yamlText(shown)}`, 'status: todo'];
     if (input.due) fm.push(`due: ${input.due}`);

@@ -69,7 +69,11 @@ function slippedHtml(): string {
     late
       .map(
         (t) =>
-          `<li class="rv-item"><div class="rv-t"><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button> <span class="chip late">${esc(t.due ? fmtDate(t.due) : '')}</span></div><div class="rv-ctl">${quickDates().map(([l, d]) => `<button class="btn small" data-rv-due="${esc(t.item.id)}|${d}">${l}</button>`).join('')}<button class="btn small" data-rv-due="${esc(t.item.id)}|">No date</button><button class="btn small primary" data-rv-done="${esc(t.item.id)}">Done</button></div></li>`,
+          `<li class="rv-item"><div class="rv-t"><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button> <span class="chip late">${esc(t.due ? fmtDate(t.due) : '')}</span></div><div class="rv-ctl">${quickDates()
+            .map(([l, d]) => `<button class="btn small" data-rv-due="${esc(t.item.id)}|${d}">${l}</button>`)
+            .join(
+              '',
+            )}<button class="btn small" data-rv-due="${esc(t.item.id)}|">No date</button><button class="btn small primary" data-rv-done="${esc(t.item.id)}">Done</button></div></li>`,
       )
       .join('') +
     '</ul>'
@@ -86,7 +90,9 @@ function waitingHtml(): string {
     w
       .map(
         ({ task: t, days }) =>
-          `<li class="rv-item"><div class="rv-t"><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button>${t.people.length ? ` <span class="chip mono">@${esc(t.people[0] ?? '')}</span>` : ''}${days !== undefined ? ` <span class="muted small">${days} day${days === 1 ? '' : 's'}</span>` : ''}</div><div class="rv-ctl">${quickDates().map(([l, d]) => `<button class="btn small" data-rv-due="${esc(t.item.id)}|${d}">Check ${l.toLowerCase()}</button>`).join('')}<button class="btn small primary" data-rv-done="${esc(t.item.id)}">Arrived</button></div></li>`,
+          `<li class="rv-item"><div class="rv-t"><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button>${t.people.length ? ` <span class="chip mono">@${esc(t.people[0] ?? '')}</span>` : ''}${days !== undefined ? ` <span class="muted small">${days} day${days === 1 ? '' : 's'}</span>` : ''}</div><div class="rv-ctl">${quickDates()
+            .map(([l, d]) => `<button class="btn small" data-rv-due="${esc(t.item.id)}|${d}">Check ${l.toLowerCase()}</button>`)
+            .join('')}<button class="btn small primary" data-rv-done="${esc(t.item.id)}">Arrived</button></div></li>`,
       )
       .join('') +
     '</ul>'
@@ -100,12 +106,23 @@ function planHtml(): string {
   const free = undated(idx);
   const days = week.map((d) => `<option value="${d.date}">${esc(fmtDate(d.date))}</option>`).join('');
   return (
-    `<div class="rv-week">${week.map((d) => `<div class="rv-day${d.open > 4 ? ' heavy' : ''}"><b>${esc(fmtDate(d.date))}</b> <span class="n">${d.open}</span>${d.open > 4 ? ' <span class="chip late">heavy</span>' : ''}<ul class="plain small">${d.tasks.slice(0, 4).map((t) => `<li>${esc(t.item.title)}</li>`).join('')}${d.tasks.length > 4 ? `<li class="muted">+${d.tasks.length - 4} more</li>` : ''}</ul></div>`).join('')}</div>` +
+    `<div class="rv-week">${week
+      .map(
+        (d) =>
+          `<div class="rv-day${d.open > 4 ? ' heavy' : ''}"><b>${esc(fmtDate(d.date))}</b> <span class="n">${d.open}</span>${d.open > 4 ? ' <span class="chip late">heavy</span>' : ''}<ul class="plain small">${d.tasks
+            .slice(0, 4)
+            .map((t) => `<li>${esc(t.item.title)}</li>`)
+            .join('')}${d.tasks.length > 4 ? `<li class="muted">+${d.tasks.length - 4} more</li>` : ''}</ul></div>`,
+      )
+      .join('')}</div>` +
     `<h3 class="grp">Tasks with no date <span>${free.length}</span></h3>` +
     (free.length
       ? `<p class="muted small">Pick a day for the ones you want to do this week. Leave the rest.</p><ul class="plain rv-list">${free
           .slice(0, 25)
-          .map((t) => `<li class="rv-item"><div class="rv-t"><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button></div><div class="rv-ctl"><select class="inp" data-rv-plan="${esc(t.item.id)}" aria-label="Day for ${esc(t.item.title)}"><option value="">Pick a day…</option>${days}</select></div></li>`)
+          .map(
+            (t) =>
+              `<li class="rv-item"><div class="rv-t"><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button></div><div class="rv-ctl"><select class="inp" data-rv-plan="${esc(t.item.id)}" aria-label="Day for ${esc(t.item.title)}"><option value="">Pick a day…</option>${days}</select></div></li>`,
+          )
           .join('')}${free.length > 25 ? `<li class="muted small">and ${free.length - 25} more</li>` : ''}</ul>`
       : '<div class="empty">Every open task has a date.</div>')
   );

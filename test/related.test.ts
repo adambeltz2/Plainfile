@@ -11,9 +11,12 @@ async function setup(files: Record<string, string>) {
 
 const VAULT = {
   'projects/site/index.md': '---\ntitle: Website relaunch\ntype: project\ntags: [launch]\n---\nSee [[kickoff]] and [[pricing-research]].\n',
-  'projects/site/kickoff.md': '---\ntitle: Kickoff call\ntags: [launch, meeting]\nproject: site\n---\nDana agreed the pricing page copy and the launch date.\nBack to [[Website relaunch]].\n',
-  'projects/site/pricing-research.md': '---\ntitle: Pricing research\ntags: [launch, pricing]\nproject: site\n---\nCompetitor pricing tiers and per seat pricing for the pricing page.\n',
-  'reference/pricing-psychology.md': '---\ntags: [pricing, reading]\n---\n# Pricing psychology\nAnchoring and decoy pricing make tiers look sensible on a pricing page.\n',
+  'projects/site/kickoff.md':
+    '---\ntitle: Kickoff call\ntags: [launch, meeting]\nproject: site\n---\nDana agreed the pricing page copy and the launch date.\nBack to [[Website relaunch]].\n',
+  'projects/site/pricing-research.md':
+    '---\ntitle: Pricing research\ntags: [launch, pricing]\nproject: site\n---\nCompetitor pricing tiers and per seat pricing for the pricing page.\n',
+  'reference/pricing-psychology.md':
+    '---\ntags: [pricing, reading]\n---\n# Pricing psychology\nAnchoring and decoy pricing make tiers look sensible on a pricing page.\n',
   'people/dana.md': '---\ntitle: Dana Ortiz\naliases: [Dana]\n---\nBrand lead at Northfield.\n',
   'journal/day.md': 'Spoke with Dana Ortiz about the Website relaunch today.\n```\nDana Ortiz in code is ignored\n```\n',
   'misc/cooking.md': '---\ntags: [food]\n---\nA recipe for tomato soup with basil.\n',
@@ -106,7 +109,10 @@ describe('hubs and graph', () => {
     const index = await setup(VAULT);
     const g = graphAround(index, 'projects/site/kickoff.md', { depth: 2, related: 2 });
     expect(g.nodes[0]).toMatchObject({ path: 'projects/site/kickoff.md', kind: 'focus', depth: 0 });
-    const linked = g.nodes.filter((n) => n.kind === 'link').map((n) => n.path).sort();
+    const linked = g.nodes
+      .filter((n) => n.kind === 'link')
+      .map((n) => n.path)
+      .sort();
     expect(linked).toEqual(['projects/site/index.md', 'projects/site/pricing-research.md']);
     expect(g.edges.filter((e) => e.kind === 'link').length).toBeGreaterThanOrEqual(3);
     const related = g.nodes.filter((n) => n.kind === 'related');

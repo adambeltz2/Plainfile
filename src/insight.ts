@@ -29,16 +29,17 @@ export function activity(index: VaultIndex, today: string, weeks = 26): { weeks:
   let days = 0;
   let busiest: Heat | undefined;
   const values: number[] = [];
-  for (let w = 0; w < weeks; w++) for (let d = 0; d < 7; d++) {
-    const c = counts.get(addDays(start, w * 7 + d)) ?? 0;
-    if (c) values.push(c);
-  }
+  for (let w = 0; w < weeks; w++)
+    for (let d = 0; d < 7; d++) {
+      const c = counts.get(addDays(start, w * 7 + d)) ?? 0;
+      if (c) values.push(c);
+    }
   const max = Math.max(0, ...values);
   for (let w = 0; w < weeks; w++) {
     const col: Heat[] = [];
     for (let d = 0; d < 7; d++) {
       const date = addDays(start, w * 7 + d);
-      const count = date > today ? 0 : counts.get(date) ?? 0;
+      const count = date > today ? 0 : (counts.get(date) ?? 0);
       const level: Heat['level'] = count === 0 ? 0 : count <= max / 3 ? 1 : count <= (2 * max) / 3 ? 2 : 3;
       const h = { date, count, level };
       col.push(h);
@@ -90,7 +91,10 @@ export function folderSizes(index: VaultIndex, limit = 8): { folder: string; not
     const top = n.path.includes('/') ? (n.path.split('/')[0] as string) : '(top level)';
     m.set(top, (m.get(top) ?? 0) + 1);
   }
-  return [...m].map(([folder, notes]) => ({ folder, notes })).sort((a, b) => b.notes - a.notes || a.folder.localeCompare(b.folder)).slice(0, limit);
+  return [...m]
+    .map(([folder, notes]) => ({ folder, notes }))
+    .sort((a, b) => b.notes - a.notes || a.folder.localeCompare(b.folder))
+    .slice(0, limit);
 }
 
 export type Drill = 'edited' | 'notesCreated' | 'tasksCreated' | 'tasksDone' | 'open' | 'overdue';
@@ -108,7 +112,11 @@ export function drillItems(index: VaultIndex, today: string, kind: Drill): Drill
   const month = today.slice(0, 7);
   const notes = [...index.notes.values()];
   const byTime = (a: { path: string }, b: { path: string }) => (index.notes.get(b.path)?.mtime ?? 0) - (index.notes.get(a.path)?.mtime ?? 0);
-  if (kind === 'edited') return notes.filter((n) => localDateOf(n.mtime).startsWith(month)).map((n) => ({ path: n.path, title: n.title, hint: localDateOf(n.mtime) })).sort(byTime);
+  if (kind === 'edited')
+    return notes
+      .filter((n) => localDateOf(n.mtime).startsWith(month))
+      .map((n) => ({ path: n.path, title: n.title, hint: localDateOf(n.mtime) }))
+      .sort(byTime);
   if (kind === 'notesCreated') {
     return notes
       .filter((n) => !n.fileTask && normalizeDate(n.frontmatter.created)?.startsWith(month))
@@ -116,11 +124,27 @@ export function drillItems(index: VaultIndex, today: string, kind: Drill): Drill
       .sort((a, b) => b.hint.localeCompare(a.hint));
   }
   const tasks = allTasks(index);
-  const pick = (list: typeof tasks, hint: (t: (typeof tasks)[number]) => string): DrillItem[] => list.map((t) => ({ path: t.item.path, title: t.item.title, line: t.item.line, hint: hint(t) })).sort((a, b) => b.hint.localeCompare(a.hint));
-  if (kind === 'tasksCreated') return pick(tasks.filter((t) => (t.item.created ?? '').startsWith(month)), (t) => t.item.created ?? '');
-  if (kind === 'tasksDone') return pick(tasks.filter((t) => t.status === 'done' && localDateOf(t.note.mtime).startsWith(month)), (t) => localDateOf(t.note.mtime));
-  if (kind === 'overdue') return pick(tasks.filter((t) => t.status !== 'done' && t.due && t.due < today), (t) => t.due ?? '').reverse();
-  return pick(tasks.filter((t) => t.status !== 'done'), (t) => t.due ?? '');
+  const pick = (list: typeof tasks, hint: (t: (typeof tasks)[number]) => string): DrillItem[] =>
+    list.map((t) => ({ path: t.item.path, title: t.item.title, line: t.item.line, hint: hint(t) })).sort((a, b) => b.hint.localeCompare(a.hint));
+  if (kind === 'tasksCreated')
+    return pick(
+      tasks.filter((t) => (t.item.created ?? '').startsWith(month)),
+      (t) => t.item.created ?? '',
+    );
+  if (kind === 'tasksDone')
+    return pick(
+      tasks.filter((t) => t.status === 'done' && localDateOf(t.note.mtime).startsWith(month)),
+      (t) => localDateOf(t.note.mtime),
+    );
+  if (kind === 'overdue')
+    return pick(
+      tasks.filter((t) => t.status !== 'done' && t.due && t.due < today),
+      (t) => t.due ?? '',
+    ).reverse();
+  return pick(
+    tasks.filter((t) => t.status !== 'done'),
+    (t) => t.due ?? '',
+  );
 }
 
 /** Notes whose file changed on one day, newest first. */

@@ -16,7 +16,11 @@ async function fakeDropbox(page: Page, fake: FakeDropbox): Promise<{ tokenBodies
   await page.route('https://api.dropboxapi.com/oauth2/token', (route) => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
     tokenBodies.push(route.request().postData() ?? '');
-    return route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify({ access_token: 'good', refresh_token: 'refresh1', expires_in: 14400 }) });
+    return route.fulfill({
+      status: 200,
+      headers: { ...cors, 'content-type': 'application/json' },
+      body: JSON.stringify({ access_token: 'good', refresh_token: 'refresh1', expires_in: 14400 }),
+    });
   });
   await page.route(/https:\/\/(api|content)\.dropboxapi\.com\/2\/.*/, async (route) => {
     const req = route.request();

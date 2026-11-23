@@ -16,15 +16,41 @@ export type Status = 'todo' | 'doing' | 'waiting' | 'done';
 export const STATUSES: Status[] = ['todo', 'doing', 'waiting', 'done'];
 
 const STATUS_WORDS: Record<string, Status> = {
-  todo: 'todo', 'to do': 'todo', 'to-do': 'todo', open: 'todo', backlog: 'todo', new: 'todo', 'not started': 'todo', planned: 'todo',
-  doing: 'doing', 'in progress': 'doing', 'in-progress': 'doing', inprogress: 'doing', started: 'doing', wip: 'doing', active: 'doing',
-  waiting: 'waiting', blocked: 'waiting', 'on hold': 'waiting', hold: 'waiting', 'waiting on': 'waiting',
-  done: 'done', complete: 'done', completed: 'done', closed: 'done', finished: 'done', x: 'done',
+  todo: 'todo',
+  'to do': 'todo',
+  'to-do': 'todo',
+  open: 'todo',
+  backlog: 'todo',
+  new: 'todo',
+  'not started': 'todo',
+  planned: 'todo',
+  doing: 'doing',
+  'in progress': 'doing',
+  'in-progress': 'doing',
+  inprogress: 'doing',
+  started: 'doing',
+  wip: 'doing',
+  active: 'doing',
+  waiting: 'waiting',
+  blocked: 'waiting',
+  'on hold': 'waiting',
+  hold: 'waiting',
+  'waiting on': 'waiting',
+  done: 'done',
+  complete: 'done',
+  completed: 'done',
+  closed: 'done',
+  finished: 'done',
+  x: 'done',
 };
 
 /** A status as written, to one of the four the app uses. Undefined if it is not a word we know. */
 export function normalizeStatus(raw: unknown): Status | undefined {
-  return STATUS_WORDS[String(raw ?? '').trim().toLowerCase()];
+  return STATUS_WORDS[
+    String(raw ?? '')
+      .trim()
+      .toLowerCase()
+  ];
 }
 
 /** Other spellings read for each canonical key. The canonical name is what gets written. */
@@ -79,28 +105,68 @@ const isTaskNote = (n: Note): boolean => !!n.fileTask || /(^|\/)tasks\//.test(n.
 export function fieldIssues(index: VaultIndex, notes: Note[]): FieldIssue[] {
   const out: FieldIssue[] = [];
   const projects: Project[] = listProjects(index);
-  const add = (n: Note, kind: IssueKind, message: string, fix?: FieldIssue['fix']): void => void out.push({ id: `${n.path}#${kind}:${fix?.key ?? ''}`, path: n.path, title: n.title, kind, message, fix });
+  const add = (n: Note, kind: IssueKind, message: string, fix?: FieldIssue['fix']): void =>
+    void out.push({ id: `${n.path}#${kind}:${fix?.key ?? ''}`, path: n.path, title: n.title, kind, message, fix });
   for (const n of notes) {
     const fm = n.frontmatter;
     if (isTaskNote(n)) {
       const st = fieldOf(fm, 'status');
-      if (!st) add(n, 'missing-status', 'A task note without a status is not counted as a task.', { key: 'status', value: 'todo', before: '(no status)', after: 'status: todo' });
+      if (!st)
+        add(n, 'missing-status', 'A task note without a status is not counted as a task.', {
+          key: 'status',
+          value: 'todo',
+          before: '(no status)',
+          after: 'status: todo',
+        });
       else {
         const canon = normalizeStatus(st.value);
-        if (!canon) add(n, 'unknown-status', `“${String(st.value)}” is not a status Plainfile knows (todo, doing, waiting, done).`, { key: 'status', value: 'todo', remove: st.key === 'status' ? undefined : st.key, before: `${st.key}: ${String(st.value)}`, after: 'status: todo' });
-        else if (st.key !== 'status') add(n, 'alias-key', `Written as “${st.key}”. The standard name is “status”.`, { key: 'status', value: canon, remove: st.key, before: `${st.key}: ${String(st.value)}`, after: `status: ${canon}` });
-        else if (String(st.value) !== canon) add(n, 'status-value', `“${String(st.value)}” is written as “${canon}”.`, { key: 'status', value: canon, before: `status: ${String(st.value)}`, after: `status: ${canon}` });
+        if (!canon)
+          add(n, 'unknown-status', `“${String(st.value)}” is not a status Plainfile knows (todo, doing, waiting, done).`, {
+            key: 'status',
+            value: 'todo',
+            remove: st.key === 'status' ? undefined : st.key,
+            before: `${st.key}: ${String(st.value)}`,
+            after: 'status: todo',
+          });
+        else if (st.key !== 'status')
+          add(n, 'alias-key', `Written as “${st.key}”. The standard name is “status”.`, {
+            key: 'status',
+            value: canon,
+            remove: st.key,
+            before: `${st.key}: ${String(st.value)}`,
+            after: `status: ${canon}`,
+          });
+        else if (String(st.value) !== canon)
+          add(n, 'status-value', `“${String(st.value)}” is written as “${canon}”.`, {
+            key: 'status',
+            value: canon,
+            before: `status: ${String(st.value)}`,
+            after: `status: ${canon}`,
+          });
       }
       const due = fieldOf(fm, 'due');
       if (due) {
         const iso = normalizeDate(due.value);
         if (!iso) add(n, 'unreadable-due', `Could not read the date “${String(due.value)}”.`);
-        else if (due.key !== 'due' || String(due.value) !== iso) add(n, due.key !== 'due' ? 'alias-key' : 'due-format', due.key !== 'due' ? `Written as “${due.key}”. The standard name is “due”.` : `“${String(due.value)}” is written as ${iso}.`, { key: 'due', value: iso, remove: due.key === 'due' ? undefined : due.key, before: `${due.key}: ${String(due.value)}`, after: `due: ${iso}` });
+        else if (due.key !== 'due' || String(due.value) !== iso)
+          add(
+            n,
+            due.key !== 'due' ? 'alias-key' : 'due-format',
+            due.key !== 'due' ? `Written as “${due.key}”. The standard name is “due”.` : `“${String(due.value)}” is written as ${iso}.`,
+            { key: 'due', value: iso, remove: due.key === 'due' ? undefined : due.key, before: `${due.key}: ${String(due.value)}`, after: `due: ${iso}` },
+          );
       }
     }
     for (const alias of ['phase', 'people'] as const) {
       const f = fieldOf(fm, alias);
-      if (f && f.key !== alias && isTaskNote(n)) add(n, 'alias-key', `Written as “${f.key}”. The standard name is “${alias}”.`, { key: alias, value: Array.isArray(f.value) ? `[${f.value.map(String).join(', ')}]` : String(f.value), remove: f.key, before: `${f.key}: ${Array.isArray(f.value) ? `[${f.value.join(', ')}]` : String(f.value)}`, after: `${alias}: ${Array.isArray(f.value) ? `[${f.value.join(', ')}]` : String(f.value)}` });
+      if (f && f.key !== alias && isTaskNote(n))
+        add(n, 'alias-key', `Written as “${f.key}”. The standard name is “${alias}”.`, {
+          key: alias,
+          value: Array.isArray(f.value) ? `[${f.value.map(String).join(', ')}]` : String(f.value),
+          remove: f.key,
+          before: `${f.key}: ${Array.isArray(f.value) ? `[${f.value.join(', ')}]` : String(f.value)}`,
+          after: `${alias}: ${Array.isArray(f.value) ? `[${f.value.join(', ')}]` : String(f.value)}`,
+        });
     }
     const pr = fieldOf(fm, 'project');
     if (pr) {

@@ -25,7 +25,9 @@ export function html(): string {
   const waiting = waitingOn(idx, t);
   const week = weekAhead(idx, t);
   const peak = Math.max(1, ...week.map((d) => d.open));
-  const rows = portfolio(idx, t).filter((r) => r.project.active).slice(0, 5);
+  const rows = portfolio(idx, t)
+    .filter((r) => r.project.active)
+    .slice(0, 5);
 
   const card = (title: string, body: string, extra = ''): string => `<section class="card home-card"><h3>${esc(title)}${extra}</h3>${body}</section>`;
   const list = (items: string[]): string => `<ul class="plain home-rows">${items.map((x) => `<li>${x}</li>`).join('')}</ul>`;
@@ -39,27 +41,51 @@ export function html(): string {
   h += card(
     'Projects',
     rows.length
-      ? rows.map((r) => `<button class="home-proj" data-open-project="${esc(r.project.path)}"><span>${r.project.number ?? '–'} ${esc(r.project.title)}</span><span class="small muted">${r.open} open${r.overdue ? ` · ${r.overdue} late` : ''}</span><span class="prog"><i style="width:${r.total ? Math.round((r.done / r.total) * 100) : 0}%"></i></span></button>`).join('')
+      ? rows
+          .map(
+            (r) =>
+              `<button class="home-proj" data-open-project="${esc(r.project.path)}"><span>${r.project.number ?? '–'} ${esc(r.project.title)}</span><span class="small muted">${r.open} open${r.overdue ? ` · ${r.overdue} late` : ''}</span><span class="prog"><i style="width:${r.total ? Math.round((r.done / r.total) * 100) : 0}%"></i></span></button>`,
+          )
+          .join('')
       : '<p class="muted small" style="margin:0">No projects yet. Make one from + New.</p>',
   );
   h += card(
     'Today',
     due.length
-      ? `<ul class="tasks">${due.slice(0, 8).map((x) => row(x)).join('')}</ul>${due.length > 8 ? `<p class="small muted">and ${due.length - 8} more</p>` : ''}<button class="btn small" data-nav="today">All of Today</button>`
+      ? `<ul class="tasks">${due
+          .slice(0, 8)
+          .map((x) => row(x))
+          .join(
+            '',
+          )}</ul>${due.length > 8 ? `<p class="small muted">and ${due.length - 8} more</p>` : ''}<button class="btn small" data-nav="today">All of Today</button>`
       : '<p class="muted small" style="margin:0 0 6px">Nothing is due or late. Enjoy it, or look at the week below.</p><button class="btn small" data-nav="today">Open Today</button>',
     ` <span class="n">${due.length}</span>`,
   );
   h += card(
     'Needs filing',
     unfiled.length
-      ? list(unfiled.slice(0, 3).map((u) => `<button class="item note-quick" data-open="${esc(u.path)}"><span>${esc(u.title)}</span><span class="chip quiet">${u.kind === 'task' ? 'task' : 'note'}</span></button>`)) + `<button class="btn small primary" data-nav="review">${unfiled.length > 3 ? `File all ${unfiled.length}` : 'File them'}</button>`
+      ? list(
+          unfiled
+            .slice(0, 3)
+            .map(
+              (u) =>
+                `<button class="item note-quick" data-open="${esc(u.path)}"><span>${esc(u.title)}</span><span class="chip quiet">${u.kind === 'task' ? 'task' : 'note'}</span></button>`,
+            ),
+        ) + `<button class="btn small primary" data-nav="review">${unfiled.length > 3 ? `File all ${unfiled.length}` : 'File them'}</button>`
       : '<p class="muted small" style="margin:0">Everything is filed.</p>',
     unfiled.length ? ` <span class="chip late">${unfiled.length}</span>` : '',
   );
   h += card(
     'Waiting on',
     waiting.length
-      ? list(waiting.slice(0, 4).map((w) => `<button class="item note-quick" data-open="${esc(w.task.item.path)}" data-line="${w.task.item.line}"><span>${esc(w.task.item.title)}</span><span class="muted small">${w.task.people.length ? `@${esc(w.task.people[0] ?? '')} · ` : ''}${w.days !== undefined ? `${w.days} d` : ''}</span></button>`))
+      ? list(
+          waiting
+            .slice(0, 4)
+            .map(
+              (w) =>
+                `<button class="item note-quick" data-open="${esc(w.task.item.path)}" data-line="${w.task.item.line}"><span>${esc(w.task.item.title)}</span><span class="muted small">${w.task.people.length ? `@${esc(w.task.people[0] ?? '')} · ` : ''}${w.days !== undefined ? `${w.days} d` : ''}</span></button>`,
+            ),
+        )
       : '<p class="muted small" style="margin:0">You are not waiting on anything.</p>',
   );
   return `${h}</div></div>`;

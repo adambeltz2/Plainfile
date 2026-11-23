@@ -30,7 +30,10 @@ export function frontmatterKeys(index: VaultIndex): KeyUse[] {
     .map(([key, e]) => ({
       key,
       count: e.count,
-      samples: [...e.samples].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 3).map(([s]) => s),
+      samples: [...e.samples]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, 3)
+        .map(([s]) => s),
     }))
     .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
 }

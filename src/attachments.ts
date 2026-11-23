@@ -5,8 +5,26 @@ import { ExistsError, type VaultStorage } from './storage';
 /** Where pasted images are kept, at the top of the vault. */
 export const ATTACHMENTS_DIR = '_attachments';
 
-const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/avif': 'avif', 'image/bmp': 'bmp' };
-const MIME: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', avif: 'image/avif', bmp: 'image/bmp' };
+const EXT: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/svg+xml': 'svg',
+  'image/avif': 'avif',
+  'image/bmp': 'bmp',
+};
+const MIME: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  svg: 'image/svg+xml',
+  avif: 'image/avif',
+  bmp: 'image/bmp',
+};
 
 export const isImageType = (mime: string): boolean => mime.startsWith('image/');
 
@@ -25,7 +43,12 @@ export function pastedName(mime: string, now: Date): string {
 
 /** A dropped file's own name, made safe for a link. Empty when it is just the generic name a paste gets. */
 export function safeName(name: string): string {
-  const clean = name.trim().replace(/[^\w.-]+/g, '-').replace(/-+/g, '-').replace(/-+(\.\w+)$/, '$1').replace(/^[.-]+|-+$/g, '');
+  const clean = name
+    .trim()
+    .replace(/[^\w.-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/-+(\.\w+)$/, '$1')
+    .replace(/^[.-]+|-+$/g, '');
   return /^(image|blob|pasted)\.\w+$/i.test(clean) || !clean ? '' : clean;
 }
 

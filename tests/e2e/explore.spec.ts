@@ -5,18 +5,20 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-
 async function sample(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
   await nav(page, 'Explore').click();
 }
 
 test.describe('explore', () => {
-  test('starts with the most connected notes and shows a note\'s links and graph', async ({ page }) => {
+  test("starts with the most connected notes and shows a note's links and graph", async ({ page }) => {
     await sample(page);
     await expect(page.locator('.empty, .meta').first()).toBeVisible();
     await expect(page.locator('#explore-list .item').first()).toBeVisible();
-    await page.locator('#explore-list').getByRole('button', { name: /^Pricing research/ }).click();
+    await page
+      .locator('#explore-list')
+      .getByRole('button', { name: /^Pricing research/ })
+      .click();
     await expect(page.locator('.ed-head .title')).toHaveText('Pricing research');
     await expect(page.locator('.gn.focus')).toHaveCount(1);
     expect(await page.locator('.gn').count()).toBeGreaterThanOrEqual(3);
@@ -28,7 +30,10 @@ test.describe('explore', () => {
 
   test('lists related notes that nothing links yet, with the reason', async ({ page }) => {
     await sample(page);
-    await page.locator('#explore-list').getByRole('button', { name: /^Pricing research/ }).click();
+    await page
+      .locator('#explore-list')
+      .getByRole('button', { name: /^Pricing research/ })
+      .click();
     const rel = page.locator('.xwide', { has: page.locator('h3', { hasText: 'Related, not linked' }) });
     await expect(rel).toContainText('Pricing psychology');
     await expect(rel.locator('.xrow', { hasText: 'Pricing psychology' })).toContainText('#pricing');
@@ -38,7 +43,10 @@ test.describe('explore', () => {
 
   test('clicking a note in the graph moves the focus there, and Back returns', async ({ page }) => {
     await sample(page);
-    await page.locator('#explore-list').getByRole('button', { name: /^Pricing research/ }).click();
+    await page
+      .locator('#explore-list')
+      .getByRole('button', { name: /^Pricing research/ })
+      .click();
     await page.locator('.gn', { hasText: 'Website relaunch' }).click();
     await expect(page.locator('.ed-head .title')).toHaveText('Website relaunch');
     await page.getByRole('button', { name: 'Back' }).click();
@@ -48,7 +56,10 @@ test.describe('explore', () => {
 
   test('a list entry also moves the focus, and Open edits the note', async ({ page }) => {
     await sample(page);
-    await page.locator('#explore-list').getByRole('button', { name: /^Website relaunch/ }).click();
+    await page
+      .locator('#explore-list')
+      .getByRole('button', { name: /^Website relaunch/ })
+      .click();
     await page.locator('.xgrid').getByRole('button', { name: 'Kickoff call with Dana' }).first().click();
     await expect(page.locator('.ed-head .title')).toHaveText('Kickoff call with Dana');
     await page.getByRole('button', { name: 'Open note' }).click();
@@ -58,7 +69,10 @@ test.describe('explore', () => {
 
   test('2 hops draws more of the neighbourhood than 1 hop', async ({ page }) => {
     await sample(page);
-    await page.locator('#explore-list').getByRole('button', { name: /^Website relaunch/ }).click();
+    await page
+      .locator('#explore-list')
+      .getByRole('button', { name: /^Website relaunch/ })
+      .click();
     const one = await page.locator('.gn').count();
     await page.getByRole('button', { name: '2 hops' }).click();
     expect(await page.locator('.gn').count()).toBeGreaterThan(one);
@@ -67,7 +81,10 @@ test.describe('explore', () => {
 
   test('graph nodes work from the keyboard', async ({ page }) => {
     await sample(page);
-    await page.locator('#explore-list').getByRole('button', { name: /^Website relaunch/ }).click();
+    await page
+      .locator('#explore-list')
+      .getByRole('button', { name: /^Website relaunch/ })
+      .click();
     const node = page.locator('.gn', { hasText: 'Pricing research' });
     await node.focus();
     await page.keyboard.press('Enter');
@@ -127,7 +144,10 @@ test.describe('explore', () => {
     await page.setViewportSize({ width: 390, height: 800 });
     await sample(page);
     await page.locator('.side-toggle').click();
-    await page.locator('#explore-list').getByRole('button', { name: /^Website relaunch/ }).click();
+    await page
+      .locator('#explore-list')
+      .getByRole('button', { name: /^Website relaunch/ })
+      .click();
     await page.getByRole('button', { name: '2 hops' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });

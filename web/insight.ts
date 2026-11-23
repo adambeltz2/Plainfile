@@ -10,7 +10,14 @@ import { esc } from './util';
 /** Insight: a quiet look at your own files. When you wrote, what this month looked like, what you write about, and what needs tidying. */
 export const insight = { tidy: false, error: '', drill: '' as '' | Drill | `day:${string}` };
 
-const DRILL_TITLES: Record<Drill, string> = { edited: 'Notes changed this month', notesCreated: 'Notes created this month', tasksCreated: 'Tasks created this month', tasksDone: 'Tasks finished this month (estimate)', open: 'Open tasks', overdue: 'Overdue tasks' };
+const DRILL_TITLES: Record<Drill, string> = {
+  edited: 'Notes changed this month',
+  notesCreated: 'Notes created this month',
+  tasksCreated: 'Tasks created this month',
+  tasksDone: 'Tasks finished this month (estimate)',
+  open: 'Open tasks',
+  overdue: 'Overdue tasks',
+};
 
 let issuesCache: { version: number; list: FieldIssue[] } | undefined;
 function tidyIssues(): FieldIssue[] {
@@ -38,7 +45,8 @@ export function html(): string {
   const maxTag = tags[0]?.count ?? 1;
   const maxFolder = folders[0]?.notes ?? 1;
 
-  let h = '<div class="home insight"><h2 class="title">Insight</h2><p class="meta">Worked out from your own files, in this browser. Nothing is recorded anywhere.</p><div class="home-grid">';
+  let h =
+    '<div class="home insight"><h2 class="title">Insight</h2><p class="meta">Worked out from your own files, in this browser. Nothing is recorded anywhere.</p><div class="home-grid">';
   h += card(
     'Activity: notes changed per day, last 26 weeks',
     `<div class="heat" role="img" aria-label="${a.total} notes changed on ${a.days} days in the last 26 weeks">${a.weeks.map((w) => `<div class="heat-col">${w.map((d) => (d.count ? `<button class="lv${d.level}" data-insight-day="${esc(d.date)}" aria-label="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed. Show them." title="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed"></button>` : `<i class="lv0" title="${esc(fmtDate(d.date))}: nothing changed"></i>`)).join('')}</div>`).join('')}</div>` +
@@ -58,9 +66,11 @@ export function html(): string {
         ['overdue', 'Overdue', m.overdue],
       ] as [Drill, string, number][]
     )
-      .map(([k, label, n]) => `<tr><td>${label}</td><td><button class="stat-n" data-insight-drill="${k}" aria-pressed="${insight.drill === k}" aria-label="Show the ${n} behind: ${esc(DRILL_TITLES[k])}"><b>${n}</b></button></td></tr>`)
+      .map(
+        ([k, label, n]) =>
+          `<tr><td>${label}</td><td><button class="stat-n" data-insight-drill="${k}" aria-pressed="${insight.drill === k}" aria-label="Show the ${n} behind: ${esc(DRILL_TITLES[k])}"><b>${n}</b></button></td></tr>`,
+      )
       .join('')}</tbody></table>`,
-
   );
   h += card(
     'Topics',
@@ -74,7 +84,10 @@ export function html(): string {
       ? `<ul class="plain">${people.map((p) => `<li><button class="item" data-person="${esc(p.key)}"><span>${esc(p.name)}</span><span class="n">${p.open} open</span></button></li>`).join('')}</ul><button class="btn small" data-nav="people">All people</button>`
       : '<p class="muted small" style="margin:0">Nobody yet. Write <code>@dana</code> on a task.</p>',
   );
-  h += card('Folders', `<ul class="plain">${folders.map((f) => `<li class="fbar"><span class="mono small">${esc(f.folder)}</span><span class="prog"><i style="width:${Math.round((f.notes / maxFolder) * 100)}%"></i></span><span class="n">${f.notes}</span></li>`).join('')}</ul>`);
+  h += card(
+    'Folders',
+    `<ul class="plain">${folders.map((f) => `<li class="fbar"><span class="mono small">${esc(f.folder)}</span><span class="prog"><i style="width:${Math.round((f.notes / maxFolder) * 100)}%"></i></span><span class="n">${f.notes}</span></li>`).join('')}</ul>`,
+  );
   const broken = health ? health.unresolved.length + health.ambiguous.length + health.missingEmbeds.length : 0;
   h += card(
     'Health',
@@ -99,7 +112,8 @@ function drillCard(idx: NonNullable<typeof state.index>, t: string): string {
     `${title} · ${items.length}`,
     (items.length
       ? `<ul class="plain home-rows">${shown.map((x) => `<li><button class="item note-quick" data-open="${esc(x.path)}"${x.line ? ` data-line="${x.line}"` : ''}><span>${esc(x.title)}<span class="muted mono small" style="display:block">${esc(x.path)}</span></span><span class="muted mono small">${esc(x.hint ? (/^\d{4}-\d{2}-\d{2}$/.test(x.hint) ? fmtDate(x.hint) : x.hint) : '')}</span></button></li>`).join('')}${items.length > shown.length ? `<li class="muted small">and ${items.length - shown.length} more</li>` : ''}</ul>`
-      : '<p class="muted small" style="margin:0">Nothing here.</p>') + '<div class="row-gap"><button class="btn small" data-insight-drill="">Close</button></div>',
+      : '<p class="muted small" style="margin:0">Nothing here.</p>') +
+      '<div class="row-gap"><button class="btn small" data-insight-drill="">Close</button></div>',
     true,
   );
 }
@@ -109,10 +123,15 @@ function tidyList(issues: FieldIssue[]): string {
   const fixable = issues.filter((i) => i.fix);
   return (
     '<p class="small muted" style="margin:8px 0 6px">Each fix changes one line in one note, and only when you press it.</p>' +
-    (fixable.length ? `<div class="row-gap" style="margin:0 0 8px"><button class="btn small primary" data-insight-fixall>Fix all ${fixable.length}</button></div>` : '') +
+    (fixable.length
+      ? `<div class="row-gap" style="margin:0 0 8px"><button class="btn small primary" data-insight-fixall>Fix all ${fixable.length}</button></div>`
+      : '') +
     `<ul class="plain tidy">${issues
       .slice(0, 60)
-      .map((i) => `<li><div><button class="link" data-open="${esc(i.path)}">${esc(i.title)}</button> <span class="muted small">${esc(i.message)}</span></div>${i.fix ? `<div class="mono small">${esc(i.fix.before)} → ${esc(i.fix.after)} <button class="btn small" data-insight-fix="${esc(i.id)}">Fix</button></div>` : ''}</li>`)
+      .map(
+        (i) =>
+          `<li><div><button class="link" data-open="${esc(i.path)}">${esc(i.title)}</button> <span class="muted small">${esc(i.message)}</span></div>${i.fix ? `<div class="mono small">${esc(i.fix.before)} → ${esc(i.fix.after)} <button class="btn small" data-insight-fix="${esc(i.id)}">Fix</button></div>` : ''}</li>`,
+      )
       .join('')}${issues.length > 60 ? `<li class="muted">and ${issues.length - 60} more</li>` : ''}</ul>`
   );
 }

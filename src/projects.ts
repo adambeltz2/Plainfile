@@ -27,7 +27,11 @@ function isActive(n: Note): boolean {
   return !(a === false || String(a).toLowerCase() === 'false');
 }
 
-const slug = (v: unknown): string => String(v).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const slug = (v: unknown): string =>
+  String(v)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 /** The names a note's `project:` value can use to point at a project: its title, folder and file name. */
 function projectNames(n: Note): Set<string> {
@@ -79,12 +83,7 @@ export function listProjects(index: VaultIndex): Project[] {
       followups: covered.reduce((c, x) => c + x.followups.length, 0),
     });
   }
-  out.sort(
-    (a, b) =>
-      Number(b.active) - Number(a.active) ||
-      (a.sortOrder ?? Infinity) - (b.sortOrder ?? Infinity) ||
-      a.title.localeCompare(b.title),
-  );
+  out.sort((a, b) => Number(b.active) - Number(a.active) || (a.sortOrder ?? Infinity) - (b.sortOrder ?? Infinity) || a.title.localeCompare(b.title));
   let k = 0;
   for (const p of out) if (p.active) p.number = ++k;
   return out;
@@ -171,7 +170,9 @@ export function projectDashboard(index: VaultIndex, path: string, today: string,
   const rank = <K extends string>(m: Map<string, number>, key: K) =>
     [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([k, count]) => ({ [key]: k, count }));
   const goal = /^##\s+Goal\s*\n+([^\n#][^\n]*)/im.exec(me.text)?.[1]?.trim();
-  const created = me.fileTask?.created ?? (typeof me.frontmatter.created === 'string' || typeof me.frontmatter.created === 'number' ? String(me.frontmatter.created).slice(0, 10) : undefined);
+  const created =
+    me.fileTask?.created ??
+    (typeof me.frontmatter.created === 'string' || typeof me.frontmatter.created === 'number' ? String(me.frontmatter.created).slice(0, 10) : undefined);
   return {
     note: me,
     title: me.title,

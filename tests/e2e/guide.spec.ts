@@ -31,7 +31,9 @@ test.describe('cheat sheet', () => {
     await expect(page.locator('#ex-task')).toContainText('- [ ] Send logo files @dana #launch due:2026-11-23 created:2026-11-21');
     await page.locator('[data-copy="task"]').click();
     await expect(page.locator('[data-copy="task"]')).toHaveText('Copied');
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('- [ ] Send logo files @dana #launch due:2026-11-23 created:2026-11-21\n- [x] Share staging link');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      '- [ ] Send logo files @dana #launch due:2026-11-23 created:2026-11-21\n- [x] Share staging link',
+    );
     await page.locator('.nav').getByRole('button', { name: 'Today' }).click();
     await page.locator('.foot').getByRole('button', { name: 'Cheat sheet' }).click();
     await expect(page.getByRole('heading', { name: 'Cheat sheet' })).toBeVisible();

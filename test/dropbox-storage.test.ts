@@ -4,7 +4,8 @@ import { VaultIndex } from '../src/index';
 import { ConflictError } from '../src/storage';
 import { FakeDropbox } from './helpers/fake-dropbox';
 
-const make = (fake: FakeDropbox, root = '', getToken: (refresh?: boolean) => Promise<string> = async () => 'good') => new DropboxStorage({ getToken, root, fetch: fake.fetch });
+const make = (fake: FakeDropbox, root = '', getToken: (refresh?: boolean) => Promise<string> = async () => 'good') =>
+  new DropboxStorage({ getToken, root, fetch: fake.fetch });
 
 describe('DropboxStorage specifics', () => {
   it('lists across several pages with the cursor, and reports progress', async () => {

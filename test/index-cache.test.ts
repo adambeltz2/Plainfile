@@ -86,7 +86,11 @@ describe('saved index', () => {
     reads.length = 0;
     await new VaultIndex(store, cache).scan();
     expect(reads.sort()).toEqual(['a.md', 'b/c.md']);
-    const broken: IndexCache = { load: async () => Promise.reject(new Error('blocked')), put: async () => Promise.reject(new Error('blocked')), remove: async () => undefined };
+    const broken: IndexCache = {
+      load: async () => Promise.reject(new Error('blocked')),
+      put: async () => Promise.reject(new Error('blocked')),
+      remove: async () => undefined,
+    };
     const i = new VaultIndex(store, broken);
     await i.scan();
     await settle();

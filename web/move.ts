@@ -69,7 +69,9 @@ export function html(): string {
       body +=
         `<div class="fld"><label for="mv-dest">Folder</label><input id="mv-dest" class="inp" type="text" autocomplete="off" spellcheck="false" placeholder="projects/website-relaunch" value="${esc(mv.query)}"></div>` +
         `<ul class="plain mvlist">${list.map((f) => `<li><button class="menu-item" data-mv-pick="${esc(f.folder)}"><b>${esc(f.folder || '(top level)')}</b><span>${f.notes} note${f.notes === 1 ? '' : 's'}</span></button></li>`).join('')}` +
-        (clean && !list.some((f) => f.folder === clean) && clean !== dirname(mv.path) ? `<li><button class="menu-item" data-mv-pick="${esc(clean)}"><b>+ New folder “${esc(clean)}”</b><span>Created when you move</span></button></li>` : '') +
+        (clean && !list.some((f) => f.folder === clean) && clean !== dirname(mv.path)
+          ? `<li><button class="menu-item" data-mv-pick="${esc(clean)}"><b>+ New folder “${esc(clean)}”</b><span>Created when you move</span></button></li>`
+          : '') +
         '</ul>';
     } else {
       const p = mv.plan;
@@ -78,7 +80,13 @@ export function html(): string {
         `<div class="grp" style="margin-top:0">Will become</div><div class="mono small" style="overflow-wrap:anywhere">${esc(p.to)}</div>` +
         `<div class="grp">${edits.length ? `${p.inbound.length} link line${p.inbound.length === 1 ? '' : 's'} elsewhere and ${p.outbound.length} inside the note are updated` : 'No links need to change'}</div>` +
         (edits.length
-          ? `<ul class="plain small mvedits">${edits.slice(0, 8).map((e) => `<li><div class="mono muted">${esc(e.path === p.from ? p.to : e.path)}:${e.line}</div><div class="diff"><div class="del"><span class="sg">−</span><span>${esc(e.before)}</span></div><div class="add"><span class="sg">+</span><span>${esc(e.after)}</span></div></div></li>`).join('')}${edits.length > 8 ? `<li class="muted">and ${edits.length - 8} more</li>` : ''}</ul>`
+          ? `<ul class="plain small mvedits">${edits
+              .slice(0, 8)
+              .map(
+                (e) =>
+                  `<li><div class="mono muted">${esc(e.path === p.from ? p.to : e.path)}:${e.line}</div><div class="diff"><div class="del"><span class="sg">−</span><span>${esc(e.before)}</span></div><div class="add"><span class="sg">+</span><span>${esc(e.after)}</span></div></div></li>`,
+              )
+              .join('')}${edits.length > 8 ? `<li class="muted">and ${edits.length - 8} more</li>` : ''}</ul>`
           : '<p class="muted small" style="margin:0">Links by name keep working wherever the note goes. Tasks inside it move with it.</p>') +
         p.warnings.map((w) => `<div class="notice small">${esc(w)}</div>`).join('') +
         `<div class="row-gap"><button class="btn primary" data-act="mv-go"${mv.busy ? ' disabled' : ''}>${mv.busy ? 'Moving…' : 'Move'}</button><button class="btn" data-act="mv-back">Change folder</button></div>`;

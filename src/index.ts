@@ -25,9 +25,7 @@ export interface Resolution {
 }
 
 /** What a scan is doing, for a progress bar. */
-export type ScanProgress =
-  | ({ phase: 'listing' } & ListProgress)
-  | { phase: 'reading'; done: number; total: number };
+export type ScanProgress = ({ phase: 'listing' } & ListProgress) | { phase: 'reading'; done: number; total: number };
 
 export interface ScanOptions {
   onProgress?: (p: ScanProgress) => void;
@@ -357,7 +355,10 @@ export class VaultIndex {
 /** `people: [Dana, sam]` in a task file's frontmatter, as the `@dana` names an inline task uses. */
 function peopleOf(v: unknown): string[] {
   const list = Array.isArray(v) ? v : typeof v === 'string' ? v.split(/[,\s]+/) : [];
-  return list.map((x) => String(x).trim().replace(/^@/, '').toLowerCase().replace(/\s+/g, '-')).filter(Boolean).map((x) => `@${x}`);
+  return list
+    .map((x) => String(x).trim().replace(/^@/, '').toLowerCase().replace(/\s+/g, '-'))
+    .filter(Boolean)
+    .map((x) => `@${x}`);
 }
 
 function inlineItem(n: Note, t: InlineTask): TaskItem {

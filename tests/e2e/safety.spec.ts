@@ -5,7 +5,6 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-
 async function open(page: Page, title: string): Promise<void> {
   await nav(page, 'Notes').click();
   await (await noteItem(page, title)).click();

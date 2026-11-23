@@ -290,7 +290,10 @@ export interface Rendered {
 }
 
 function clean(name: string): string {
-  return name.replace(/[\\/:?*"<>|]/g, '-').replace(/\s+/g, ' ').trim();
+  return name
+    .replace(/[\\/:?*"<>|]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /** What a template would create, without writing anything. Used for the live preview. */

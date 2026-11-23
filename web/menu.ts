@@ -13,7 +13,22 @@ import { esc } from './util';
  * The actions on a note, in one place: the ⋯ menu in the note's header, the menu on a right-click or
  * long-press in the note list, and the command palette all run them from here.
  */
-export type NoteAction = 'copyrich' | 'docx' | 'print' | 'markers' | 'open' | 'xray' | 'explore' | 'history' | 'move' | 'rename' | 'duplicate' | 'pin' | 'copylink' | 'frontmatter' | 'delete';
+export type NoteAction =
+  | 'copyrich'
+  | 'docx'
+  | 'print'
+  | 'markers'
+  | 'open'
+  | 'xray'
+  | 'explore'
+  | 'history'
+  | 'move'
+  | 'rename'
+  | 'duplicate'
+  | 'pin'
+  | 'copylink'
+  | 'frontmatter'
+  | 'delete';
 
 export const KEYS: Partial<Record<NoteAction, string>> = {
   xray: `${MOD}Shift+X`,
@@ -69,7 +84,9 @@ export function html(): string {
   const list = itemsFor(m.path, m.inNote);
   const rows = list
     .map((i) =>
-      i === '-' ? '<hr>' : `<button role="menuitem" data-menu-act="${i.action}"><span>${esc(i.label)}</span><span class="k">${esc(KEYS[i.action] ?? '')}</span></button>`,
+      i === '-'
+        ? '<hr>'
+        : `<button role="menuitem" data-menu-act="${i.action}"><span>${esc(i.label)}</span><span class="k">${esc(KEYS[i.action] ?? '')}</span></button>`,
     )
     .join('');
   const left = Math.max(8, Math.min(m.x, window.innerWidth - 262));
@@ -135,15 +152,18 @@ export async function run(action: NoteAction, path: string): Promise<void> {
       const note = state.index?.notes.get(path);
       if (!note) return;
       const open = notes.path === path && notes.handle;
-      const selection = open ? notes.handle?.getSelection() ?? '' : '';
-      const md = selection.trim() ? selection : open ? notes.handle?.getText() ?? '' : (await state.storage?.read(path)) ?? '';
+      const selection = open ? (notes.handle?.getSelection() ?? '') : '';
+      const md = selection.trim() ? selection : open ? (notes.handle?.getText() ?? '') : ((await state.storage?.read(path)) ?? '');
       const title = note.title;
-      notes.status = action === 'copyrich' ? await copyFormatted(md, path) : action === 'docx' ? await downloadDocx(md, title, path) : await printDocument(md, title, path);
+      notes.status =
+        action === 'copyrich' ? await copyFormatted(md, path) : action === 'docx' ? await downloadDocx(md, title, path) : await printDocument(md, title, path);
       return render();
     }
     case 'markers':
       setKeepMarkers(!keepMarkers());
-      notes.status = keepMarkers() ? 'Copies and Word files now keep #tags, @people and due: markers.' : 'Copies and Word files now leave out #tags, @people and due: markers.';
+      notes.status = keepMarkers()
+        ? 'Copies and Word files now keep #tags, @people and due: markers.'
+        : 'Copies and Word files now leave out #tags, @people and due: markers.';
       return render();
     case 'copylink': {
       const n = state.index?.notes.get(path);

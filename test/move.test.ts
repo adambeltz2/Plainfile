@@ -49,13 +49,20 @@ describe('planMove and applyMove', () => {
     ]);
     expect(plan.outbound.map((e) => e.after)).toEqual(['See [other](../../ref/other.md) and ![img](../../_att/i.png) and [[ref/other]].']);
     await applyMove(storage, index, plan, all(plan));
-    expect(await storage.read('projects/site/note.md')).toBe('---\ntitle: Note\n---\nSee [other](../../ref/other.md) and ![img](../../_att/i.png) and [[ref/other]].\r\n- [ ] A task due:2026-11-30\n');
+    expect(await storage.read('projects/site/note.md')).toBe(
+      '---\ntitle: Note\n---\nSee [other](../../ref/other.md) and ![img](../../_att/i.png) and [[ref/other]].\r\n- [ ] A task due:2026-11-30\n',
+    );
     await expect(storage.read('inbox/note.md')).rejects.toBeDefined();
     expect(await storage.read('a.md')).toBe('Plain [[note]] and path [[projects/site/note]] and md [x](projects/site/note.md#top) end');
     expect(await storage.read('ref/other.md')).toBe('Other');
     expect(index.notes.has('projects/site/note.md')).toBe(true);
     // Every link still resolves.
-    expect(index.backlinks('projects/site/note.md').map((b) => b.from).sort()).toEqual(['a.md', 'a.md', 'a.md', 'b/c.md']);
+    expect(
+      index
+        .backlinks('projects/site/note.md')
+        .map((b) => b.from)
+        .sort(),
+    ).toEqual(['a.md', 'a.md', 'a.md', 'b/c.md']);
   });
 
   it('uses full paths for plain name links when the name is shared with another note', async () => {

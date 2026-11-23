@@ -49,7 +49,10 @@ test('files the browser refuses to read are skipped and listed, and the folder s
     };
     const root = await navigator.storage.getDirectory();
     const vault = await root.getDirectoryHandle(`skip-${Date.now()}`, { create: true });
-    for (const [name, text] of [['good.md', '# Good\n- [ ] A task due:2026-01-01'], ['bad.md', '# Bad']] as const) {
+    for (const [name, text] of [
+      ['good.md', '# Good\n- [ ] A task due:2026-01-01'],
+      ['bad.md', '# Bad'],
+    ] as const) {
       const w = await (await vault.getFileHandle(name, { create: true })).createWritable();
       await w.write(text);
       await w.close();

@@ -87,8 +87,7 @@ export class FsaStorage implements VaultStorage {
               if (handle.kind === 'directory') {
                 this.seenDirs.set(rel, handle as FileSystemDirectoryHandle);
                 queue.push({ dir: handle as FileSystemDirectoryHandle, prefix: rel });
-              }
-              else {
+              } else {
                 files.push({ rel, handle: handle as FileSystemFileHandle });
                 this.seen.set(rel, handle as FileSystemFileHandle);
                 found++;

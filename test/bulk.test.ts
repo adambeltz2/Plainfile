@@ -32,7 +32,9 @@ describe('single edits', () => {
     expect(editInlineLine('Plain line', { kind: 'done', done: true })).toBeNull();
   });
   it('change one key in a task note', () => {
-    expect(editFileText(FILES['p/tasks/a.md']!, { kind: 'status', status: 'waiting' })).toBe('---\ntitle: A\nstatus: waiting\ndue: 2026-11-25\npeople: [dana]\ntags: []\n---\nbody\n');
+    expect(editFileText(FILES['p/tasks/a.md']!, { kind: 'status', status: 'waiting' })).toBe(
+      '---\ntitle: A\nstatus: waiting\ndue: 2026-11-25\npeople: [dana]\ntags: []\n---\nbody\n',
+    );
     expect(editFileText(FILES['p/tasks/a.md']!, { kind: 'person', name: 'sam' })).toContain('people: [dana, sam]');
     expect(editFileText(FILES['p/tasks/a.md']!, { kind: 'due', date: null })).not.toContain('due:');
   });
@@ -44,10 +46,16 @@ describe('planBulk and applyBulk', () => {
     const sel = [ids('One'), ids('Two'), ids('A'), ids('B')];
     const plan = await planBulk(store, index, sel, { kind: 'due', date: '2026-12-24' });
     expect(plan.skipped).toBe(0);
-    expect(plan.edits.map((e) => [e.path, e.tasks])).toEqual([['p/index.md', 2], ['p/tasks/a.md', 1], ['p/tasks/b.md', 1]]);
+    expect(plan.edits.map((e) => [e.path, e.tasks])).toEqual([
+      ['p/index.md', 2],
+      ['p/tasks/a.md', 1],
+      ['p/tasks/b.md', 1],
+    ]);
     expect(plan.edits[0]).toMatchObject({ line: 5, was: '- [ ] One due:2026-11-20', now: '- [ ] One due:2026-12-24' });
     await applyBulk(store, index, plan.edits);
-    expect(await store.read('p/index.md')).toBe('---\ntitle: P\n---\n# P\n- [ ] One due:2026-12-24\r\n- [ ] Two @sam due:2026-12-24\n- [x] Three #launch\nPlain line\n');
+    expect(await store.read('p/index.md')).toBe(
+      '---\ntitle: P\n---\n# P\n- [ ] One due:2026-12-24\r\n- [ ] Two @sam due:2026-12-24\n- [x] Three #launch\nPlain line\n',
+    );
     expect(await store.read('p/tasks/a.md')).toContain('due: 2026-12-24');
     expect(await store.read('p/tasks/b.md')).toBe('---\ntitle: B\nstatus: todo\ndue: 2026-12-24\n---\n');
     await applyBulk(store, index, plan.edits, 'back');

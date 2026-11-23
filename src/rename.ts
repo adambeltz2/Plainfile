@@ -43,7 +43,12 @@ const stripCR = (l: string): string => (l.endsWith('\r') ? l.slice(0, -1) : l);
 const baseName = (p: string): string => (p.split('/').pop() ?? p).replace(/\.md$/i, '');
 
 function cleanName(raw: string): string {
-  return raw.trim().replace(/\.md$/i, '').replace(/[\\/:?*"<>|]/g, '-').replace(/\s+/g, ' ').trim();
+  return raw
+    .trim()
+    .replace(/\.md$/i, '')
+    .replace(/[\\/:?*"<>|]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 interface Collect {
@@ -169,7 +174,13 @@ export async function applyRename(storage: VaultStorage, index: VaultIndex, plan
   if (opts.keepAlias) content = addFrontmatterListItem(content, 'aliases', plan.oldName);
 
   await storage.create(plan.to, content);
-  changes.push(...(await applyEdits(storage, index, chosen.filter((x) => x.path !== plan.from))));
+  changes.push(
+    ...(await applyEdits(
+      storage,
+      index,
+      chosen.filter((x) => x.path !== plan.from),
+    )),
+  );
   await storage.remove(plan.from, oldStat.mtime);
   await index.scan();
   return { from: plan.from, to: plan.to, changes };

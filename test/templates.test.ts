@@ -3,7 +3,19 @@ import { INBOX_FILE, addTask, addTaskNote, cleanTaskText, taskFileName } from '.
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { ConflictError } from '../src/storage';
-import { BUILT_IN, clock, createFromTemplate, freePath, numberTitle, loadTemplates, parseTemplateFile, promptDefault, renderTemplate, slug, templateExtras } from '../src/templates';
+import {
+  BUILT_IN,
+  clock,
+  createFromTemplate,
+  freePath,
+  numberTitle,
+  loadTemplates,
+  parseTemplateFile,
+  promptDefault,
+  renderTemplate,
+  slug,
+  templateExtras,
+} from '../src/templates';
 
 const TODAY = '2026-11-21';
 const byName = (n: string) => BUILT_IN.find((t) => t.name === n)!;
@@ -81,7 +93,18 @@ describe('template files', () => {
     const own = file.replace('Weekly review', 'Meeting');
     const { store } = await setup({ '.plainfile/templates/review.md': file, '.plainfile/templates/meeting.md': own });
     const all = await loadTemplates(store);
-    expect(all.map((t) => t.name)).toEqual(['Note', 'Task', 'Project', 'Project task', 'Project note', 'Quick note', 'Daily journal', 'Person', 'Weekly review', 'Meeting']);
+    expect(all.map((t) => t.name)).toEqual([
+      'Note',
+      'Task',
+      'Project',
+      'Project task',
+      'Project note',
+      'Quick note',
+      'Daily journal',
+      'Person',
+      'Weekly review',
+      'Meeting',
+    ]);
     expect(all.find((t) => t.name === 'Meeting')!.source).toBe('.plainfile/templates/meeting.md');
   });
 });
@@ -151,7 +174,9 @@ describe('projects', () => {
     expect(templateExtras(index)).toEqual({ sortOrder: '5' });
     const r = await createFromTemplate(store, index, byName('Project'), { title: 'Kitchen Remodel', goal: 'New cabinets' }, TODAY);
     expect(r.path).toBe('projects/kitchen-remodel/index.md');
-    expect(r.content).toBe('---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 5\ncreated: 2026-11-21\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Notes\n- \n\n## Tasks\n- [ ] \n');
+    expect(r.content).toBe(
+      '---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 5\ncreated: 2026-11-21\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Notes\n- \n\n## Tasks\n- [ ] \n',
+    );
   });
 
   it('the first project is number 1', async () => {
@@ -176,9 +201,21 @@ describe('projects', () => {
 describe('quick add details', () => {
   it('writes the created date, and tags and people if given, without repeating ones already typed', async () => {
     const { store, index } = await setup();
-    const r = await addTask(store, index, { text: 'Call Dana @dana', due: '2026-11-24', created: TODAY, tags: ['#launch', 'home'], people: ['@dana', 'Sam Lee'] });
+    const r = await addTask(store, index, {
+      text: 'Call Dana @dana',
+      due: '2026-11-24',
+      created: TODAY,
+      tags: ['#launch', 'home'],
+      people: ['@dana', 'Sam Lee'],
+    });
     expect(r.after).toBe('- [ ] Call Dana @dana @Sam-Lee #launch #home due:2026-11-24 created:2026-11-21');
-    expect(index.tasks()[0]).toMatchObject({ title: 'Call Dana', due: '2026-11-24', created: '2026-11-21', who: ['@dana', '@sam-lee'], tags: ['launch', 'home'] });
+    expect(index.tasks()[0]).toMatchObject({
+      title: 'Call Dana',
+      due: '2026-11-24',
+      created: '2026-11-21',
+      who: ['@dana', '@sam-lee'],
+      tags: ['launch', 'home'],
+    });
   });
 
   it('leaves out anything not given', async () => {
@@ -186,7 +223,6 @@ describe('quick add details', () => {
     expect((await addTask(store, index, { text: 'Plain', created: TODAY })).after).toBe('- [ ] Plain created:2026-11-21');
   });
 });
-
 
 describe('addTaskNote', () => {
   async function setup(files: Record<string, string> = {}) {
@@ -200,7 +236,9 @@ describe('addTaskNote', () => {
     const { store, index } = await setup();
     const r = await addTaskNote(store, index, { title: 'Call Dana', due: '2026-11-24', created: '2026-11-21', tags: ['#launch'], people: ['@dana', 'sam'] });
     expect(r.path).toBe('tasks/Call Dana.md');
-    expect(await store.read(r.path)).toBe('---\ntitle: Call Dana\nstatus: todo\ndue: 2026-11-24\ncreated: 2026-11-21\ntags: [launch]\npeople: [dana, sam]\n---\n\n');
+    expect(await store.read(r.path)).toBe(
+      '---\ntitle: Call Dana\nstatus: todo\ndue: 2026-11-24\ncreated: 2026-11-21\ntags: [launch]\npeople: [dana, sam]\n---\n\n',
+    );
     const t = index.getTask(r.taskId)!;
     expect(t).toMatchObject({ kind: 'file', title: 'Call Dana', due: '2026-11-24', done: false, status: 'todo' });
     expect(t.who).toEqual(expect.arrayContaining(['@dana']));
@@ -212,7 +250,9 @@ describe('addTaskNote', () => {
     const a = await addTaskNote(store, index, input);
     const b = await addTaskNote(store, index, input);
     expect([a.path, b.path]).toEqual(['projects/kitchen-remodel/tasks/Order- cabinets.md', 'projects/kitchen-remodel/tasks/Order- cabinets 2.md']);
-    expect(await store.read(a.path)).toBe('---\ntitle: "Order: cabinets?"\nstatus: todo\ncreated: 2026-11-21\nproject: kitchen-remodel\ntags: []\npeople: []\n---\n\n');
+    expect(await store.read(a.path)).toBe(
+      '---\ntitle: "Order: cabinets?"\nstatus: todo\ncreated: 2026-11-21\nproject: kitchen-remodel\ntags: []\npeople: []\n---\n\n',
+    );
     expect(index.getTask(a.taskId)?.title).toBe('Order: cabinets?');
   });
 

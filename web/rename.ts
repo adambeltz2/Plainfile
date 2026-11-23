@@ -61,9 +61,11 @@ function planHtml(plan: RenamePlan, boxes: boolean): string {
     h += `<div class="fcard"><span class="mono small">${esc(plan.to)} · frontmatter</span><div class="diff plain-box"><div class="add"><span class="sg">+</span><span>aliases: [${esc(plan.oldName)}]</span></div></div></div>`;
   }
   const skipped = plan.edits.length - chosen.length;
-  if (skipped && !rn.alias) h += `<div class="notice err small">${skipped} unchecked link${skipped === 1 ? '' : 's'} will stop working. Turn on the alias to keep ${skipped === 1 ? 'it' : 'them'} working.</div>`;
+  if (skipped && !rn.alias)
+    h += `<div class="notice err small">${skipped} unchecked link${skipped === 1 ? '' : 's'} will stop working. Turn on the alias to keep ${skipped === 1 ? 'it' : 'them'} working.</div>`;
   else if (skipped) h += `<div class="notice small">${skipped} unchecked link${skipped === 1 ? '' : 's'} will keep working through the alias.</div>`;
-  if (plan.nameClash) h += `<div class="notice small">Another note already has this name, so updated links include the folder: <span class="mono">${esc(plan.to.replace(/\.md$/i, ''))}</span>.</div>`;
+  if (plan.nameClash)
+    h += `<div class="notice small">Another note already has this name, so updated links include the folder: <span class="mono">${esc(plan.to.replace(/\.md$/i, ''))}</span>.</div>`;
   for (const w of plan.warnings) h += `<div class="notice small">${esc(w)}</div>`;
   return h;
 }
@@ -113,7 +115,9 @@ export function html(): string {
   if (!idx) return '';
   const note = rn.path ? idx.notes.get(rn.path) : undefined;
   let h = '<div class="frame two"><aside class="side"><div><h2>Note</h2>';
-  h += rn.path ? `<p class="mono small" style="margin:0;overflow-wrap:anywhere">${esc(rn.path)}</p>` : '<p class="muted small" style="margin:0">None chosen</p>';
+  h += rn.path
+    ? `<p class="mono small" style="margin:0;overflow-wrap:anywhere">${esc(rn.path)}</p>`
+    : '<p class="muted small" style="margin:0">None chosen</p>';
   h += '</div><div><h2>Linked from</h2>';
   const back = rn.path ? idx.backlinks(rn.path) : [];
   h += back.length
@@ -122,9 +126,12 @@ export function html(): string {
   h += '</div></aside><section class="main"><h2 class="title">Rename a note</h2>';
   // "Renamed outside" is only for fixing links after a file was renamed in another app. It shows up when one is found.
   if (state.renames.length || rn.mode === 'out') {
-    h += `<div class="ed-bar"><div class="seg" role="group" aria-label="Rename scenario"><button data-rn-mode="in" aria-pressed="${rn.mode === 'in'}">Rename in Plainfile</button>` +
+    h +=
+      `<div class="ed-bar"><div class="seg" role="group" aria-label="Rename scenario"><button data-rn-mode="in" aria-pressed="${rn.mode === 'in'}">Rename in Plainfile</button>` +
       `<button data-rn-mode="out" aria-pressed="${rn.mode === 'out'}">Renamed outside${state.renames.length ? ` <span class="badge">${state.renames.length}</span>` : ''}</button></div></div>`;
-    if (rn.mode === 'out') h += '<p class="muted small" style="margin:6px 0 0">A file was renamed in another app (Finder, Dropbox, an editor). Plainfile noticed, and can fix the links that now point nowhere.</p>';
+    if (rn.mode === 'out')
+      h +=
+        '<p class="muted small" style="margin:6px 0 0">A file was renamed in another app (Finder, Dropbox, an editor). Plainfile noticed, and can fix the links that now point nowhere.</p>';
   }
   if (rn.mode === 'in') {
     if (rn.result) {
@@ -139,7 +146,8 @@ export function html(): string {
         `<div id="rn-preview">${previewHtml()}</div>`;
     }
   } else h += `<div id="rn-out">${outsideHtml()}</div>`;
-  h += '<p class="note">Back-links are not stored anywhere. Plainfile works them out from the links in your files, so they stay correct as long as the links resolve.</p></section></div>';
+  h +=
+    '<p class="note">Back-links are not stored anywhere. Plainfile works them out from the links in your files, so they stay correct as long as the links resolve.</p></section></div>';
   return h;
 }
 

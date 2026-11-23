@@ -25,7 +25,8 @@ export function quickBar(cls = ''): { form: string; below: string } {
 
 /** One line under the box saying how the typed text will be filed: where it goes, who, what tags, which day. */
 export function quickPreview(line: string): string {
-  if (!line.trim()) return '<span class="qhint">One line is enough: <code>Email Sam +Project @sam #tag due:tomorrow</code>. It becomes a task note, shown in your Inbox (or filed in the project), dated today.</span>';
+  if (!line.trim())
+    return '<span class="qhint">One line is enough: <code>Email Sam +Project @sam #tag due:tomorrow</code>. It becomes a task note, shown in your Inbox (or filed in the project), dated today.</span>';
   const { parsed, project, error } = planQuickLine(line, quick.project);
   if (error) return `<span class="err-text">${esc(error)}</span>`;
   const bits = [`Task note "${esc(parsed.title || parsed.text)}" in <b>${esc(project ? project.title : 'Inbox')}</b>`];
@@ -57,8 +58,7 @@ function visible(): TaskItem[] {
 }
 
 const keep = (t: TaskItem): boolean => !t.done || justDone.has(t.id);
-const byDue = (a: TaskItem, b: TaskItem): number =>
-  (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.path.localeCompare(b.path) || a.line - b.line;
+const byDue = (a: TaskItem, b: TaskItem): number => (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.path.localeCompare(b.path) || a.line - b.line;
 
 interface Group {
   title: string;
@@ -97,7 +97,11 @@ function groupsFor(view: TodayViewId, tasks: TaskItem[]): Group[] {
       gs = [{ title: 'Waiting on', items: open.filter((t) => t.status === 'waiting' || t.tags.includes('waiting')).sort(byDue) }];
       break;
     default:
-      gs = [...dated, { title: 'Later', items: open.filter((t) => t.due && t.due > week).sort(byDue) }, { title: 'No date', items: open.filter((t) => !t.due).sort(byDue) }];
+      gs = [
+        ...dated,
+        { title: 'Later', items: open.filter((t) => t.due && t.due > week).sort(byDue) },
+        { title: 'No date', items: open.filter((t) => !t.due).sort(byDue) },
+      ];
   }
   return gs.filter((g) => g.items.length);
 }
@@ -105,7 +109,10 @@ function groupsFor(view: TodayViewId, tasks: TaskItem[]): Group[] {
 function count(view: TodayViewId, tasks: TaskItem[]): number {
   if (view === 'followups') return state.index ? listFollowUps(state.index).length : 0;
   if (view === 'projects') return state.index ? listProjects(state.index).filter((p) => p.active).length : 0;
-  return groupsFor(view, tasks.filter((t) => !t.done)).reduce((n, g) => n + g.items.length, 0);
+  return groupsFor(
+    view,
+    tasks.filter((t) => !t.done),
+  ).reduce((n, g) => n + g.items.length, 0);
 }
 
 /* ---------- rendering ---------- */
@@ -198,14 +205,16 @@ export function html(): string {
   }
   if (tags.length) {
     h += '<div><h2>Tags</h2><ul>';
-    for (const [g, n] of tags) h += `<li><button class="item mono" data-tag="${esc(g)}" aria-current="${state.tag === g}">#${esc(g)} <span class="n">${n}</span></button></li>`;
+    for (const [g, n] of tags)
+      h += `<li><button class="item mono" data-tag="${esc(g)}" aria-current="${state.tag === g}">#${esc(g)} <span class="n">${n}</span></button></li>`;
     h += '</ul></div>';
   }
   h += `<div class="stat">${idx.notes.size} notes<br>scanned in ${state.scanMs} ms${idx.fromCache ? ` (${idx.fromCache} from the saved copy)` : ''}${state.demo ? '<br>sample date 21 Nov 2026' : ''}</div></aside>`;
 
   const label = VIEWS.find((v) => v.id === state.view)?.label ?? 'Today';
   h += '<section class="main">';
-  h += `<form class="quick" data-quick><label class="sr" for="quick-text">Add a task</label>` +
+  h +=
+    `<form class="quick" data-quick><label class="sr" for="quick-text">Add a task</label>` +
     `<input id="quick-text" class="inp" type="text" autocomplete="off" data-suggest="line" placeholder="Call Dana +Website @dana #launch due:friday" value="${esc(quick.text)}">` +
     `<button class="btn primary" type="submit">Add</button>` +
     `<div id="quick-preview" class="qprev small muted" aria-live="polite">${quickPreview(quick.text)}</div></form>`;
@@ -215,7 +224,8 @@ export function html(): string {
   else if (state.view === 'projects') h += projectsHtml();
   else {
     h += `<p class="meta">${esc(fmtDateLong(today()))} · ${shown} ${state.view === 'today' ? 'need attention' : shown === 1 ? 'task' : 'tasks'}</p>`;
-    if (state.tag) h += `<div class="filter"><span class="chip mono">#${esc(state.tag)}</span><button class="btn small" data-act="clear-tag">Clear filter</button></div>`;
+    if (state.tag)
+      h += `<div class="filter"><span class="chip mono">#${esc(state.tag)}</span><button class="btn small" data-act="clear-tag">Clear filter</button></div>`;
     if (!shown) {
       h +=
         state.view === 'today'

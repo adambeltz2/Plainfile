@@ -64,7 +64,15 @@ function weekHtml(): string {
   return (
     '<div class="cal-week">' +
     days
-      .map((d) => `<div class="cal-col${d === today() ? ' today' : ''}${d === cal.selected ? ' sel' : ''}" data-cal-day="${d}"><button class="cal-num" data-cal-pick="${d}">${esc(fmtDate(d))}</button>${ev.filter((e) => e.date === d).map(chip).join('') || '<span class="muted small">Nothing</span>'}</div>`)
+      .map(
+        (d) =>
+          `<div class="cal-col${d === today() ? ' today' : ''}${d === cal.selected ? ' sel' : ''}" data-cal-day="${d}"><button class="cal-num" data-cal-pick="${d}">${esc(fmtDate(d))}</button>${
+            ev
+              .filter((e) => e.date === d)
+              .map(chip)
+              .join('') || '<span class="muted small">Nothing</span>'
+          }</div>`,
+      )
       .join('') +
     '</div>'
   );
@@ -77,7 +85,15 @@ function agendaHtml(): string {
   const ev = eventsBetween(idx, from, addDays(from, 30));
   if (!ev.length) return '<div class="empty">Nothing dated in the next 30 days. Give a task a due date, or a note a <code>date:</code>.</div>';
   const days = [...new Set(ev.map((e) => e.date))];
-  return `<div class="cal-agenda">${days.map((d) => `<section><h3 class="grp${d === today() ? ' late' : ''}">${esc(fmtDateLong(d))}${d === today() ? ' · today' : ''}</h3><div class="cal-day-list">${ev.filter((e) => e.date === d).map(chip).join('')}</div></section>`).join('')}</div>`;
+  return `<div class="cal-agenda">${days
+    .map(
+      (d) =>
+        `<section><h3 class="grp${d === today() ? ' late' : ''}">${esc(fmtDateLong(d))}${d === today() ? ' · today' : ''}</h3><div class="cal-day-list">${ev
+          .filter((e) => e.date === d)
+          .map(chip)
+          .join('')}</div></section>`,
+    )
+    .join('')}</div>`;
 }
 
 function dayPanel(): string {
@@ -85,12 +101,20 @@ function dayPanel(): string {
   if (!idx) return '';
   const d = cal.selected;
   const ev = eventsBetween(idx, d, d);
-  const tasks = ev.filter((e) => e.kind === 'task' && e.id).map((e) => idx.getTask(e.id as string)).filter((t) => !!t);
+  const tasks = ev
+    .filter((e) => e.kind === 'task' && e.id)
+    .map((e) => idx.getTask(e.id as string))
+    .filter((t) => !!t);
   const notes = ev.filter((e) => e.kind === 'note');
   return (
     `<section class="cal-day card" aria-label="${esc(fmtDateLong(d))}"><h3>${esc(fmtDateLong(d))}${d === today() ? ' · today' : ''}</h3>` +
     (tasks.length
-      ? tasks.map((t) => `<div class="cal-trow"><ul class="tasks">${row(t!)}</ul><label class="small muted cal-move">Move to <input type="date" class="inp date" data-cal-move="${esc(t!.id)}" value="${esc(t!.due ?? '')}" aria-label="New date for ${esc(t!.title)}"></label></div>`).join('')
+      ? tasks
+          .map(
+            (t) =>
+              `<div class="cal-trow"><ul class="tasks">${row(t!)}</ul><label class="small muted cal-move">Move to <input type="date" class="inp date" data-cal-move="${esc(t!.id)}" value="${esc(t!.due ?? '')}" aria-label="New date for ${esc(t!.title)}"></label></div>`,
+          )
+          .join('')
       : '<p class="muted small" style="margin:0 0 6px">No tasks this day.</p>') +
     (notes.length ? `<h4 class="small muted" style="margin:8px 0 4px">Notes</h4><div class="cal-day-list">${notes.map(chip).join('')}</div>` : '') +
     `<form class="cal-add" data-cal-add><label class="sr" for="cal-add-text">Add a task for this day</label><input id="cal-add-text" class="inp" autocomplete="off" placeholder="Add a task for this day" value="${esc(cal.adding)}"><button class="btn small primary" type="submit">Add</button></form>` +
@@ -100,7 +124,12 @@ function dayPanel(): string {
 
 export function html(): string {
   ensure();
-  const label = cal.view === 'month' ? monthLabel(cal.anchor) : cal.view === 'week' ? `Week of ${fmtDate(weekOf(cal.anchor)[0] as string)}` : `Next 30 days from ${fmtDate(cal.anchor)}`;
+  const label =
+    cal.view === 'month'
+      ? monthLabel(cal.anchor)
+      : cal.view === 'week'
+        ? `Week of ${fmtDate(weekOf(cal.anchor)[0] as string)}`
+        : `Next 30 days from ${fmtDate(cal.anchor)}`;
   const view = (v: View, l: string): string => `<button class="btn small" data-cal-view="${v}" aria-pressed="${cal.view === v}">${l}</button>`;
   return (
     '<div class="frame" style="grid-template-columns:minmax(0,1fr)"><section class="main calendar">' +

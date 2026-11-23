@@ -5,7 +5,8 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const task = (title: string, status: string, project = 'site') => `---\ntitle: ${title}\nstatus: ${status}\nproject: ${project}\ndue: 2026-12-01\n---\nBody of ${title}.\n`;
+const task = (title: string, status: string, project = 'site') =>
+  `---\ntitle: ${title}\nstatus: ${status}\nproject: ${project}\ndue: 2026-12-01\n---\nBody of ${title}.\n`;
 
 test.describe('board', () => {
   test('shows task files in status columns and filters by project', async ({ page }) => {
@@ -27,7 +28,10 @@ test.describe('board', () => {
   test('clicking a card opens its note, and the arrow buttons still only move it', async ({ page }) => {
     const dir = await openVault(page, { 'tasks/a.md': task('Alpha', 'todo') });
     await nav(page, 'Board').click();
-    await page.locator('[data-col="todo"] .card .t, [data-col="todo"] .card').first().click({ position: { x: 20, y: 12 } });
+    await page
+      .locator('[data-col="todo"] .card .t, [data-col="todo"] .card')
+      .first()
+      .click({ position: { x: 20, y: 12 } });
     await expect(page.locator('.cm-content')).toContainText('Body of Alpha');
     expect(await readFile(page, dir, 'tasks/a.md')).toBe(task('Alpha', 'todo'));
   });

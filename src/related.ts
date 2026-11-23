@@ -42,7 +42,9 @@ export interface Mention {
 const stripCR = (l: string): string => (l.endsWith('\r') ? l.slice(0, -1) : l);
 
 function lineOf(n: Note, line: number): string {
-  return stripCR(n.text.split('\n')[line - 1] ?? '').trim().slice(0, 200);
+  return stripCR(n.text.split('\n')[line - 1] ?? '')
+    .trim()
+    .slice(0, 200);
 }
 
 /* ---------- direct links ---------- */
@@ -406,7 +408,10 @@ export function graphAround(index: VaultIndex, path: string, opts: GraphOptions 
     const scored = new Map<string, number>();
     relatedByText(index, path, relatedCount * 2).forEach((r, i) => scored.set(r.path, (scored.get(r.path) ?? 0) + 1 / (i + 1)));
     relatedByTags(index, path, relatedCount * 2).forEach((r, i) => scored.set(r.path, (scored.get(r.path) ?? 0) + 1 / (i + 1)));
-    const picks = [...scored].filter(([p]) => !nodes.has(p)).sort((a, b) => b[1] - a[1]).slice(0, relatedCount);
+    const picks = [...scored]
+      .filter(([p]) => !nodes.has(p))
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, relatedCount);
     for (const [p] of picks) {
       nodes.set(p, { path: p, title: index.notes.get(p)?.title ?? p, depth: 1, kind: 'related' });
       edges.push({ from: path, to: p, kind: 'related' });

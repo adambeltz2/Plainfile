@@ -59,9 +59,17 @@ describe('docx', () => {
   });
 
   it('makes a Word document with the parts Word needs, headings, formatting, lists and a table', () => {
-    const md = '---\ntitle: X\n---\n# Heading **one**\n\nText with *italic* & <tags>.\n\n- [ ] Task A\n- bullet\n\n1. First\n\n| A | B |\n|---|---|\n| 1 | 2 |\n';
+    const md =
+      '---\ntitle: X\n---\n# Heading **one**\n\nText with *italic* & <tags>.\n\n- [ ] Task A\n- bullet\n\n1. First\n\n| A | B |\n|---|---|\n| 1 | 2 |\n';
     const files = unzip(toDocx(md, {}, 'My <doc>'));
-    expect([...files.keys()].sort()).toEqual(['[Content_Types].xml', '_rels/.rels', 'docProps/core.xml', 'word/_rels/document.xml.rels', 'word/document.xml', 'word/styles.xml']);
+    expect([...files.keys()].sort()).toEqual([
+      '[Content_Types].xml',
+      '_rels/.rels',
+      'docProps/core.xml',
+      'word/_rels/document.xml.rels',
+      'word/document.xml',
+      'word/styles.xml',
+    ]);
     const doc = new TextDecoder().decode(files.get('word/document.xml'));
     expect(doc).toContain('<w:pStyle w:val="Heading1"/>');
     expect(doc).toContain('Heading ');
@@ -75,7 +83,8 @@ describe('docx', () => {
     expect(doc).not.toContain('title: X');
     expect(new TextDecoder().decode(files.get('docProps/core.xml'))).toContain('My &lt;doc&gt;');
     // Every part is well formed: each tag that opens is closed in order.
-    for (const name of ['word/document.xml', 'word/styles.xml', '[Content_Types].xml', 'docProps/core.xml']) expect(balanced(new TextDecoder().decode(files.get(name))), name).toBe(true);
+    for (const name of ['word/document.xml', 'word/styles.xml', '[Content_Types].xml', 'docProps/core.xml'])
+      expect(balanced(new TextDecoder().decode(files.get(name))), name).toBe(true);
   });
 
   it('an empty note still makes a valid document', () => {

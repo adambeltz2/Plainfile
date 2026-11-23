@@ -6,7 +6,8 @@ import { toHtml } from '../src/render';
 
 const TODAY = '2026-11-21';
 const FILES: Record<string, string> = {
-  'projects/site/index.md': '---\ntitle: Website relaunch\ntype: project\nactive: true\n---\n## Goal\nLaunch by Dec 8\n## Phase 1\n- [ ] Pick a host @sam due:2026-11-10\n- [x] Buy domain @dana\n## Phase 2\n- [ ] Write copy @dana due:2026-11-25\n- [ ] Loose end\n- Ask legal #followup\n',
+  'projects/site/index.md':
+    '---\ntitle: Website relaunch\ntype: project\nactive: true\n---\n## Goal\nLaunch by Dec 8\n## Phase 1\n- [ ] Pick a host @sam due:2026-11-10\n- [x] Buy domain @dana\n## Phase 2\n- [ ] Write copy @dana due:2026-11-25\n- [ ] Loose end\n- Ask legal #followup\n',
   'projects/site/tasks/Legal.md': '---\ntitle: Legal sign-off\nstatus: waiting\ncreated: 2026-11-10\npeople: [pat]\n---\n',
   'projects/site/notes.md': '# Notes\ntext',
 };

@@ -7,7 +7,8 @@ test.beforeEach(async ({ page, context }) => {
   await page.goto('/');
 });
 
-const NOTE = '---\ntitle: Kickoff\ntags: [launch]\n---\n# Kickoff call\n\nMet **Dana** about [[Other|pricing]].\n\n- [ ] Send logos @dana due:2026-11-23 #launch\n- [x] Share link\n\n| A | B |\n|---|---|\n| 1 | 2 |\n';
+const NOTE =
+  '---\ntitle: Kickoff\ntags: [launch]\n---\n# Kickoff call\n\nMet **Dana** about [[Other|pricing]].\n\n- [ ] Send logos @dana due:2026-11-23 #launch\n- [x] Share link\n\n| A | B |\n|---|---|\n| 1 | 2 |\n';
 const VAULT = { 'meetings/Kickoff.md': NOTE, 'Other.md': 'x' };
 
 async function openKickoff(page: Page): Promise<string> {
@@ -98,7 +99,13 @@ test.describe('export', () => {
         configurable: true,
         get() {
           const w = Object.getOwnPropertyDescriptor(Node.prototype, 'ownerDocument') ? null : null;
-          return { focus() {}, print() { (window as unknown as { __printed: number }).__printed++; }, document: w };
+          return {
+            focus() {},
+            print() {
+              (window as unknown as { __printed: number }).__printed++;
+            },
+            document: w,
+          };
         },
       });
     });

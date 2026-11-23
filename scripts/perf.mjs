@@ -38,7 +38,10 @@ await cdp.send('Profiler.start');
 
 const t1 = Date.now();
 await page.getByRole('button', { name: '+ New' }).click();
-await page.locator('.modal').getByRole('button', { name: /^Project/ }).click();
+await page
+  .locator('.modal')
+  .getByRole('button', { name: /^Project/ })
+  .click();
 await page.locator('#tpl-title').fill('Perf test project');
 const t2 = Date.now();
 await page.getByRole('button', { name: 'Create file' }).click();

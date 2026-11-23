@@ -76,7 +76,11 @@ describe('applyRename', () => {
     expect(await store.read('journal/day.md')).toBe('Read [[pricing-analysis|the research]] and [text](../projects/a/pricing-analysis.md#top) today.\n');
     expect(await store.read('index.md')).toBe('- [[projects/a/pricing-analysis]]\n- [[Pricing research]] by title stays\n');
     expect(await store.read('people/dana.md')).toBe('Dana');
-    expect([...new Set(index.backlinks('projects/a/pricing-analysis.md').map((b) => b.from))].sort()).toEqual(['index.md', 'journal/day.md', 'projects/a/kickoff.md']);
+    expect([...new Set(index.backlinks('projects/a/pricing-analysis.md').map((b) => b.from))].sort()).toEqual([
+      'index.md',
+      'journal/day.md',
+      'projects/a/kickoff.md',
+    ]);
   });
 
   it('leaves unchecked links alone, and the alias keeps them working', async () => {

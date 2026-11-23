@@ -54,7 +54,13 @@ export function readVersion(storage: VaultStorage, v: Version): Promise<string> 
  * Keep `content` as a version of the note. Does nothing if it is identical to the newest one.
  * Returns true if a snapshot was written.
  */
-export async function snapshot(storage: VaultStorage, notePath: string, content: string, stamp: string = stampNow(), keep: number = KEEP_VERSIONS): Promise<boolean> {
+export async function snapshot(
+  storage: VaultStorage,
+  notePath: string,
+  content: string,
+  stamp: string = stampNow(),
+  keep: number = KEEP_VERSIONS,
+): Promise<boolean> {
   const existing = await listVersions(storage, notePath);
   const newest = existing[0];
   if (newest && (await storage.read(newest.path)) === content) return false;
