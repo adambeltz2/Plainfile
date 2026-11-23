@@ -7,7 +7,6 @@ import { applyFilters, groupTasks, hubTasks, newFilters, summarize, type Filters
 import { dirname } from '../src/index';
 import { ALL_PROJECTS, listProjects, projectDashboard, projectNotes, type ProjectDashboard } from '../src/projects';
 import { addDays } from '../src/query';
-import { deleteView, listViews, saveView, type SavedView } from '../src/views';
 import { setTaskStatus } from '../src/writeback';
 import { errorMessage, justDone, render, rescan, state, today, writeFailure } from './store';
 import { openNote } from './notes';
@@ -46,8 +45,6 @@ export const hubState = {
   /** The last change made, so it can be undone. */
   last: undefined as undefined | { label: string; edits: BulkPlan['edits'] },
   error: '',
-  views: [] as SavedView[],
-  viewName: '',
 };
 
 const PAGE = 25;
@@ -134,26 +131,32 @@ function toolbar(all: HubTask[]): string {
   const statuses = count(all.map((t) => t.status)).map(([v, n]): [string, string, number] => [v, v, n]);
   const quick = (k: 'overdue' | 'week' | 'none', l: string): string =>
     `<button class="chip${f.due === k ? ' on' : ''}" data-hub-due="${k}" aria-pressed="${f.due === k}">${l}</button>`;
-  const narrow = isNarrow();
   const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + (f.due ? 1 : 0);
   return (
-    `<input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="${hubState.project === ALL_PROJECTS ? 'Filter all tasks…' : 'Filter this project…'}" aria-label="Filter tasks in this project" value="${esc(f.text)}">` +
-    `<details class="hub-tools"${!narrow || hubState.toolsOpen ? ' open' : ''}><summary class="small">Filter &amp; group${active ? ` · ${active} on` : ''}</summary>` +
+    `<div class="hub-find"><input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="${hubState.project === ALL_PROJECTS ? 'Filter all tasks…' : 'Filter this project…'}" aria-label="Filter tasks in this project" value="${esc(f.text)}">${hubState.tab === 'tasks' ? `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}</div>` +
+    `<details class="hub-tools"${hubState.toolsOpen ? ' open' : ''}><summary class="small">Filter &amp; group${active ? ` · ${active} on` : ''}</summary>` +
     '<div class="hub-bar">' +
-    `<label class="hub-sel"><span class="small muted">View</span><select id="hub-views" class="inp" aria-label="Saved views"><option value="">${hubState.views.length ? 'Saved views…' : 'No saved views'}</option>${hubState.views.map((v) => `<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('')}${hubState.views.length ? '<option value="__delete">Delete a view…</option>' : ''}</select></label>` +
-    (hubState.tab !== 'tasks'
-      ? ''
-      : `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` +
-        `<label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>`) +
+    (hubState.tab === 'tasks' ? `<label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>` : '') +
     (hubState.tab === 'tasks'
       ? `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button><button class="btn small" data-hub-export="csv" title="Download the tasks shown as a spreadsheet file">Export CSV</button><button class="btn small" data-hub-export="json" title="Download the tasks shown as JSON">Export JSON</button>`
       : '') +
     '</div>' +
-    `<div class="chips hub-quick">${quick('overdue', 'Overdue')}${quick('week', 'Due this week')}${quick('none', 'No date')}<form class="hub-saveview" data-hub-saveview><input id="hub-view-name" class="inp" autocomplete="off" placeholder="Name this view" aria-label="Name for this view" value="${esc(hubState.viewName)}"><button class="btn small" type="submit">Save view</button></form></div>` +
+    `<div class="chips hub-quick">${quick('overdue', 'Overdue')}${quick('week', 'Due this week')}${quick('none', 'No date')}</div>` +
     `<details class="hub-facets"${hubState.facetsOpen || f.people.length || f.tags.length || f.phases.length || f.statuses.length ? ' open' : ''}><summary class="small">More filters: people, tags, phases, status</summary>${facet('People', 'people', people, f.people)}${facet('Tags', 'tags', tags, f.tags)}${facet('Phases', 'phases', phases, f.phases)}${facet('Status', 'statuses', statuses, f.statuses)}</details>` +
     '</details>' +
     activeChips()
   );
+}
+
+/** The five numbers under the title. Each one is a button that shows what it counts. */
+function statsHtml(open: number, overdue: number, done: number, notes: number, followups: number): string {
+  const f = hubState.filters;
+  const onOpen = hubState.tab === 'tasks' && !f.due && !f.statuses.length && f.hideDone;
+  const onOverdue = hubState.tab === 'tasks' && f.due === 'overdue';
+  const onDone = hubState.tab === 'tasks' && !f.hideDone && f.statuses.includes('done');
+  const stat = (key: string, n: number, label: string, on: boolean, late = false): string =>
+    `<button class="pstat${late && n ? ' late' : ''}" data-hub-stat="${key}" aria-pressed="${on}" aria-label="Show the ${n} ${label}"><b>${n}</b><span>${label}</span></button>`;
+  return `<div class="pstats">${stat('open', open, 'open', onOpen)}${stat('overdue', overdue, 'overdue', onOverdue, true)}${stat('done', done, 'done', onDone)}${stat('notes', notes, 'notes', hubState.tab === 'notes')}${stat('followups', followups, 'follow-ups', false)}</div>`;
 }
 
 function groupsHtml(visible: HubTask[]): string {
@@ -405,10 +408,9 @@ export function html(path: string): string {
       : `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
         `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></span>` +
         `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>`) +
-    (everything ? `${quickBar('hub-quick').form}${quickBar().below}` : '') +
-    (d.summary ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
-    `<div class="pstats"><div class="pstat"><b>${openCount}</b><span>open</span></div><div class="pstat${d.overdue ? ' late' : ''}"><b>${d.overdue}</b><span>overdue</span></div><div class="pstat"><b>${all.length - openCount}</b><span>done</span></div><div class="pstat"><b>${d.notes.length}</b><span>notes</span></div><div class="pstat"><b>${d.followups.length}</b><span>follow-ups</span></div></div>` +
-    `<div class="pprog"><progress max="${Math.max(all.length, 1)}" value="${all.length - openCount}" aria-label="Tasks done"></progress><span class="small muted">${all.length - openCount} of ${all.length} tasks done${all.length ? ` (${Math.round(((all.length - openCount) / all.length) * 100)}%)` : ''}</span></div>` +
+    (everything ? `${quickBar('hub-quick').form}${quickBar('', true).below}` : '') +
+    (d.summary && !everything ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
+    statsHtml(openCount, d.overdue, all.length - openCount, d.notes.length, d.followups.length) +
     `<div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button role="tab" class="tab${hubState.tab === id ? ' on' : ''}" data-hub-tab="${id}" aria-selected="${hubState.tab === id}">${esc(l)}</button>`).join('')}</div>` +
     `<div class="hub-content">${hubState.tab === 'tasks' || hubState.tab === 'board' ? `<div id="hub-bulk">${bulkHtml()}</div>` : ''}${body}</div>${log ? `<div class="plog" aria-live="polite">${log}</div>` : ''}</div>${statusColumn(all, issues)}</div>`
   );
@@ -573,6 +575,26 @@ export async function click(target: HTMLElement): Promise<boolean> {
     render();
     return true;
   }
+  const stat = q('data-hub-stat');
+  if (stat) {
+    // Each number shows the tasks or notes it counts, from the Tasks tab or the Notes tab.
+    hubState.filters = newFilters();
+    hubState.limits.clear();
+    hubState.selectMode = false;
+    hubState.selected.clear();
+    if (stat === 'notes' || stat === 'followups') hubState.tab = 'notes';
+    else {
+      hubState.tab = 'tasks';
+      if (stat === 'overdue') hubState.filters.due = 'overdue';
+      if (stat === 'done') {
+        hubState.filters.hideDone = false;
+        hubState.filters.statuses = ['done'];
+        hubState.toggled.add(`${hubState.groupBy}:done`); // the Done group starts folded; open it
+      }
+    }
+    render();
+    return true;
+  }
   const exp = q('data-hub-export');
   if (exp) {
     const idx = state.index;
@@ -688,45 +710,8 @@ export async function click(target: HTMLElement): Promise<boolean> {
   return false;
 }
 
-/** Read the saved views from the folder. Call when a project is opened. */
-export async function loadViews(): Promise<void> {
-  const { storage } = state;
-  hubState.views = storage ? await listViews(storage).catch(() => []) : [];
-}
-
-/** Save the grouping and filters now showing under a name. */
-export async function saveCurrentView(): Promise<void> {
-  const { storage } = state;
-  const name = hubState.viewName.trim();
-  if (!storage || !name) return;
-  try {
-    await saveView(storage, { name, groupBy: hubState.groupBy, filters: structuredClone(hubState.filters) });
-    hubState.viewName = '';
-    await loadViews();
-    hubState.error = '';
-  } catch (e) {
-    hubState.error = `Could not save the view. ${errorMessage(e)}`;
-  }
-  render();
-}
-
-function applyView(name: string): void {
-  const v = hubState.views.find((x) => x.name === name);
-  if (!v) return;
-  hubState.groupBy = v.groupBy;
-  hubState.filters = structuredClone(v.filters);
-  hubState.toggled.clear();
-  hubState.limits.clear();
-  hubState.selected.clear();
-  render();
-}
-
 export function input(e: Event): boolean {
   const t = e.target as HTMLInputElement;
-  if (t.id === 'hub-view-name') {
-    hubState.viewName = t.value;
-    return true;
-  }
   const field: Record<string, 'due' | 'person' | 'tag'> = { 'bulk-due': 'due', 'bulk-person': 'person', 'bulk-tag': 'tag' };
   if (field[t.id]) {
     hubState.inputs[field[t.id] as 'due' | 'person' | 'tag'] = t.value;
@@ -743,16 +728,6 @@ export function input(e: Event): boolean {
 
 export function change(e: Event): boolean {
   const t = e.target as HTMLInputElement | HTMLSelectElement;
-  if (t.id === 'hub-views') {
-    const v = t.value;
-    if (v === '__delete') {
-      const name = window.prompt('Delete which saved view? Type its name.', hubState.views[0]?.name ?? '');
-      const found = hubState.views.find((x) => x.name.toLowerCase() === (name ?? '').trim().toLowerCase());
-      if (found && state.storage) void deleteView(state.storage, found.name).then(loadViews).then(render);
-      else render();
-    } else if (v) applyView(v);
-    return true;
-  }
   if (t.id === 'bulk-status') {
     hubState.inputs.status = t.value;
     return true;

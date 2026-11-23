@@ -26,7 +26,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   and projects, and `due:` day words. Every task gets a created date.
 - **Projects:** a hub per project built for hundreds of tasks: a project rail, tabs (Tasks, Board, Timeline,
   Notes, Activity), grouping by due date, status, person, phase or tag, filter chips, a status column,
-  bulk changes with a preview and Undo, saved views, and a sortable portfolio table. A project is a folder with an `index.md`; notes elsewhere
+  bulk changes with a preview and Undo, and a sortable portfolio table. A project is a folder with an `index.md`; notes elsewhere
   belong to it when their `project:` names it. Notebook projects (`active`, `sortOrder`) still work.
 - **Uniform fields without requiring them:** frontmatter is read tolerantly; a Tidy panel offers one-line
   fixes to the standard field names and values.

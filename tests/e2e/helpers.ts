@@ -148,3 +148,8 @@ export async function noteItem(page: Page, hasText: string | RegExp): Promise<im
   if ((await t.isVisible()) && (await t.getAttribute('aria-expanded')) === 'false') await t.click();
   return page.locator('.note-item', { hasText });
 }
+
+/** The project hub keeps its filter, view and export controls folded away. Open them (once). */
+export async function openHubTools(page: Page): Promise<void> {
+  if (!(await page.locator('.hub-tools[open]').count())) await page.locator('.hub-tools > summary').click();
+}

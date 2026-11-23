@@ -11,7 +11,6 @@ import { esc } from './util';
 export const projectState = { path: '', view: 'cards' as 'cards' | 'table', sort: 'number' as string, desc: false };
 
 export function openProject(path: string): void {
-  void hub.loadViews().then(() => projectState.path === path && render());
   projectState.path = path;
   state.screen = 'projects';
   state.log = undefined;
