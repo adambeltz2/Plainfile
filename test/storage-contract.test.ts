@@ -14,7 +14,7 @@ import { NodeStorage } from '../src/node-storage';
 import { planDelete, deleteNote } from '../src/delete';
 import { applyRename, planRename } from '../src/rename';
 import { ConflictError, ExistsError, type VaultStorage } from '../src/storage';
-import { setTaskDone } from '../src/writeback';
+import { setTaskDone, setTaskStatus } from '../src/writeback';
 import { FakeDropbox } from './helpers/fake-dropbox';
 
 /**
@@ -198,6 +198,13 @@ for (const { name, make } of ADAPTERS) {
       await applyPersonRename(s, index, rp, { keepAlias: false });
       expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @Dana-Lee due:2026-11-23');
       await undoPersonRename(s, index, rp);
+      expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @dana due:2026-11-23');
+
+      // A status on a checkbox line is one word on that line; ticking removes it again.
+      const logos2 = index.tasks().find((t) => t.title === 'Send logos')!;
+      await setTaskStatus(s, index, logos2.id, 'doing');
+      expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [ ] Send logos @dana due:2026-11-23 status:doing');
+      await setTaskDone(s, index, logos2.id, true);
       expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @dana due:2026-11-23');
 
       const mv = planMove(index, 'inbox/Kickoff.md', 'projects/site');

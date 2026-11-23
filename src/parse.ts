@@ -1,4 +1,5 @@
 import { parse as parseYaml } from 'yaml';
+import { extractInlineStatus, INLINE_STATUS_RE } from './inline-status';
 import { extractPriority, normalizePriority, stripPriority } from './priority';
 
 /**
@@ -29,6 +30,8 @@ export interface InlineTask {
   due?: string;
   /** When the task was added, from `created:2026-11-21` (or Obsidian Tasks' ➕ date). */
   created?: string;
+  /** `status:doing` or `status:waiting` on the line. */
+  status?: 'doing' | 'waiting';
   /** `(A)` after the checkbox (or an Obsidian Tasks priority emoji): A is first. */
   priority?: string;
   who: string[];
@@ -144,7 +147,7 @@ function toIsoDate(v: unknown): string | undefined {
 }
 
 function cleanTitle(text: string): string {
-  let t = stripPriority(text);
+  let t = stripPriority(text).replace(new RegExp(INLINE_STATUS_RE.source, 'gi'), '$1');
   for (const p of [...DUE_PATTERNS, ...CREATED_PATTERNS]) t = t.replace(new RegExp(p.source, p.flags + 'g'), ' ');
   t = t.replace(WHO, '$1').replace(TAG, '$1');
   return t.replace(/\s+/g, ' ').trim();
@@ -253,6 +256,7 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         due: extractDue(rest),
         created: extractCreated(rest),
         priority: extractPriority(rest),
+        status: extractInlineStatus(rest),
         who: [...rest.matchAll(WHO)].map((x) => `@${(x[2] ?? '').toLowerCase()}`),
         tags: taskTags,
       });

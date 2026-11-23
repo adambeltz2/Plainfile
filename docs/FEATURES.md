@@ -24,6 +24,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   you are waiting on, the week ahead, project progress) and a four-step review that files, reschedules and plans
   with small guarded edits to your own notes.
 - **Priority:** `(A)`, `(B)`, `(C)` straight after the checkbox (or `priority: A` in a task note, or an Obsidian Tasks emoji) shows as a badge and sorts first. Start a quick add with `(A)`, press 1, 2, 3 or 0 on a selected task on Today, or filter and bulk-set it in a project. Each change edits one letter in the file.
+- **Status on a checkbox line:** `status:doing` or `status:waiting` on an inline task, like `due:`. It shows as a chip and in status groups, bulk Set status sets it, and ticking the box (done) removes it.
 - **Today:** open tasks that are late, due today or due this week, plus Upcoming, Inbox, Waiting on,
   All open, Follow-ups and Projects views. Ticking a box changes one character in the file and shows
   the exact before and after lines.
@@ -44,7 +45,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Notes:** click a link in a note to go to it (or to create it, if it does not exist yet); hide the list and details panes to use the whole window on a wide screen (a Hide button in each panel, or the Notes list and Details buttons; an edge tab brings a hidden panel back).
 - **Note kinds:** an icon beside each note in the list says what it is: project (folder), person (head), task (tick box), meeting (speech bubble), journal (calendar) or note (page), read from its `type`, fields or folder.
 - **Notes:** reopens where you left off, or shows a home with pinned, modified-today and recent notes.
-  One live editor where `- [ ] ` becomes a checkbox as you type. X-ray (in ⋯ More, or Ctrl/Cmd+Shift+X) shows raw
+  One live editor where `- [ ] ` becomes a checkbox as you type; Ctrl/Cmd+B and Ctrl/Cmd+I bold and italic the selection. X-ray (in ⋯ More, or Ctrl/Cmd+Shift+X) shows raw
   markdown, focus mode hides the noise (Details and Notes list still open over the note), and a properties panel edits frontmatter. A button adds
   default frontmatter to a note that has none. Autosave, Undo and Redo, version history with restore,
   and delete to a trash you can restore from.

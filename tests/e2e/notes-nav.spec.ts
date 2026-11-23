@@ -438,6 +438,33 @@ test.describe('editor keys and paste', () => {
     expect(await readFileOrEmpty(page, dir, 'n.md')).toBe('- one\n- two\n\nplain\n');
   });
 
+  test('Ctrl+B and Ctrl+I wrap the selection in bold or italic marks, and a second press takes them off', async ({ page }) => {
+    await page.goto('/');
+    const dir = await open(page, 'See the docs here\n');
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+Home');
+    for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Shift+Control+ArrowRight'); // "the"
+    await page.keyboard.press('Control+b');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'n.md')).toBe('See **the** docs here\n');
+    await page.keyboard.press('Control+i'); // the selection stays on the word, so italic goes round the bold
+    await expect.poll(() => readFileOrEmpty(page, dir, 'n.md')).toBe('See ***the*** docs here\n');
+    await page.keyboard.press('Control+b');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'n.md')).toBe('See *the* docs here\n');
+    await page.keyboard.press('Control+i');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'n.md')).toBe('See the docs here\n');
+  });
+
+  test('Ctrl+B with nothing selected types a pair of marks and leaves the cursor between them', async ({ page }) => {
+    await page.goto('/');
+    const dir = await open(page, 'x\n');
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+b');
+    await page.keyboard.type('loud');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'n.md')).toBe('x\n**loud**');
+  });
+
   test('pasting a web address over selected text makes a link of it', async ({ page }) => {
     await page.goto('/');
     const dir = await open(page, 'See the docs here\n');

@@ -476,6 +476,18 @@ test.describe('project hub', () => {
     await expect(page.locator('.hub-col[data-col="doing"] .hub-card', { hasText: 'Task 001' })).toBeVisible();
   });
 
+  test('the Board moves a checkbox line between statuses too, by writing status:doing on the line', async ({ page }) => {
+    const INDEX = '---\ntitle: P\ntype: project\nactive: true\n---\n- [ ] Inline job due:2026-12-01\n';
+    const dir = await openVault(page, { 'projects/p/index.md': INDEX });
+    await nav(page, 'Projects').click();
+    await page.locator('.pcard .pbtn').click();
+    await page.getByRole('tab', { name: 'Board' }).click();
+    await page.locator('.hub-col[data-col="todo"] .hub-card', { hasText: 'Inline job' }).getByRole('button', { name: 'Move to doing' }).click();
+    await expect.poll(() => readFile(page, dir, 'projects/p/index.md')).toBe(INDEX.replace('due:2026-12-01', 'due:2026-12-01 status:doing'));
+    await expect(page.locator('.hub-col[data-col="doing"] .hub-card', { hasText: 'Inline job' })).toBeVisible();
+    await expect(page.locator('.hub-col[data-col="doing"] .hub-card', { hasText: 'status:' })).toHaveCount(0);
+  });
+
   test('the timeline lays tasks out by week and phase', async ({ page }) => {
     await openBig(page);
     await page.getByRole('tab', { name: 'Timeline' }).click();

@@ -1,6 +1,7 @@
 import { addFrontmatterListItem, setFrontmatterField } from './frontmatter';
 import type { VaultIndex } from './index';
 import { STATUSES, type Status } from './fields';
+import { inlineWithStatus, stripInlineStatus } from './inline-status';
 import { PRIORITY_EMOJI } from './priority';
 import { ConflictError, type VaultStorage } from './storage';
 import { StaleError, type ChangeResult } from './writeback';
@@ -53,8 +54,10 @@ export function editInlineLine(line: string, a: BulkAction): string | null {
   const cr = line.endsWith('\r') ? '\r' : '';
   const body = cr ? line.slice(0, -1) : line;
   let out: string | null = null;
-  if (a.kind === 'done') out = CHECKBOX.test(body) ? body.replace(CHECKBOX, (_m, a1: string, a2: string) => `${a1}${a.done ? 'x' : ' '}${a2}`) : null;
-  else if (a.kind === 'status') out = a.status === 'done' || a.status === 'todo' ? editInlineLine(body, { kind: 'done', done: a.status === 'done' }) : null;
+  if (a.kind === 'done') {
+    const ticked = CHECKBOX.test(body) ? body.replace(CHECKBOX, (_m, a1: string, a2: string) => `${a1}${a.done ? 'x' : ' '}${a2}`) : null;
+    out = ticked !== null && a.done ? stripInlineStatus(ticked) : ticked; // a finished task no longer says "doing"
+  } else if (a.kind === 'status') out = inlineWithStatus(body, a.status);
   else if (a.kind === 'priority') out = withPriority(body, a.letter);
   else if (a.kind === 'due') {
     if (a.date === null) out = body.replace(/\s*#?\bdue:\d{4}-\d{2}-\d{2}/i, '');

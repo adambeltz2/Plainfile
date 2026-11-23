@@ -5,7 +5,7 @@ import { defaultKeymap, history, historyKeymap, indentLess, indentMore, redo, re
 import { parseDueWord } from '../src/quickline';
 import { acceptCompletion, autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
 import { markdown } from '@codemirror/lang-markdown';
-import { Compartment, EditorState, Transaction, type Range } from '@codemirror/state';
+import { Compartment, EditorSelection, EditorState, Transaction, type Range } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, WidgetType, keymap, tooltips, type DecorationSet, type ViewUpdate } from '@codemirror/view';
 import { addDays } from '../src/query';
 import type { LinkTarget, SuggestKind } from '../src/vocabulary';
@@ -491,6 +491,55 @@ async function insertImages(view: EditorView, files: File[], save: (f: File) => 
 const imagesIn = (list: FileList | DataTransferItemList | null | undefined): File[] =>
   [...((list as FileList | undefined) ?? [])].filter((f): f is File => f instanceof File && f.type.startsWith('image/'));
 
+/** How many `*` sit in a row ending just before `pos` (or starting at it, when `after`). */
+function starRun(doc: string, pos: number, after: boolean): number {
+  let n = 0;
+  if (after) while (doc[pos + n] === '*') n++;
+  else while (pos - n - 1 >= 0 && doc[pos - n - 1] === '*') n++;
+  return n;
+}
+
+/**
+ * Ctrl/Cmd+B and Ctrl/Cmd+I: wrap the selection in `**` (bold) or `*` (italic), or take the marks off again when
+ * they are already there. Italic is told apart from bold by the length of the run of stars, so `**x**` is bold only
+ * and `***x***` is both. With nothing selected, a pair is inserted and the cursor goes between.
+ */
+function toggleMark(view: EditorView, mark: '**' | '*'): boolean {
+  const doc = view.state.doc.toString();
+  const len = mark.length;
+  const has = (run: number): boolean => (mark === '**' ? run >= 2 : run % 2 === 1);
+  const spec = view.state.changeByRange((r) => {
+    const sel = doc.slice(r.from, r.to);
+    const before = starRun(doc, r.from, false);
+    const after = starRun(doc, r.to, true);
+    // The marks sit just outside the selection: take them off.
+    if (!r.empty && has(before) && has(after)) {
+      return {
+        changes: [
+          { from: r.from - len, to: r.from },
+          { from: r.to, to: r.to + len },
+        ],
+        range: EditorSelection.range(r.anchor - len, r.head - len),
+      };
+    }
+    // The selection includes its own marks: take them off.
+    const inside = /^(\*+)([\s\S]*?)(\*+)$/.exec(sel);
+    if (inside && inside[2] && has(Math.min((inside[1] as string).length, (inside[3] as string).length)) && !inside[2].startsWith('*')) {
+      return { changes: [{ from: r.from, to: r.to, insert: inside[2] }], range: EditorSelection.range(r.from, r.from + inside[2].length) };
+    }
+    if (r.empty) return { changes: { from: r.from, insert: mark + mark }, range: EditorSelection.range(r.from + len, r.from + len) };
+    return {
+      changes: [
+        { from: r.from, insert: mark },
+        { from: r.to, insert: mark },
+      ],
+      range: EditorSelection.range(r.from + len, r.to + len),
+    };
+  });
+  view.dispatch(spec, { scrollIntoView: true, userEvent: 'input' });
+  return true;
+}
+
 /** Whether the cursor is on a bullet, numbered or task line, where Tab and Shift+Tab change the nesting. */
 function onListLine(view: EditorView): boolean {
   const line = view.state.doc.lineAt(view.state.selection.main.head).text;
@@ -522,6 +571,8 @@ export function createEditor(o: {
         { key: 'Tab', run: (view) => acceptCompletion(view) || (onListLine(view) && indentMore(view)) },
         // On a list or task line, Shift+Tab takes an item back out a level. Elsewhere it moves focus on, as usual.
         { key: 'Shift-Tab', run: (view) => onListLine(view) && indentLess(view) },
+        { key: 'Mod-b', run: (view) => toggleMark(view, '**') },
+        { key: 'Mod-i', run: (view) => toggleMark(view, '*') },
         {
           key: 'Mod-s',
           run: () => {

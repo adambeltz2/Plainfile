@@ -95,7 +95,7 @@ export function toHubTask(item: TaskItem, note: Note): HubTask {
     phase = ph !== undefined ? String(ph).trim() : undefined;
     people = [...new Set([...people, ...listOf(fieldOf(fm, 'people')?.value).map((p) => p.replace(/^@/, '').toLowerCase().replace(/\s+/g, '-'))])];
   } else {
-    status = item.done ? 'done' : item.tags.includes('waiting') ? 'waiting' : 'todo';
+    status = item.done ? 'done' : ((item.status as Status | undefined) ?? (item.tags.includes('waiting') ? 'waiting' : 'todo'));
     phase = headingAbove(note, item.line);
   }
   return { item, status, due: normalizeDate(item.due) ?? undefined, phase: phase || undefined, people, tags: item.tags, note };
