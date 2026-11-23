@@ -3,6 +3,7 @@ import { allTasks, daysSince } from './home';
 import type { HubTask } from './hub';
 import type { VaultIndex } from './index';
 import type { Note } from './parse';
+import { isPersonNote } from './note-kind';
 
 /**
  * People, worked out from your own notes: `@dana` on a task, `people:` or `attendees:` in frontmatter, and notes
@@ -39,7 +40,7 @@ export interface Person {
 function aliasMap(index: VaultIndex): Map<string, string> {
   const m = new Map<string, string>();
   for (const n of index.notes.values()) {
-    if (String(n.frontmatter.type ?? '').toLowerCase() !== 'person') continue;
+    if (!isPersonNote(n)) continue;
     const key = slugName(n.name);
     for (const s of [n.name, n.title, ...listOf(n.frontmatter.aliases)]) if (slugName(s)) m.set(slugName(s), key);
   }
@@ -74,7 +75,7 @@ export function buildPeople(index: VaultIndex, today: string): PeopleIndex {
   const display = new Map<string, string>();
   const notes = new Map<string, Note>();
   for (const n of index.notes.values()) {
-    if (String(n.frontmatter.type ?? '').toLowerCase() === 'person') {
+    if (isPersonNote(n)) {
       const k = slugName(n.name);
       notes.set(k, n);
       display.set(k, n.title);
@@ -91,7 +92,7 @@ export function buildPeople(index: VaultIndex, today: string): PeopleIndex {
   }
   const mentions = new Map<string, Note[]>();
   for (const n of index.notes.values()) {
-    const own = String(n.frontmatter.type ?? '').toLowerCase() === 'person' ? slugName(n.name) : '';
+    const own = isPersonNote(n) ? slugName(n.name) : '';
     for (const p of new Set(namesIn(n).map(see).filter(Boolean))) if (p !== own) mentions.set(p, [...(mentions.get(p) ?? []), n]);
   }
   const keys = new Set([...display.keys()].filter((k) => tasks.has(k) || mentions.has(k) || notes.has(k)));

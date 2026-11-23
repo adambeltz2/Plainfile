@@ -29,6 +29,14 @@ function built(): PeopleIndex | undefined {
   return cache.built;
 }
 
+/** Back to the list of everyone (what choosing People in the header shows). */
+export function openList(): void {
+  peopleState.key = '';
+  peopleState.rename = undefined;
+  peopleState.last = undefined;
+  state.log = undefined;
+}
+
 export function openPerson(key: string): void {
   peopleState.key = key;
   peopleState.rename = undefined;
@@ -78,7 +86,7 @@ function table(p: PeopleIndex): string {
     rows
       .map(
         (r) =>
-          `<tr><td><button class="link" data-person="${esc(r.key)}"><b>${esc(r.name)}</b></button>${r.note ? '' : ' <span class="chip quiet" title="No note of type: person yet">no note</span>'}</td><td>${r.open}</td><td>${r.waiting}</td><td>${r.overdue ? `<span class="chip late">${r.overdue}</span>` : '0'}</td><td>${r.notes}</td><td>${esc(ago(r.lastSeen))}</td></tr>`,
+          `<tr><td><button class="link" data-person="${esc(r.key)}"><b>${esc(r.name)}</b></button>${r.note ? '' : ' <span class="chip quiet" title="No person note yet. Make one from their page.">no note</span>'}</td><td>${r.open}</td><td>${r.waiting}</td><td>${r.overdue ? `<span class="chip late">${r.overdue}</span>` : '0'}</td><td>${r.notes}</td><td>${esc(ago(r.lastSeen))}</td></tr>`,
       )
       .join('') +
     '</tbody></table></div>'

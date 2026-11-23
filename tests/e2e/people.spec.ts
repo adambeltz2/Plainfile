@@ -70,3 +70,25 @@ test.describe('People', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
 });
+
+test('a note in a people/ folder is a person even without type: person, so they are listed before anyone mentions them', async ({ page }) => {
+  await openVault(page, { 'people/Ken Moore.md': '---\ntitle: Ken Moore\ntags: [people]\n---\nRuns data.\n', 'a.md': '# A\n' });
+  await nav(page, 'People').click();
+  const rows = page.locator('.portfolio tbody tr');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('Ken Moore');
+  await expect(rows.first()).not.toContainText('no note'); // they have a note
+});
+
+test('choosing People shows the list of people, even when you last looked at one person', async ({ page }) => {
+  await openVault(page, { 'people/Ken Moore.md': '---\ntitle: Ken Moore\ntype: person\n---\n', 'a.md': 'Ask @betsy-s today.\n- [ ] Hi @betsy-s\n' });
+  await nav(page, 'People').click();
+  await page.locator('.portfolio [data-person]', { hasText: 'betsy-s' }).click();
+  await expect(page.getByRole('heading', { name: 'betsy-s' })).toBeVisible();
+  await nav(page, 'Today').click();
+  await nav(page, 'People').click();
+  await expect(page.locator('.portfolio tbody tr')).toHaveCount(2); // both Ken Moore and betsy-s
+  await page.locator('.portfolio [data-person]', { hasText: 'betsy-s' }).click();
+  await nav(page, 'People').click(); // from a person's page too
+  await expect(page.locator('.portfolio tbody tr')).toHaveCount(2);
+});

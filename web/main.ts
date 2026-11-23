@@ -120,6 +120,8 @@ async function go(screen: ScreenId): Promise<void> {
   if (screen === 'tasks') return projectScreen.openProject(ALL_PROJECTS);
   if (screen === 'review' && state.screen !== 'review') reviewScreen.startReview();
   state.error = '';
+  // Choosing People shows the list of people, not whichever person you looked at last.
+  if (screen === 'people') peopleScreen.openList();
   state.screen = screen;
   state.modal = undefined;
   if (screen === 'notes' && !notes.notes.path) {
