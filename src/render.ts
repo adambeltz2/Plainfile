@@ -46,6 +46,7 @@ export function hideMarkers(s: string): string {
   return s
     .replace(/(^|\s)#?due:\S+/gi, '$1')
     .replace(/(^|\s)created:\S+/gi, '$1')
+    .replace(/(^|\s)done:\d{4}-\d{2}-\d{2}/gi, '$1')
     .replace(/(^|\s)\[(?:due|created)::[^\]]*\]/gi, '$1')
     .replace(/\s*(?:📅|➕|⏳)\s*\d{4}-\d{2}-\d{2}/g, '')
     .replace(/(^|[\s(])#[\p{L}][\p{L}\p{N}_/-]*/gu, '$1')

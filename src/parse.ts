@@ -32,6 +32,8 @@ export interface InlineTask {
   created?: string;
   /** `status:doing` or `status:waiting` on the line. */
   status?: 'doing' | 'waiting';
+  /** The day it was finished, if it says so (`done:2026-11-23`). */
+  completed?: string;
   /** `(A)` after the checkbox (or an Obsidian Tasks priority emoji): A is first. */
   priority?: string;
   who: string[];
@@ -46,6 +48,8 @@ export interface FileTask {
   done: boolean;
   due?: string;
   created?: string;
+  /** `completed: 2026-11-23` in the frontmatter. */
+  completed?: string;
   /** `priority: A` in the frontmatter. */
   priority?: string;
   statusLine: number; // 1-based line of `status:` in the frontmatter
@@ -83,6 +87,13 @@ const DUE_PATTERNS = [
   new RegExp(String.raw`#?\bdue:\s?(${DATE})`, 'i'), // due:2026-11-23, and #due:2026-11-23 from the first Notebook app
   new RegExp(String.raw`📅\s*(${DATE})`), // Obsidian Tasks
   new RegExp(String.raw`\[due::\s*(${DATE})\]`, 'i'), // Dataview
+];
+
+/** When a task was finished: `done:2026-11-23` (what Plainfile writes), Obsidian Tasks' ✅ date, or Dataview's [completion:: date]. */
+const COMPLETED_PATTERNS = [
+  new RegExp(String.raw`\bdone:\s?(${DATE})`, 'i'),
+  new RegExp(String.raw`✅\s*(${DATE})`),
+  new RegExp(String.raw`\[completion::\s*(${DATE})\]`, 'i'),
 ];
 
 const CREATED_PATTERNS = [
@@ -148,9 +159,17 @@ function toIsoDate(v: unknown): string | undefined {
 
 function cleanTitle(text: string): string {
   let t = stripPriority(text).replace(new RegExp(INLINE_STATUS_RE.source, 'gi'), '$1');
-  for (const p of [...DUE_PATTERNS, ...CREATED_PATTERNS]) t = t.replace(new RegExp(p.source, p.flags + 'g'), ' ');
+  for (const p of [...DUE_PATTERNS, ...CREATED_PATTERNS, ...COMPLETED_PATTERNS]) t = t.replace(new RegExp(p.source, p.flags + 'g'), ' ');
   t = t.replace(WHO, '$1').replace(TAG, '$1');
   return t.replace(/\s+/g, ' ').trim();
+}
+
+export function extractCompleted(text: string): string | undefined {
+  for (const p of COMPLETED_PATTERNS) {
+    const m = p.exec(text);
+    if (m) return m[1];
+  }
+  return undefined;
 }
 
 export function extractCreated(text: string): string | undefined {
@@ -257,6 +276,7 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         created: extractCreated(rest),
         priority: extractPriority(rest),
         status: extractInlineStatus(rest),
+        completed: extractCompleted(rest),
         who: [...rest.matchAll(WHO)].map((x) => `@${(x[2] ?? '').toLowerCase()}`),
         tags: taskTags,
       });
@@ -291,6 +311,7 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         due: toIsoDate(fm.due),
         created: toIsoDate(fm.created),
         priority: normalizePriority(fm.priority),
+        completed: toIsoDate(fm.completed),
         statusLine: idx + 2,
         statusRaw: lines[idx + 1] ?? '',
       };
