@@ -563,3 +563,31 @@ test('a web address in a note is drawn as a link, and clicking it opens a new ta
   await page.waitForTimeout(1200);
   expect(await readFileOrEmpty(page, dir, 'n.md')).toBe(TEXT); // nothing was written into the file
 });
+
+test('Copy path asks once where the folder is on this computer, remembers it, and copies the full path', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await openVault(page, { 'inbox/Kickoff.md': '# Kickoff\n' });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Kickoff')).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  await expect(page.locator('.ed-head .path')).toHaveText('inbox/Kickoff.md'); // the button is beside the path, not part of it
+  await page.getByRole('button', { name: 'Copy path' }).click();
+  const ask = page.getByRole('group', { name: 'Where is this folder' });
+  await expect(ask).toBeVisible();
+  await page.locator('#vault-base').fill('C:\\Users\\Adam\\Notes');
+  await ask.getByRole('button', { name: 'Save and copy' }).click();
+  await expect(page.locator('#note-status')).toContainText('Copied the file path');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('C:\\Users\\Adam\\Notes\\inbox\\Kickoff.md');
+  // Remembered: the next copy does not ask.
+  await page.evaluate(() => navigator.clipboard.writeText('x'));
+  await page.getByRole('button', { name: 'Copy path' }).click();
+  await expect(ask).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('C:\\Users\\Adam\\Notes\\inbox\\Kickoff.md');
+  // The menu can change the location, and the path inside the folder can be copied without telling the app.
+  await page.locator('.ed-actions').getByRole('button', { name: /More/ }).click();
+  await page.getByRole('menuitem', { name: 'Folder location…' }).click();
+  await ask.getByRole('button', { name: 'Copy the path inside the folder' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('inbox/Kickoff.md');
+});

@@ -803,3 +803,9 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 
 /* The project page uses the width of the window, so a board of a few cards is not squeezed into the middle. */
 .wrap.hub-wide { max-width: min(2400px, 100%); }
+
+/* The note's path with a small Copy path button beside it. */
+.pathrow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.pathrow .plain-btn { color: var(--mute); text-decoration: underline; cursor: pointer; background: none; border: 0; padding: 0; font: inherit; font-size: 12px; }
+.pathrow .plain-btn:hover, .pathrow .plain-btn:focus-visible { color: var(--fg); }
+.wrap.focus .pathrow { display: none; }

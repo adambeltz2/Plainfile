@@ -14,6 +14,7 @@ import {
 } from '../src/frontmatter';
 import { listOf } from '../src/fields';
 import { kindIcon } from './kind-icon';
+import { dropboxPath, fullPath } from '../src/filepath';
 import { localDateOf } from '../src/dates';
 import { saveImage, mimeFor } from '../src/attachments';
 import { dirname, joinPath } from '../src/index';
@@ -58,6 +59,8 @@ export const notes = {
   status: '',
   diff: undefined as LineChange | undefined,
   xray: false,
+  /** Asking where the folder is on this computer, so a note's full path can be copied. */
+  pathPrompt: false,
   /** In focus mode, the side panel that is showing over the note, if any. */
   peek: undefined as undefined | 'list' | 'details',
   yaml: false,
@@ -252,6 +255,43 @@ async function createLinked(): Promise<void> {
     state.error = `Could not create ${m.path}. ${errorMessage(e)}`;
     render();
   }
+}
+
+const baseKey = (): string => `plainfile.base:${state.name}`;
+function savedBase(): string {
+  try {
+    return localStorage.getItem(baseKey()) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+async function copyText(text: string, what: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+    notes.status = `Copied ${what}`;
+  } catch {
+    notes.status = `${what}: ${text}`;
+  }
+  setStatus(notes.status);
+}
+
+/**
+ * Copy where the open note is. Dropbox: its path in Dropbox. A folder on this computer: the full path, once the app has
+ * been told where the folder is (it cannot know). Otherwise, or on request, the path inside the folder.
+ */
+export async function copyFilePath(path = notes.path, forceAsk = false): Promise<void> {
+  if (!path) return;
+  if (state.name.startsWith('Dropbox')) return copyText(dropboxPath(state.name.replace(/^Dropbox:?\s*/, ''), path), 'the Dropbox path');
+  if (state.demo) return copyText(path, 'the path');
+  const base = savedBase();
+  if (!base || forceAsk) {
+    notes.pathPrompt = true;
+    refreshBanner();
+    document.getElementById('vault-base')?.focus();
+    return;
+  }
+  return copyText(fullPath(base, path), 'the file path');
 }
 
 export async function openNote(path: string, at: At = {}): Promise<void> {
@@ -563,6 +603,15 @@ function statsText(): string {
 }
 
 function bannerHtml(): string {
+  if (notes.pathPrompt) {
+    return (
+      '<div class="notice" role="group" aria-label="Where is this folder">Browsers do not tell Plainfile where this folder is on your computer, so tell it once and it will be remembered here. ' +
+      '<div class="row-gap" style="margin:8px 0"><label class="small" for="vault-base">Folder location</label><input id="vault-base" class="inp" type="text" autocomplete="off" spellcheck="false" placeholder="C:\\Users\\you\\Notes  or  /Users/you/Notes" value="' +
+      esc(savedBase()) +
+      '"></div>' +
+      '<button class="btn primary" data-act="path-save">Save and copy</button> <button class="btn" data-act="path-relative">Copy the path inside the folder</button> <button class="btn" data-act="path-cancel">Cancel</button></div>'
+    );
+  }
   if (notes.missingLink) {
     const m = notes.missingLink;
     return `<div class="notice">There is no note called “${esc(m.title)}” yet. <button class="btn primary" data-act="link-create">Create ${esc(m.path)}</button> <button class="btn" data-act="link-cancel">Cancel</button></div>`;
@@ -820,7 +869,7 @@ export function html(): string {
   } else {
     const n = idx.notes.get(notes.path);
     main =
-      `<div class="ed-head"><div style="min-width:0"><input id="note-title" class="title title-input" type="text" value="${esc(n?.title ?? notes.path)}" aria-label="Note title (click to change)" title="Click to change the title" spellcheck="false" autocomplete="off"><div class="mono muted small path">${esc(notes.path)}</div><div id="note-stats" class="muted small">${statsText()}</div></div>` +
+      `<div class="ed-head"><div style="min-width:0"><input id="note-title" class="title title-input" type="text" value="${esc(n?.title ?? notes.path)}" aria-label="Note title (click to change)" title="Click to change the title" spellcheck="false" autocomplete="off"><div class="pathrow"><div class="mono muted small path">${esc(notes.path)}</div><button class="plain-btn small" data-act="copy-path" title="Copy where this file is, to paste somewhere else">Copy path</button></div><div id="note-stats" class="muted small">${statsText()}</div></div>` +
       `<div class="ed-actions"><button class="btn only-narrow hide-in-focus" data-act="note-close">All notes</button>` +
       `<button class="btn" id="note-undo" data-act="note-undo" disabled>Undo</button><button class="btn" id="note-redo" data-act="note-redo" disabled>Redo</button>` +
       `<button class="btn only-wide" data-act="pane-list" aria-pressed="${notes.focus ? notes.peek === 'list' : notes.panes.list}" title="Show or hide the list of notes">Notes list</button><button class="btn only-wide" data-act="pane-details" aria-pressed="${notes.focus ? notes.peek === 'details' : notes.panes.details}" title="Show or hide properties, links and history">Details</button>` +
@@ -951,6 +1000,31 @@ export async function click(target: HTMLElement): Promise<boolean> {
       refreshSide();
       return true;
     }
+    case 'copy-path':
+      await copyFilePath();
+      return true;
+    case 'path-save': {
+      const v = (document.getElementById('vault-base') as HTMLInputElement | null)?.value.trim() ?? '';
+      if (!v) return true;
+      try {
+        localStorage.setItem(baseKey(), v);
+      } catch {
+        /* it is just not remembered */
+      }
+      notes.pathPrompt = false;
+      refreshBanner();
+      if (notes.path) await copyText(fullPath(v, notes.path), 'the file path');
+      return true;
+    }
+    case 'path-relative':
+      notes.pathPrompt = false;
+      refreshBanner();
+      if (notes.path) await copyText(notes.path, 'the path inside the folder');
+      return true;
+    case 'path-cancel':
+      notes.pathPrompt = false;
+      refreshBanner();
+      return true;
     case 'project-remove': {
       const h = notes.handle;
       if (!h || !notes.path) return true;
