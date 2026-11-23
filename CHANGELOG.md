@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.16.0] - 2026-11-23
+
+### Added
+- **Pictures in the Word file.** A note's images (pasted screenshots and attachments: PNG, JPEG and GIF) are now embedded in the downloaded .docx at their real proportions, scaled to the page width, with the alt text kept as the picture's description. Images Word cannot show (SVG, WebP) still appear as `[image: description]`.
+
 ## [1.15.0] - 2026-11-23
 
 ### Added

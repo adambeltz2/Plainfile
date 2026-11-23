@@ -92,3 +92,58 @@ describe('docx', () => {
     expect(new TextDecoder().decode(files.get('word/document.xml'))).toContain('<w:body><w:p/>');
   });
 });
+
+import { imageSize } from '../src/docx';
+describe('docx pictures', () => {
+  // A 3 x 2 pixel PNG header (only the signature and IHDR matter for sizing), and a real 1 x 1 PNG for the file itself.
+  const PNG_1x1 = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='), (c) =>
+    c.charCodeAt(0),
+  );
+  const dataUri = (mime: string, bytes: Uint8Array): string => `data:${mime};base64,${btoa(String.fromCharCode(...bytes))}`;
+
+  it('reads the pixel size from PNG, GIF and JPEG headers', () => {
+    expect(imageSize(PNG_1x1)).toEqual({ w: 1, h: 1 });
+    expect(imageSize(Uint8Array.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 4, 0, 3, 0, 0, 0]))).toEqual({ w: 4, h: 3 });
+    const jpeg = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0, 4, 0, 0, 0xff, 0xc0, 0, 11, 8, 0, 20, 0, 30, 3, 0, 0, 0]);
+    expect(imageSize(jpeg)).toEqual({ w: 30, h: 20 });
+    expect(imageSize(Uint8Array.from([1, 2, 3]))).toBeUndefined();
+  });
+
+  it('embeds an image as a picture with its bytes, relationship and content type, and still shows alt text for ones Word cannot show', () => {
+    const md = 'Before\n\n![The logo](img/logo.png)\n\nAfter ![svg](icon.svg)\n';
+    const images = new Map([
+      ['img/logo.png', dataUri('image/png', PNG_1x1)],
+      ['icon.svg', dataUri('image/svg+xml', new TextEncoder().encode('<svg/>'))],
+    ]);
+    const files = unzip(toDocx(md, { images }, 'T'));
+    const doc = new TextDecoder().decode(files.get('word/document.xml'));
+    expect(doc).toContain('<w:drawing>');
+    expect(doc).toContain('r:embed="rIdImg1"');
+    expect(doc).toContain('descr="The logo"');
+    expect(doc).toContain('cx="9525"'); // 1 pixel wide
+    expect(doc).toContain('xmlns:wp=');
+    expect(doc).toContain('[image: svg]'); // the SVG is not something Word can show
+    expect(doc.match(/<w:drawing>/g)).toHaveLength(1);
+    expect(files.get('word/media/image1.png')).toEqual(PNG_1x1);
+    expect(new TextDecoder().decode(files.get('word/_rels/document.xml.rels'))).toContain(
+      'Id="rIdImg1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"',
+    );
+    expect(new TextDecoder().decode(files.get('[Content_Types].xml'))).toContain('<Default Extension="png" ContentType="image/png"/>');
+  });
+
+  it('scales a wide picture down to the text width and keeps its shape', () => {
+    const wide = new Uint8Array(PNG_1x1);
+    new DataView(wide.buffer).setUint32(16, 2000); // width
+    new DataView(wide.buffer).setUint32(20, 1000); // height
+    const doc = new TextDecoder().decode(
+      unzip(toDocx('![wide](w.png)', { images: new Map([['w.png', dataUri('image/png', wide)]]) })).get('word/document.xml'),
+    );
+    expect(doc).toContain('cx="5486400" cy="2743200"');
+  });
+
+  it('a document with no pictures is unchanged', () => {
+    const files = unzip(toDocx('Just text\n'));
+    expect([...files.keys()].some((k) => k.startsWith('word/media/'))).toBe(false);
+    expect(new TextDecoder().decode(files.get('[Content_Types].xml'))).not.toContain('image/');
+  });
+});

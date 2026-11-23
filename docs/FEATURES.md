@@ -52,7 +52,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   ("move kick"). F2 renames, Ctrl/Cmd+Shift+M moves, Ctrl/Cmd+Shift+X toggles X-ray.
 - **Paste images:** paste a screenshot or drop an image into a note; it is saved in `_attachments/`, linked
 - **Diagrams (experimental):** a fenced `mermaid` code block is drawn under its code. Mermaid is loaded from a pinned CDN copy only when a note has a diagram; offline you just see the code. It lives in `web/mermaid.ts` and can be removed on its own.
-- **Take your notes out:** ⋯ More has Copy as formatted text, Download as Word, markdown or a web page, and Print or save as PDF. On the Tasks tab and in a project, Export CSV or JSON downloads the tasks shown. Moving or renaming a note keeps its version history.
+- **Take your notes out:** ⋯ More has Copy as formatted text, Download as Word (with the note's pictures), markdown or a web page, and Print or save as PDF. On the Tasks tab and in a project, Export CSV or JSON downloads the tasks shown. Moving or renaming a note keeps its version history.
 - **Insert image…** (⋯ More) picks an image file, for phones where pasting one is awkward.
   relative to the note and shown inline.
 - **Type-ahead:** `[[` links, `#` tags, `@` people, `due:` days and frontmatter values while you type.
