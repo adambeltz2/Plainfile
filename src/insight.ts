@@ -66,8 +66,14 @@ export interface MonthStats {
   open: number;
 }
 
-export function monthStats(index: VaultIndex, today: string): MonthStats {
-  const month = today.slice(0, 7);
+/** The month key (YYYY-MM) `n` months after `month`. */
+export function shiftMonth(month: string, n: number): string {
+  const d = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1 + n, 1));
+  return d.toISOString().slice(0, 7);
+}
+
+/** `month` is YYYY-MM and defaults to today's. Open and overdue always mean now; the rest count that month. */
+export function monthStats(index: VaultIndex, today: string, month: string = today.slice(0, 7)): MonthStats {
   let edited = 0;
   let notesCreated = 0;
   for (const n of index.notes.values()) {
@@ -110,8 +116,7 @@ export interface DrillItem {
 }
 
 /** The notes or tasks behind one of the This month numbers, so the number can be opened and checked. */
-export function drillItems(index: VaultIndex, today: string, kind: Drill): DrillItem[] {
-  const month = today.slice(0, 7);
+export function drillItems(index: VaultIndex, today: string, kind: Drill, month: string = today.slice(0, 7)): DrillItem[] {
   const notes = [...index.notes.values()];
   const byTime = (a: { path: string }, b: { path: string }) => (index.notes.get(b.path)?.mtime ?? 0) - (index.notes.get(a.path)?.mtime ?? 0);
   if (kind === 'edited')

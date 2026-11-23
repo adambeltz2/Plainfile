@@ -92,3 +92,22 @@ test('Insight exports its numbers as CSV and JSON', async ({ page }) => {
   expect(data.topics[0]!.tag).toBe('launch');
   expect(data.month.open).toBe(1);
 });
+
+test('Insight can show 13, 26 or 52 weeks, and step back through months with the change since the one before', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { 'a.md': '---\ncreated: 2026-09-05\n---\nx\n', 'b.md': '# B\n' });
+  await nav(page, 'Insight').click();
+  await expect(page.locator('.heat-col')).toHaveCount(26);
+  await page.locator('#insight-weeks').selectOption('52');
+  await expect(page.locator('.heat-col')).toHaveCount(52);
+  await page.locator('#insight-weeks').selectOption('13');
+  await expect(page.locator('.heat-col')).toHaveCount(13);
+  const card = page.locator('.home-card', { has: page.locator('[data-insight-month]') });
+  await expect(card.locator('h3')).toHaveText('This month');
+  await expect(card.getByRole('button', { name: 'Next month' })).toBeDisabled();
+  await card.getByRole('button', { name: 'Previous month' }).click();
+  await expect(card.locator('h3')).not.toHaveText('This month');
+  await expect(card.getByRole('button', { name: 'Next month' })).toBeEnabled();
+  await card.locator('button[data-insight-month="0"]').click();
+  await expect(card.locator('h3')).toHaveText('This month');
+});

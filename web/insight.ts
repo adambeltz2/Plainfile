@@ -2,7 +2,7 @@ import { applyFieldFix, fieldIssues, type FieldIssue } from '../src/fields';
 import { fmtDate } from '../src/dates';
 import { save } from './export';
 import { insightToCsv } from '../src/export';
-import { activity, drillItems, insightReport, folderSizes, monthStats, notesChangedOn, type Drill } from '../src/insight';
+import { activity, drillItems, insightReport, folderSizes, monthStats, notesChangedOn, shiftMonth, type Drill } from '../src/insight';
 import { buildPeople } from '../src/people';
 import { tagCounts } from '../src/vocabulary';
 import { errorMessage, getHealth, render, state, today } from './store';
@@ -10,7 +10,7 @@ import { logHtml } from './tasks';
 import { esc } from './util';
 
 /** Insight: a quiet look at your own files. When you wrote, what this month looked like, what you write about, and what needs tidying. */
-export const insight = { tidy: false, error: '', drill: '' as '' | Drill | `day:${string}` };
+export const insight = { tidy: false, error: '', drill: '' as '' | Drill | `day:${string}`, /** YYYY-MM, or '' for this month. */ month: '', weeks: 26 };
 
 const DRILL_TITLES: Record<Drill, string> = {
   edited: 'Notes changed this month',
@@ -37,8 +37,10 @@ export function html(): string {
   const idx = state.index;
   if (!idx) return '';
   const t = today();
-  const a = activity(idx, t);
-  const m = monthStats(idx, t);
+  const month = insight.month || t.slice(0, 7);
+  const a = activity(idx, t, insight.weeks);
+  const m = monthStats(idx, t, month);
+  const before = monthStats(idx, t, shiftMonth(month, -1));
   const tags = tagCounts(idx).slice(0, 40);
   const people = buildPeople(idx, t).people.slice(0, 8);
   const folders = folderSizes(idx);
@@ -50,29 +52,34 @@ export function html(): string {
   let h =
     '<div class="home insight"><h2 class="title">Insight</h2><p class="meta">Worked out from your own files, in this browser. Nothing is recorded anywhere. <button class="link" data-insight-export="csv">Export CSV</button> · <button class="link" data-insight-export="json">Export JSON</button></p><div class="home-grid">';
   h += card(
-    'Activity: notes changed per day, last 26 weeks',
-    `<div class="heat" role="group" aria-label="${a.total} notes changed on ${a.days} days in the last 26 weeks">${a.weeks.map((w) => `<div class="heat-col">${w.map((d) => (d.count ? `<button class="lv${d.level}" data-insight-day="${esc(d.date)}" aria-label="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed. Show them." title="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed"></button>` : `<i class="lv0" title="${esc(fmtDate(d.date))}: nothing changed"></i>`)).join('')}</div>`).join('')}</div>` +
+    `Activity: notes changed per day, last ${insight.weeks} weeks`,
+    `<label class="small muted">Show <select id="insight-weeks" class="inp" aria-label="Weeks shown">${[13, 26, 52].map((w) => `<option value="${w}"${w === insight.weeks ? ' selected' : ''}>${w} weeks</option>`).join('')}</select></label>` +
+      `<div class="heat" role="group" aria-label="${a.total} notes changed on ${a.days} days in the last ${insight.weeks} weeks">${a.weeks.map((w) => `<div class="heat-col">${w.map((d) => (d.count ? `<button class="lv${d.level}" data-insight-day="${esc(d.date)}" aria-label="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed. Show them." title="${esc(fmtDate(d.date))}: ${d.count} note${d.count === 1 ? '' : 's'} changed"></button>` : `<i class="lv0" title="${esc(fmtDate(d.date))}: nothing changed"></i>`)).join('')}</div>`).join('')}</div>` +
       `<p class="small muted" style="margin:6px 0 0">${a.total} note${a.total === 1 ? '' : 's'} changed on ${a.days} day${a.days === 1 ? '' : 's'}${a.busiest ? `. Busiest: ${esc(fmtDate(a.busiest.date))}, ${a.busiest.count}.` : '.'} Darker is busier. Dates come from each file's modified time.</p>`,
     true,
   );
   h += drillCard(idx, t);
+  const monthLabel = new Date(`${month}-01T00:00:00Z`).toLocaleString('en', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const delta = (now: number, was: number): string =>
+    now === was ? '' : ` <span class="muted small" title="compared with the month before">${now > was ? '+' : '−'}${Math.abs(now - was)}</span>`;
   h += card(
-    'This month',
-    `<table class="plain-table"><tbody>${(
-      [
-        ['edited', 'Notes changed', m.edited],
-        ['notesCreated', 'Notes created', m.notesCreated],
-        ['tasksCreated', 'Tasks created', m.tasksCreated],
-        ['tasksDone', 'Tasks finished <span class="muted small">(estimate)</span>', m.tasksDone],
-        ['open', 'Open now', m.open],
-        ['overdue', 'Overdue', m.overdue],
-      ] as [Drill, string, number][]
-    )
-      .map(
-        ([k, label, n]) =>
-          `<tr><td>${label}</td><td><button class="stat-n" data-insight-drill="${k}" aria-pressed="${insight.drill === k}" aria-label="Show the ${n} behind: ${esc(DRILL_TITLES[k])}"><b>${n}</b></button></td></tr>`,
+    month === t.slice(0, 7) ? 'This month' : monthLabel,
+    `<div class="row-gap" style="margin:0 0 6px"><button class="btn small" data-insight-month="-1" aria-label="Previous month">‹</button><b>${esc(monthLabel)}</b><button class="btn small" data-insight-month="1" aria-label="Next month"${month >= t.slice(0, 7) ? ' disabled' : ''}>›</button>${month === t.slice(0, 7) ? '' : '<button class="btn small" data-insight-month="0">This month</button>'}</div>` +
+      `<table class="plain-table"><tbody>${(
+        [
+          ['edited', 'Notes changed', m.edited],
+          ['notesCreated', 'Notes created', m.notesCreated],
+          ['tasksCreated', 'Tasks created', m.tasksCreated],
+          ['tasksDone', 'Tasks finished <span class="muted small">(estimate)</span>', m.tasksDone],
+          ['open', 'Open now', m.open],
+          ['overdue', 'Overdue', m.overdue],
+        ] as [Drill, string, number][]
       )
-      .join('')}</tbody></table>`,
+        .map(
+          ([k, label, n]) =>
+            `<tr><td>${label}</td><td><button class="stat-n" data-insight-drill="${k}" aria-pressed="${insight.drill === k}" aria-label="Show the ${n} behind: ${esc(DRILL_TITLES[k])}"><b>${n}</b></button>${['edited', 'notesCreated', 'tasksCreated', 'tasksDone'].includes(k) ? delta(n, before[k as keyof typeof before] as number) : ''}</td></tr>`,
+        )
+        .join('')}</tbody></table>`,
   );
   h += card(
     'Topics',
@@ -107,8 +114,11 @@ function drillCard(idx: NonNullable<typeof state.index>, t: string): string {
   const k = insight.drill;
   if (!k) return '';
   const day = k.startsWith('day:') ? k.slice(4) : '';
-  const items = day ? notesChangedOn(idx, day) : drillItems(idx, t, k as Drill);
-  const title = day ? `Notes changed on ${fmtDate(day)}` : DRILL_TITLES[k as Drill];
+  const items = day ? notesChangedOn(idx, day) : drillItems(idx, t, k as Drill, insight.month || t.slice(0, 7));
+  const inMonth = insight.month
+    ? ` in ${new Date(`${insight.month}-01T00:00:00Z`).toLocaleString('en', { month: 'long', year: 'numeric', timeZone: 'UTC' })}`
+    : ' this month';
+  const title = day ? `Notes changed on ${fmtDate(day)}` : DRILL_TITLES[k as Drill].replace(' this month', inMonth);
   const shown = items.slice(0, 100);
   return card(
     `${title} · ${items.length}`,
@@ -138,7 +148,24 @@ function tidyList(issues: FieldIssue[]): string {
   );
 }
 
+export function change(e: Event): boolean {
+  const t = e.target as HTMLSelectElement;
+  if (t.id !== 'insight-weeks') return false;
+  insight.weeks = Number(t.value) || 26;
+  render();
+  return true;
+}
+
 export async function click(target: HTMLElement): Promise<boolean> {
+  const mv = target.closest<HTMLElement>('[data-insight-month]')?.dataset.insightMonth;
+  if (mv !== undefined) {
+    const cur = insight.month || today().slice(0, 7);
+    const next = mv === '0' ? '' : shiftMonth(cur, Number(mv));
+    insight.month = next >= today().slice(0, 7) ? '' : next;
+    insight.drill = '';
+    render();
+    return true;
+  }
   const exp = target.closest<HTMLElement>('[data-insight-export]')?.dataset.insightExport;
   if (exp && state.index) {
     const r = insightReport(state.index, today());

@@ -90,3 +90,27 @@ describe('drill-down lists match the numbers', () => {
     expect(notesChangedOn(index, localDateOf([...index.notes.values()][0]!.mtime)).length).toBe(2);
   });
 });
+
+import { shiftMonth } from '../src/insight';
+describe('month range', () => {
+  it('moves between months across years', () => {
+    expect(shiftMonth('2026-11', -1)).toBe('2026-10');
+    expect(shiftMonth('2026-01', -1)).toBe('2025-12');
+    expect(shiftMonth('2026-12', 1)).toBe('2027-01');
+    expect(shiftMonth('2026-03', -14)).toBe('2025-01');
+  });
+  it('counts a chosen month, and drill lists agree with the numbers', async () => {
+    const store = new MemoryStorage({
+      'old.md': '---\ncreated: 2026-09-05\n---\n- [ ] Old task created:2026-09-06\n',
+      'new.md': '---\ncreated: 2026-11-02\n---\nx\n',
+    });
+    const index = new VaultIndex(store);
+    await index.scan();
+    const sep = monthStats(index, '2026-11-23', '2026-09');
+    expect(sep.notesCreated).toBe(1);
+    expect(sep.tasksCreated).toBe(1);
+    expect(drillItems(index, '2026-11-23', 'notesCreated', '2026-09').map((x) => x.path)).toEqual(['old.md']);
+    expect(drillItems(index, '2026-11-23', 'notesCreated').map((x) => x.path)).toEqual(['new.md']);
+    expect(monthStats(index, '2026-11-23').notesCreated).toBe(1);
+  });
+});
