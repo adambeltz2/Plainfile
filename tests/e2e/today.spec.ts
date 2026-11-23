@@ -171,3 +171,34 @@ test('a date in plain words ends up as the due date, in the preview and in the f
   const tomorrow = localDate(1);
   await expect.poll(async () => readFileOrEmpty(page, dir, 'tasks/Call Dana.md')).toContain(`due: ${tomorrow}`);
 });
+
+test.describe('keys on the Today list', () => {
+  const TODAY = localDate(0);
+  const FILES = { 'a.md': `- [ ] First due:${TODAY}\n- [ ] Second due:${TODAY}\n- [ ] Third due:${TODAY}\n` };
+
+  test('j and k move through the tasks, x ticks the chosen one, e opens its note', async ({ page }) => {
+    await page.goto('/');
+    const dir = await openVault(page, FILES);
+    await expect(page.locator('li.task')).toHaveCount(3);
+    await page.keyboard.press('j');
+    await expect(page.locator('li.task.sel')).toContainText('First');
+    await page.keyboard.press('j');
+    await expect(page.locator('li.task.sel')).toContainText('Second');
+    await page.keyboard.press('j');
+    await page.keyboard.press('k');
+    await expect(page.locator('li.task.sel')).toContainText('Second');
+    await page.keyboard.press('x');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] First due:${TODAY}\n- [x] Second due:${TODAY}\n- [ ] Third due:${TODAY}\n`);
+    await page.keyboard.press('e');
+    await expect(page.locator('.cm-content')).toBeVisible();
+  });
+
+  test('the keys do nothing while you are typing in a box', async ({ page }) => {
+    await page.goto('/');
+    await openVault(page, FILES);
+    await page.locator('#quick-text').click();
+    await page.keyboard.type('jkxe');
+    await expect(page.locator('#quick-text')).toHaveValue('jkxe');
+    await expect(page.locator('li.task.sel')).toHaveCount(0);
+  });
+});

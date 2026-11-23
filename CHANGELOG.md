@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.8.1] - 2026-11-23
+
+### Added
+- **Keys for the Today list:** `j` and `k` move down and up the tasks, `x` ticks the chosen one, `e` opens its note. They do nothing while you are typing in a box. Listed in the cheat sheet.
+
 ## [1.8.0] - 2026-11-23
 
 ### Added

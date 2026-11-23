@@ -680,6 +680,8 @@ document.addEventListener('keydown', (e) => {
   } else if (e.key === 'F2' && path) {
     e.preventDefault();
     void menu.run('rename', path);
+  } else if (state.screen === 'today' && !state.modal && !palette.pal.open && todayScreen.listKey(e)) {
+    // handled: j and k move through the tasks, x ticks, e opens
   } else if (e.key === '?' && !typing && !mod && !state.modal && !palette.pal.open) {
     e.preventDefault();
     void go('guide');
