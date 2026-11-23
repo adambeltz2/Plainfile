@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.5.1] - 2026-11-23
+
+### Added
+- **Word count and reading time** under a note's title ("320 words · 1 min read"), updating as you type. Frontmatter, code blocks and link addresses are not counted.
+
 ## [1.5.0] - 2026-11-23
 
 ### Added

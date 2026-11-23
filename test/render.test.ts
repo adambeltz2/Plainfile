@@ -107,3 +107,15 @@ describe('markdown to blocks', () => {
     expect(toHtml('a | b\nplain')).toContain('<p>');
   });
 });
+
+import { readingStats } from '../src/render';
+describe('readingStats', () => {
+  it('counts the words a reader sees', () => {
+    expect(readingStats('')).toEqual({ words: 0, minutes: 0 });
+    const md =
+      '---\ntitle: Ignore these words\n---\n# Heading two\n\nOne [link text](http://x.com/ignored) and [[Page|alias]] plus ![img](a.png).\n\n```js\nconst notCounted = 1;\n```\n';
+    expect(readingStats(md).words).toBe(2 + 1 + 2 + 1 + 1 + 1); // Heading two, One, link text, and, alias, plus
+    expect(readingStats('word '.repeat(440)).minutes).toBe(2);
+    expect(readingStats('short').minutes).toBe(1);
+  });
+});
