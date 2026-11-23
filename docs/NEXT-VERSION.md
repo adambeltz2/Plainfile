@@ -124,3 +124,24 @@ readout; it is the trust feature.
 - Do not add accounts, a server or a plugin system. The strength is that there is nothing to run and nothing to lose.
 - Do not add colour. Weight, borders and inversion carry state well; the black and white rule is a feature.
 - Do not turn the app into a notes database. If a view cannot be rebuilt from the files, it does not belong.
+
+## Build plan (agreed choices)
+
+Decisions: priorities are `(A)` to `(Z)` after the checkbox; repeats use `rec:` for inline tasks and `repeat:` in task notes
+(Obsidian `🔁` is read, never rewritten); first-run setup is kept but optional and tucked under the menu.
+Each step ships as its own release with tests, the way the project already works.
+
+| Step | Version | What ships | Main tests |
+|---|---|---|---|
+| 0 | 1.16.1 | Close out working state (done) | e2e with slowed writes |
+| 1 | 1.17.0 | **Priority.** Parse `(A)`, `priority:` and `⏫ 🔼`. Chip (inverted A, bold B, thin C), sort within groups, `(A)` in quick add, keys `1 2 3 0`, Priority filter. | Parser forms; one-letter write-back is byte identical; CRLF; `(a)` prose not a priority |
+| 2 | 1.18.0 | **Repeats.** Parse `rec:1w`, `rec:+3d`, `repeat:`, `🔁`. Ticking writes the done line and the next line with a readout; Undo removes both. "every monday" in quick add. | No duplicate next line; one next task after missed repeats; month ends; task-note form |
+| 3 | 1.19.0 | **Calmer shell.** One overflow menu (Rescan, Open folder, Theme, Health, Cheat sheet), labelled badge, plain-word labels, path chip only on hover or select, task notes hidden from Notes by default, frontmatter folded in the editor. | Header and clicks specs, axe scan, phone layout |
+| 4 | 1.20.0 | **Omnibar.** Go to… becomes Add or go to… with a live "Add task" first result, and a + button on phones. | Palette and quick add specs |
+| 5 | 2.0.0 | **Plan.** Build in three releases behind the existing screens: (a) `src/scope.ts`, one tested filter model for everything, (b) the Plan screen with scope bar and List view, (c) Board, Calendar and Timeline as views, then Home and Today become saved scopes and the old tabs redirect. | Scope unit tests; every old route still opens; clicks and a11y specs; perf budget on 5,000 notes |
+| 6 | 2.1.0 | **Set up this folder.** Optional, under the menu and one quiet line on an empty folder; lists exact files, writes nothing until confirmed. | Memory and disk adapters; no write on cancel |
+
+Risks and how they are handled:
+- **`(A)` at the start of a task might be prose.** Only an upper case single letter plus a space directly after the checkbox counts.
+- **Repeats are the first feature that writes a new line on its own.** Always shown in the readout, undoable, never repeated twice.
+- **Plan replaces five screens.** Built last, on top of a tested scope model, with old addresses kept working so nothing in a bookmark or the installed app shortcuts breaks.
