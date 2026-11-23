@@ -175,8 +175,12 @@ describe('projects', () => {
     const r = await createFromTemplate(store, index, byName('Project'), { title: 'Kitchen Remodel', goal: 'New cabinets' }, TODAY);
     expect(r.path).toBe('projects/kitchen-remodel/index.md');
     expect(r.content).toBe(
-      '---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 5\ncreated: 2026-11-21\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Notes\n- \n\n## Tasks\n- [ ] \n',
+      '---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 5\ncreated: 2026-11-21\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Milestones\n\n\n## Notes\n- \n\n## Tasks\n<!--\nAdd a task here as a checkbox line, one per line: a dash, a space, [ ], a space, then the text.\nFor example, the line  - [ ] Call the supplier @dana due:friday  makes a task with a person and a date.\nOr use "+ Task" at the top of this project to make a task as its own note.\n-->\n',
     );
+    // The explanation is a comment, so a new project starts with no blank or example task.
+    await index.refreshFile(r.path);
+    expect(index.tasks()).toEqual([]);
+    expect(r.content.indexOf('## Milestones')).toBeGreaterThan(r.content.indexOf('## Goal'));
   });
 
   it('the first project is number 1', async () => {

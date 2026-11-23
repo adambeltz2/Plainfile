@@ -548,6 +548,9 @@ app.addEventListener('submit', (e) => {
   } else if (form.matches('[data-cal-add]')) {
     e.preventDefault();
     void calendarScreen.submitAdd();
+  } else if (form.matches('[data-person-add]')) {
+    e.preventDefault();
+    notes.addPerson();
   } else if (form.matches('[data-proj-add]')) {
     e.preventDefault();
     notes.addProject();

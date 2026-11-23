@@ -453,3 +453,43 @@ test.describe('editor keys and paste', () => {
     await expect.poll(() => readFileOrEmpty(page, dir, 'n.md')).toBe('See [the](https://example.com/docs) docs here\n');
   });
 });
+
+test('each side panel has its own Hide button, and an edge tab brings it back', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openVault(page, { 'a.md': '---\ntitle: Alpha\n---\nBody\n' });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Alpha')).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  const wide = (await page.locator('.editor-main').boundingBox())!.width;
+  await page.getByRole('button', { name: 'Collapse left pane' }).click();
+  await expect(page.locator('.frame.notes > .side')).toBeHidden();
+  await page.getByRole('button', { name: 'Collapse right pane' }).click();
+  await expect(page.locator('#note-side')).toBeHidden();
+  expect((await page.locator('.editor-main').boundingBox())!.width).toBeGreaterThan(wide + 400);
+  await expect(page.getByRole('button', { name: 'Collapse left pane' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Expand right pane' }).click();
+  await expect(page.locator('#note-side')).toBeVisible();
+  await page.getByRole('button', { name: 'Expand left pane' }).click();
+  await expect(page.locator('.frame.notes > .side')).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Expand/ })).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('plainfile.panes'))).toBe('{"list":true,"details":true}');
+});
+
+test('the notes list shows an icon for what each note is, with its name for screen readers', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, {
+    'projects/site/index.md': '---\ntitle: Website\ntype: project\nactive: true\n---\n',
+    'people/Ken Moore.md': '---\ntitle: Ken Moore\ntype: person\n---\n',
+    'tasks/Call Dana.md': '---\ntitle: Call Dana\nstatus: todo\n---\n',
+    'journal/2026-11-23.md': '---\ntitle: 2026-11-23\ntype: journal\n---\n',
+    'ideas/Brand.md': '---\ntitle: Brand\n---\nText\n',
+  });
+  await nav(page, 'Notes').click();
+  const icon = async (title: string, kind: string) => expect((await noteItem(page, new RegExp(`^${title}$`))).getByRole('img', { name: kind })).toBeVisible();
+  await icon('Website', 'Project');
+  await icon('Ken Moore', 'Person');
+  await icon('Call Dana', 'Task');
+  await icon('2026-11-23', 'Journal');
+  await icon('Brand', 'Note');
+});

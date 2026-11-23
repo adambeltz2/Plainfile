@@ -87,7 +87,7 @@ test.describe('new project', () => {
     await page.getByRole('button', { name: 'Create file' }).click();
     await expect(page.locator('.cm-content')).toBeVisible();
     expect(await readFile(page, dir, 'projects/kitchen-remodel/index.md')).toBe(
-      `---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 1\ncreated: ${TODAY()}\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Notes\n- \n\n## Tasks\n- [ ] \n`,
+      `---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 1\ncreated: ${TODAY()}\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Milestones\n\n\n## Notes\n- \n\n## Tasks\n<!--\nAdd a task here as a checkbox line, one per line: a dash, a space, [ ], a space, then the text.\nFor example, the line  - [ ] Call the supplier @dana due:friday  makes a task with a person and a date.\nOr use "+ Task" at the top of this project to make a task as its own note.\n-->\n`,
     );
     await nav(page, 'Today').click();
     await page
@@ -129,7 +129,7 @@ test.describe('new project', () => {
       .locator('.side')
       .getByRole('button', { name: /^Projects/ })
       .click();
-    await expect(page.locator('.pcard')).toContainText('2 tasks'); // the starter checkbox plus the new task file
+    await expect(page.locator('.pcard')).toContainText('1 task'); // only the new task file: a new project has no placeholder task
     await page.locator('.pcard').getByRole('button', { name: '+ Note' }).click();
     await page.locator('#tpl-title').fill('Quote from Dana');
     await page.getByRole('button', { name: 'Create file' }).click();
@@ -291,6 +291,25 @@ test.describe('project dashboard', () => {
     await expect(page.locator('.title')).toHaveText('Website relaunch');
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
+});
+
+test('add people to a note from its properties like a project, with type-ahead, and remove one', async ({ page }) => {
+  const NOTE = '---\ntitle: 1x1\ncreated: 2026-11-23\npeople: [dana]\n---\nTalked.\n';
+  const dir = await openVault(page, { 'journal/1x1.md': NOTE, 'people/Ken Moore.md': '---\ntitle: Ken Moore\ntype: person\n---\n' });
+  await nav(page, 'Notes').click();
+  await page.locator('.note-item', { hasText: /^1x1$/ }).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  await expect(page.locator('.projchip', { hasText: 'dana' })).toBeVisible();
+  await page.locator('#prop-person').fill('Ken Mo');
+  await expect(page.locator('.suggest')).toContainText('ken-moore');
+  await page.locator('.suggest').getByText('ken-moore').click(); // replaces both words, not just the last
+  await expect(page.locator('#prop-person')).toHaveValue('ken-moore');
+  await page.locator('#prop-person').fill('Ken Moore');
+  await page.locator('#prop-person').press('Enter');
+  await expect(page.locator('.projchip', { hasText: 'Ken Moore' })).toBeVisible();
+  await expect.poll(() => readFileOrEmpty(page, dir, 'journal/1x1.md'), { timeout: 5000 }).toBe(NOTE.replace('[dana]', '[dana, Ken-Moore]'));
+  await page.getByRole('button', { name: 'Remove dana' }).click();
+  await expect.poll(() => readFileOrEmpty(page, dir, 'journal/1x1.md'), { timeout: 5000 }).toBe(NOTE.replace('[dana]', '[Ken-Moore]'));
 });
 
 test.describe('tagging a note with projects', () => {

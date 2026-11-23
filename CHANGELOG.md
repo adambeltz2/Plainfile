@@ -4,6 +4,27 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.17.4] - 2026-11-23
+
+### Added
+- Every note in the Notes list (and in Pinned and Recent) has a small icon for what it is: a folder for a project, a head for a person, a tick box for a task, a speech bubble for a meeting, a calendar for a journal, and a page for any other note. The kind is read from the note itself (its `type`, its fields or its folder), so it follows whatever you change, and it is named for screen readers.
+
+## [1.17.3] - 2026-11-23
+
+### Added
+- Each side panel on the Notes screen has its own « Hide / Hide » button, and when a panel is hidden a small tab on the window edge brings it back. The choice is remembered. (The Notes list and Details buttons in the note header still work too.)
+
+## [1.17.2] - 2026-11-23
+
+### Added
+- A note's Properties panel has a People row, like Projects: type a name (several words are fine, "Ken Moore") and press Add, with type-ahead from the people you already have. Each person shows as a chip with an × to remove. It edits only the `people:` line of the frontmatter.
+
+## [1.17.1] - 2026-11-23
+
+### Changed
+- A new project note now has a Milestones section under Goal, with the cursor placed there.
+- A new project no longer starts with a blank placeholder task. The Tasks section holds a comment explaining how to add one (a checkbox line, or + Task for a task as its own note).
+
 ## [1.17.0] - 2026-11-23
 
 ### Added
