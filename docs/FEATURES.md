@@ -55,6 +55,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   Undo, duplicate it, or pin it to the top. They live in a **⋯ More** menu on the note and in a
   right-click or long-press menu in the list.
 - **Comments:** `<!-- a note to yourself -->` shows quietly in the editor and is left out of copies and exports.
+- **Copy file path:** beside a note's path (and in ⋯ More), copies its full path on your computer (you tell the app where the folder is once; browsers cannot know), its Dropbox path, or the path inside the folder.
 - **Quick note:** one click or Alt+N makes a note titled with the date and time, ready to type; tag it later.
 - **Go to… and quick keys:** Ctrl/Cmd+P finds a note by a few letters, creates one, or runs an action
   ("move kick"). F2 renames, Ctrl/Cmd+Shift+M moves, Ctrl/Cmd+Shift+X toggles X-ray.

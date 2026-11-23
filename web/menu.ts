@@ -4,7 +4,7 @@ import * as explore from './explore';
 import { copyFormatted, downloadDocx, downloadHtml, downloadMarkdown, keepMarkers, printDocument, setKeepMarkers } from './export';
 import { MOD } from './keys';
 import * as move from './move';
-import { applyProperty, notes, openNote, click as notesClick } from './notes';
+import { applyProperty, copyFilePath, notes, openNote, click as notesClick } from './notes';
 import * as rename from './rename';
 import { errorMessage, render, state } from './store';
 import { esc } from './util';
@@ -30,6 +30,8 @@ export type NoteAction =
   | 'duplicate'
   | 'pin'
   | 'copylink'
+  | 'copypath'
+  | 'setbase'
   | 'frontmatter'
   | 'delete';
 
@@ -75,6 +77,8 @@ export function itemsFor(path: string, inNote: boolean): (Item | '-')[] {
     { action: 'duplicate', label: 'Duplicate' },
     { action: 'pin', label: isPinned(path) ? 'Unpin' : 'Pin to top' },
     { action: 'copylink', label: 'Copy link' },
+    { action: 'copypath', label: 'Copy file path' },
+    { action: 'setbase', label: 'Folder location…' },
     '-',
     { action: 'copyrich', label: 'Copy as formatted text' },
     { action: 'docx', label: 'Download as Word (.docx)' },
@@ -136,7 +140,7 @@ export async function run(action: NoteAction, path: string): Promise<void> {
     for (const [k, v] of Object.entries(data)) b.dataset[k] = v;
     return b;
   };
-  const noOpen = new Set<NoteAction>(['copylink', 'open', 'copyrich', 'docx', 'markdown', 'html', 'print', 'markers']);
+  const noOpen = new Set<NoteAction>(['copylink', 'copypath', 'setbase', 'open', 'copyrich', 'docx', 'markdown', 'html', 'print', 'markers']);
   if (!noOpen.has(action) && notes.path !== path) await openNote(path);
   switch (action) {
     case 'open':
@@ -195,6 +199,12 @@ export async function run(action: NoteAction, path: string): Promise<void> {
       notes.status = keepMarkers()
         ? 'Copies and Word files now keep #tags, @people and due: markers.'
         : 'Copies and Word files now leave out #tags, @people and due: markers.';
+      return render();
+    case 'copypath':
+      await copyFilePath(path);
+      return render();
+    case 'setbase':
+      await copyFilePath(path, true);
       return render();
     case 'copylink': {
       const n = state.index?.notes.get(path);

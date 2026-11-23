@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.21.0] - 2026-11-23
+
+### Added
+- **Copy path** beside a note's path, and **Copy file path** in the ⋯ More menu, copy where the file is so you can paste it somewhere else. In Dropbox you get its Dropbox path. For a folder on your computer you get the full path, such as `C:\Users\you\Notes\inbox\Kickoff.md`: a browser cannot tell Plainfile where a folder is, so it asks once ("Folder location"), remembers the answer in this browser, and writes the slashes the way you typed it. The prompt also offers to copy just the path inside the folder, and ⋯ More → Folder location… changes the saved location.
+
 ## [1.20.1] - 2026-11-23
 
 ### Added
