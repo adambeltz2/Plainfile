@@ -41,3 +41,32 @@ describe('status report', () => {
     expect(statusReport(index, 'nope.md', TODAY)).toBeUndefined();
   });
 });
+
+import { demoteHeadings, projectBook } from '../src/report';
+describe('projectBook', () => {
+  it('moves headings down without touching code', () => {
+    expect(demoteHeadings('# A\ntext\n## B\n```md\n# not a heading\n```\n###### Six', 1)).toBe('## A\ntext\n### B\n```md\n# not a heading\n```\n###### Six');
+  });
+  it('makes one document: title, contents, then each note as a chapter, without frontmatter or task notes', async () => {
+    const { VaultIndex } = await import('../src/index');
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const index = new VaultIndex(
+      new MemoryStorage({
+        'projects/site/index.md': '---\ntitle: Website\ntype: project\n---\n# Website\n\n## Goal\nLaunch it.\n',
+        'projects/site/Kickoff.md': '---\ntitle: Kickoff call\nproject: site\n---\n# Kickoff call\nAgenda here.\n\n## Decisions\n- Go\n',
+        'projects/site/Budget.md': '---\ntitle: Budget\nproject: site\n---\nNumbers.\n',
+        'projects/site/tasks/Do it.md': '---\ntitle: Do it\nstatus: todo\nproject: site\n---\n',
+      }),
+    );
+    await index.scan();
+    const md = projectBook(index, 'projects/site/index.md')!;
+    expect(md).toBe(
+      '# Website\n\n## Contents\n\n1. Website\n2. Budget\n3. Kickoff call\n\n' +
+        '## Website\n\n### Goal\nLaunch it.\n\n' +
+        '## Budget\n\nNumbers.\n\n' +
+        '## Kickoff call\n\nAgenda here.\n\n### Decisions\n- Go\n',
+    );
+    expect(md).not.toContain('Do it');
+    expect(md).not.toContain('type: project');
+  });
+});

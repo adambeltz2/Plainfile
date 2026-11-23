@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.15.0] - 2026-11-23
+
+### Added
+- **Export a project's notes as one document.** **Export notes** in a project (beside Report) builds a single document: the project's title, a contents list, then each note as a chapter (its headings moved down a level, its frontmatter left out; task notes are in the status report). Copy it as formatted text, download it as Word, print or save as PDF, or save it as a note.
+
 ## [1.14.0] - 2026-11-23
 
 ### Changed
