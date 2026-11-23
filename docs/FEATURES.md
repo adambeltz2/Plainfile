@@ -14,7 +14,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Tasks (all projects):** the Tasks tab, a place to start the day and add tasks from one line, opens the project hub over every task, from every project and from notes outside any; group by Project, person, status or date, filter, and use the board and timeline as usual.
 - **Close out a project:** a project's page shows Active or Archived and has Close out / Reopen. Closing writes `active: false` and `completed:` in the project note and moves it under Archived; its tasks leave the Tasks tab and Home. It can also move the whole folder to `archive/` (and back on Reopen), rewriting every link, with a preview; nothing is deleted.
 - **If something breaks:** an error bar offers Copy details for a bug report, and Reload. Nothing is sent or collected.
-- **Install:** an Install button in the footer, where the browser offers it, makes Plainfile an app with its own window and offline copy.
+- **Install:** an Install button in the footer, where the browser offers it, makes Plainfile an app with its own window and offline copy, with New task, Today and Search shortcuts on its icon.
 - **Editor keys:** Tab and Shift+Tab nest list items; paste a web address over selected text to make a link.
 - **Insight export:** the activity grid, month numbers, topics, people and folders download as CSV or JSON.
 - **Home and the weekly review:** a landing screen (capture, today, what needs filing, what

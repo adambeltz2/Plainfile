@@ -21,7 +21,7 @@ helper, per-screen event routing).
 - [x] Tab and Shift+Tab indent list items; move a line up or down (1.7.0, Alt+Up/Down already moved lines)
 - [x] Recent searches (1.7.1)
 - [x] Create a note from a broken link in Vault health (1.7.2)
-- [ ] PWA shortcuts (New task, Search, Today)
+- [x] PWA shortcuts (1.7.3; opening `.md` files with the app is still open)
 
 **Tier 2: moderate, self-contained**
 - [ ] Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]`
@@ -334,8 +334,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   and a shortcut overlay on `?`. _Affected: `web/today.ts`, `web/main.ts`._
 - `[FEATURE]` First-run setup for an empty folder: offer to create `inbox/`, a README note and the
   starter templates. _Affected: `web/main.ts`._
-- `[FEATURE]` PWA shortcuts (New task, Search, Today) and file handling so `.md` files can be opened
-  with Plainfile. _Affected: `web/manifest.json`._
+- `[FEATURE]` PWA file handling so `.md` files can be opened with the installed app. _Affected: `web/manifest.json`, `web/main.ts`._
 - `[FEATURE]` Toasts for results, instead of readouts only inside panels. _Affected: `web/store.ts`._
 - `[FEATURE]` Translations and regional date formats. _Affected: `src/dates.ts`, `web`._
 - `[FEATURE]` Encrypt chosen notes with a passphrase. _Affected: new `src/crypto.ts`._

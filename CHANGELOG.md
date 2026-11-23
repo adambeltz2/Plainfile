@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.7.3] - 2026-11-23
+
+### Added
+- **App shortcuts.** When Plainfile is installed, pressing and holding its icon (or right-clicking it) offers **New task**, **Today** and **Search**, each opening the app on that screen (New task and Search focus their box).
+
 ## [1.7.2] - 2026-11-23
 
 ### Added
