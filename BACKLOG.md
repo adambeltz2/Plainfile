@@ -413,4 +413,4 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - [FEATURE] Click a diagram to enlarge it. `web/mermaid-widget.ts`.
 
 ## Filing
-- [FEATURE] Offer to move a task note into its project folder (`<project>/tasks/`) when a project is assigned later; today only `project:` changes and the file stays put. `src/home.ts` (fileItem), `src/move.ts`, `web/review.ts`, `web/notes.ts`.
+- [DECISION] A task belongs to projects by link (`project:` can list several), not by folder, so assigning a project never moves the file. Do not build "move into project folder". Open question: tasks created with `+Project` are written into that project's `tasks/` folder; with several projects that location is arbitrary, so consider always creating in `tasks/`. `src/capture.ts` (addTaskNote).
