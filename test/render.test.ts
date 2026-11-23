@@ -119,3 +119,16 @@ describe('readingStats', () => {
     expect(readingStats('short').minutes).toBe(1);
   });
 });
+
+describe('line breaks inside a paragraph', () => {
+  const MD = 'Winner:\nA000195757\n\nLosers:\nA000196963\nA000197040\n';
+  it('stay line breaks in the pasted HTML, as the editor shows them', () => {
+    expect(toHtml(MD)).toBe('<p>Winner:<br>A000195757</p>\n<p>Losers:<br>A000196963<br>A000197040</p>');
+  });
+  it('stay line breaks in plain text', () => {
+    expect(toPlain(MD)).toContain('Losers:\nA000196963\nA000197040');
+  });
+  it('still hide markers on a line without leaving a stray space', () => {
+    expect(toHtml('Call Dana #launch\nthen Sam')).toBe('<p>Call Dana<br>then Sam</p>');
+  });
+});

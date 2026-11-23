@@ -106,11 +106,13 @@ test.describe('live editor', () => {
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
     await expect(page.locator('.cm-cb')).toHaveCount(1);
-    await page.getByRole('button', { name: 'X-ray' }).click();
+    await page.locator('.ed-actions').getByRole('button', { name: /More/ }).click();
+    await page.getByRole('menuitem', { name: /X-ray/ }).click();
     await expect(page.locator('.cm-cb')).toHaveCount(0);
     await expect(page.locator('.cm-content')).toContainText('# Title');
     await expect(page.locator('.cm-content')).toContainText('- [ ] Do it **now**');
-    await page.getByRole('button', { name: 'X-ray' }).click();
+    await page.locator('.ed-actions').getByRole('button', { name: /More/ }).click();
+    await page.getByRole('menuitem', { name: /X-ray/ }).click();
     await expect(page.locator('.cm-cb')).toHaveCount(1);
   });
 
@@ -289,7 +291,7 @@ test('on a phone the note list gives way to the open note, with an All notes but
   await expect(page.locator('.cm-content')).toBeVisible();
   await expect(page.locator('#note-list')).toBeHidden();
   // The buttons stay on one line each.
-  const xray = await page.getByRole('button', { name: 'X-ray' }).boundingBox();
+  const xray = await page.getByRole('button', { name: 'Focus', exact: true }).boundingBox();
   expect(xray!.height).toBeLessThan(50);
   await page.getByRole('button', { name: 'All notes' }).click();
   await expect(page.locator('.cm-content')).toHaveCount(0);

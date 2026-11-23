@@ -790,3 +790,10 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 /* The icon that says what kind of note this is: project, person, task, meeting, journal or note. */
 .kind { flex: none; margin-right: 6px; vertical-align: -2px; opacity: 0.85; }
 .note-item[aria-current='true'] .kind, .item[aria-current='true'] .kind { opacity: 1; }
+
+/* Focus mode: Details and Notes list open their panel over the note instead of doing nothing. */
+.wrap.focus .edge-tab { display: none; }
+.wrap.focus .frame.notes.peek-details > .source,
+.wrap.focus .frame.notes.peek-list > .side { display: block !important; position: fixed; top: 0; bottom: 0; z-index: 30; width: min(340px, 92vw); overflow: auto; background: var(--bg); padding: 12px; box-shadow: 0 0 0 1px var(--fg); }
+.wrap.focus .frame.notes.peek-details > .source { right: 0; }
+.wrap.focus .frame.notes.peek-list > .side { left: 0; }
