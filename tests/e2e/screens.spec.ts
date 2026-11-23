@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { localDate, openVault, readFile, writeFileExternally, readFileOrEmpty, nav, noteItem } from './helpers';
+import { listFiles, localDate, openVault, readFile, writeFileExternally, readFileOrEmpty, nav, noteItem } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -205,6 +205,22 @@ test.describe('vault health', () => {
     await page.getByRole('button', { name: 'Link to pricing-research' }).click();
     await expect(page.locator('.diff .add')).toContainText('[[pricing-research|the research]]');
     expect(await readFile(page, dir, 'a.md')).toBe(text.replace('reserach', 'research'));
+    await expect(page.locator('.empty')).toContainText('Nothing to fix');
+  });
+
+  test('a link that points nowhere can be turned into the note it names, beside the note that links to it', async ({ page }) => {
+    const text = 'Plan: see [[Open Questions]] and [[notes/Deeper Idea]].\n';
+    const dir = await openVault(page, { 'projects/a/index.md': text });
+    await nav(page, /^Vault health/).click();
+    await expect(page.locator('.res')).toHaveCount(2);
+    await page.locator('.res', { hasText: '[[Open Questions]]' }).getByRole('button', { name: 'Create note' }).click();
+    await expect(page.locator('.diff .add')).toContainText('title: Open Questions');
+    await expect.poll(() => listFiles(page, dir)).toContain('projects/a/Open Questions.md');
+    expect(await readFile(page, dir, 'projects/a/Open Questions.md')).toMatch(/^---\ntitle: Open Questions\ncreated: \d{4}-\d{2}-\d{2}\n---\n\n$/);
+    expect(await readFile(page, dir, 'projects/a/index.md')).toBe(text); // the linking note is untouched
+    await expect(page.locator('.res')).toHaveCount(1);
+    await page.locator('.res', { hasText: 'Deeper Idea' }).getByRole('button', { name: 'Create note' }).click();
+    await expect.poll(() => listFiles(page, dir)).toContain('notes/Deeper Idea.md');
     await expect(page.locator('.empty')).toContainText('Nothing to fix');
   });
 

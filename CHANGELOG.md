@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.7.2] - 2026-11-23
+
+### Added
+- **Create the note a broken link names.** In Vault health, a link that points nowhere has a **Create note** button: it makes the note (titled, dated, ready to fill in) beside the note that links to it. The linking note is not touched, and the list updates.
+
 ## [1.7.1] - 2026-11-23
 
 ### Added
