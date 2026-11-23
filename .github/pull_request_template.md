@@ -7,4 +7,4 @@
 - [ ] `npm run format`, `npm run typecheck`, `npm test` and `npm run test:e2e` pass
 - [ ] New or changed behavior has a test (writes: the file is byte-identical apart from the intended edit)
 - [ ] Version bumped in `package.json` and an entry added to `CHANGELOG.md`
-- [ ] README features list (and screenshots) updated for any visible change
+- [ ] `docs/FEATURES.md` (and the README screenshots) updated for any visible change
