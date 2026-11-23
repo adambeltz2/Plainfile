@@ -218,6 +218,7 @@ A note is a task file when it has `status` and lives in a `tasks/` folder or has
 
 ## Project docs
 
+- `CONTRIBUTING.md`: how to set up, what to run before a pull request, and what a good change looks like (Prettier, tests, docs).
 - `CLAUDE.md`: engineering conventions and product rules, including keeping this README current.
 - `CHANGELOG.md`: what shipped, by version.
 - `BACKLOG.md`: deferred features, bugs and debt.

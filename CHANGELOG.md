@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.0.0] - 2026-11-23
+
+First major version, for a project that is ready for outside contributions.
+
+### Added
+- **Prettier.** All TypeScript and script files are formatted with Prettier (`npm run format`), and CI fails if a file is not (`npm run format:check`). Settings are in `.prettierrc.json`; styles, docs and generated files are left alone.
+- **`CONTRIBUTING.md`**: how to set up, what to run before a pull request, and what a good change looks like.
+- **`.git-blame-ignore-revs`**, so `git blame` skips the one commit that reformatted the code.
+
+### Changed
+- Every `.ts` and `.mjs` file was reformatted once (whitespace and line wrapping only; no behavior change). The unit tests, browser tests and build are unchanged.
+
 ## [0.48.0] - 2026-11-23
 
 ### Added
