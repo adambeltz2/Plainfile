@@ -87,7 +87,7 @@ test.describe('new project', () => {
     await page.getByRole('button', { name: 'Create file' }).click();
     await expect(page.locator('.cm-content')).toBeVisible();
     expect(await readFile(page, dir, 'projects/kitchen-remodel/index.md')).toBe(
-      `---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 1\ncreated: ${TODAY()}\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Notes\n- \n\n## Tasks\n- [ ] \n`,
+      `---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 1\ncreated: ${TODAY()}\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Milestones\n\n\n## Notes\n- \n\n## Tasks\n<!--\nAdd a task here as a checkbox line, one per line: a dash, a space, [ ], a space, then the text.\nFor example, the line  - [ ] Call the supplier @dana due:friday  makes a task with a person and a date.\nOr use "+ Task" at the top of this project to make a task as its own note.\n-->\n`,
     );
     await nav(page, 'Today').click();
     await page
@@ -129,7 +129,7 @@ test.describe('new project', () => {
       .locator('.side')
       .getByRole('button', { name: /^Projects/ })
       .click();
-    await expect(page.locator('.pcard')).toContainText('2 tasks'); // the starter checkbox plus the new task file
+    await expect(page.locator('.pcard')).toContainText('1 task'); // only the new task file: a new project has no placeholder task
     await page.locator('.pcard').getByRole('button', { name: '+ Note' }).click();
     await page.locator('#tpl-title').fill('Quote from Dana');
     await page.getByRole('button', { name: 'Create file' }).click();

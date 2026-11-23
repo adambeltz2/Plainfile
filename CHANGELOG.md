@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.17.1] - 2026-11-23
+
+### Changed
+- A new project note now has a Milestones section under Goal, with the cursor placed there.
+- A new project no longer starts with a blank placeholder task. The Tasks section holds a comment explaining how to add one (a checkbox line, or + Task for a task as its own note).
+
 ## [1.17.0] - 2026-11-23
 
 ### Added
