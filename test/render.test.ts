@@ -58,7 +58,7 @@ describe('markdown to blocks', () => {
     expect(html).not.toContain('[[');
     expect(html).toContain('the plan'); // a link to a note is text
     expect(html).not.toContain('plan.md');
-    expect(html).toContain('<a href="https://x.test">site</a>');
+    expect(html).toContain('<a href="https://x.test" target="_blank" rel="noopener noreferrer">site</a>');
     expect(html).toContain('Launch date is <b>Dec 8</b>');
     expect(html).not.toContain('#launch');
     expect(html).toContain('☐ Send logo files');
@@ -142,5 +142,19 @@ describe('HTML comments', () => {
   });
   it('are kept inside a fenced code block, where they are code', () => {
     expect(toHtml('```\n<!-- keep -->\n```\n')).toContain('&lt;!-- keep --&gt;');
+  });
+});
+
+describe('web addresses', () => {
+  it('become links that open in a new tab, whether bare, in <angle brackets> or written as [text](address)', () => {
+    const html = toHtml('See https://example.com/a?b=1, and <https://x.test/y> and [the docs](https://docs.test/z).');
+    expect(html).toContain('<a href="https://example.com/a?b=1" target="_blank" rel="noopener noreferrer">https://example.com/a?b=1</a>,');
+    expect(html).toContain('<a href="https://x.test/y" target="_blank" rel="noopener noreferrer">https://x.test/y</a>');
+    expect(html).toContain('<a href="https://docs.test/z" target="_blank" rel="noopener noreferrer">the docs</a>.');
+  });
+  it('leave the full stop and closing bracket of the sentence outside the link', () => {
+    expect(toHtml('(see https://example.com/x).')).toContain(
+      '(see <a href="https://example.com/x" target="_blank" rel="noopener noreferrer">https://example.com/x</a>).',
+    );
   });
 });

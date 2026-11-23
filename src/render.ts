@@ -78,6 +78,17 @@ function parseInline(src: string, o: RenderOptions): Inline[] {
     { re: /~~([^~]+)~~/, make: (m) => ({ t: 's', c: parseInline(m[1] as string, o) }) },
     { re: /(?<![\w*])\*([^*\s][^*]*?)\*(?![\w*])|(?<![\w_])_([^_\s][^_]*?)_(?![\w_])/, make: (m) => ({ t: 'i', c: parseInline((m[1] ?? m[2]) as string, o) }) },
     { re: /<(https?:\/\/[^>\s]+)>/, make: (m) => ({ t: 'link', href: m[1] as string, c: [{ t: 'text', s: m[1] as string }] }) },
+    // A web address on its own becomes a link, without the full stop or bracket that ends the sentence.
+    {
+      re: /(?<![\w"'=(\[])https?:\/\/[^\s<>\]]+/,
+      make: (m) => {
+        const url = m[0].replace(/[.,;:!?'")]+$/, '');
+        return [
+          { t: 'link', href: url, c: [{ t: 'text', s: url }] } as Inline,
+          ...(url.length < m[0].length ? [{ t: 'text', s: m[0].slice(url.length) } as Inline] : []),
+        ];
+      },
+    },
   ];
   let rest = src;
   while (rest) {
@@ -312,7 +323,7 @@ function inlineHtml(inl: Inline[], o: RenderOptions): string {
         case 'code':
           return `<code style="font-family:Consolas,monospace">${esc(x.s)}</code>`;
         case 'link':
-          return `<a href="${esc(x.href)}">${inlineHtml(x.c, o)}</a>`;
+          return `<a href="${esc(x.href)}" target="_blank" rel="noopener noreferrer">${inlineHtml(x.c, o)}</a>`;
         case 'img': {
           const src = /^(https?:|data:)/i.test(x.src) ? x.src : o.images?.get(x.src);
           return src ? `<img src="${esc(src)}" alt="${esc(x.alt)}" style="max-width:100%">` : x.alt ? `[image: ${esc(x.alt)}]` : '';

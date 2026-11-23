@@ -541,3 +541,25 @@ test('in focus mode, Details and Notes list open their panel over the note, and 
   await expect(page.locator('.frame.notes > .side')).toBeVisible(); // back to the normal layout, nothing left open over the note
   await expect(page.locator('.frame.notes.peek-list')).toHaveCount(0);
 });
+
+test('a web address in a note is drawn as a link, and clicking it opens a new tab without changing the note', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await page.context().route('https://example.test/**', (r) => r.fulfill({ contentType: 'text/html', body: '<p>ok</p>' }));
+  const TEXT = 'Summary:\nSee https://example.test/docs/page. And [the docs](https://example.test/md).\n\nend\n';
+  const dir = await openVault(page, { 'n.md': TEXT });
+  await nav(page, 'Notes').click();
+  await page.locator('.note-item', { hasText: /^n$/ }).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  await page.locator('.cm-content').focus();
+  await page.keyboard.press('Control+End'); // the cursor is off the link lines
+  await expect(page.locator('.cm-link', { hasText: 'https://example.test/docs/page' })).toBeVisible();
+  const [popup] = await Promise.all([page.waitForEvent('popup'), page.locator('.cm-link', { hasText: 'https://example.test/docs/page' }).click()]);
+  await expect.poll(() => popup.url()).toBe('https://example.test/docs/page');
+  await popup.close();
+  const [popup2] = await Promise.all([page.waitForEvent('popup'), page.locator('.cm-link', { hasText: 'the docs' }).click()]);
+  await expect.poll(() => popup2.url()).toBe('https://example.test/md');
+  await popup2.close();
+  await page.waitForTimeout(1200);
+  expect(await readFileOrEmpty(page, dir, 'n.md')).toBe(TEXT); // nothing was written into the file
+});
