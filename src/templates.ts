@@ -49,7 +49,7 @@ export interface Template {
 export const BUILT_IN: Template[] = [
   {
     name: 'Note',
-    description: 'A blank note with a title.',
+    description: 'A blank note. You give it a title first.',
     folder: 'inbox',
     filename: '{{title}}',
     prompts: [{ id: 'title', label: 'Title', default: '' }],
@@ -60,7 +60,7 @@ export const BUILT_IN: Template[] = [
   {
     name: 'Task',
     hidden: true,
-    description: 'One file per task, with status and due date. Shows up in Today.',
+    description: 'One file per task, with status and due date. Shows up in Tasks.',
     folder: 'tasks',
     filename: '{{title}}',
     prompts: [
@@ -129,7 +129,7 @@ export const BUILT_IN: Template[] = [
   },
   {
     name: 'Quick note',
-    description: 'Titled with the date and time, ready to type. Tag and file it later.',
+    description: 'No questions: named with the date and time, ready to type. Rename and file it later.',
     folder: 'inbox',
     filename: '{{date}} {{timefile}}',
     prompts: [],

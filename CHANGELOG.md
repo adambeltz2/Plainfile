@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.0.1] - 2026-11-23
+
+### Fixed
+- The New menu still said a task "shows in Today"; it now says Tasks. The Note and Quick note descriptions now say how they differ: Note asks for a title first, Quick note asks nothing and names itself with the date and time.
+
 ## [2.0.0] - 2026-11-23
 
 ### Changed

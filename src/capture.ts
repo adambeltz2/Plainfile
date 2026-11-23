@@ -96,7 +96,7 @@ export interface TaskNoteInput {
 
 /**
  * Create a task as its own note: `tasks/<title>.md` (or the project's `tasks/` folder) with `status`, `due`,
- * `created`, `project`, `tags` and `people` in its frontmatter. It shows in Today by its due date, on the
+ * `created`, `project`, `tags` and `people` in its frontmatter. It shows in Tasks by its due date, on the
  * Board by its status, and in the Inbox view while it is not filed in a project. The result points at the
  * `title:` line, and the task's id is its `status:` line.
  */
