@@ -745,3 +745,4 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .changelog h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); margin: 10px 0 2px; }
 .hub-quick { display: flex; gap: 8px; margin: 0 0 6px; }
 .hub-quick .inp { flex: 1; min-width: 0; }
+.home-quick .quick-project, .hub-quick .quick-project { flex: 0 1 11rem; max-width: 11rem; }

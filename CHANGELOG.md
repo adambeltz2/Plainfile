@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.47.2] - 2026-11-23
+
+### Added
+- **Pick a project when adding a task.** The quick add on Home and on the Tasks tab has a project picker beside Add. The task is filed in that project (in its folder, with `project:` set). A `+Project` typed in the line wins over the picker, and the choice is kept for the next task so you can add several in a row.
+
 ## [0.47.1] - 2026-11-23
 
 ### Added
