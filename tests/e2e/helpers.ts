@@ -112,6 +112,8 @@ export async function readFileOrEmpty(page: Page, dir: string, path: string): Pr
 
 /** Go to a screen by name at any width: the header tabs on a wide screen, the bottom bar (or its More sheet) on a phone. */
 export async function goTo(page: Page, name: RegExp | string): Promise<void> {
+  // There is no Today tab any more: the Tasks tab opens on its Today view, which is what Today was.
+  if (name === 'Today') name = 'Tasks';
   // Explore lives under Search now: go to Search, then switch.
   if (name === 'Explore') {
     await goTo(page, 'Search');
@@ -158,4 +160,12 @@ export async function openHubTools(page: Page): Promise<void> {
 export async function rescanApp(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Folder actions' }).click();
   await page.getByRole('menuitem', { name: /Check for changes/ }).click();
+}
+
+/** On the Tasks screen, switch to a quick view (All, Late, Today, This week, Waiting, Inbox, No date, Follow-ups). */
+export async function showView(page: Page, view: string): Promise<void> {
+  await page
+    .getByRole('group', { name: 'Show' })
+    .getByRole('button', { name: new RegExp(`^${view}\\b`) })
+    .click();
 }

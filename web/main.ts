@@ -46,6 +46,7 @@ import {
   type ScreenId,
 } from './store';
 import * as todayScreen from './today';
+import type { QuickView } from '../src/hub';
 import { esc } from './util';
 
 const app = document.getElementById('app') as HTMLElement;
@@ -98,7 +99,6 @@ function isCurrent(id: ScreenId): boolean {
 /** The tabs used every day sit in the header; the rest are under More, so the bar stays short. */
 const NAV: { id: ScreenId; label: string }[] = [
   { id: 'home', label: 'Home' },
-  { id: 'today', label: 'Today' },
   { id: 'tasks', label: 'Tasks' },
   { id: 'projects', label: 'Projects' },
   { id: 'notes', label: 'Notes' },
@@ -117,10 +117,11 @@ let navMoreOpen = false;
 /** The header's folder menu (Check for changes, Open another folder) is open. */
 let hdrMenuOpen = false;
 
-async function go(screen: ScreenId): Promise<void> {
+async function go(screen: ScreenId, view?: QuickView): Promise<void> {
   await notes.flush();
-  // Tasks is the project hub over everything: every task from every project, the place to start the day.
-  if (screen === 'tasks') return projectScreen.openProject(ALL_PROJECTS);
+  // Tasks is the project hub over everything, and the place to start the day: it opens on Today. The old Today screen is that view.
+  if (screen === 'today') return projectScreen.openTasks('today');
+  if (screen === 'tasks') return projectScreen.openTasks(view ?? 'today');
   if (screen === 'review' && state.screen !== 'review') reviewScreen.startReview();
   state.error = '';
   // Choosing People shows the list of people, not whichever person you looked at last.
@@ -209,7 +210,6 @@ function tabbar(hc: number): string {
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
       [
-        'tasks:Tasks',
         'recent:Recent',
         'search:Search',
         'calendar:Calendar',
@@ -230,7 +230,7 @@ function tabbar(hc: number): string {
       (fsaSupported() ? '<button class="btn" data-act="open" data-more-item>Open another folder…</button>' : '') +
       `${themeControl()}<button class="btn" data-act="more-close">Close</button></div></div>`
     : '';
-  return `<nav class="tabbar" aria-label="Main">${tab('home', 'Home')}${tab('today', 'Today')}${tab('projects', 'Projects')}${tab('notes', 'Notes')}<button class="tab-b" data-act="more-toggle" aria-expanded="${moreOpen}">More${hc ? ' •' : ''}</button></nav>${sheet}`;
+  return `<nav class="tabbar" aria-label="Main">${tab('home', 'Home')}${tab('tasks', 'Tasks')}${tab('projects', 'Projects')}${tab('notes', 'Notes')}<button class="tab-b" data-act="more-toggle" aria-expanded="${moreOpen}">More${hc ? ' •' : ''}</button></nav>${sheet}`;
 }
 
 function shell(): string {
@@ -459,7 +459,7 @@ app.addEventListener('click', (e) => {
       navMoreOpen = false;
       moreOpen = false;
       sideOpen.clear();
-      return void go(nav);
+      return void go(nav, target.closest<HTMLElement>('[data-nav]')?.dataset.view as QuickView | undefined);
     }
 
     const act = target.closest<HTMLElement>('[data-act]')?.dataset.act;
@@ -616,7 +616,7 @@ app.addEventListener('input', (e) => {
 app.addEventListener('change', (e) => {
   if (state.screen === 'projects' && projectScreen.change(e)) return;
   if (state.screen === 'insight' && insightScreen.change(e)) return;
-  if (state.screen === 'today' && todayScreen.change(e)) return;
+  if ((state.screen === 'today' || state.screen === 'projects') && todayScreen.change(e)) return;
   if (state.screen === 'review' && reviewScreen.change(e)) return;
   if (state.screen === 'calendar' && calendarScreen.change(e)) return;
   if (rename.change(e)) return;
@@ -725,7 +725,12 @@ document.addEventListener('keydown', (e) => {
   } else if (e.key === 'F2' && path) {
     e.preventDefault();
     void menu.run('rename', path);
-  } else if (state.screen === 'today' && !state.modal && !palette.pal.open && todayScreen.listKey(e)) {
+  } else if (
+    (state.screen === 'today' || (state.screen === 'projects' && !!projectScreen.projectState.path)) &&
+    !state.modal &&
+    !palette.pal.open &&
+    todayScreen.listKey(e)
+  ) {
     // handled: j and k move through the tasks, x ticks, e opens
   } else if (e.key === '?' && !typing && !mod && !state.modal && !palette.pal.open) {
     e.preventDefault();
@@ -747,7 +752,7 @@ palette.setRunner(async (item) => {
       return;
     }
     case 'screen':
-      return go(item.screen as ScreenId);
+      return item.screen === 'tasks-all' ? go('tasks', 'all') : go(item.screen as ScreenId);
     case 'quick-note':
       return newmenu.quickNote();
     case 'add-task': {

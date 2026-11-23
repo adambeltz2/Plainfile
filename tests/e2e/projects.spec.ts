@@ -874,28 +874,53 @@ test('on a wide screen the project page uses the width, and an empty Board colum
   expect(todo).toBeGreaterThan(doing * 1.5);
 });
 
-test('the Tasks screen has quick views (All, Late, Today, This week, Waiting, No date) with counts, one click each', async ({ page }) => {
+test('the Tasks screen has quick views (All, Late, Today, Upcoming, Waiting, Inbox, No date) with counts, one click each', async ({ page }) => {
   const T = localDate(0);
-  await openVault(page, {
-    'a.md': `- [ ] Late one due:${localDate(-3)}\n- [ ] Today one due:${T}\n- [ ] Soon one due:${localDate(3)}\n- [ ] Far one due:${localDate(40)}\n- [ ] Undated one\n- [ ] Waiting one #waiting\n`,
-  });
-  await nav(page, 'Tasks').click();
+  await openVault(
+    page,
+    {
+      'a.md': `- [ ] Late one due:${localDate(-3)}\n- [ ] Today one due:${T}\n- [ ] Soon one due:${localDate(3)}\n- [ ] Far one due:${localDate(40)}\n- [ ] Undated one\n- [ ] Waiting one #waiting\n`,
+      'projects/p/index.md': '---\ntitle: P\ntype: project\nactive: true\n---\n- [ ] Filed one\n',
+    },
+    true,
+    'home',
+  );
+  await nav(page, 'Tasks').click(); // opens on Today: what needs attention
   const views = page.getByRole('group', { name: 'Show' });
-  await expect(views.getByRole('button', { name: /^All 6/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(views.getByRole('button', { name: /^Today/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.hub-content .task')).toHaveCount(3); // late, today, and soon (within a week)
+  await expect(page.locator('.hub-content')).not.toContainText('Far one');
   await views.getByRole('button', { name: /^Late/ }).click();
   await expect(page.locator('.hub-content .task')).toHaveCount(1);
-  await expect(page.locator('.hub-content')).toContainText('Late one');
-  await views.getByRole('button', { name: /^Today/ }).click();
-  await expect(page.locator('.hub-content .task')).toHaveCount(2); // late and today
-  await views.getByRole('button', { name: /^This week/ }).click();
-  await expect(page.locator('.hub-content')).toContainText('Today one');
+  await views.getByRole('button', { name: /^Upcoming/ }).click();
   await expect(page.locator('.hub-content')).toContainText('Soon one');
-  await expect(page.locator('.hub-content')).not.toContainText('Far one');
+  await expect(page.locator('.hub-content')).toContainText('Far one');
+  await expect(page.locator('.hub-content')).not.toContainText('Today one');
   await views.getByRole('button', { name: /^Waiting/ }).click();
   await expect(page.locator('.hub-content .task')).toHaveCount(1);
   await expect(page.locator('.hub-content')).toContainText('Waiting one');
+  await views.getByRole('button', { name: /^Inbox/ }).click();
+  await expect(page.locator('.hub-content')).toContainText('Undated one');
+  await expect(page.locator('.hub-content')).not.toContainText('Filed one'); // it is in a project
   await views.getByRole('button', { name: /^No date/ }).click();
   await expect(page.locator('.hub-content')).toContainText('Undated one');
   await views.getByRole('button', { name: /^All/ }).click();
-  await expect(page.locator('.hub-content .task')).toHaveCount(6);
+  await expect(page.locator('.hub-content .task')).toHaveCount(7);
+});
+
+test('Follow-ups is a view on the Tasks screen and a card on Home, listing the #followup lines', async ({ page }) => {
+  await openVault(page, { 'a.md': '# A\n- Ask Dana about the logo files #followup\n- plain line\n' }, true, 'home');
+  const card = page.locator('.home-card', { has: page.locator('h3', { hasText: 'Follow-ups' }) });
+  await expect(card).toContainText('Ask Dana about the logo files');
+  await nav(page, 'Tasks').click();
+  await page
+    .getByRole('group', { name: 'Show' })
+    .getByRole('button', { name: /^Follow-ups 1/ })
+    .click();
+  await expect(page.locator('.hub-content')).toContainText('Ask Dana about the logo files');
+  await page
+    .locator('.hub-content')
+    .getByRole('button', { name: /Open a\.md/ })
+    .click();
+  await expect(page.locator('.cm-content')).toContainText('Ask Dana');
 });

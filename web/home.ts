@@ -1,6 +1,7 @@
 import { fmtDate, fmtDateLong } from '../src/dates';
 import { portfolio } from '../src/hub';
 import { triage, waitingOn, weekAhead } from '../src/home';
+import { listFollowUps } from '../src/projects';
 import { todayView } from '../src/query';
 import { justDone, render, state, today } from './store';
 import { logHtml, openTaskRow, row, toggleTask } from './tasks';
@@ -38,7 +39,7 @@ export function html(): string {
   let h = `<div class="home"><div class="home-top"><span class="meta home-date">${esc(fmtDateLong(t))}</span>${qb.form}</div>${qb.below}`;
   if (logHtml()) h += `<div class="home-log">${logHtml()}</div>`;
   if (notice.text) h += `<div class="notice ok" role="status">${esc(notice.text)} <button class="btn small" data-home-dismiss>Dismiss</button></div>`;
-  h += `<div class="home-stats"><div class="home-bars" role="img" aria-label="Open tasks due each day for the next seven days">${week.map((d) => `<div class="wday${d.date === t ? ' today' : ''}"><i style="height:${Math.round((d.open / peak) * 100)}%"></i><b>${d.open}</b><span>${esc(fmtDate(d.date).slice(0, 3))}</span></div>`).join('')}</div><div class="home-links"><button class="btn small" data-nav="notes" data-count title="${idx.files.size} files in the folder, ${idx.notes.size} of them notes. Open the list.">${idx.notes.size.toLocaleString()} note${idx.notes.size === 1 ? '' : 's'}</button><button class="btn small" data-nav="tasks">All tasks</button><button class="btn small" data-nav="search">Search</button><button class="btn small" data-nav="explore">Explore</button><button class="btn small" data-nav="review">Weekly review</button><button class="btn small" data-nav="today">Upcoming</button><button class="btn small" data-nav="recent">Recent</button></div></div>`;
+  h += `<div class="home-stats"><div class="home-bars" role="img" aria-label="Open tasks due each day for the next seven days">${week.map((d) => `<div class="wday${d.date === t ? ' today' : ''}"><i style="height:${Math.round((d.open / peak) * 100)}%"></i><b>${d.open}</b><span>${esc(fmtDate(d.date).slice(0, 3))}</span></div>`).join('')}</div><div class="home-links"><button class="btn small" data-nav="notes" data-count title="${idx.files.size} files in the folder, ${idx.notes.size} of them notes. Open the list.">${idx.notes.size.toLocaleString()} note${idx.notes.size === 1 ? '' : 's'}</button><button class="btn small" data-nav="tasks" data-view="all">All tasks</button><button class="btn small" data-nav="search">Search</button><button class="btn small" data-nav="explore">Explore</button><button class="btn small" data-nav="review">Weekly review</button><button class="btn small" data-nav="tasks" data-view="upcoming">Upcoming</button><button class="btn small" data-nav="recent">Recent</button></div></div>`;
   h += '<div class="home-grid">';
   const pins = pinnedNotes(idx);
   h += card(
@@ -98,6 +99,21 @@ export function html(): string {
             ),
         )
       : '<p class="muted small" style="margin:0">You are not waiting on anything.</p>',
+  );
+  const followups = listFollowUps(idx);
+  h += card(
+    'Follow-ups',
+    followups.length
+      ? list(
+          followups
+            .slice(0, 4)
+            .map(
+              (f) =>
+                `<button class="item note-quick" data-open="${esc(f.path)}" data-line="${f.line}"><span>${esc(f.title)}</span><span class="muted small">${esc(f.from)}</span></button>`,
+            ),
+        ) + (followups.length > 4 ? `<button class="btn small" data-nav="tasks" data-view="followups">All ${followups.length} follow-ups</button>` : '')
+      : '<p class="muted small" style="margin:0">None. Tag a line <code>#followup</code> in any note and it shows here.</p>',
+    followups.length ? ` <span class="n">${followups.length}</span>` : '',
   );
   return `${h}</div></div>`;
 }

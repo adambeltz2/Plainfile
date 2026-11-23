@@ -10,6 +10,9 @@ import { openNote } from './notes';
 import { logHtml, row, toggleTask } from './tasks';
 import { esc } from './util';
 
+/** Set by the Tasks screen: called after a quick add, so it can switch to a view that shows the new task. */
+export const quickHooks: { added?: (due: string | undefined) => void } = {};
+
 export const quick = { text: '', error: '' };
 
 /**
@@ -167,7 +170,12 @@ async function movePriority(letter: string | null): Promise<void> {
   render();
 }
 
-function source(): string {
+/** The panel for the selected task: its lines in the file, Open note, and Reschedule. Used on the Tasks screen. */
+export function taskPanelHtml(): string {
+  return source(false);
+}
+
+function source(withLog = true): string {
   const c = state.context;
   let h = '<h2>In your file</h2>';
   if (!c)
@@ -182,7 +190,7 @@ function source(): string {
     h += `</div><div class="row-gap"><button class="btn small" data-open="${esc(c.path)}" data-line="${c.hi}">Open note</button></div>`;
     h += rescheduleHtml();
   }
-  h += logHtml();
+  if (withLog) h += logHtml();
   return h;
 }
 
@@ -295,7 +303,7 @@ export function html(): string {
 
 /* ---------- events ---------- */
 
-async function select(id: string): Promise<void> {
+export async function select(id: string): Promise<void> {
   state.selected = id;
   await loadContext(id);
   render();
@@ -322,6 +330,7 @@ export async function submitQuick(): Promise<void> {
   } else {
     // Show the new task: in Today if it is due within the week, otherwise in the Inbox.
     state.view = due && due <= addDays(today(), 7) ? 'today' : state.view === 'all' ? 'all' : 'inbox';
+    quickHooks.added?.(due);
     if (state.selected) await loadContext(state.selected).catch(() => undefined);
   }
   render();
@@ -404,7 +413,7 @@ export function listKey(e: KeyboardEvent): boolean {
   const k = e.key.toLowerCase();
   if (!['j', 'k', 'x', 'e', '1', '2', '3', '0'].includes(k)) return false;
   if ((e.target as HTMLElement | null)?.closest('input, textarea, select, button:not(.cb), [contenteditable="true"]')) return false;
-  const rows = [...document.querySelectorAll<HTMLElement>('.main li.task[data-id]')];
+  const rows = [...document.querySelectorAll<HTMLElement>('.main li.task[data-id], .hub-content li.task[data-id]')];
   if (!rows.length) return false;
   const at = rows.findIndex((r) => r.dataset.id === state.selected);
   if (k === 'j' || k === 'k') {

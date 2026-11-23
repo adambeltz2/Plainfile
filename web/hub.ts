@@ -1,11 +1,13 @@
 import { fmtDate, localDateOf } from '../src/dates';
 import { save } from './export';
+import { quickHooks, taskPanelHtml } from './today';
 import { tasksToCsv, tasksToJson } from '../src/export';
 import { applyBulk, planBulk, type BulkAction, type BulkPlan } from '../src/bulk';
 import { applyFieldFix, fieldIssues, STATUSES, type FieldIssue, type Status } from '../src/fields';
 import {
   applyFilters,
   currentView,
+  EVERYTHING_VIEWS,
   filtersForView,
   groupTasks,
   hubTasks,
@@ -21,7 +23,7 @@ import {
 import { dirname } from '../src/index';
 import { applyFolderMove, planFolderMove } from '../src/folder-move';
 import { priorityRank } from '../src/priority';
-import { ALL_PROJECTS, listProjects, projectDashboard, projectNotes, setProjectActive, type ProjectDashboard } from '../src/projects';
+import { ALL_PROJECTS, listFollowUps, listProjects, projectDashboard, projectNotes, setProjectActive, type ProjectDashboard } from '../src/projects';
 import { addDays } from '../src/query';
 import { setTaskStatus } from '../src/writeback';
 import { errorMessage, justDone, render, rescan, state, today, writeFailure } from './store';
@@ -146,7 +148,7 @@ function activeChips(): string {
   for (const p of f.priorities) out.push(chip('priorities', p, p === '-' ? 'No priority' : `Priority ${p}`));
   if (f.due)
     out.push(
-      `<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'today' ? 'Due today or late' : f.due === 'week' ? 'Due this week' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`,
+      `<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'soon' ? 'Late or due within a week' : f.due === 'later' ? 'Due later' : f.due === 'week' ? 'Due this week' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`,
     );
   return out.length ? `<div class="chips hub-active">${out.join('')}<button class="btn small" data-hub-clear>Clear all</button></div>` : '';
 }
@@ -169,11 +171,17 @@ function toolbar(all: HubTask[]): string {
   const quick = (k: 'overdue' | 'week' | 'none', l: string): string =>
     `<button class="chip${f.due === k ? ' on' : ''}" data-hub-due="${k}" aria-pressed="${f.due === k}">${l}</button>`;
   const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + f.priorities.length + (f.due ? 1 : 0);
-  const counts = viewCounts(all, today());
+  const everything = hubState.project === ALL_PROJECTS;
+  const counts = viewCounts(all, today(), state.index ? listFollowUps(state.index).length : 0);
   const cur = currentView(f);
   const views =
     hubState.tab === 'tasks'
-      ? `<div class="hub-views" role="group" aria-label="Show">${QUICK_VIEWS.map(([v, l]) => `<button class="chip${cur === v ? ' on' : ''}" data-hub-view="${v}" aria-pressed="${cur === v}">${l} <span class="muted">${counts[v]}</span></button>`).join('')}</div>`
+      ? `<div class="hub-views" role="group" aria-label="Show">${QUICK_VIEWS.filter(([v]) => everything || !EVERYTHING_VIEWS.includes(v))
+          .map(
+            ([v, l]) =>
+              `<button class="chip${cur === v ? ' on' : ''}" data-hub-view="${v}" aria-pressed="${cur === v}">${l} <span class="muted">${counts[v]}</span></button>`,
+          )
+          .join('')}</div>`
       : '';
   return (
     views +
@@ -274,7 +282,21 @@ function statsHtml(open: number, overdue: number, done: number, notes: number, f
   return `<div class="pstats">${stat('open', open, 'open', onOpen)}${stat('overdue', overdue, 'overdue', onOverdue, true)}${stat('done', done, 'done', onDone)}${stat('notes', notes, 'notes', hubState.tab === 'notes')}${stat('followups', followups, 'follow-ups', false)}</div>`;
 }
 
+/** The lines tagged #followup in any note: they are not tasks, so they are listed on their own. */
+function followupsHtml(): string {
+  const list = state.index ? listFollowUps(state.index) : [];
+  if (!list.length)
+    return '<div class="empty">No follow-ups. Add <code>#followup</code> to any line, like <code>- Ask Dana about the logo files #followup</code>, and it shows up here.</div>';
+  return `<p class="meta">${list.length} line${list.length === 1 ? '' : 's'} tagged <span class="mono">#followup</span>, from every note</p><ul class="tasks">${list
+    .map(
+      (f) =>
+        `<li class="task" tabindex="-1"><div class="body"><div class="t">${esc(f.title)}</div><div class="chips"><button class="chip src mono" data-open="${esc(f.path)}" data-line="${f.line}" aria-label="Open ${esc(f.path)}">${esc(f.from)} · line ${f.line}</button></div></div></li>`,
+    )
+    .join('')}</ul>`;
+}
+
 function groupsHtml(visible: HubTask[]): string {
+  if (hubState.filters.followups) return followupsHtml();
   const groups = groupTasks(visible, hubState.groupBy, today(), justDone);
   if (!groups.length) return '<div class="empty">No tasks match. Clear a filter, or add one with <b>+ Task</b>.</div>';
   return groups
@@ -426,8 +448,13 @@ function statusColumn(all: HubTask[], issues: FieldIssue[]): string {
   const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
   const f = hubState.filters;
   const spark = Math.max(1, ...s.weekly);
+  const panel =
+    hubState.tab === 'tasks' && state.selected && state.index?.getTask(state.selected)
+      ? `<div class="hub-taskpanel" aria-live="polite">${taskPanelHtml()}</div>`
+      : '';
   return (
     '<aside class="hub-status" aria-label="Project status">' +
+    panel +
     `<details class="hub-status-d"${isNarrow() && !hubState.statusOpen ? '' : ' open'}><summary class="small">Status: ${s.done} of ${s.total} done${s.overdue ? `, ${s.overdue} overdue` : ''}${issues.length ? `, ${issues.length} to tidy` : ''}</summary>` +
     `<h3>Progress</h3><div class="prog"><i style="width:${pct}%"></i></div><p class="small muted" style="margin:4px 0 8px">${s.done} of ${s.total} done${s.total ? ` (${pct}%)` : ''} · ${s.overdue} overdue</p>` +
     (s.phases.length
@@ -646,6 +673,16 @@ async function undoLast(): Promise<void> {
   }
   render();
 }
+
+// After a quick add on the Tasks screen, show a view that includes the new task (its date decides which).
+quickHooks.added = (due) => {
+  if (state.screen !== 'projects' || hubState.tab !== 'tasks') return;
+  const cur = currentView(hubState.filters);
+  if (cur === 'all') return;
+  const t = today();
+  const next: QuickView = !due ? 'all' : due <= addDays(t, 7) ? 'today' : 'upcoming';
+  if (cur !== next) hubState.filters = filtersForView(hubState.filters, next);
+};
 
 /** Hooks the project screen sets, so it follows the project when its folder moves. */
 export const hubHooks: { moved?: (newPath: string) => void } = {};

@@ -1,9 +1,11 @@
 import { fmtDate, localDateOf } from '../src/dates';
 import { listProjects } from '../src/projects';
-import { portfolio } from '../src/hub';
+import { filtersForView, newFilters, portfolio, type QuickView } from '../src/hub';
+import { ALL_PROJECTS } from '../src/projects';
 import * as hub from './hub';
 import { openTemplate } from './newmenu';
 import { render, state, today } from './store';
+import * as todayScreen from './today';
 import { openTaskRow, toggleTask } from './tasks';
 import { esc } from './util';
 
@@ -21,6 +23,16 @@ export function openProject(path: string): void {
   state.log = undefined;
   state.modal = undefined;
   render();
+}
+
+/** The Tasks screen: every task from every project, opened on a quick view (Today unless asked for another). */
+export function openTasks(view: QuickView = 'today'): void {
+  hub.resetFor(ALL_PROJECTS);
+  hub.hubState.filters = filtersForView(newFilters(), view);
+  hub.hubState.tab = 'tasks';
+  hub.hubState.groupBy = 'due';
+  hub.hubState.limits.clear();
+  openProject(ALL_PROJECTS);
 }
 
 function portfolioTable(idx: NonNullable<typeof state.index>): string {
@@ -111,6 +123,8 @@ export async function click(target: HTMLElement): Promise<boolean> {
     render();
     return true;
   }
+  // Reschedule buttons in the selected task's panel.
+  if (target.closest('[data-resched]')) return todayScreen.click(target);
   const tg = target.closest<HTMLElement>('[data-toggle]')?.dataset.toggle;
   if (tg) {
     await toggleTask(tg);
