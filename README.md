@@ -24,7 +24,7 @@ Your folder stays plain markdown the whole time; delete the app and every file s
 
 Plainfile is plainly inspired by tools like <a href="https://silverbullet.md/" target="_blank" rel="noopener noreferrer">SilverBullet</a> and <a href="https://obsidian.md/" target="_blank" rel="noopener noreferrer">Obsidian</a>: your notes are a folder of markdown files you own, linked with `[[wikilinks]]`, edited live. The approach differs in a few ways:
 
-- **Tasks and projects are first-class, and still plain files.** A task can be an inline `- [ ]` line or its own note with a `status:`; projects are folders. Home, Today, the project hub and the weekly review are views over those files, not a second database.
+- **Tasks and projects are first-class, and still plain files.** A task can be an inline `- [ ]` line or its own note with a `status:`; projects are folders. Home, Tasks (with its Today view), the project hub and the weekly review are views over those files, not a second database.
 - **It reads other people's conventions without rewriting them.** `due:`, `📅`, Dataview `[due:: …]`, `#tags` and `[[links]]` all work, and writes touch the smallest piece of text possible.
 - **Nothing to install or run.** It is a static web page that opens a folder (or a Dropbox folder) directly in the browser. There is no server, database, account or plugin system, and the index is a cache you can delete.
 - **It shows its work.** After every write you see the exact before and after lines; deleting goes to a trash; every save keeps history.
@@ -41,7 +41,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 | **Recent**: every note by when it last changed, grouped by day, with a filter | ![Recent](docs/screenshots/recent.png) |
 | **Calendar**: tasks and dated notes by day, drag to reschedule | ![Calendar](docs/screenshots/calendar.png) |
 | **Insight**: activity, this month, topics, people, health | ![Insight](docs/screenshots/insight.png) |
-| **Today**: everything due or overdue, one-line quick add, a readout of the exact change on disk | ![Today](docs/screenshots/today.png) |
+| **Today view** (the Tasks tab opens on it): everything late, due today or due this week, one-line quick add, a readout of the exact change on disk | ![Today](docs/screenshots/today.png) |
 | **Quick add**: `Send logos +website-relaunch @dana #launch due:friday`, with a live preview | ![Quick add](docs/screenshots/quick-add.png) |
 | **Board**: task files in status columns | ![Board](docs/screenshots/board.png) |
 | **Project hub**: tasks grouped and filtered, status column, tabs, bulk changes | ![Project hub](docs/screenshots/project.png) |
@@ -58,7 +58,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 
 ## Highlights
 
-- **One list of tasks** from inline `- [ ]` lines and one-file-per-task notes, with Today, Tasks (everything), a project hub, Board, Calendar and a weekly review.
+- **One list of tasks** from inline `- [ ]` lines and one-file-per-task notes, with Tasks (opens on Today; also All, Late, Upcoming, Waiting, Inbox and Follow-ups), a project hub, Board, Calendar and a weekly review.
 - **A live editor** with `[[links]]`, `#tags`, `@people` and type-ahead; click a link to go there, or to create it.
 - **Safe by design:** every write is the smallest edit, guarded by the file's modified time, with history, a trash, and a readout of the exact lines changed.
 - **Yours:** plain files, no account or server; sync with whatever you already use. Export to Word, PDF, markdown, HTML, CSV and JSON.

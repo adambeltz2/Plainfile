@@ -86,7 +86,7 @@ const KEYS: [string, string, string][] = [
   ['type', 'type: meeting', 'Groups notes. type: project makes a Project card. type: task makes a task file.'],
   ['tags', 'tags: [launch, meeting]', 'Same as #launch in the text. Find them with tag:launch in Search.'],
   ['status', 'status: doing', 'Makes a task file (in a tasks/ folder, or with type: task). Board columns: todo, doing, waiting, done.'],
-  ['due', 'due: 2026-11-24', 'The date for a task file. It appears in Today.'],
+  ['due', 'due: 2026-11-24', 'The date for a task file. It appears in Tasks, on the Today view.'],
   ['created', 'created: 2026-11-21', 'When a note or task was made. Plainfile fills it in for tasks, notes in a project, and new projects.'],
   ['people', 'people: [dana, sam]', 'Who a task file involves, the same as @dana in an inline task. Search with @dana.'],
   ['project', 'project: website-relaunch', 'Groups task files on the Board and links related notes in Explorer.'],
@@ -110,7 +110,7 @@ const SHORTCUTS: [string, string][] = [
     'Copy the note (or the selection) cleanly for Word, Docs or email. Also under Download as Word and Print or save as PDF',
   ],
   ['Alt + N', 'Quick note: titled with the date and time, ready to type'],
-  ['J and K, then X or E (on Today)', 'Move down and up the task list, tick the chosen task (X), or open its note (E)'],
+  ['J and K, then X or E (on Tasks)', 'Move down and up the task list, tick the chosen task (X), or open its note (E)'],
   ['F2', 'Rename the open note'],
   ['Ctrl/Cmd + Shift + M', 'Move the open note to another folder'],
   ['Ctrl/Cmd + Shift + X', 'Toggle X-ray'],
@@ -213,7 +213,7 @@ export function html(): string {
     'tasks',
     'Tasks',
     '<p>A task is a checkbox line in any note, or a note of its own. Typing <code>- [ ] </code> turns into a checkbox as you type, and a typed <code>*</code> is saved as <code>-</code>.</p>' +
-      block('quick', 'Quick add: one line in the box on Today', EX.quick) +
+      block('quick', 'Quick add: one line in the box on Home or Tasks', EX.quick) +
       block('task', 'A task inside a note', EX.task) +
       block('taskfile', 'A task as its own file (in a tasks/ folder)', EX.taskfile) +
       '<p>Dates are read in several styles, and written the first way:</p>' +

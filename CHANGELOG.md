@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.0.0] - 2026-11-23
+
+### Changed
+- **Today is now part of Tasks.** There are three places that answered "what now?" (Home, Today, Tasks); now there are two. The **Today tab is gone**: the **Tasks** tab opens on its **Today** view, which shows what the Today screen did (late, due today and due in the next seven days), and old Today links, shortcuts and `?go=today` open it too. The quick views above the list are **All, Late, Today, Upcoming, Waiting, Inbox, No date and Follow-ups**, each with its count. Inbox is tasks that are in no project, and Follow-ups lists the `#followup` lines (also a new card on Home). The projects list stays on the left of Tasks; the folders and tags lists that Today had are in Notes and under "More filters".
+- On the Tasks list, **click a task's title to open its note**, or click its date (or anywhere else on the row) to select it: the right-hand column then shows its lines in the file with Open note and **Reschedule** (Tomorrow, Next Monday, In a week, No date, or a date). The j / k / x / e keys and 1 2 3 0 for priority work there too.
+- After a quick add on Tasks, the list switches to a view that shows the new task (Today for something due this week, Upcoming for later, All for no date).
+- The Projects tab always shows the list of projects, and each project card has **Dashboard**, **+ Task** and **+ Note**. On a phone, Tasks is in the bottom bar with its open-task count.
+- The footer shows how many notes were read and how long it took (it was in Today's side panel).
+
 ## [1.25.0] - 2026-11-23
 
 ### Added

@@ -340,7 +340,7 @@ function shell(): string {
       h += health.html();
       break;
     default:
-      h += todayScreen.html();
+      h += homeScreen.html(); // 'today' is not a screen any more: the Tasks tab opens on its Today view
   }
   const hideBar = state.screen === 'notes' && !!notes.notes.path;
   return `${h}${footer()}${hideBar ? '' : tabbar(healthCount())}</div>`;
@@ -666,7 +666,7 @@ app.addEventListener('keydown', (e) => {
     primary?.click();
     return;
   }
-  if (state.screen === 'today') todayScreen.keydown(e);
+  if (state.screen === 'today' || state.screen === 'projects') todayScreen.keydown(e);
   if (state.screen === 'explore') explore.keydown(e);
 });
 
