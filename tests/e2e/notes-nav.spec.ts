@@ -384,9 +384,9 @@ test('the note header shows a word count and reading time that follow what you t
   await openVault(page, { 'a.md': '---\ntitle: Alpha\n---\nOne two three four five.\n' });
   await nav(page, 'Notes').click();
   await (await noteItem(page, 'Alpha')).click();
-  await expect(page.locator('#note-stats')).toHaveText(' · 5 words · 1 min read');
+  await expect(page.locator('#note-stats')).toHaveText('5 words · 1 min read');
   await page.locator('.cm-content').click();
   await page.keyboard.press('Control+End');
   await page.keyboard.type(' six seven');
-  await expect(page.locator('#note-stats')).toHaveText(' · 7 words · 1 min read');
+  await expect(page.locator('#note-stats')).toHaveText('7 words · 1 min read');
 });

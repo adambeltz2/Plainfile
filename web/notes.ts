@@ -530,11 +530,11 @@ async function restoreFromTrash(trashPath: string): Promise<void> {
   }
 }
 
-/** " · 320 words · 1 min" for the open note, from what is in the editor. */
+/** "320 words · 1 min read" for the open note, from what is in the editor. */
 function statsText(): string {
   const text = notes.handle?.getText() ?? state.index?.notes.get(notes.path ?? '')?.text ?? '';
   const { words, minutes } = readingStats(text);
-  return words ? ` · ${words.toLocaleString()} word${words === 1 ? '' : 's'} · ${minutes} min read` : '';
+  return words ? `${words.toLocaleString()} word${words === 1 ? '' : 's'} · ${minutes} min read` : '';
 }
 
 function bannerHtml(): string {
@@ -762,7 +762,7 @@ export function html(): string {
   } else {
     const n = idx.notes.get(notes.path);
     main =
-      `<div class="ed-head"><div style="min-width:0"><input id="note-title" class="title title-input" type="text" value="${esc(n?.title ?? notes.path)}" aria-label="Note title (click to change)" title="Click to change the title" spellcheck="false" autocomplete="off"><div class="mono muted small path">${esc(notes.path)}<span id="note-stats">${statsText()}</span></div></div>` +
+      `<div class="ed-head"><div style="min-width:0"><input id="note-title" class="title title-input" type="text" value="${esc(n?.title ?? notes.path)}" aria-label="Note title (click to change)" title="Click to change the title" spellcheck="false" autocomplete="off"><div class="mono muted small path">${esc(notes.path)}</div><div id="note-stats" class="muted small">${statsText()}</div></div>` +
       `<div class="ed-actions"><button class="btn only-narrow hide-in-focus" data-act="note-close">All notes</button>` +
       `<button class="btn" id="note-undo" data-act="note-undo" disabled>Undo</button><button class="btn" id="note-redo" data-act="note-redo" disabled>Redo</button>` +
       `<button class="btn only-wide" data-act="pane-list" aria-pressed="${notes.panes.list}" title="Show or hide the list of notes">Notes list</button><button class="btn only-wide" data-act="pane-details" aria-pressed="${notes.panes.details}" title="Show or hide properties, links and history">Details</button>` +
