@@ -113,6 +113,8 @@ const NAV_MORE: { id: ScreenId; label: string }[] = [
 ];
 /** Whether the header's More menu is open. */
 let navMoreOpen = false;
+/** The header's folder menu (Check for changes, Open another folder) is open. */
+let hdrMenuOpen = false;
 
 async function go(screen: ScreenId): Promise<void> {
   await notes.flush();
@@ -223,8 +225,8 @@ function tabbar(hc: number): string {
           return `<button class="btn" data-nav="${id}" data-more-item>${label}${n ? ` <span class="badge"${id === 'tasks' ? ` aria-label="${n} open task${n === 1 ? '' : 's'}"` : ''}>${n}</span>` : ''}</button>`;
         })
         .join('') +
-      '<button class="btn" data-act="rescan" data-more-item>Rescan</button>' +
-      (fsaSupported() ? '<button class="btn" data-act="open" data-more-item>Open folder</button>' : '') +
+      '<button class="btn" data-act="rescan" data-more-item>Check for changes</button>' +
+      (fsaSupported() ? '<button class="btn" data-act="open" data-more-item>Open another folder…</button>' : '') +
       `${themeControl()}<button class="btn" data-act="more-close">Close</button></div></div>`
     : '';
   return `<nav class="tabbar" aria-label="Main">${tab('home', 'Home')}${tab('today', 'Today')}${tab('projects', 'Projects')}${tab('notes', 'Notes')}<button class="tab-b" data-act="more-toggle" aria-expanded="${moreOpen}">More${hc ? ' •' : ''}</button></nav>${sheet}`;
@@ -243,7 +245,7 @@ function shell(): string {
   }
   const inMore = NAV_MORE.some((n) => isCurrent(n.id));
   h +=
-    `<span class="nav-more-wrap"><button class="navbtn nav-more" data-act="nav-more" aria-haspopup="menu" aria-expanded="${navMoreOpen}" aria-current="${inMore}">More${hc ? ` <span class="badge">${hc}</span>` : ''}</button>` +
+    `<span class="nav-more-wrap"><button class="navbtn nav-more" data-act="nav-more" aria-haspopup="menu" aria-expanded="${navMoreOpen}" aria-current="${inMore}">More${hc ? ` <span class="badge" title="${hc} thing${hc === 1 ? '' : 's'} to look at in Vault health" aria-label="${hc} thing${hc === 1 ? '' : 's'} to look at in Vault health">${hc}</span>` : ''}</button>` +
     (navMoreOpen
       ? `<div class="nav-menu" role="menu">${NAV_MORE.map((n) => `<button role="menuitem" data-nav="${n.id}" aria-current="${isCurrent(n.id)}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`).join('')}</div>`
       : '') +
@@ -252,8 +254,13 @@ function shell(): string {
   h += '<button class="btn" data-act="palette-open" title="Open a note or run an action" aria-label="Go to a note or action">Go to…</button>';
   h += '<button class="btn primary" data-act="new">+ New</button>';
   const rest =
-    '<button class="btn" data-act="rescan">Rescan</button>' +
-    (fsaSupported() ? '<button class="btn" data-act="open">Open folder</button>' : '') +
+    `<span class="hdr-menu-wrap"><button class="btn" data-act="hdr-menu" aria-haspopup="menu" aria-expanded="${hdrMenuOpen}" aria-label="Folder actions" title="Check for changes, open another folder">⋯</button>` +
+    (hdrMenuOpen
+      ? '<div class="nav-menu hdr-menu" role="menu"><button role="menuitem" data-act="rescan"><span>Check for changes</span><span class="muted small">read the folder again</span></button>' +
+        (fsaSupported() ? '<button role="menuitem" data-act="open"><span>Open another folder…</span></button>' : '') +
+        '</div>'
+      : '') +
+    '</span>' +
     `<button class="btn" data-nav="guide" aria-label="Syntax cheat sheet" title="Syntax cheat sheet" aria-current="${state.screen === 'guide'}">?</button>${themeControl()}`;
   // On a phone these live in the More sheet of the bottom bar, so the header is only the name, Go to… and + New.
   h += `<span class="hdr-wide">${rest}</span></header>`;
@@ -436,9 +443,13 @@ app.addEventListener('click', (e) => {
       else sideOpen.add(toggle);
       return requestRender();
     }
-    // A click anywhere but the header More menu closes it.
+    // A click anywhere but the header More menu closes it, and the same for the folder menu (and after picking from it).
     if (navMoreOpen && !target.closest('.nav-more-wrap')) {
       navMoreOpen = false;
+      requestRender();
+    }
+    if (hdrMenuOpen && (!target.closest('.hdr-menu-wrap') || target.closest('[role="menuitem"]'))) {
+      hdrMenuOpen = false;
       requestRender();
     }
     const nav = target.closest<HTMLElement>('[data-nav]')?.dataset.nav as ScreenId | undefined;
@@ -461,6 +472,11 @@ app.addEventListener('click', (e) => {
         return newmenu.openNew();
       case 'nav-more':
         navMoreOpen = !navMoreOpen;
+        hdrMenuOpen = false;
+        return requestRender();
+      case 'hdr-menu':
+        hdrMenuOpen = !hdrMenuOpen;
+        navMoreOpen = false;
         return requestRender();
       case 'more-toggle':
         moreOpen = !moreOpen;
@@ -679,8 +695,9 @@ document.addEventListener(
 
 // The header More menu closes on Escape. This is on the document because redrawing the header drops the focus.
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && navMoreOpen) {
+  if (e.key === 'Escape' && (navMoreOpen || hdrMenuOpen)) {
     navMoreOpen = false;
+    hdrMenuOpen = false;
     requestRender();
   }
 });

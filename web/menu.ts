@@ -65,7 +65,7 @@ export function itemsFor(path: string, inNote: boolean): (Item | '-')[] {
   const items: (Item | '-')[] = [];
   if (inNote)
     items.push(
-      { action: 'xray', label: 'X-ray (show raw markdown)' },
+      { action: 'xray', label: 'Show raw markdown (X-ray)' },
       { action: 'explore', label: 'Explore related' },
       { action: 'history', label: 'History' },
       '-',

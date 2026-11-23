@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { addFileExternally, listFiles, openVault, readFile, removeFileExternally, noteMenu, nav, noteItem } from './helpers';
+import { addFileExternally, listFiles, openVault, readFile, removeFileExternally, noteMenu, nav, noteItem, rescanApp } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -124,7 +124,7 @@ test.describe('rename', () => {
     const content = VAULT['notes/pricing-research.md'];
     await removeFileExternally(page, dir, 'notes/pricing-research.md');
     await addFileExternally(page, dir, 'notes/pricing-analysis.md', content);
-    await page.getByRole('button', { name: 'Rescan' }).click();
+    await rescanApp(page);
     await expect(page.locator('.notice', { hasText: 'was renamed to' })).toBeVisible();
     await page.getByRole('button', { name: /^Review/ }).click();
     await expect(page.getByRole('button', { name: /^Renamed outside/ })).toContainText('1');
@@ -146,7 +146,7 @@ test.describe('rename', () => {
     const dir = await openVault(page, VAULT);
     await removeFileExternally(page, dir, 'notes/pricing-research.md');
     await addFileExternally(page, dir, 'notes/pricing-analysis.md', VAULT['notes/pricing-research.md']);
-    await page.getByRole('button', { name: 'Rescan' }).click();
+    await rescanApp(page);
     await page.getByRole('button', { name: /^Review/ }).click();
     await page.getByRole('button', { name: 'No, different note' }).click();
     await expect(page.locator('.notice', { hasText: 'was renamed to' })).toHaveCount(0);

@@ -21,7 +21,7 @@ test.describe('the header on a wide screen', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('.nav-menu')).toHaveCount(0);
     await more.click();
-    await page.locator('.title, .home').first().click();
+    await page.locator('h1').click(); // away from the menu
     await expect(page.locator('.nav-menu')).toHaveCount(0);
     await more.click();
     await page.locator('.nav-menu').getByRole('menuitem', { name: 'Calendar' }).click();
@@ -41,4 +41,22 @@ test('on a phone the open task count is on Tasks in the More sheet', async ({ pa
       .getByRole('button', { name: /^Tasks/ })
       .locator('.badge'),
   ).toHaveText('2');
+});
+
+test('the header has one ⋯ folder menu instead of two buttons, and More says what its number is', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await openVault(page, { 'a.md': 'See [[Nowhere]].\n' }); // a broken link, so Vault health has something to say
+  await expect(page.getByRole('button', { name: 'Rescan', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Open folder', exact: true })).toHaveCount(0);
+  const menu = page.getByRole('button', { name: 'Folder actions' });
+  await menu.click();
+  await expect(page.getByRole('menuitem', { name: /Check for changes/ })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: /Open another folder/ })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menuitem', { name: /Check for changes/ })).toHaveCount(0);
+  await menu.click();
+  await page.locator('h1').click(); // a click elsewhere closes it too
+  await expect(page.getByRole('menuitem', { name: /Check for changes/ })).toHaveCount(0);
+  await expect(page.locator('.nav-more .badge')).toHaveAttribute('title', /to look at in Vault health/);
 });

@@ -639,7 +639,7 @@ test.describe('project hub', () => {
     await expect(page.locator('.hub-tools')).not.toHaveAttribute('open', '');
     await expect(page.locator('.hub-status-d')).not.toHaveAttribute('open', '');
     await expect(page.locator('.selbox').first()).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Rescan' })).toBeHidden(); // behind the More tab
+    await expect(page.getByRole('button', { name: 'Folder actions' })).toBeHidden(); // behind the More tab
     await page.locator('.hub-tools > summary').click();
     await page.locator('#hub-group').selectOption('person');
     await expect(page.locator('.hub-tools')).toHaveAttribute('open', ''); // stays open while you work in it
@@ -649,7 +649,7 @@ test.describe('project hub', () => {
     await page.getByRole('button', { name: 'Stop selecting' }).click();
     await expect(page.locator('.selbox').first()).toBeHidden();
     await page.locator('.tabbar').getByRole('button', { name: /^More/ }).click();
-    await expect(page.locator('.more-sheet').getByRole('button', { name: 'Rescan' })).toBeVisible();
+    await expect(page.locator('.more-sheet').getByRole('button', { name: 'Check for changes' })).toBeVisible();
     await expect(page.locator('.more-sheet').getByRole('button', { name: 'Dark' })).toBeVisible();
     await page.locator('.more-sheet').getByRole('button', { name: 'Close' }).click();
     await page.locator('.hub-status-d > summary').click();

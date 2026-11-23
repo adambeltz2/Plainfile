@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.23.0] - 2026-11-23
+
+### Changed
+- A calmer header: **Rescan** and **Open folder** are now one **⋯** menu with **Check for changes** and **Open another folder…**, so there are two fewer buttons before your work starts. The same words are in the More sheet on a phone.
+- The number on **More** now says what it counts when you hover it or use a screen reader ("3 things to look at in Vault health").
+- Plainer words: the panel beside Today is **In your file** (it was "Source on disk"), and the note menu item is **Show raw markdown (X-ray)**.
+
 ## [1.22.3] - 2026-11-23
 
 ### Changed
