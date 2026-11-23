@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.24.0] - 2026-11-23
+
+### Added
+- The header button **Go to…** is now **Add or go to…** (Ctrl/Cmd+P as before). Type a note name to open it, or type a task and the first choice is **Add task: …** with a one-line summary of what it will make (project, priority, due date, repeat, people, tags). A sentence, or anything using `@`, `#`, `+`, `due:`, `(A)` or `every`, puts Add task first; a short word puts the matching note first and Add task last. Enter adds it as a task note, the same as the quick add on Home.
+
 ## [1.23.0] - 2026-11-23
 
 ### Changed

@@ -2,6 +2,9 @@ import { isPinned, KEYS, run, type NoteAction } from './menu';
 import { notes } from './notes';
 import { render, state } from './store';
 import { esc } from './util';
+import { fmtDate } from '../src/dates';
+import { looksLikeTask, parseQuickLine } from '../src/quickline';
+import { today } from './store';
 
 /**
  * The command palette: one box to open a note by name, create one, jump to a screen, or run an action
@@ -14,6 +17,7 @@ export type PaletteItem =
   | { kind: 'create'; label: string; hint: string; title: string }
   | { kind: 'screen'; label: string; hint: string; screen: string }
   | { kind: 'new-task'; label: string; hint: string }
+  | { kind: 'add-task'; label: string; hint: string; line: string }
   | { kind: 'quick-note'; label: string; hint: string }
   | { kind: 'action'; label: string; hint: string; action: NoteAction; path: string };
 
@@ -76,6 +80,18 @@ function matchNotes(q: string, limit: number): { title: string; path: string }[]
     .map(({ n }) => ({ title: n.title, path: n.path }));
 }
 
+/** The "Add task" row: what the typed line would make, in a few words. */
+function addTaskItem(raw: string): PaletteItem {
+  const p = parseQuickLine(raw, today());
+  const bits = [p.project ? `in ${p.project}` : 'in Inbox'];
+  if (p.priority) bits.push(`priority ${p.priority}`);
+  if (p.due) bits.push(`due ${fmtDate(p.due)}`);
+  if (p.rec) bits.push('repeats');
+  for (const w of p.people) bits.push(`@${w}`);
+  for (const g of p.tags) bits.push(`#${g}`);
+  return { kind: 'add-task', label: `Add task: ${p.title || p.text}`, hint: bits.join(' · '), line: raw };
+}
+
 export function items(): PaletteItem[] {
   const idx = state.index;
   if (!idx) return [];
@@ -126,6 +142,13 @@ export function items(): PaletteItem[] {
     if (!q || `go to ${name}`.toLowerCase().includes(q)) out.push({ kind: 'screen', screen: id, label: `Go to ${name}`, hint: '' });
   const made = raw && !idx.notes.has(raw) && ![...idx.notes.values()].some((n) => n.title.toLowerCase() === q);
   if (made) out.push({ kind: 'create', label: `New note “${raw}”`, hint: 'Create it', title: raw });
+  // A sentence is most likely a task, so "Add task" leads; a short word is most likely a note, so it comes last.
+  // But not when it names a screen, an action or a note: "go to search" must go there, not add a task.
+  if (raw && !verbAction) {
+    const named = out.some((i) => i.kind === 'screen' || i.kind === 'action' || (i.kind === 'note' && i.label.toLowerCase().includes(q)));
+    if (looksLikeTask(raw) && !named) out.unshift(addTaskItem(raw));
+    else out.push(addTaskItem(raw));
+  }
   return out.slice(0, 14);
 }
 
@@ -134,8 +157,8 @@ export function html(): string {
   const list = items();
   pal.sel = Math.min(pal.sel, Math.max(0, list.length - 1));
   return (
-    '<div class="modal-back pal-back" data-pal-backdrop><div class="modal pal" role="dialog" aria-modal="true" aria-label="Go to">' +
-    `<input id="pal-q" class="inp" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="pal-list" placeholder="Open a note, make one, or run an action" value="${esc(pal.q)}">` +
+    '<div class="modal-back pal-back" data-pal-backdrop><div class="modal pal" role="dialog" aria-modal="true" aria-label="Add or go to">' +
+    `<input id="pal-q" class="inp" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="pal-list" placeholder="Open a note, or type a task: Call Dana @dana due:friday" value="${esc(pal.q)}">` +
     `<ul id="pal-list" class="plain pal-list" role="listbox">${list
       .map(
         (it, i) =>

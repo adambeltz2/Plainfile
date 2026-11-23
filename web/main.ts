@@ -37,6 +37,7 @@ import {
   openFolder,
   openSample,
   render as requestRender,
+  quickAddLine,
   reopenSaved,
   rescan,
   resumeSaved,
@@ -251,7 +252,8 @@ function shell(): string {
       : '') +
     '</span>';
   h += '</nav><span class="grow"></span>';
-  h += '<button class="btn" data-act="palette-open" title="Open a note or run an action" aria-label="Go to a note or action">Go to…</button>';
+  h +=
+    '<button class="btn" data-act="palette-open" title="Open a note, add a task, or run an action (Ctrl/Cmd+P)" aria-label="Add or go to">Add or go to…</button>';
   h += '<button class="btn primary" data-act="new">+ New</button>';
   const rest =
     `<span class="hdr-menu-wrap"><button class="btn" data-act="hdr-menu" aria-haspopup="menu" aria-expanded="${hdrMenuOpen}" aria-label="Folder actions" title="Check for changes, open another folder">⋯</button>` +
@@ -748,6 +750,12 @@ palette.setRunner(async (item) => {
       return go(item.screen as ScreenId);
     case 'quick-note':
       return newmenu.quickNote();
+    case 'add-task': {
+      const err = await quickAddLine(item.line);
+      if (err) state.error = err;
+      else state.error = '';
+      return requestRender();
+    }
     case 'new-task':
       state.modal = { step: 'task', text: '', due: '', tags: '', people: '', project: '', priority: '', error: '' };
       return requestRender();

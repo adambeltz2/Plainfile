@@ -146,3 +146,10 @@ export function findProject(projects: Project[], word: string): Project | undefi
   };
   return projects.find((p) => names(p).includes(w)) ?? projects.find((p) => names(p).some((n) => n.startsWith(w)));
 }
+
+/** Whether what was typed reads like a task rather than a note name: a sentence, or it uses @, #, +, due:, (A) or every. */
+export function looksLikeTask(raw: string): boolean {
+  const t = raw.trim();
+  if (!t) return false;
+  return t.split(/\s+/).length >= 3 || /(^|\s)[@#+]\S/.test(t) || /(^|\s)(due|rec):/i.test(t) || /^\([A-Z]\)\s/.test(t) || /\bevery\b/i.test(t);
+}

@@ -591,3 +591,24 @@ test('Copy path asks once where the folder is on this computer, remembers it, an
   await ask.getByRole('button', { name: 'Copy the path inside the folder' }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('inbox/Kickoff.md');
 });
+
+test('the header box is "Add or go to": a sentence offers Add task first, and Enter makes it; a short word lists the note first', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  const dir = await openVault(page, { 'people/Ken Moore.md': '---\ntitle: Ken Moore\ntype: person\n---\n', 'a.md': '# A\n' });
+  await page.getByRole('button', { name: 'Add or go to' }).click();
+  await page.locator('#pal-q').fill('Call Dana about logos @dana due:2026-12-01');
+  const first = page.locator('.pal-item').first();
+  await expect(first).toContainText('Add task: Call Dana about logos');
+  await expect(first).toContainText('due');
+  await expect(first).toContainText('@dana');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => listFiles(page, dir)).toContain('tasks/Call Dana about logos.md');
+  expect(await readFile(page, dir, 'tasks/Call Dana about logos.md')).toContain('due: 2026-12-01\n');
+  await expect(page.locator('.pal')).toHaveCount(0);
+  // A short word is probably a note: the note comes first and "Add task" is the last choice.
+  await page.keyboard.press('Control+p');
+  await page.locator('#pal-q').fill('ken');
+  await expect(page.locator('.pal-item').first()).toContainText('Ken Moore');
+  await expect(page.locator('.pal-item').last()).toContainText('Add task: ken');
+});

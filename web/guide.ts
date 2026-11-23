@@ -97,7 +97,10 @@ const KEYS: [string, string, string][] = [
 ];
 
 const SHORTCUTS: [string, string][] = [
-  ['Ctrl/Cmd + P', 'Go to a note by a few letters, make a new one, or run an action. Try "move kick" to move the note whose name matches'],
+  [
+    'Ctrl/Cmd + P',
+    'Add or go to: open a note by a few letters, add a task by typing it (Call Dana @dana due:friday), make a note, or run an action. Try "move kick" to move the note whose name matches',
+  ],
   ['Ctrl/Cmd + K', 'Search'],
   ['Ctrl/Cmd + S', 'Save the open note now (it also saves by itself)'],
   ['Ctrl/Cmd + B / I', 'Bold or italic the selection (press again to take it off); with nothing selected, type between the marks'],
