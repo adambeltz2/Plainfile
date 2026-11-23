@@ -14,7 +14,7 @@ import { addDays } from '../src/query';
 import { linkTargets, suggestionsFor, type LinkTarget } from '../src/vocabulary';
 import { ConflictError } from '../src/storage';
 import { readingStats } from '../src/render';
-import { createEditor, type EditorHandle } from './editor';
+import type { EditorHandle } from './editor';
 import { MOD } from './keys';
 import { errorMessage, onVaultChange, projectRef, render, state, today } from './store';
 import { esc } from './util';
@@ -259,6 +259,8 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
     notes.lastDeleted = undefined;
     notes.confirmDelete = undefined;
     notes.missingLink = undefined;
+    // CodeMirror is loaded on first use, so the app opens without it.
+    const { createEditor } = await import('./editor');
     notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush(), suggest, pasteImage, loadImage, openLink });
     rememberLast(path);
   } catch (e) {

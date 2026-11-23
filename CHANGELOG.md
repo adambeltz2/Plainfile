@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.14.0] - 2026-11-23
+
+### Changed
+- **A faster first load.** The note editor (CodeMirror, most of the code) is now loaded the first time you open a note, so the main file is about 360 KB instead of 1 MB, and Home, Tasks and the other screens appear sooner. The installed app's offline copy includes the editor.
+
 ## [1.13.1] - 2026-11-23
 
 ### Added

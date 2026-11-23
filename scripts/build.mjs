@@ -23,8 +23,11 @@ rmSync(join(root, 'dist'), { recursive: true, force: true });
 mkdirSync(join(root, 'dist'), { recursive: true });
 
 await build({
-  entryPoints: [join(root, 'web/main.ts')],
-  outfile: join(root, 'dist/app.js'),
+  // The note editor (CodeMirror, most of the size) is its own chunk, loaded the first time a note is opened.
+  entryPoints: { app: join(root, 'web/main.ts') },
+  outdir: join(root, 'dist'),
+  splitting: true,
+  chunkNames: 'chunk-[hash]',
   bundle: true,
   format: 'esm',
   target: 'es2022',
@@ -43,4 +46,13 @@ for (const f of ['index.html', 'app.css', 'manifest.json']) copyFileSync(join(ro
 cpSync(join(root, 'web', 'icons'), join(root, 'dist', 'icons'), { recursive: true });
 
 // The service worker's cache name carries the app version, so each release replaces the old cache.
-writeFileSync(join(root, 'dist', 'sw.js'), readFileSync(join(root, 'web', 'sw.js'), 'utf8').replace('__VERSION__', version));
+// The split-off chunks are part of the shell too, so the editor still opens offline.
+const chunks = readdirSync(join(root, 'dist'))
+  .filter((f) => /^chunk-.*\.js$/.test(f))
+  .map((f) => `./${f}`);
+writeFileSync(
+  join(root, 'dist', 'sw.js'),
+  readFileSync(join(root, 'web', 'sw.js'), 'utf8')
+    .replace('__VERSION__', version)
+    .replace('__CHUNKS__', JSON.stringify(chunks)),
+);
