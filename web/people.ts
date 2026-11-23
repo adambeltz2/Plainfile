@@ -54,7 +54,7 @@ function table(p: PeopleIndex): string {
     return (peopleState.desc ? -c : c) || a.name.localeCompare(b.name);
   });
   const th = (id: string, label: string): string =>
-    `<th><button class="plain-btn" data-people-sort="${id}" aria-sort="${peopleState.sort === id ? (peopleState.desc ? 'descending' : 'ascending') : 'none'}">${label}${peopleState.sort === id ? (peopleState.desc ? ' ▾' : ' ▴') : ''}</button></th>`;
+    `<th aria-sort="${peopleState.sort === id ? (peopleState.desc ? 'descending' : 'ascending') : 'none'}"><button class="plain-btn" data-people-sort="${id}">${label}${peopleState.sort === id ? (peopleState.desc ? ' ▾' : ' ▴') : ''}</button></th>`;
   return (
     '<div class="table-wrap"><table class="portfolio"><thead><tr>' +
     th('name', 'Person') +

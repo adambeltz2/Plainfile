@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.4.2] - 2026-11-23
+
+### Added
+- **An accessibility check in the browser tests** (`tests/e2e/a11y.spec.ts`, `@axe-core/playwright`, dev only): axe scans 13 screens in light and dark against WCAG 2 A and AA, so a regression fails CI.
+
+### Fixed
+- Found by that check: file-name chips were too faint in dark mode and the greyed-out days of the Calendar month in light mode; the Calendar grid and the Insight activity grid used ARIA roles that did not fit their content; the sort state on the People and Projects tables was on the wrong element; and Home's week bars wrapped buttons inside an image role.
+
 ## [1.4.1] - 2026-11-23
 
 ### Added
