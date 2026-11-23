@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.6.3] - 2026-11-23
+
+### Added
+- **More template variables:** `{{weekday}}` (Monday), `{{day}}`, `{{week}}` (ISO week number), `{{month}}`, `{{year}}` and `{{datelong}}` (Monday 23 November 2026), beside `{{date}}`, `{{date+7d}}` and `{{time}}`. These names are now built in, so a template prompt with one of these names would be filled from the date instead of asked.
+
 ## [1.6.2] - 2026-11-23
 
 ### Added

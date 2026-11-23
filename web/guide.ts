@@ -258,7 +258,7 @@ export function html(): string {
   h += section(
     'templates',
     'Templates',
-    '<p>A template is a markdown file in <code>.plainfile/templates/</code>. Its <code>plainfile:</code> block names it and says where the new note goes, and is removed from the note it makes. Each <code>{{name}}</code> becomes a question when you use it. <code>{{date}}</code>, <code>{{date+7d}}</code> and <code>{{cursor}}</code> are built in.</p>' +
+    '<p>A template is a markdown file in <code>.plainfile/templates/</code>. Its <code>plainfile:</code> block names it and says where the new note goes, and is removed from the note it makes. Each <code>{{name}}</code> becomes a question when you use it. <code>{{date}}</code>, <code>{{date+7d}}</code>, <code>{{time}}</code>, <code>{{weekday}}</code>, <code>{{day}}</code>, <code>{{week}}</code>, <code>{{month}}</code>, <code>{{year}}</code>, <code>{{datelong}}</code> and <code>{{cursor}}</code> are built in.</p>' +
       block('template', '.plainfile/templates/weekly-review.md', EX.template),
   );
 
