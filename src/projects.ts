@@ -1,5 +1,9 @@
+import { normalizeDate } from './fields';
+import { setFrontmatterField } from './frontmatter';
 import { dirname, type TaskItem, type VaultIndex } from './index';
 import type { Note } from './parse';
+import type { VaultStorage } from './storage';
+import type { ChangeResult } from './writeback';
 
 /**
  * Projects, as the first Notebook app had them: a note with `active` or `sortOrder` in its
@@ -130,6 +134,8 @@ export interface ProjectDashboard {
   /** The goal or first lines of the note. */
   summary: string;
   created?: string;
+  /** When it was closed out (`completed:`), if it was. */
+  completed?: string;
   /** Open tasks: late first, then by date, then undated. */
   open: TaskItem[];
   overdue: number;
@@ -179,6 +185,7 @@ export function projectDashboard(index: VaultIndex, path: string, today: string,
     active: isActive(me),
     summary: goal ?? me.preview,
     created,
+    completed: normalizeDate(me.frontmatter.completed),
     open,
     overdue: open.filter((t) => !t.done && t.due && t.due < today).length,
     done: tasks.filter((t) => t.done).length,
@@ -196,4 +203,29 @@ export function noteProjects(n: Note): string[] {
   const v = n.frontmatter.project;
   const list = Array.isArray(v) ? v : v === undefined || v === null || v === '' ? [] : [v];
   return list.map((x) => String(x).trim()).filter(Boolean);
+}
+
+/** Whether a project has been closed out: `active: false`. Such a project is archived, not deleted. */
+export const isArchived = (n: Note): boolean => !isActive(n);
+
+/**
+ * Close out a project (`active: false` and `completed: <date>`) or reopen it (`active: true`, no `completed`).
+ * Only those two frontmatter lines change, and the write is guarded by the file's modified time. Nothing moves.
+ */
+export async function setProjectActive(storage: VaultStorage, index: VaultIndex, path: string, active: boolean, today: string): Promise<ChangeResult> {
+  const note = index.notes.get(path);
+  if (!note) throw new Error(`No such project: ${path}`);
+  const stat = await storage.stat(path);
+  const text = await storage.read(path);
+  let next = setFrontmatterField(text, 'active', active ? 'true' : 'false');
+  next = setFrontmatterField(next, 'completed', active ? null : today);
+  if (next === text) return { path, line: 1, before: '', after: '', written: false };
+  const a = text.split('\n');
+  const b = next.split('\n');
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  await storage.write(path, next, stat.mtime);
+  await index.refreshFile(path);
+  const strip = (l: string | undefined): string => (l ?? '').replace(/\r$/, '');
+  return { path, line: i + 1, before: strip(a[i]), after: strip(b[i]), written: true };
 }

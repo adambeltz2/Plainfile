@@ -115,3 +115,63 @@ describe('projectDashboard', () => {
     expect(projectDashboard(index, 'nope.md', '2026-11-21')).toBeUndefined();
   });
 });
+
+describe('closing out a project', () => {
+  async function setup(files: Record<string, string>) {
+    const storage = new MemoryStorage(files);
+    const index = new VaultIndex(storage);
+    await index.scan();
+    return { storage, index };
+  }
+
+  it('changes only the active and completed lines, and reopening undoes them', async () => {
+    const original = '---\ntitle: Site\ntype: project\nactive: true\n# a comment\ntags: [x]\n---\n\nBody stays.\n- [ ] a task\n';
+    const { storage, index } = await setup({ 'projects/site/index.md': original });
+    const { setProjectActive } = await import('../src/projects');
+    const r = await setProjectActive(storage, index, 'projects/site/index.md', false, '2026-11-23');
+    expect(r).toMatchObject({ written: true, before: 'active: true', after: 'active: false' });
+    expect(await storage.read('projects/site/index.md')).toBe(
+      original.replace('active: true\n', 'active: false\n').replace('tags: [x]\n', 'tags: [x]\ncompleted: 2026-11-23\n'),
+    );
+    expect(index.notes.get('projects/site/index.md')!.frontmatter.active).toBe(false);
+    const again = await setProjectActive(storage, index, 'projects/site/index.md', false, '2026-11-23');
+    expect(again.written).toBe(false);
+    await setProjectActive(storage, index, 'projects/site/index.md', true, '2026-11-24');
+    expect(await storage.read('projects/site/index.md')).toBe(original);
+  });
+
+  it('keeps CRLF line endings', async () => {
+    const original = '---\r\ntitle: Site\r\ntype: project\r\nactive: true\r\n---\r\nBody\r\n';
+    const { storage, index } = await setup({ 'p.md': original });
+    const { setProjectActive } = await import('../src/projects');
+    await setProjectActive(storage, index, 'p.md', false, '2026-11-23');
+    expect(await storage.read('p.md')).toBe('---\r\ntitle: Site\r\ntype: project\r\nactive: false\r\ncompleted: 2026-11-23\r\n---\r\nBody\r\n');
+    await setProjectActive(storage, index, 'p.md', true, '2026-11-24');
+    expect(await storage.read('p.md')).toBe(original);
+  });
+
+  it('works on a project note with no active line, and refuses a changed file', async () => {
+    const { storage, index } = await setup({ 'p.md': '---\ntitle: P\ntype: project\n---\nBody\n' });
+    const { setProjectActive } = await import('../src/projects');
+    (storage as unknown as { external(p: string, t: string): void }).external('p.md', '---\ntitle: P\ntype: project\n---\nChanged elsewhere\n');
+    await expect(setProjectActive(storage, index, 'p.md', false, '2026-11-23')).resolves.toMatchObject({ written: true });
+    expect(await storage.read('p.md')).toBe('---\ntitle: P\ntype: project\nactive: false\ncompleted: 2026-11-23\n---\nChanged elsewhere\n');
+  });
+
+  it('leaves an archived project out of All tasks, but keeps tasks that are also in a live one', async () => {
+    const { index } = await setup({
+      'projects/old/index.md': '---\ntitle: Old\ntype: project\nactive: false\n---\n- [ ] Old job\n',
+      'projects/new/index.md': '---\ntitle: New\ntype: project\nactive: true\n---\n- [ ] New job\n',
+      'tasks/Shared.md': '---\ntitle: Shared\nstatus: todo\nproject: [old, new]\n---\n',
+      'tasks/OnlyOld.md': '---\ntitle: Only old\nstatus: todo\nproject: old\n---\n',
+      'loose.md': '- [ ] Loose job\n',
+    });
+    const { hubTasks } = await import('../src/hub');
+    const { ALL_PROJECTS } = await import('../src/projects');
+    expect(
+      hubTasks(index, ALL_PROJECTS)
+        .map((t) => t.item.title)
+        .sort(),
+    ).toEqual(['Loose job', 'New job', 'Shared']);
+  });
+});

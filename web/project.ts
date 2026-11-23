@@ -77,7 +77,9 @@ function overview(): string {
     `<li class="pcard${p.active ? '' : ' off'}"><button class="pbtn" data-open-project="${esc(p.path)}">` +
     `<span class="pnum" aria-hidden="true">${p.number ?? '–'}</span><span class="ptitle">${esc(p.title)}</span><span class="pprev">${esc(p.preview) || '&nbsp;'}</span>` +
     `<span class="chips"><span class="chip">${p.openTasks} open task${p.openTasks === 1 ? '' : 's'}</span>${p.followups ? `<span class="chip">${p.followups} follow-up${p.followups === 1 ? '' : 's'}</span>` : ''}${p.active ? '' : '<span class="chip quiet">inactive</span>'}</span></button></li>`;
-  return `${h}<ul class="pgrid">${all.map(card).join('')}</ul>`;
+  const live = all.filter((p) => p.active);
+  const archived = all.filter((p) => !p.active);
+  return `${h}<ul class="pgrid">${live.map(card).join('')}</ul>${archived.length ? `<h3 class="muted" style="margin:18px 0 8px">Archived <span class="n">${archived.length}</span></h3><ul class="pgrid">${archived.map(card).join('')}</ul>` : ''}`;
 }
 
 export function html(): string {

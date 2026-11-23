@@ -674,3 +674,35 @@ test('the Tasks tab shows the open count, and each number on a hub opens what it
   await page.getByRole('button', { name: /Show the \d+ notes/ }).click();
   await expect(page.locator('.tab.on')).toContainText('Notes');
 });
+
+test('a finished project can be closed out to the Archive and reopened; only its note changes', async ({ page }) => {
+  await page.goto('/');
+  const PROJ = '---\ntitle: Weekend\ntype: project\nactive: true\n---\n- [x] Everything done\n';
+  const dir = await openVault(page, {
+    'projects/weekend/index.md': PROJ,
+    'projects/other/index.md': '---\ntitle: Other\ntype: project\nactive: true\n---\n- [ ] Other job\n',
+    'projects/weekend/tasks/Leftover.md': '---\ntitle: Leftover\nstatus: todo\nproject: weekend\n---\n',
+  });
+  await nav(page, 'Projects').click();
+  await page.locator('.pcard .pbtn', { hasText: 'Weekend' }).click();
+  await expect(page.locator('.hub-main .meta')).toContainText('Active');
+  await page.getByRole('button', { name: 'Close out', exact: true }).first().click();
+  await expect(page.getByRole('group', { name: 'Close out this project' })).toContainText('1 open task');
+  await page.getByRole('button', { name: 'Close out', exact: true }).last().click();
+  await expect.poll(() => readFileOrEmpty(page, dir, 'projects/weekend/index.md')).toContain('active: false');
+  const closed = await readFile(page, dir, 'projects/weekend/index.md');
+  expect(closed).toBe(PROJ.replace('active: true\n', 'active: false\ncompleted: ' + new Date().toLocaleDateString('en-CA') + '\n'));
+  expect(await readFile(page, dir, 'projects/weekend/tasks/Leftover.md')).toBe('---\ntitle: Leftover\nstatus: todo\nproject: weekend\n---\n');
+  await expect(page.locator('.hub-main .meta')).toContainText('Archived');
+  await expect(page.locator('.hub-main .notice', { hasText: 'Archived.' })).toBeVisible();
+  // The Archive: out of the Tasks tab, and under Archived on the Projects screen.
+  await nav(page, 'Tasks').click();
+  await expect(page.locator('.hub-content')).toContainText('Other job');
+  await expect(page.locator('.hub-content')).not.toContainText('Leftover');
+  await nav(page, 'Projects').click();
+  await page.getByRole('button', { name: 'All projects' }).first().click();
+  await expect(page.getByRole('heading', { name: /^Archived/ })).toBeVisible();
+  await page.locator('.pcard.off .pbtn', { hasText: 'Weekend' }).click();
+  await page.getByRole('button', { name: 'Reopen' }).first().click();
+  await expect.poll(() => readFileOrEmpty(page, dir, 'projects/weekend/index.md')).toBe(PROJ);
+});

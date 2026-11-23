@@ -167,7 +167,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 - `[FEATURE]` Move a task or note into a project (and out of one) with every link updated.
   _Affected: `src/rename.ts`, `web/today.ts`._
-- `[FEATURE]` Finish or archive a project: set `active: false`, and offer to move it to `archive/`.
+- `[FEATURE]` Offer to also move a closed-out project's folder to `archive/` (needs folder moves). `src/move.ts`, `web/hub.ts`.
   _Affected: `src/frontmatter.ts`, `web/notes.ts`._
 - `[FEATURE]` Reorder projects by dragging cards, writing `sortOrder` for each. _Affected:
   `web/today.ts`._

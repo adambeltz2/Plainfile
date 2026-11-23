@@ -5,7 +5,7 @@ import { applyBulk, planBulk, type BulkAction, type BulkPlan } from '../src/bulk
 import { applyFieldFix, fieldIssues, STATUSES, type FieldIssue, type Status } from '../src/fields';
 import { applyFilters, groupTasks, hubTasks, newFilters, summarize, type Filters, type GroupBy, type HubTask } from '../src/hub';
 import { dirname } from '../src/index';
-import { ALL_PROJECTS, listProjects, projectDashboard, projectNotes, type ProjectDashboard } from '../src/projects';
+import { ALL_PROJECTS, listProjects, projectDashboard, projectNotes, setProjectActive, type ProjectDashboard } from '../src/projects';
 import { addDays } from '../src/query';
 import { setTaskStatus } from '../src/writeback';
 import { errorMessage, justDone, render, rescan, state, today, writeFailure } from './store';
@@ -34,6 +34,8 @@ export const hubState = {
   facetsOpen: false,
   /** The Filter & group drawer on a phone, and whether row tick boxes are showing there. */
   toolsOpen: false,
+  /** The close-out confirmation is showing. */
+  closing: false,
   statusOpen: false,
   selectMode: false,
   /** Task ids ticked for a bulk change. */
@@ -83,6 +85,7 @@ export function resetFor(path: string): void {
     tidy: false,
     facetsOpen: false,
     toolsOpen: false,
+    closing: false,
     statusOpen: false,
     selectMode: false,
     selected: new Set<string>(),
@@ -146,6 +149,29 @@ function toolbar(all: HubTask[]): string {
     '</details>' +
     activeChips()
   );
+}
+
+/** Close out, or Reopen, for the project's header. */
+function statusButton(d: ProjectDashboard): string {
+  return d.active ? '<button class="btn" data-hub-close>Close out</button>' : '<button class="btn" data-hub-reopen>Reopen</button>';
+}
+
+/** The close-out confirmation, a nudge when every task is done, or a note that the project is archived. */
+function projectBanner(d: ProjectDashboard, open: number, total: number): string {
+  if (!d.active) {
+    return `<div class="notice small" role="status"><b>Archived.</b> This project is closed out${d.completed ? ` (${esc(fmtDate(d.completed))})` : ''}. It is kept out of Home and the Tasks tab. Its files are untouched. <button class="btn small" data-hub-reopen>Reopen</button></div>`;
+  }
+  if (hubState.closing) {
+    return (
+      `<div class="notice" role="group" aria-label="Close out this project"><b>Close out “${esc(d.title)}”?</b> It moves to the Archive: ${open ? `its ${open} open task${open === 1 ? '' : 's'} leave the Tasks tab and Home, and stay in the files. ` : ''}` +
+      'Only the project note changes (<code>active: false</code> and <code>completed:</code>). You can reopen it any time. ' +
+      '<button class="btn primary small" data-hub-close-go>Close out</button> <button class="btn small" data-hub-close-cancel>Cancel</button></div>'
+    );
+  }
+  if (total > 0 && open === 0) {
+    return '<div class="notice small" role="status">Every task here is done. <button class="btn small primary" data-hub-close>Close out this project</button></div>';
+  }
+  return '';
 }
 
 /** The five numbers under the title. Each one is a button that shows what it counts. */
@@ -346,7 +372,7 @@ function rail(path: string): string {
     .map(item)
     .join('')}${
     all.some((p) => !p.active)
-      ? `<h3 class="muted">Inactive</h3>${all
+      ? `<h3 class="muted">Archived</h3>${all
           .filter((p) => !p.active)
           .map(item)
           .join('')}`
@@ -402,12 +428,13 @@ export function html(path: string): string {
     )
       .map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${esc(p.title)}</option>`)
       .join('')}</select><button class="btn small" data-act="proj-back">All projects</button></label>` +
-    `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${everything ? 'Every project' : d.active ? 'Active' : 'Inactive'}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
+    `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${everything ? 'Every project' : d.active ? 'Active' : `Archived${d.completed ? ` · closed ${esc(fmtDate(d.completed))}` : ''}`}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
     (everything
       ? '</div>'
       : `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
-        `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></span>` +
-        `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>`) +
+        `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button>${statusButton(d)}<button class="btn" data-open="${esc(path)}">Open note</button></span>` +
+        `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button>${statusButton(d)}<button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>`) +
+    (everything ? '' : projectBanner(d, openCount, all.length)) +
     (everything ? `${quickBar('hub-quick').form}${quickBar('', true).below}` : '') +
     (d.summary && !everything ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
     statsHtml(openCount, d.overdue, all.length - openCount, d.notes.length, d.followups.length) +
@@ -522,6 +549,22 @@ async function undoLast(): Promise<void> {
   render();
 }
 
+/** Close out the open project, or reopen it, then show the exact line that changed. */
+async function setActive(active: boolean): Promise<void> {
+  const { storage, index } = state;
+  if (!storage || !index || !hubState.project) return;
+  hubState.closing = false;
+  try {
+    state.log = await setProjectActive(storage, index, hubState.project, active, today());
+    hubState.error = '';
+  } catch (e) {
+    const friendly = writeFailure(e);
+    if (friendly) await rescan();
+    hubState.error = friendly ?? `Could not save that change. ${errorMessage(e)}`;
+  }
+  render();
+}
+
 async function move(id: string, status: string): Promise<void> {
   const { storage, index } = state;
   if (!storage || !index) return;
@@ -573,6 +616,20 @@ export async function click(target: HTMLElement): Promise<boolean> {
     else hubState.selected.add(id);
     hubState.preview = undefined;
     render();
+    return true;
+  }
+  if (q('data-hub-close') !== undefined) {
+    hubState.closing = true;
+    render();
+    return true;
+  }
+  if (q('data-hub-close-cancel') !== undefined) {
+    hubState.closing = false;
+    render();
+    return true;
+  }
+  if (q('data-hub-close-go') !== undefined || q('data-hub-reopen') !== undefined) {
+    await setActive(q('data-hub-reopen') !== undefined);
     return true;
   }
   const stat = q('data-hub-stat');

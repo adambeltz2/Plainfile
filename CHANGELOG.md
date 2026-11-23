@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.4.0] - 2026-11-23
+
+### Added
+- **Close out a project to the Archive.** A project's page shows its status (Active, or Archived with the date it was closed) and a **Close out** button; when every task is done it also offers to close the project. Closing out writes two lines in the project note (`active: false` and `completed: <date>`) after a confirmation, and nothing else changes, no file moves. **Reopen** undoes it.
+- Archived projects are listed under **Archived** on the Projects screen and in the project rail, and their tasks are left out of the Tasks tab and Home. A task that is also in a live project stays.
+
 ## [1.3.1] - 2026-11-23
 
 ### Removed
