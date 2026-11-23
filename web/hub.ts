@@ -314,8 +314,10 @@ function bulkHtml(): string {
 function boardHtml(all: HubTask[]): string {
   const f = { ...hubState.filters, hideDone: false };
   const vis = applyFilters(all, f, justDone, today());
+  // Columns that hold cards share the room; an empty one stays slim, so three cards do not sit in a narrow strip.
+  const sizes = COLS.map(([key]) => (vis.some((t) => t.status === key) ? '1fr' : '0.45fr'));
   return (
-    '<div class="hub-cols">' +
+    `<div class="hub-cols" style="--cols:${sizes.map((x) => `minmax(0,${x})`).join(' ')}">` +
     COLS.map(([key, label], ci) => {
       const cards = vis
         .filter((t) => t.status === key)

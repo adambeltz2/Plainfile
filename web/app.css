@@ -509,7 +509,7 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .hub-group > .grp { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit; }
 .gprog { width: 70px; height: 6px; border: 1px solid currentColor; border-radius: 4px; overflow: hidden; flex: none; }
 .gprog i { display: block; height: 100%; background: currentColor; }
-.hub-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-items: start; }
+.hub-cols { display: grid; grid-template-columns: var(--cols, repeat(4, minmax(0, 1fr))); gap: 8px; align-items: start; }
 .hub-col { border: 1px solid var(--line); border-radius: 8px; padding: 6px; min-width: 0; }
 .hub-col h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
 .hub-card { border: 1px solid var(--line); border-radius: 6px; padding: 6px; margin: 0 0 6px; }
@@ -797,3 +797,9 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .wrap.focus .frame.notes.peek-list > .side { display: block !important; position: fixed; top: 0; bottom: 0; z-index: 30; width: min(340px, 92vw); overflow: auto; background: var(--bg); padding: 12px; box-shadow: 0 0 0 1px var(--fg); }
 .wrap.focus .frame.notes.peek-details > .source { right: 0; }
 .wrap.focus .frame.notes.peek-list > .side { left: 0; }
+
+/* An HTML comment in a note (<!-- ... -->): a quiet note to yourself, left out of copies and exports. */
+.cm-comment { color: var(--mute); font-style: italic; font-size: 0.92em; }
+
+/* The project page uses the width of the window, so a board of a few cards is not squeezed into the middle. */
+.wrap.hub-wide { max-width: min(2400px, 100%); }

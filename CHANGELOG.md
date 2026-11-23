@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.19.1] - 2026-11-23
+
+### Fixed
+- On Today, clicking a task that is already selected (or double-clicking one) now opens its note at that line. Before, a click only selected it, so it looked as if the note could not be opened. The panel on the right says so, and E still opens it.
+
+### Changed
+- The project page now uses the width of the window, and on the Board a column with no cards stays slim while the columns that hold cards share the room, so a few cards are not squeezed into narrow strips.
+- An HTML comment in a note (`<!-- a note to yourself -->`, like the how-to in a new project) now shows greyed and italic in the editor, and is left out when you copy, print or export the note to Word or HTML. Comments inside code blocks are left alone.
+
 ## [1.19.0] - 2026-11-23
 
 ### Added
