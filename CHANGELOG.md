@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.1.3] - 2026-11-23
+
+### Changed
+- **A shorter header.** The everyday tabs (Home, Today, Tasks, Projects, Notes, Search) stay in the header. Calendar, People, Board, Recent, Insight and Vault health are under a **More** menu (with the Vault health count on it). It closes on Escape or a click elsewhere. Phones are unchanged (bottom bar).
+
 ## [1.1.2] - 2026-11-23
 
 ### Changed

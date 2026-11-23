@@ -92,20 +92,25 @@ function isCurrent(id: ScreenId): boolean {
 
 /* ---------- screens ---------- */
 
+/** The tabs used every day sit in the header; the rest are under More, so the bar stays short. */
 const NAV: { id: ScreenId; label: string }[] = [
   { id: 'home', label: 'Home' },
   { id: 'today', label: 'Today' },
   { id: 'tasks', label: 'Tasks' },
-  { id: 'calendar', label: 'Calendar' },
   { id: 'projects', label: 'Projects' },
+  { id: 'notes', label: 'Notes' },
+  { id: 'search', label: 'Search' },
+];
+const NAV_MORE: { id: ScreenId; label: string }[] = [
+  { id: 'calendar', label: 'Calendar' },
   { id: 'people', label: 'People' },
   { id: 'board', label: 'Board' },
-  { id: 'notes', label: 'Notes' },
   { id: 'recent', label: 'Recent' },
-  { id: 'search', label: 'Search' },
   { id: 'insight', label: 'Insight' },
   { id: 'health', label: 'Vault health' },
 ];
+/** Whether the header's More menu is open. */
+let navMoreOpen = false;
 
 async function go(screen: ScreenId): Promise<void> {
   await notes.flush();
@@ -216,6 +221,13 @@ function shell(): string {
   for (const n of NAV) {
     h += `<button class="navbtn" data-nav="${n.id}" aria-current="${isCurrent(n.id)}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
   }
+  const inMore = NAV_MORE.some((n) => isCurrent(n.id));
+  h +=
+    `<span class="nav-more-wrap"><button class="navbtn nav-more" data-act="nav-more" aria-haspopup="menu" aria-expanded="${navMoreOpen}" aria-current="${inMore}">More${hc ? ` <span class="badge">${hc}</span>` : ''}</button>` +
+    (navMoreOpen
+      ? `<div class="nav-menu" role="menu">${NAV_MORE.map((n) => `<button role="menuitem" data-nav="${n.id}" aria-current="${isCurrent(n.id)}">${n.label}${n.id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`).join('')}</div>`
+      : '') +
+    '</span>';
   h += '</nav><span class="grow"></span>';
   h += '<button class="btn" data-act="palette-open" title="Open a note or run an action" aria-label="Go to a note or action">Go to…</button>';
   h += '<button class="btn primary" data-act="new">+ New</button>';
@@ -398,8 +410,14 @@ app.addEventListener('click', (e) => {
       else sideOpen.add(toggle);
       return requestRender();
     }
+    // A click anywhere but the header More menu closes it.
+    if (navMoreOpen && !target.closest('.nav-more-wrap')) {
+      navMoreOpen = false;
+      requestRender();
+    }
     const nav = target.closest<HTMLElement>('[data-nav]')?.dataset.nav as ScreenId | undefined;
     if (nav) {
+      navMoreOpen = false;
       moreOpen = false;
       sideOpen.clear();
       return void go(nav);
@@ -415,6 +433,9 @@ app.addEventListener('click', (e) => {
         return void openSample(__SAMPLE_VAULT__);
       case 'new':
         return newmenu.openNew();
+      case 'nav-more':
+        navMoreOpen = !navMoreOpen;
+        return requestRender();
       case 'more-toggle':
         moreOpen = !moreOpen;
         return requestRender();
@@ -623,6 +644,14 @@ document.addEventListener(
   },
   true,
 );
+
+// The header More menu closes on Escape. This is on the document because redrawing the header drops the focus.
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && navMoreOpen) {
+    navMoreOpen = false;
+    requestRender();
+  }
+});
 
 document.addEventListener('keydown', (e) => {
   if (!state.index || state.busy) return;

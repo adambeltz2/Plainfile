@@ -14,7 +14,12 @@ async function session(viewport, scheme, scale = 1) {
   await page.locator('.wrap').waitFor();
   return page;
 }
-const nav = (page, name) => page.locator('.nav').getByRole('button', { name }).click();
+const nav = async (page, name) => {
+  const top = page.locator('.nav').getByRole('button', { name, exact: true });
+  if (await top.count()) return top.click();
+  await page.locator('.nav-more').click();
+  return page.locator('.nav-menu').getByRole('menuitem', { name }).click();
+};
 const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png` });
 
 let page = await session({ width: 1280, height: 800 }, 'light');

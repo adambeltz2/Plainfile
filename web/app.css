@@ -746,3 +746,10 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .hub-quick { display: flex; gap: 8px; margin: 0 0 6px; }
 .hub-quick .inp { flex: 1; min-width: 0; }
 .home-quick .quick-project, .hub-quick .quick-project { flex: 0 1 11rem; max-width: 11rem; }
+
+/* The header's More menu. */
+.nav-more-wrap { position: relative; display: inline-block; }
+.nav-menu { position: absolute; top: 100%; left: 0; z-index: 30; min-width: 11rem; padding: 4px; background: var(--bg); color: var(--fg); border: 1px solid var(--fg); border-radius: 8px; box-shadow: 4px 4px 0 var(--fg); display: flex; flex-direction: column; }
+.nav-menu button { background: none; border: 0; border-radius: 4px; padding: 6px 10px; text-align: left; color: inherit; font: inherit; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; }
+.nav-menu button:hover, .nav-menu button:focus-visible { background: var(--fg); color: var(--bg); }
+.nav-menu button[aria-current='true'] { font-weight: 700; }

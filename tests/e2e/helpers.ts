@@ -122,6 +122,12 @@ export async function goTo(page: Page, name: RegExp | string): Promise<void> {
   }
   const top = page.locator('.nav').getByRole('button', { name });
   if (await top.isVisible()) return top.click();
+  // On a wide screen the less-used tabs are under the header's More menu.
+  const more = page.locator('.nav .nav-more');
+  if (await more.isVisible()) {
+    await more.click();
+    return page.locator('.nav-menu').getByRole('menuitem', { name }).click();
+  }
   if (!(await page.locator('.tabbar').count())) {
     // A note is open on a phone: the bar is out of the way, and All notes brings it back.
     const back = page.getByRole('button', { name: 'All notes' });
