@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyFix, fieldIssues, normalizeDate, normalizeStatus, applyFieldFix } from '../src/fields';
-import { applyFilters, groupTasks, hubTasks, NO_FILTERS, summarize } from '../src/hub';
+import { applyFilters, currentView, filtersForView, groupTasks, hubTasks, newFilters, NO_FILTERS, summarize, viewCounts } from '../src/hub';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 
@@ -227,5 +227,54 @@ describe('all tasks across projects', () => {
         .map((t) => t.item.title)
         .sort(),
     ).toEqual(['Buried in a random folder', 'Ghost project', 'Odd status']);
+  });
+});
+
+describe('quick views', () => {
+  const TODAY = '2026-11-23';
+
+  async function tasks() {
+    const { VaultIndex } = await import('../src/index');
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const { ALL_PROJECTS } = await import('../src/projects');
+    const index = new VaultIndex(
+      new MemoryStorage({
+        'a.md': [
+          '- [ ] Late one due:2026-11-20',
+          '- [ ] Today one due:2026-11-23',
+          '- [ ] Soon one due:2026-11-26',
+          '- [ ] Far one due:2026-12-30',
+          '- [ ] Undated one',
+          '- [ ] Waiting one #waiting due:2026-12-30',
+          '- [x] Finished one due:2026-11-20',
+          '',
+        ].join('\n'),
+      }),
+    );
+    await index.scan();
+    return hubTasks(index, ALL_PROJECTS);
+  }
+
+  it('counts the open tasks in each view', async () => {
+    expect(viewCounts(await tasks(), TODAY)).toEqual({ all: 6, late: 1, today: 2, week: 2, waiting: 1, none: 1 });
+  });
+
+  it('Today is due today or late, and a finished task never shows', async () => {
+    const f = filtersForView(newFilters(), 'today');
+    expect(applyFilters(await tasks(), f, undefined, TODAY).map((t) => t.item.title)).toEqual(['Late one', 'Today one']);
+    const fl = filtersForView(newFilters(false), 'late');
+    expect(applyFilters(await tasks(), fl, undefined, TODAY).map((t) => t.item.title)).toEqual(['Late one']);
+  });
+
+  it('switches view without losing the people, tags and text that were chosen, and knows which view it is on', async () => {
+    const f = { ...newFilters(), people: ['dana'], text: 'x' };
+    const w = filtersForView(f, 'waiting');
+    expect(w).toMatchObject({ people: ['dana'], text: 'x', statuses: ['waiting'] });
+    expect(currentView(w)).toBe('waiting');
+    const week = filtersForView(w, 'week');
+    expect(week.statuses).toEqual([]);
+    expect(currentView(week)).toBe('week');
+    expect(currentView(filtersForView(week, 'all'))).toBe('all');
+    expect(currentView({ ...newFilters(), statuses: ['doing'] })).toBeUndefined(); // some other status filter: no quick view is on
   });
 });

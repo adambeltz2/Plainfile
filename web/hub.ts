@@ -3,7 +3,21 @@ import { save } from './export';
 import { tasksToCsv, tasksToJson } from '../src/export';
 import { applyBulk, planBulk, type BulkAction, type BulkPlan } from '../src/bulk';
 import { applyFieldFix, fieldIssues, STATUSES, type FieldIssue, type Status } from '../src/fields';
-import { applyFilters, groupTasks, hubTasks, newFilters, summarize, type Filters, type GroupBy, type HubTask } from '../src/hub';
+import {
+  applyFilters,
+  currentView,
+  filtersForView,
+  groupTasks,
+  hubTasks,
+  newFilters,
+  QUICK_VIEWS,
+  summarize,
+  viewCounts,
+  type Filters,
+  type GroupBy,
+  type HubTask,
+  type QuickView,
+} from '../src/hub';
 import { dirname } from '../src/index';
 import { applyFolderMove, planFolderMove } from '../src/folder-move';
 import { priorityRank } from '../src/priority';
@@ -132,7 +146,7 @@ function activeChips(): string {
   for (const p of f.priorities) out.push(chip('priorities', p, p === '-' ? 'No priority' : `Priority ${p}`));
   if (f.due)
     out.push(
-      `<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'week' ? 'Due this week' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`,
+      `<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'today' ? 'Due today or late' : f.due === 'week' ? 'Due this week' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`,
     );
   return out.length ? `<div class="chips hub-active">${out.join('')}<button class="btn small" data-hub-clear>Clear all</button></div>` : '';
 }
@@ -155,7 +169,14 @@ function toolbar(all: HubTask[]): string {
   const quick = (k: 'overdue' | 'week' | 'none', l: string): string =>
     `<button class="chip${f.due === k ? ' on' : ''}" data-hub-due="${k}" aria-pressed="${f.due === k}">${l}</button>`;
   const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + f.priorities.length + (f.due ? 1 : 0);
+  const counts = viewCounts(all, today());
+  const cur = currentView(f);
+  const views =
+    hubState.tab === 'tasks'
+      ? `<div class="hub-views" role="group" aria-label="Show">${QUICK_VIEWS.map(([v, l]) => `<button class="chip${cur === v ? ' on' : ''}" data-hub-view="${v}" aria-pressed="${cur === v}">${l} <span class="muted">${counts[v]}</span></button>`).join('')}</div>`
+      : '';
   return (
+    views +
     `<div class="hub-find"><input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="${hubState.project === ALL_PROJECTS ? 'Filter all tasks…' : 'Filter this project…'}" aria-label="Filter tasks in this project" value="${esc(f.text)}">${hubState.tab === 'tasks' ? `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}</div>` +
     `<details class="hub-tools"${hubState.toolsOpen ? ' open' : ''}><summary class="small">Filter &amp; group${active ? ` · ${active} on` : ''}</summary>` +
     '<div class="hub-bar">' +
@@ -829,6 +850,13 @@ export async function click(target: HTMLElement): Promise<boolean> {
   if (filter) {
     const i = filter.indexOf(':');
     toggleFilter(filter.slice(0, i), filter.slice(i + 1));
+    render();
+    return true;
+  }
+  const view = q<QuickView>('data-hub-view');
+  if (view) {
+    hubState.filters = filtersForView(hubState.filters, view);
+    hubState.limits.clear();
     render();
     return true;
   }

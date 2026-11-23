@@ -873,3 +873,29 @@ test('on a wide screen the project page uses the width, and an empty Board colum
   const doing = (await page.locator('.hub-col[data-col="doing"]').boundingBox())!.width;
   expect(todo).toBeGreaterThan(doing * 1.5);
 });
+
+test('the Tasks screen has quick views (All, Late, Today, This week, Waiting, No date) with counts, one click each', async ({ page }) => {
+  const T = localDate(0);
+  await openVault(page, {
+    'a.md': `- [ ] Late one due:${localDate(-3)}\n- [ ] Today one due:${T}\n- [ ] Soon one due:${localDate(3)}\n- [ ] Far one due:${localDate(40)}\n- [ ] Undated one\n- [ ] Waiting one #waiting\n`,
+  });
+  await nav(page, 'Tasks').click();
+  const views = page.getByRole('group', { name: 'Show' });
+  await expect(views.getByRole('button', { name: /^All 6/ })).toHaveAttribute('aria-pressed', 'true');
+  await views.getByRole('button', { name: /^Late/ }).click();
+  await expect(page.locator('.hub-content .task')).toHaveCount(1);
+  await expect(page.locator('.hub-content')).toContainText('Late one');
+  await views.getByRole('button', { name: /^Today/ }).click();
+  await expect(page.locator('.hub-content .task')).toHaveCount(2); // late and today
+  await views.getByRole('button', { name: /^This week/ }).click();
+  await expect(page.locator('.hub-content')).toContainText('Today one');
+  await expect(page.locator('.hub-content')).toContainText('Soon one');
+  await expect(page.locator('.hub-content')).not.toContainText('Far one');
+  await views.getByRole('button', { name: /^Waiting/ }).click();
+  await expect(page.locator('.hub-content .task')).toHaveCount(1);
+  await expect(page.locator('.hub-content')).toContainText('Waiting one');
+  await views.getByRole('button', { name: /^No date/ }).click();
+  await expect(page.locator('.hub-content')).toContainText('Undated one');
+  await views.getByRole('button', { name: /^All/ }).click();
+  await expect(page.locator('.hub-content .task')).toHaveCount(6);
+});
