@@ -15,7 +15,7 @@ async function session(viewport, scheme, scale = 1) {
   return page;
 }
 const nav = async (page, name) => {
-  const top = page.locator('.nav').getByRole('button', { name, exact: true });
+  const top = page.locator('.nav').getByRole('button', { name: new RegExp(`^${name}( |$)`) });
   if (await top.count()) return top.click();
   await page.locator('.nav-more').click();
   return page.locator('.nav-menu').getByRole('menuitem', { name }).click();

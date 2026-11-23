@@ -103,10 +103,19 @@ export function hubTasks(index: VaultIndex, projectPath: string): HubTask[] {
   if (projectPath === ALL_PROJECTS) {
     // Which projects each note belongs to, by folder or `project:`, so the tasks can be grouped by project.
     const of = new Map<string, string[]>();
-    for (const p of listProjects(index)) for (const n of projectNotes(index, p.path)) of.set(n.path, [...(of.get(n.path) ?? []), p.title]);
+    const live = new Set<string>();
+    for (const p of listProjects(index)) {
+      for (const n of projectNotes(index, p.path)) {
+        of.set(n.path, [...(of.get(n.path) ?? []), p.title]);
+        if (p.active) live.add(n.path);
+      }
+    }
+    // A task whose only projects are archived is left out: a closed project should not crowd the day's list.
     return index.tasks().flatMap((t) => {
       const n = index.notes.get(t.path);
-      return n ? [{ ...toHubTask(t, n), projects: of.get(n.path) ?? [] }] : [];
+      if (!n) return [];
+      const ps = of.get(n.path) ?? [];
+      return ps.length && !live.has(n.path) ? [] : [{ ...toHubTask(t, n), projects: ps }];
     });
   }
   const covered = projectNotes(index, projectPath);
