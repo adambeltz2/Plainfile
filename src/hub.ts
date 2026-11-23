@@ -33,7 +33,7 @@ export interface Filters {
   /** Priority letters, and `-` for a task with none. */
   priorities: string[];
   /** 'overdue', 'week' (the next 7 days) or 'none' (no date). */
-  due?: 'overdue' | 'week' | 'none';
+  due?: 'overdue' | 'today' | 'week' | 'none';
   /** Hide finished tasks. On by default. */
   hideDone: boolean;
 }
@@ -144,11 +144,59 @@ export function applyFilters(tasks: HubTask[], f: Filters, keep?: ReadonlySet<st
     if (f.priorities.length && !f.priorities.includes(t.item.priority ?? '-')) return false;
     if (f.phases.length && !f.phases.includes(t.phase ?? '')) return false;
     if (f.due === 'overdue' && !(t.due && t.due < today && t.status !== 'done')) return false;
+    if (f.due === 'today' && !(t.due && t.due <= today && t.status !== 'done')) return false;
     if (f.due === 'week' && !(t.due && t.due >= today && t.due <= week)) return false;
     if (f.due === 'none' && t.due) return false;
     if (q && !`${t.item.title} ${t.people.join(' ')} ${t.tags.join(' ')} ${t.phase ?? ''} ${t.note.title}`.toLowerCase().includes(q)) return false;
     return true;
   });
+}
+
+/** The quick views over the tasks: the choices that used to be the Today screen's tabs. */
+export type QuickView = 'all' | 'late' | 'today' | 'week' | 'waiting' | 'none';
+export const QUICK_VIEWS: [QuickView, string][] = [
+  ['all', 'All'],
+  ['late', 'Late'],
+  ['today', 'Today'],
+  ['week', 'This week'],
+  ['waiting', 'Waiting'],
+  ['none', 'No date'],
+];
+
+/** Filters set to a quick view: its date and status, keeping any people, tags, text and the rest the user chose. */
+export function filtersForView(f: Filters, v: QuickView): Filters {
+  const next: Filters = { ...f, statuses: [], due: undefined };
+  if (v === 'late') next.due = 'overdue';
+  else if (v === 'today') next.due = 'today';
+  else if (v === 'week') next.due = 'week';
+  else if (v === 'none') next.due = 'none';
+  else if (v === 'waiting') next.statuses = ['waiting'];
+  return next;
+}
+
+/** Which quick view the filters are on, or undefined when the date and status filters are something else. */
+export function currentView(f: Filters): QuickView | undefined {
+  if (f.due === 'overdue' && !f.statuses.length) return 'late';
+  if (f.due === 'today' && !f.statuses.length) return 'today';
+  if (f.due === 'week' && !f.statuses.length) return 'week';
+  if (f.due === 'none' && !f.statuses.length) return 'none';
+  if (!f.due && f.statuses.length === 1 && f.statuses[0] === 'waiting') return 'waiting';
+  if (!f.due && !f.statuses.length) return 'all';
+  return undefined;
+}
+
+/** How many open tasks each quick view would show. */
+export function viewCounts(tasks: HubTask[], today: string): Record<QuickView, number> {
+  const open = tasks.filter((t) => t.status !== 'done');
+  const week = addDays(today, 7);
+  return {
+    all: open.length,
+    late: open.filter((t) => t.due && t.due < today).length,
+    today: open.filter((t) => t.due && t.due <= today).length,
+    week: open.filter((t) => t.due && t.due >= today && t.due <= week).length,
+    waiting: open.filter((t) => t.status === 'waiting').length,
+    none: open.filter((t) => !t.due).length,
+  };
 }
 
 const byDue = (a: HubTask, b: HubTask): number =>

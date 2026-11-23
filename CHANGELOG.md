@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.25.0] - 2026-11-23
+
+### Added
+- Quick views on the Tasks screen: **All, Late, Today, This week, Waiting, No date**, each with its count, right above the list. They were the Today screen's tabs and a drawer of filters; now one click shows them, in any project or across all of them. Switching view keeps the people, tags and words you had picked. Today means due today or late.
+
 ## [1.24.0] - 2026-11-23
 
 ### Added
