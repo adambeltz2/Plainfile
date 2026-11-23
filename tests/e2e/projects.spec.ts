@@ -587,6 +587,7 @@ test('a project picked beside the quick add files the task there, and a typed +P
   await page.locator('#quick-text').press('Enter');
   await expect.poll(async () => (await listFiles(page, dir)).includes('projects/a/tasks/Picked job.md')).toBe(true);
   // The choice stays for the next one; a +Project in the line overrides it.
+  await expect(page.locator('#quick-text')).toHaveValue(''); // the first add has finished
   await expect(page.locator('[data-quick-project]')).toHaveValue('projects/a/index.md');
   await page.locator('#quick-text').fill('Typed job +Beta');
   await page.locator('#quick-text').press('Enter');
