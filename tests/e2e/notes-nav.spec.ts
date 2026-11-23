@@ -107,6 +107,7 @@ test.describe('command palette and keys', () => {
     await page.keyboard.type('kck');
     await expect(page.locator('.pal-item').first()).toContainText('Kickoff');
     await page.keyboard.press('Enter');
+    await expect(page.locator('.cm-content')).toBeVisible();
     await expect(page.locator('.ed-head .title')).toHaveValue('Kickoff');
     await expect(page.locator('.pal')).toHaveCount(0);
   });

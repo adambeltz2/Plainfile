@@ -149,9 +149,11 @@ export function applyFilters(tasks: HubTask[], f: Filters, keep?: ReadonlySet<st
     if (f.priorities.length && !f.priorities.includes(t.item.priority ?? '-')) return false;
     if (f.noProject && t.projects?.length) return false;
     if (f.phases.length && !f.phases.includes(t.phase ?? '')) return false;
-    if (f.due === 'overdue' && !(t.due && t.due < today && t.status !== 'done')) return false;
-    if (f.due === 'soon' && !(t.due && t.due <= week && t.status !== 'done')) return false;
-    if (f.due === 'later' && !(t.due && t.due > today && t.status !== 'done')) return false;
+    // A task just ticked stays in its place (struck through) instead of vanishing from the view it is in.
+    const stillOpen = t.status !== 'done' || !!keep?.has(t.item.id);
+    if (f.due === 'overdue' && !(t.due && t.due < today && stillOpen)) return false;
+    if (f.due === 'soon' && !(t.due && t.due <= week && stillOpen)) return false;
+    if (f.due === 'later' && !(t.due && t.due > today && stillOpen)) return false;
     if (f.due === 'week' && !(t.due && t.due >= today && t.due <= week)) return false;
     if (f.due === 'none' && t.due) return false;
     if (q && !`${t.item.title} ${t.people.join(' ')} ${t.tags.join(' ')} ${t.phase ?? ''} ${t.note.title}`.toLowerCase().includes(q)) return false;

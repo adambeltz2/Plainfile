@@ -93,7 +93,8 @@ function overview(): string {
   const card = (p: (typeof all)[number]): string =>
     `<li class="pcard${p.active ? '' : ' off'}"><button class="pbtn" data-open-project="${esc(p.path)}">` +
     `<span class="pnum" aria-hidden="true">${p.number ?? '–'}</span><span class="ptitle">${esc(p.title)}</span><span class="pprev">${esc(p.preview) || '&nbsp;'}</span>` +
-    `<span class="chips"><span class="chip">${p.openTasks} open task${p.openTasks === 1 ? '' : 's'}</span>${p.followups ? `<span class="chip">${p.followups} follow-up${p.followups === 1 ? '' : 's'}</span>` : ''}${p.active ? '' : '<span class="chip quiet">inactive</span>'}</span></button></li>`;
+    `<span class="chips"><span class="chip">${p.openTasks} open task${p.openTasks === 1 ? '' : 's'}</span>${p.followups ? `<span class="chip">${p.followups} follow-up${p.followups === 1 ? '' : 's'}</span>` : ''}${p.active ? '' : '<span class="chip quiet">inactive</span>'}</span></button>` +
+    `<div class="pacts"><button class="btn small" data-open-project="${esc(p.path)}">Dashboard</button><button class="btn small" data-act="proj-task" data-path="${esc(p.path)}">+ Task</button><button class="btn small" data-act="proj-note" data-path="${esc(p.path)}">+ Note</button></div></li>`;
   const live = all.filter((p) => p.active);
   const archived = all.filter((p) => !p.active);
   return `${h}<ul class="pgrid">${live.map(card).join('')}</ul>${archived.length ? `<h3 class="muted" style="margin:18px 0 8px">Archived <span class="n">${archived.length}</span></h3><ul class="pgrid">${archived.map(card).join('')}</ul>` : ''}`;
@@ -130,8 +131,17 @@ export async function click(target: HTMLElement): Promise<boolean> {
     await toggleTask(tg);
     return true;
   }
-  // A click on a task in the project's list opens its note (in select mode the boxes are for choosing).
-  if (projectState.path && !hub.hubState.selectMode && (await openTaskRow(target))) return true;
+  // In a task list: the title opens its note; anywhere else on the row (the date, a blank part) selects it, which shows its panel
+  // with the lines in its file and Reschedule. In select mode the boxes are for choosing.
+  if (projectState.path && !hub.hubState.selectMode) {
+    const row = target.closest<HTMLElement>('li.task[data-id]');
+    if (row?.dataset.id && !target.closest('button, input, select, a, label')) {
+      if (target.closest('.t')) return openTaskRow(target);
+      await todayScreen.select(row.dataset.id);
+      return true;
+    }
+    if (await openTaskRow(target)) return true;
+  }
   const act = target.closest<HTMLElement>('[data-act]');
   switch (act?.dataset.act) {
     case 'proj-back':

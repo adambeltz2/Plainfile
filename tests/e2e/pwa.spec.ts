@@ -25,8 +25,8 @@ test('a service worker takes over and the app opens with no connection', async (
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Plainfile' })).toBeVisible();
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
-  await nav(page, 'Today').click();
-  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
+  await nav(page, 'Tasks').click();
+  await expect(page.locator('.title')).toHaveText('All tasks');
   await context.setOffline(false);
 });
 
@@ -66,7 +66,7 @@ test('the manifest offers New task, Today and Search shortcuts that open the app
 for (const [go, check] of [
   ['search', '#search-q'],
   ['quick', '#quick-text'],
-  ['today', '.title:text("Today")'],
+  ['today', '.hub-views .chip.on'],
 ] as const) {
   test(`opening ?go=${go} lands on the right screen once a folder is open`, async ({ page }) => {
     await page.goto(`/?go=${go}`);

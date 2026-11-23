@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { listFiles, localDate, openVault, readFile, readFileOrEmpty, writeFileExternally, nav, rescanApp } from './helpers';
+import { listFiles, localDate, openHubTools, openVault, readFile, readFileOrEmpty, writeFileExternally, nav, rescanApp, showView } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -14,11 +14,11 @@ test('landing offers a folder and the sample vault', async ({ page }) => {
 test('sample vault shows Today grouped by overdue, today and this week', async ({ page }) => {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
   await nav(page, 'Today').click();
-  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Show' }).getByRole('button', { name: /^Today/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.grp', { hasText: 'Overdue' })).toContainText('2');
   await expect(page.locator('.grp', { hasText: 'Due today' })).toContainText('2');
   await expect(page.locator('.grp', { hasText: 'This week' })).toContainText('3');
-  await expect(page.getByText('File estimated tax payment')).toBeVisible();
+  await expect(page.locator('.hub-content').getByText('File estimated tax payment')).toBeVisible();
   await expect(page.locator('.task.done')).toHaveCount(0);
 });
 
@@ -36,14 +36,16 @@ test('ticking a task shows exactly what changed on disk and keeps it on screen',
   await expect(page.locator('.task.done')).toHaveCount(0);
 });
 
-test('tag filter and All open view', async ({ page }) => {
+test('the All view and a tag filter', async ({ page }) => {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
-  await nav(page, 'Today').click();
-  await page.getByRole('button', { name: /^All open/ }).click();
+  await nav(page, 'Tasks').click();
+  await showView(page, 'All');
   await expect(page.locator('.grp', { hasText: 'No date' })).toHaveCount(0);
+  await openHubTools(page);
+  await page.locator('.hub-facets > summary').click();
   await page.getByRole('button', { name: /^#admin/ }).click();
   await expect(page.locator('.task')).toHaveCount(1);
-  await page.getByRole('button', { name: 'Clear filter' }).click();
+  await page.getByRole('button', { name: 'Clear all' }).click();
   await expect(page.locator('.task').first()).toBeVisible();
 });
 
@@ -86,7 +88,7 @@ test('real folder: reads files, ticks one character, leaves everything else byte
   const dir = await openVault(page, { 'notes/a.md': text });
 
   await expect(page.locator('.grp', { hasText: 'Overdue' })).toContainText('1');
-  await expect(page.getByText('Call Dana')).toBeVisible();
+  await expect(page.locator('.hub-content').getByText('Call Dana')).toBeVisible();
 
   await page.getByRole('button', { name: 'Mark done: Call Dana' }).click();
   await expect(page.locator('.task.done')).toHaveCount(1);
@@ -98,7 +100,7 @@ test('real folder: reads files, ticks one character, leaves everything else byte
 test('real folder: a file edited elsewhere is never overwritten', async ({ page }) => {
   const today = localDate(0);
   const dir = await openVault(page, { 'a.md': `- [ ] Original task due:${today}\n` });
-  await expect(page.getByText('Original task')).toBeVisible();
+  await expect(page.locator('.hub-content').getByText('Original task')).toBeVisible();
 
   const edited = `- [ ] Edited somewhere else due:${today}\n`;
   await writeFileExternally(page, dir, 'a.md', edited);
@@ -107,7 +109,7 @@ test('real folder: a file edited elsewhere is never overwritten', async ({ page 
   await expect(page.locator('.diff')).toContainText('nothing was written');
   expect(await readFile(page, dir, 'a.md')).toBe(edited);
   // The list was refreshed to match the file.
-  await expect(page.getByText('Edited somewhere else')).toBeVisible();
+  await expect(page.locator('.hub-content').getByText('Edited somewhere else')).toBeVisible();
 });
 
 test('real folder: Rescan picks up a new file', async ({ page }) => {
@@ -131,7 +133,7 @@ test('works at phone width without sideways scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
   await nav(page, 'Today').click();
-  await expect(page.getByText('File estimated tax payment')).toBeVisible();
+  await expect(page.locator('.hub-content').getByText('File estimated tax payment')).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
@@ -211,16 +213,11 @@ test.describe('reschedule from Today', () => {
     await page.goto('/');
     const text = `- [ ] Pay rent due:${TODAY}\n- [ ] Other due:${TODAY}\n`;
     const dir = await openVault(page, { 'a.md': text });
-    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.t').click();
+    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.chip').first().click(); // the date selects it, and shows Reschedule
     const panel = page.getByRole('group', { name: 'Reschedule this task' });
     await panel.getByRole('button', { name: 'Tomorrow' }).click();
     await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent due:${localDate(1)}\n- [ ] Other due:${TODAY}\n`);
-    await page
-      .getByRole('button', { name: 'Upcoming' })
-      .first()
-      .click()
-      .catch(() => undefined);
-    // The task is still selected, so its panel is still there (clicking it again would open its note).
+    // The task is still selected, so its panel is still there.
     await page.getByRole('group', { name: 'Reschedule this task' }).getByRole('button', { name: 'No date' }).click();
     await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent\n- [ ] Other due:${TODAY}\n`);
   });
@@ -228,7 +225,7 @@ test.describe('reschedule from Today', () => {
   test('the date box sets any date', async ({ page }) => {
     await page.goto('/');
     const dir = await openVault(page, { 'a.md': `- [ ] Pay rent due:${TODAY}\n` });
-    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.t').click();
+    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.chip').first().click();
     await page.locator('[data-resched-pick]').fill(localDate(3));
     await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent due:${localDate(3)}\n`);
   });
@@ -256,7 +253,7 @@ test.describe('priority', () => {
   test('1, 2, 3 and 0 set and clear the priority of the selected task, changing one piece of the line', async ({ page }) => {
     const dir = await openVault(page, { 'work.md': NOTE });
     await nav(page, 'Today').click();
-    await page.locator('li.task', { hasText: 'Plain thing' }).click();
+    await page.locator('li.task', { hasText: 'Plain thing' }).locator('.chip').first().click(); // select it by its date
     await page.keyboard.press('2');
     await expect.poll(() => readFile(page, dir, 'work.md')).toBe(NOTE.replace('- [ ] Plain thing', '- [ ] (B) Plain thing'));
     await expect(page.locator('.diff .add')).toContainText('(B) Plain thing');
@@ -328,21 +325,18 @@ test('status:doing on a checkbox line shows as a status, stays out of the title,
     );
 });
 
-test('clicking a task selects it, and clicking the selected task again (or double-clicking) opens its note at that line', async ({ page }) => {
+test('on Tasks, the title opens the task note at its line, and the date selects it to show its lines and Reschedule', async ({ page }) => {
   await openVault(page, {
     'work.md': `# Work\nIntro line\n- [ ] Draft the memo due:${localDate(0)}\n- [ ] Second job due:${localDate(0)}\n`,
     'other.md': '# Other\n',
   });
-  await nav(page, 'Today').click();
-  await page.locator('li.task', { hasText: 'Draft the memo' }).locator('.t').click();
-  await expect(page.locator('.source')).toContainText('work.md');
-  await expect(page.locator('.cm-content')).toHaveCount(0); // the first click only selects
+  await nav(page, 'Tasks').click();
+  await page.locator('li.task', { hasText: 'Draft the memo' }).locator('.chip').first().click();
+  await expect(page.locator('.hub-taskpanel')).toContainText('work.md');
+  await expect(page.locator('.hub-taskpanel')).toContainText('Reschedule');
+  await expect(page.locator('.cm-content')).toHaveCount(0); // selecting does not leave the list
   await page.locator('li.task', { hasText: 'Draft the memo' }).locator('.t').click();
   await expect(page.locator('.cm-content')).toContainText('Draft the memo');
-  // A double-click on another task does both in one go.
-  await nav(page, 'Today').click();
-  await page.locator('li.task', { hasText: 'Second job' }).locator('.t').dblclick();
-  await expect(page.locator('.cm-content')).toContainText('Second job');
 });
 
 test('ticking a task note records when it was finished, shows both changed lines, and unticking removes it', async ({ page }) => {

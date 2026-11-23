@@ -122,6 +122,8 @@ async function go(screen: ScreenId, view?: QuickView): Promise<void> {
   // Tasks is the project hub over everything, and the place to start the day: it opens on Today. The old Today screen is that view.
   if (screen === 'today') return projectScreen.openTasks('today');
   if (screen === 'tasks') return projectScreen.openTasks(view ?? 'today');
+  // The Projects tab shows the list of projects, not whichever project (or the all-tasks view) was open last.
+  if (screen === 'projects') projectScreen.projectState.path = '';
   if (screen === 'review' && state.screen !== 'review') reviewScreen.startReview();
   state.error = '';
   // Choosing People shows the list of people, not whichever person you looked at last.
@@ -142,6 +144,9 @@ function footer(): string {
   return (
     '<footer class="foot">' +
     `<span class="mono">Plainfile v${esc(__APP_VERSION__)}</span>` +
+    (state.index
+      ? `<span class="foot-stat mono muted" title="How many notes were read, and how long it took">${state.index.notes.size} notes · scanned in ${state.scanMs} ms${state.index.fromCache ? ` (${state.index.fromCache} from the saved copy)` : ''}${state.demo ? ' · sample date 21 Nov 2026' : ''}</span>`
+      : '') +
     // The footer's links open in a new tab, so you do not lose your place.
     '<a href="?go=changelog" target="_blank" rel="noopener noreferrer">What is new</a>' +
     installButton() +
@@ -196,7 +201,6 @@ function landing(): string {
 let moreOpen = false;
 const sideOpen = new Set<string>();
 const SIDE_LABEL: Record<string, string> = {
-  today: 'Views and filters',
   notes: 'All notes',
   board: 'Projects',
   search: 'Narrow by folder or tag',
@@ -206,7 +210,8 @@ const SIDE_LABEL: Record<string, string> = {
 /** The bottom tab bar for phones: the screens used all day, with the rest under More. */
 function tabbar(hc: number): string {
   const open = state.index ? state.index.tasks().filter((t) => !t.done).length : 0;
-  const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${isCurrent(id)}">${label}</button>`;
+  const tab = (id: ScreenId, label: string): string =>
+    `<button class="tab-b" data-nav="${id}" aria-current="${isCurrent(id)}">${label}${id === 'tasks' && open ? ` <span class="badge" aria-label="${open} open task${open === 1 ? '' : 's'}">${open}</span>` : ''}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
       [

@@ -5,11 +5,11 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const view = (page: Page, name: RegExp | string) => page.locator('.side').getByRole('button', { name });
+const view = (page: Page, name: RegExp | string) => page.getByRole('group', { name: 'Show' }).getByRole('button', { name });
 
 test('Follow-ups lists every #followup line and opens the note at that line', async ({ page }) => {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
-  await nav(page, 'Today').click();
+  await nav(page, 'Tasks').click();
   await expect(view(page, /^Follow-ups/)).toContainText('1');
   await view(page, /^Follow-ups/).click();
   await expect(page.locator('.task .t')).toHaveText('Ask Dana to confirm the launch date');
@@ -22,18 +22,17 @@ test('Follow-ups lists every #followup line and opens the note at that line', as
 
 test('Projects shows numbered cards with previews and counts, like the first Notebook app', async ({ page }) => {
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
-  await nav(page, 'Today').click();
-  await view(page, /^Projects/).click();
+  await nav(page, 'Projects').click();
   const cards = page.locator('.pcard');
   await expect(cards).toHaveCount(2);
   await expect(cards.nth(0).locator('.pnum')).toHaveText('1');
   await expect(cards.nth(0).locator('.ptitle')).toHaveText('Website relaunch');
-  await expect(cards.nth(0)).toContainText('4 tasks');
+  await expect(cards.nth(0)).toContainText('4 open tasks');
   await expect(cards.nth(0)).toContainText('1 follow-up');
   await expect(cards.nth(1).locator('.pnum')).toHaveText('2');
-  await expect(cards.nth(1)).toContainText('1 task');
+  await expect(cards.nth(1)).toContainText('1 open task');
   await cards.nth(1).locator('.pbtn').click();
-  await expect(page.locator('.ed-head .title')).toHaveValue('Tax 2026');
+  await expect(page.locator('.hub-main .title')).toHaveText('Tax 2026'); // the project's own page
 });
 
 test('inactive projects are kept, collapsed, and unnumbered; Notebook files work as they are', async ({ page }) => {
@@ -42,29 +41,21 @@ test('inactive projects are kept, collapsed, and unnumbered; Notebook files work
       '---\ntitle: "Kitchen Remodel"\nactive: true\nsortOrder: 1\n---\nCabinet quote came in at $14,200.\n\n- [ ] Order walnut sample panel #due:2026-09-20\n- Confirm oak vs walnut finish with Dana #followup\n',
     'archive.md': '---\ntitle: "Old Thing"\nactive: false\nsortOrder: 2\n---\nDone and dusted.\n',
   });
-  await page
-    .locator('.side')
-    .getByRole('button', { name: /^Projects/ })
-    .click();
-  await expect(page.locator('.pcard')).toHaveCount(1);
-  await expect(page.locator('.pcard')).toContainText('Cabinet quote came in at $14,200.');
-  await expect(page.locator('.pcard')).not.toContainText('#followup');
-  await page.getByRole('button', { name: 'Show 1 inactive project' }).click();
+  await nav(page, 'Projects').click();
+  await expect(page.locator('.pcard:not(.off)')).toHaveCount(1);
+  await expect(page.locator('.pcard:not(.off)')).toContainText('Cabinet quote came in at $14,200.');
+  await expect(page.locator('.pcard:not(.off)')).not.toContainText('#followup');
+  // The inactive project is kept, listed under Archived, and unnumbered.
   await expect(page.locator('.pcard')).toHaveCount(2);
   await expect(page.locator('.pcard.off .pnum')).toHaveText('–');
   // The old #due: tag is read as a date on the task.
-  await page
-    .locator('.side')
-    .getByRole('button', { name: /^All open/ })
-    .click();
+  await nav(page, 'Tasks').click();
+  await view(page, /^All/).click();
   await expect(page.locator('.task', { hasText: 'Order walnut sample panel' })).toContainText(/20 Sep/);
 });
 
 test('with no projects it explains how to make one', async ({ page }) => {
   await openVault(page, { 'a.md': 'plain' });
-  await page
-    .locator('.side')
-    .getByRole('button', { name: /^Projects/ })
-    .click();
+  await nav(page, 'Projects').click();
   await expect(page.locator('.empty')).toContainText('sortOrder');
 });

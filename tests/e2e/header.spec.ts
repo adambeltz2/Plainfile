@@ -9,7 +9,8 @@ test.describe('the header on a wide screen', () => {
   test('shows the everyday tabs, with the rest under More', async ({ page }) => {
     await openVault(page, { 'a.md': '# A\n' }, true, 'home');
     const nav = page.locator('.nav');
-    for (const t of ['Home', 'Today', 'Tasks', 'Projects', 'Notes', 'Search']) await expect(nav.getByRole('button', { name: t, exact: true })).toBeVisible();
+    for (const t of ['Home', 'Tasks', 'Projects', 'Notes', 'Search']) await expect(nav.getByRole('button', { name: t, exact: true })).toBeVisible();
+    await expect(nav.getByRole('button', { name: 'Today', exact: true })).toHaveCount(0); // it is the Tasks tab's first view now
     for (const t of ['Calendar', 'People', 'Board', 'Recent', 'Insight']) await expect(nav.getByRole('button', { name: t, exact: true })).toHaveCount(0);
   });
 
@@ -31,13 +32,12 @@ test.describe('the header on a wide screen', () => {
   });
 });
 
-test('on a phone the open task count is on Tasks in the More sheet', async ({ page }) => {
+test('on a phone the open task count is on the Tasks tab', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await openVault(page, { 'a.md': '- [ ] One\n- [ ] Two\n- [x] Done\n' }, true, 'home');
-  await page.locator('.tabbar').getByRole('button', { name: /^More/ }).click();
   await expect(
     page
-      .locator('.more-sheet')
+      .locator('.tabbar')
       .getByRole('button', { name: /^Tasks/ })
       .locator('.badge'),
   ).toHaveText('2');
