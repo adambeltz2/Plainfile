@@ -35,8 +35,10 @@ test.describe('cheat sheet', () => {
       '- [ ] Send logo files @dana #launch due:2026-11-23 created:2026-11-21\n- [x] Share staging link',
     );
     await page.locator('.nav').getByRole('button', { name: 'Today' }).click();
-    await page.locator('.foot').getByRole('button', { name: 'Cheat sheet' }).click();
-    await expect(page.getByRole('heading', { name: 'Cheat sheet' })).toBeVisible();
+    const [popup] = await Promise.all([page.waitForEvent('popup'), page.locator('.foot').getByRole('link', { name: 'Cheat sheet' }).click()]);
+    await popup.waitForLoadState();
+    await expect(popup.getByRole('heading', { name: 'Cheat sheet' })).toBeVisible();
+    await popup.close();
   });
 
   test('the section buttons jump to that section', async ({ page }) => {

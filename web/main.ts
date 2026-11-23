@@ -138,12 +138,24 @@ function footer(): string {
   return (
     '<footer class="foot">' +
     `<span class="mono">Plainfile v${esc(__APP_VERSION__)}</span>` +
-    '<button class="link" data-nav="changelog">What is new</button>' +
+    // The footer's links open in a new tab, so you do not lose your place.
+    '<a href="?go=changelog" target="_blank" rel="noopener noreferrer">What is new</a>' +
     installButton() +
     `<a href="${REPO}" target="_blank" rel="noopener noreferrer">GitHub</a>` +
-    (state.index ? '<button class="link" data-nav="guide">Cheat sheet</button>' : '') +
+    '<a href="?go=guide" target="_blank" rel="noopener noreferrer">Cheat sheet</a>' +
     '</footer>'
   );
+}
+
+/** A page opened from the footer (What is new, Cheat sheet) in its own tab, before any folder is open. */
+const standalone = ((): '' | 'changelog' | 'guide' => {
+  const g = new URLSearchParams(location.search).get('go');
+  return g === 'changelog' || g === 'guide' ? g : '';
+})();
+
+function standalonePage(): string {
+  const body = standalone === 'guide' ? guide.html() : changelogScreen.html();
+  return `<div class="theme-corner">${themeControl()}</div><div class="wrap"><header class="bar"><h1>Plainfile</h1><a class="btn" href="./">Open Plainfile</a></header><div class="frame two" style="grid-template-columns:minmax(0,1fr)"><section class="main">${body}</section></div>${footer()}</div>`;
 }
 
 function landing(): string {
@@ -356,7 +368,13 @@ function render(): void {
   const selEnd = 'selectionEnd' in (active ?? {}) ? (active as HTMLInputElement).selectionEnd : null;
   const editorFocus = state.screen === 'notes' && notes.hadFocus();
 
-  app.innerHTML = (state.index && !state.busy ? shell() : landing()) + newmenu.html() + move.html() + menu.html() + reportUi.html() + palette.html();
+  app.innerHTML =
+    (state.index && !state.busy ? shell() : standalone && !state.busy ? standalonePage() : landing()) +
+    newmenu.html() +
+    move.html() +
+    menu.html() +
+    reportUi.html() +
+    palette.html();
 
   paintProgress();
   foldSidePanels();
@@ -735,15 +753,15 @@ listenForInstall();
 
 // App shortcuts (the manifest's "New task", "Today", "Search") open the page with ?go=...: act on it once a folder is open.
 const goParam = new URLSearchParams(location.search).get('go');
-if (goParam && ['quick', 'today', 'search'].includes(goParam)) {
+if (goParam && ['quick', 'today', 'search', 'changelog', 'guide'].includes(goParam)) {
   let done = false;
   onVaultChange(() => {
     if (done) return;
     done = true;
     history.replaceState(null, '', location.pathname);
     window.setTimeout(() => {
-      void go(goParam === 'quick' ? 'home' : (goParam as ScreenId)).then(() =>
-        window.setTimeout(() => document.getElementById(goParam === 'quick' ? 'quick-text' : 'search-q')?.focus(), 60),
+      void go(goParam === 'quick' ? 'home' : (goParam as ScreenId)).then(
+        () => window.setTimeout(() => document.getElementById(goParam === 'quick' ? 'quick-text' : 'search-q')?.focus(), 60), // only the first two have a box to focus
       );
     }, 0);
   });

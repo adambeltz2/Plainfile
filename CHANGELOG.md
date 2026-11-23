@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.22.2] - 2026-11-23
+
+### Changed
+- Every link in the footer now opens in a new tab, so you do not lose your place: What is new, Cheat sheet and GitHub. What is new and the Cheat sheet are the app's own pages, so they open as their own small page (with an Open Plainfile button) even before a folder is open, and show your tags and keys if your folder opens there. The ? button in the header still opens the cheat sheet in the same tab.
+
 ## [1.22.1] - 2026-11-23
 
 ### Fixed
