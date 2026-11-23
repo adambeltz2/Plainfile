@@ -696,10 +696,10 @@ test('closing out with the folder move off changes only the project note', async
   expect(await readFile(page, dir, 'projects/weekend/tasks/Leftover.md')).toBe('---\ntitle: Leftover\nstatus: todo\nproject: weekend\n---\n');
   await expect(page.locator('.hub-main .meta')).toContainText('Archived');
   await expect(page.locator('.hub-main .notice', { hasText: 'Archived.' })).toBeVisible();
-  // The Archive: out of the Tasks tab, and under Archived on the Projects screen.
+  // The Archive: open tasks keep showing in the Tasks tab, and the project is under Archived on the Projects screen.
   await nav(page, 'Tasks').click();
   await expect(page.locator('.hub-content')).toContainText('Other job');
-  await expect(page.locator('.hub-content')).not.toContainText('Leftover');
+  await expect(page.locator('.hub-content')).toContainText('Leftover'); // still open, so it still shows
   await nav(page, 'Projects').click();
   await page.getByRole('button', { name: 'All projects' }).first().click();
   await expect(page.getByRole('heading', { name: /^Archived/ })).toBeVisible();

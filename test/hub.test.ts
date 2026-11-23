@@ -192,4 +192,21 @@ describe('all tasks across projects', () => {
     expect(by['A']).toEqual(['In A', 'Shared']); // by folder or by project:
     expect(by['No project']).toEqual(['Nowhere']);
   });
+
+  it('shows an open task from an archived project, and hides only its finished ones', async () => {
+    const { VaultIndex } = await import('../src/index');
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const { ALL_PROJECTS } = await import('../src/projects');
+    const store = new MemoryStorage({
+      'projects/old/index.md': '---\ntitle: Old\ntype: project\nactive: false\n---\n- [x] Finished long ago\n- [ ] Still to do\n',
+      'projects/old/tasks/Call someone.md': '---\ntitle: Call someone\nstatus: waiting\nproject: old\n---\n',
+    });
+    const index = new VaultIndex(store);
+    await index.scan();
+    expect(
+      hubTasks(index, ALL_PROJECTS)
+        .map((t) => t.item.title)
+        .sort(),
+    ).toEqual(['Call someone', 'Still to do']);
+  });
 });

@@ -158,9 +158,9 @@ describe('closing out a project', () => {
     expect(await storage.read('p.md')).toBe('---\ntitle: P\ntype: project\nactive: false\ncompleted: 2026-11-23\n---\nChanged elsewhere\n');
   });
 
-  it('leaves an archived project out of All tasks, but keeps tasks that are also in a live one', async () => {
+  it('keeps open tasks of an archived project in All tasks, and leaves out only its finished ones', async () => {
     const { index } = await setup({
-      'projects/old/index.md': '---\ntitle: Old\ntype: project\nactive: false\n---\n- [ ] Old job\n',
+      'projects/old/index.md': '---\ntitle: Old\ntype: project\nactive: false\n---\n- [ ] Old job\n- [x] Old finished\n',
       'projects/new/index.md': '---\ntitle: New\ntype: project\nactive: true\n---\n- [ ] New job\n',
       'tasks/Shared.md': '---\ntitle: Shared\nstatus: todo\nproject: [old, new]\n---\n',
       'tasks/OnlyOld.md': '---\ntitle: Only old\nstatus: todo\nproject: old\n---\n',
@@ -172,6 +172,6 @@ describe('closing out a project', () => {
       hubTasks(index, ALL_PROJECTS)
         .map((t) => t.item.title)
         .sort(),
-    ).toEqual(['Loose job', 'New job', 'Shared']);
+    ).toEqual(['Loose job', 'New job', 'Old job', 'Only old', 'Shared']);
   });
 });
