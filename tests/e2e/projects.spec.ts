@@ -527,6 +527,29 @@ test.describe('project hub', () => {
     await expect.poll(() => readFileOrEmpty(page, dir, 'projects/p/tasks/a.md')).toBe(FILES.a);
   });
 
+  test('filter by priority, and set it for several tasks at once with a preview and Undo', async ({ page }) => {
+    const INDEX = '---\ntitle: P\ntype: project\nactive: true\n---\n- [ ] (A) Alpha\n- [ ] (B) Beta\n- [ ] Gamma\n';
+    const dir = await openVault(page, { 'projects/p/index.md': INDEX });
+    await nav(page, 'Projects').click();
+    await page.locator('.pcard .pbtn').click();
+    await openHubTools(page);
+    await page.locator('.hub-facets > summary').click();
+    await page.getByRole('button', { name: /^Priority A/ }).click();
+    await expect(page.locator('.hub-content')).toContainText('Alpha');
+    await expect(page.locator('.hub-content')).not.toContainText('Beta');
+    await page.getByRole('button', { name: 'Clear all' }).click();
+    await page.getByRole('button', { name: 'Select tasks' }).click();
+    await page.getByRole('checkbox', { name: 'Select: Beta' }).check();
+    await page.getByRole('checkbox', { name: 'Select: Gamma' }).check();
+    await page.getByRole('button', { name: 'Set priority A' }).click();
+    await expect(page.locator('.hub-preview')).toContainText('+- [ ] (A) Beta');
+    expect(await readFile(page, dir, 'projects/p/index.md')).toBe(INDEX); // nothing written until Apply
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect.poll(() => readFile(page, dir, 'projects/p/index.md')).toBe(INDEX.replace('(B) Beta', '(A) Beta').replace('- [ ] Gamma', '- [ ] (A) Gamma'));
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/p/index.md')).toBe(INDEX);
+  });
+
   test('bulk Done, assign and tag work too, and Select all shown selects what the filters show', async ({ page }) => {
     const dir = await openBig(page);
     await page.locator('#hub-q').fill('Task 00');

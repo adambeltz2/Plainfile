@@ -238,3 +238,39 @@ test('a task with checkboxes nested under it shows how many are done', async ({ 
   await openVault(page, { 'a.md': `- [ ] Plan the trip due:${T}\n  - [x] Book flights\n  - [ ] Book hotel\n  - [ ] Pack\n` });
   await expect(page.locator('li.task', { hasText: 'Plan the trip' }).locator('.chip', { hasText: '1 of 3' })).toBeVisible();
 });
+
+test.describe('priority', () => {
+  const NOTE = `# Work\n- [ ] Plain thing due:${localDate(0)}\n- [ ] (B) Second thing due:${localDate(0)}\n- [ ] (A) First thing due:${localDate(0)}\n`;
+
+  test('shows a badge, sorts A before B before none, and keeps the badge out of the title', async ({ page }) => {
+    await openVault(page, { 'work.md': NOTE });
+    await nav(page, 'Today').click();
+    const rows = page.locator('li.task .t');
+    await expect(rows).toHaveText(['AFirst thing', 'BSecond thing', 'Plain thing']);
+    await expect(page.getByRole('img', { name: 'Priority A' })).toBeVisible();
+    await expect(page.locator('li.task').first().getByRole('button', { name: 'Mark done: First thing' })).toBeVisible();
+  });
+
+  test('1, 2, 3 and 0 set and clear the priority of the selected task, changing one piece of the line', async ({ page }) => {
+    const dir = await openVault(page, { 'work.md': NOTE });
+    await nav(page, 'Today').click();
+    await page.locator('li.task', { hasText: 'Plain thing' }).click();
+    await page.keyboard.press('2');
+    await expect.poll(() => readFile(page, dir, 'work.md')).toBe(NOTE.replace('- [ ] Plain thing', '- [ ] (B) Plain thing'));
+    await expect(page.locator('.diff .add')).toContainText('(B) Plain thing');
+    await page.keyboard.press('1');
+    await expect.poll(() => readFile(page, dir, 'work.md')).toBe(NOTE.replace('- [ ] Plain thing', '- [ ] (A) Plain thing'));
+    await page.keyboard.press('0');
+    await expect.poll(() => readFile(page, dir, 'work.md')).toBe(NOTE);
+  });
+
+  test('a quick add that starts with (A) makes a task note with that priority', async ({ page }) => {
+    const dir = await openVault(page, { 'a.md': '# A\n' });
+    await nav(page, 'Today').click();
+    await page.locator('#quick-text').fill('(A) Call Dana');
+    await expect(page.locator('#quick-preview')).toContainText('priority A');
+    await page.locator('#quick-text').press('Enter');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Call Dana.md')).toContain('priority: A');
+    expect(await readFile(page, dir, 'tasks/Call Dana.md')).toContain('title: Call Dana\n');
+  });
+});

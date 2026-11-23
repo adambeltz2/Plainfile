@@ -29,6 +29,7 @@ tags:                          # or one per line
 See #launch and #area/home     # tags can sit in the text too`,
   quick: `Send logo files +website-relaunch @dana #launch due:friday
 
+start with (A) for a priority: (A) Call Dana +site
 plus: due:today  due:tomorrow  due:mon  due:next-week  due:+3d  due:2026-11-23
 
 or dates in plain words at the end of the line:

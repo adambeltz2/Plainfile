@@ -1,6 +1,7 @@
 import { addFrontmatterListItem, setFrontmatterField } from './frontmatter';
 import type { VaultIndex } from './index';
 import { STATUSES, type Status } from './fields';
+import { PRIORITY_EMOJI } from './priority';
 import { ConflictError, type VaultStorage } from './storage';
 import { StaleError, type ChangeResult } from './writeback';
 
@@ -13,6 +14,7 @@ export type BulkAction =
   | { kind: 'done'; done: boolean }
   | { kind: 'status'; status: Status }
   | { kind: 'due'; date: string | null }
+  | { kind: 'priority'; letter: string | null }
   | { kind: 'person'; name: string }
   | { kind: 'tag'; tag: string };
 
@@ -36,6 +38,15 @@ export interface BulkPlan {
 
 const CHECKBOX = /^(\s*(?:[-*+]|\d+[.)])\s+\[)[ xX](\])/;
 const DUE = /(#?\bdue:)\d{4}-\d{2}-\d{2}/i;
+const AFTER_BOX = /^(\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\] )(?:\([A-Z]\) ?)?/;
+
+/** A line with its priority set to a letter, or removed. A line with nothing after the checkbox cannot take one. */
+function withPriority(body: string, letter: string | null): string | null {
+  const m = AFTER_BOX.exec(body);
+  if (!m) return null;
+  const text = body.slice(m[0].length).replace(PRIORITY_EMOJI, '').replace(/^\s+/, '');
+  return letter === null ? m[1] + text : `${m[1]}(${letter})${text ? ' ' + text : ''}`;
+}
 
 /** One checkbox line after the action, or null if the action does not apply to a line. */
 export function editInlineLine(line: string, a: BulkAction): string | null {
@@ -44,6 +55,7 @@ export function editInlineLine(line: string, a: BulkAction): string | null {
   let out: string | null = null;
   if (a.kind === 'done') out = CHECKBOX.test(body) ? body.replace(CHECKBOX, (_m, a1: string, a2: string) => `${a1}${a.done ? 'x' : ' '}${a2}`) : null;
   else if (a.kind === 'status') out = a.status === 'done' || a.status === 'todo' ? editInlineLine(body, { kind: 'done', done: a.status === 'done' }) : null;
+  else if (a.kind === 'priority') out = withPriority(body, a.letter);
   else if (a.kind === 'due') {
     if (a.date === null) out = body.replace(/\s*#?\bdue:\d{4}-\d{2}-\d{2}/i, '');
     else out = DUE.test(body) ? body.replace(DUE, (_m, k: string) => `${k}${a.date}`) : `${body.replace(/\s+$/, '')} due:${a.date}`;
@@ -66,6 +78,8 @@ export function editFileText(text: string, a: BulkAction): string | null {
       return setFrontmatterField(text, 'status', a.status);
     case 'due':
       return setFrontmatterField(text, 'due', a.date);
+    case 'priority':
+      return setFrontmatterField(text, 'priority', a.letter);
     case 'person':
       return addFrontmatterListItem(text, 'people', a.name.replace(/^@/, '').trim().replace(/\s+/g, '-'));
     case 'tag':
@@ -76,6 +90,7 @@ export function editFileText(text: string, a: BulkAction): string | null {
 export function checkAction(a: BulkAction): string | null {
   if (a.kind === 'status' && !STATUSES.includes(a.status)) return 'That is not a status.';
   if (a.kind === 'due' && a.date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(a.date)) return 'Pick a date.';
+  if (a.kind === 'priority' && a.letter !== null && !/^[A-Z]$/.test(a.letter)) return 'A priority is one capital letter, A to Z.';
   if (a.kind === 'person' && !a.name.replace(/^@/, '').trim()) return 'Type a name.';
   if (a.kind === 'tag' && !a.tag.replace(/^#/, '').trim()) return 'Type a tag.';
   return null;

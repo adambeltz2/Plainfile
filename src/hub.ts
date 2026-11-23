@@ -1,6 +1,7 @@
 import { fieldOf, listOf, normalizeDate, normalizeStatus, type Status } from './fields';
 import type { TaskItem, VaultIndex } from './index';
 import type { Note } from './parse';
+import { byPriority } from './priority';
 import { ALL_PROJECTS, listProjects, projectNotes, type Project } from './projects';
 import { addDays } from './query';
 
@@ -29,17 +30,19 @@ export interface Filters {
   tags: string[];
   statuses: Status[];
   phases: string[];
+  /** Priority letters, and `-` for a task with none. */
+  priorities: string[];
   /** 'overdue', 'week' (the next 7 days) or 'none' (no date). */
   due?: 'overdue' | 'week' | 'none';
   /** Hide finished tasks. On by default. */
   hideDone: boolean;
 }
 
-export const NO_FILTERS: Filters = { text: '', people: [], tags: [], statuses: [], phases: [], hideDone: true };
+export const NO_FILTERS: Filters = { text: '', people: [], tags: [], statuses: [], phases: [], priorities: [], hideDone: true };
 
 /** A new set of filters. Always use this rather than copying NO_FILTERS, whose lists would be shared. */
 export function newFilters(hideDone = true): Filters {
-  return { text: '', people: [], tags: [], statuses: [], phases: [], hideDone };
+  return { text: '', people: [], tags: [], statuses: [], phases: [], priorities: [], hideDone };
 }
 
 export interface Group {
@@ -138,6 +141,7 @@ export function applyFilters(tasks: HubTask[], f: Filters, keep?: ReadonlySet<st
     if (f.people.length && !f.people.some((p) => t.people.includes(p))) return false;
     if (f.tags.length && !f.tags.some((g) => t.tags.includes(g))) return false;
     if (f.statuses.length && !f.statuses.includes(t.status)) return false;
+    if (f.priorities.length && !f.priorities.includes(t.item.priority ?? '-')) return false;
     if (f.phases.length && !f.phases.includes(t.phase ?? '')) return false;
     if (f.due === 'overdue' && !(t.due && t.due < today && t.status !== 'done')) return false;
     if (f.due === 'week' && !(t.due && t.due >= today && t.due <= week)) return false;
@@ -148,6 +152,7 @@ export function applyFilters(tasks: HubTask[], f: Filters, keep?: ReadonlySet<st
 }
 
 const byDue = (a: HubTask, b: HubTask): number =>
+  byPriority(a.item.priority, b.item.priority) ||
   (a.due ?? '9999').localeCompare(b.due ?? '9999') ||
   a.item.title.localeCompare(b.item.title) ||
   a.item.path.localeCompare(b.item.path) ||

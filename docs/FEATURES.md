@@ -22,6 +22,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Home and the weekly review:** a landing screen (capture, today, what needs filing, what
   you are waiting on, the week ahead, project progress) and a four-step review that files, reschedules and plans
   with small guarded edits to your own notes.
+- **Priority:** `(A)`, `(B)`, `(C)` straight after the checkbox (or `priority: A` in a task note, or an Obsidian Tasks emoji) shows as a badge and sorts first. Start a quick add with `(A)`, press 1, 2, 3 or 0 on a selected task on Today, or filter and bulk-set it in a project. Each change edits one letter in the file.
 - **Today:** open tasks that are late, due today or due this week, plus Upcoming, Inbox, Waiting on,
   All open, Follow-ups and Projects views. Ticking a box changes one character in the file and shows
   the exact before and after lines.

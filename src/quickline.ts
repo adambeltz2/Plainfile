@@ -10,6 +10,8 @@ export interface QuickLine {
   /** Just the words: no `@people`, `#tags`, `due:` or `+Project`. This is a task note's title. */
   title: string;
   due?: string;
+  /** A leading `(A)`: the priority letter. It stays in `text` and is left out of `title`. */
+  priority?: string;
   project?: string;
   people: string[];
   tags: string[];
@@ -48,6 +50,11 @@ export function parseQuickLine(line: string, today: string): QuickLine {
   const skip = new Set(plain?.positions ?? []);
   if (plain) out.due = plain.iso;
   for (const [i, tok] of toks.entries()) {
+    if (i === 0 && /^\([A-Z]\)$/.test(tok)) {
+      out.priority = tok[1];
+      kept.push(tok);
+      continue;
+    }
     if (skip.has(i)) {
       if (i === (plain?.positions[0] ?? -1)) kept.push(`due:${plain?.iso}`);
       continue;

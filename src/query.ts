@@ -1,6 +1,7 @@
 import type { TaskItem, VaultIndex } from './index';
 import { localDateOf, localToday } from './dates';
 import type { Note } from './parse';
+import { byPriority } from './priority';
 
 export function addDays(iso: string, n: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -8,7 +9,8 @@ export function addDays(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-const byDue = (a: TaskItem, b: TaskItem) => (a.due ?? '').localeCompare(b.due ?? '') || a.path.localeCompare(b.path) || a.line - b.line;
+const byDue = (a: TaskItem, b: TaskItem) =>
+  byPriority(a.priority, b.priority) || (a.due ?? '').localeCompare(b.due ?? '') || a.path.localeCompare(b.path) || a.line - b.line;
 
 export interface TodayView {
   overdue: TaskItem[];

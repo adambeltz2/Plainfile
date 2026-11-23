@@ -127,6 +127,16 @@ export async function reschedule(storage: VaultStorage, index: VaultIndex, task:
   return change;
 }
 
+/** Set a task's priority (a letter A to Z, or null to clear it) through the same guarded edit. */
+export async function setPriority(storage: VaultStorage, index: VaultIndex, task: TaskItem, letter: string | null): Promise<ChangeResult> {
+  const plan = await planBulk(storage, index, [task.id], { kind: 'priority', letter });
+  const edit = plan.edits[0];
+  if (!edit) return { path: task.path, line: task.line, before: '', after: '', written: false };
+  const [change] = await applyBulk(storage, index, [edit]);
+  if (!change) throw new StaleError(task.path, task.line);
+  return change;
+}
+
 /** Mark a task done through the same edit. */
 export async function finish(storage: VaultStorage, index: VaultIndex, task: TaskItem): Promise<ChangeResult> {
   const plan = await planBulk(storage, index, [task.id], { kind: 'done', done: true });

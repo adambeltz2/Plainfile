@@ -5,6 +5,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { VaultIndex } from '../src/index';
 import { DropboxStorage } from '../src/dropbox-storage';
 import { addTaskNote } from '../src/capture';
+import { setPriority } from '../src/home';
 import { MemoryStorage } from '../src/memory-storage';
 import { applyMove, planMove } from '../src/move';
 import { NodeStorage } from '../src/node-storage';
@@ -173,6 +174,22 @@ for (const { name, make } of ADAPTERS) {
       expect(await s.read(made.path)).toBe('---\ntitle: Contract task\nstatus: todo\ndue: 2026-11-30\ncreated: 2026-11-21\ntags: []\npeople: []\n---\n\n');
       await setTaskDone(s, index, made.taskId, true);
       expect((await s.read(made.path)).split('\n')[2]).toBe('status: done');
+
+      // A priority is one piece of text on the line, and in a task note one frontmatter value.
+      const logos = index.tasks().find((t) => t.title === 'Send logos')!;
+      await setPriority(s, index, logos, 'A');
+      expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] (A) Send logos @dana due:2026-11-23');
+      await setPriority(s, index, index.getTask(made.taskId)!, 'B');
+      expect(await s.read(made.path)).toContain('people: []\npriority: B\n---');
+      await setPriority(s, index, index.getTask(made.taskId)!, null);
+      await setPriority(
+        s,
+        index,
+        index.tasks().find((t) => t.title === 'Send logos')!,
+        null,
+      );
+      expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @dana due:2026-11-23');
+      expect((await s.read(made.path)).includes('priority')).toBe(false);
 
       const mv = planMove(index, 'inbox/Kickoff.md', 'projects/site');
       await applyMove(s, index, mv, new Set(mv.inbound.map((e) => e.id)));

@@ -48,6 +48,20 @@ describe('parseQuickLine', () => {
   });
 });
 
+describe('a priority in the quick add', () => {
+  it('reads a leading (A) and keeps it out of the title', () => {
+    const q = parseQuickLine('(A) Call Dana +site due:friday', TODAY);
+    expect(q.priority).toBe('A');
+    expect(q.title).toBe('Call Dana');
+    expect(q.text.startsWith('(A) Call Dana')).toBe(true);
+  });
+  it('ignores a (A) that is not first, or not a capital', () => {
+    expect(parseQuickLine('Call (A) Dana', TODAY).priority).toBeUndefined();
+    expect(parseQuickLine('(a) Call Dana', TODAY).priority).toBeUndefined();
+    expect(parseQuickLine('(a) Call Dana', TODAY).title).toBe('(a) Call Dana');
+  });
+});
+
 describe('findProject', () => {
   const p = (path: string, title: string): Project => ({ path, title, active: true, preview: '', openTasks: 0, followups: 0 });
   const list = [p('projects/kitchen-remodel/index.md', 'Kitchen Remodel'), p('projects/site.md', 'Website relaunch')];
