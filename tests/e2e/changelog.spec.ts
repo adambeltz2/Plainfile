@@ -7,7 +7,7 @@ test('the footer opens What is new, by version without dates, and links to GitHu
   const foot = page.locator('.foot');
   await expect(foot.getByRole('link', { name: 'GitHub' })).toHaveAttribute('target', '_blank');
   // Every footer link opens a new tab. What is new is the app's own page, so it works before a folder is open.
-  for (const name of ['What is new', 'Cheat sheet', 'GitHub']) await expect(foot.getByRole('link', { name })).toHaveAttribute('target', '_blank');
+  for (const name of ['What is new', 'GitHub']) await expect(foot.getByRole('link', { name })).toHaveAttribute('target', '_blank');
   await expect(foot.getByRole('link', { name: 'What is new' })).toHaveAttribute('rel', /noopener/);
   const [popup] = await Promise.all([page.waitForEvent('popup'), foot.getByRole('link', { name: 'What is new' }).click()]);
   await popup.waitForLoadState();

@@ -22,7 +22,7 @@ test.describe('footer', () => {
 });
 
 test.describe('cheat sheet', () => {
-  test('opens from the ? button and the footer, with copyable examples', async ({ page, context }) => {
+  test('opens from the ? button (the footer has no second link to it), with copyable examples', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await page.getByRole('button', { name: 'Try the sample vault' }).click();
     await page.getByRole('button', { name: 'Syntax cheat sheet' }).click();
@@ -34,11 +34,7 @@ test.describe('cheat sheet', () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
       '- [ ] Send logo files @dana #launch due:2026-11-23 created:2026-11-21\n- [x] Share staging link',
     );
-    await page.locator('.nav').getByRole('button', { name: 'Today' }).click();
-    const [popup] = await Promise.all([page.waitForEvent('popup'), page.locator('.foot').getByRole('link', { name: 'Cheat sheet' }).click()]);
-    await popup.waitForLoadState();
-    await expect(popup.getByRole('heading', { name: 'Cheat sheet' })).toBeVisible();
-    await popup.close();
+    await expect(page.locator('.foot').getByRole('link', { name: 'Cheat sheet' })).toHaveCount(0);
   });
 
   test('the section buttons jump to that section', async ({ page }) => {
