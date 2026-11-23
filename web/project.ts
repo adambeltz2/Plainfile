@@ -57,7 +57,7 @@ function overview(): string {
   const all = listProjects(idx);
   let h = '<h2 class="title">Projects</h2>';
   h += `<p class="meta">${all.filter((p) => p.active).length} active · pick one to see its tasks, notes, people and follow-ups in one place</p>`;
-  h += '<div class="row-gap" style="margin:0 0 12px"><button class="btn primary" data-act="proj-new">+ New project</button></div>';
+  h += '<div class="row-gap" style="margin:0 0 12px"><button class="btn primary" data-act="proj-new">+ New project</button><button class="btn" data-open-project="*">All tasks</button></div>';
   if (!all.length) {
     return `${h}<div class="empty">No projects yet. Make one with <b>+ New project</b>. A project is a folder with an <code>index.md</code> (<code>type: project</code>), or any note with <code>active</code> or <code>sortOrder</code> in its frontmatter.</div>`;
   }

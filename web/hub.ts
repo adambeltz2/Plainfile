@@ -3,7 +3,7 @@ import { applyBulk, planBulk, type BulkAction, type BulkPlan } from '../src/bulk
 import { applyFieldFix, fieldIssues, STATUSES, type FieldIssue, type Status } from '../src/fields';
 import { applyFilters, groupTasks, hubTasks, newFilters, summarize, type Filters, type GroupBy, type HubTask } from '../src/hub';
 import { dirname } from '../src/index';
-import { listProjects, projectDashboard, projectNotes } from '../src/projects';
+import { ALL_PROJECTS, listProjects, projectDashboard, projectNotes, type ProjectDashboard } from '../src/projects';
 import { addDays } from '../src/query';
 import { deleteView, listViews, saveView, type SavedView } from '../src/views';
 import { setTaskStatus } from '../src/writeback';
@@ -55,6 +55,7 @@ const GROUPS: [GroupBy, string][] = [
   ['person', 'Person'],
   ['phase', 'Phase'],
   ['tag', 'Tag'],
+  ['project', 'Project'],
   ['note', 'Note it lives in'],
 ];
 const COLS: [string, string][] = [
@@ -265,20 +266,23 @@ function rail(path: string): string {
   if (!idx) return '';
   const all = listProjects(idx);
   const item = (p: (typeof all)[number]): string => `<button class="hub-rail-item${p.path === path ? ' on' : ''}" data-open-project="${esc(p.path)}" aria-current="${p.path === path}"><span>${p.number ?? '–'} ${esc(p.title)}</span><span class="n">${p.openTasks}</span></button>`;
-  return `<nav class="hub-rail" aria-label="Projects"><h3>Projects</h3>${all.filter((p) => p.active).map(item).join('')}${all.some((p) => !p.active) ? `<h3 class="muted">Inactive</h3>${all.filter((p) => !p.active).map(item).join('')}` : ''}<button class="btn small" data-act="proj-back" style="margin-top:8px">All projects</button></nav>`;
+  const allOpen = tasksOf(idx, ALL_PROJECTS).filter((t) => t.status !== 'done').length;
+  const allBtn = `<button class="hub-rail-item${path === ALL_PROJECTS ? ' on' : ''}" data-open-project="${ALL_PROJECTS}" aria-current="${path === ALL_PROJECTS}"><span>All tasks</span><span class="n">${allOpen}</span></button>`;
+  return `<nav class="hub-rail" aria-label="Projects"><h3>Projects</h3>${allBtn}${all.filter((p) => p.active).map(item).join('')}${all.some((p) => !p.active) ? `<h3 class="muted">Inactive</h3>${all.filter((p) => !p.active).map(item).join('')}` : ''}<button class="btn small" data-act="proj-back" style="margin-top:8px">All projects</button></nav>`;
 }
 
 export function html(path: string): string {
   const idx = state.index;
-  const d = idx ? projectDashboard(idx, path, today(), justDone) : undefined;
+  const everything = path === ALL_PROJECTS;
+  const d = idx ? (everything ? allDashboard(idx) : projectDashboard(idx, path, today(), justDone)) : undefined;
   if (!idx || !d) return '<div class="empty">That project is no longer there. <button class="btn" data-act="proj-back">All projects</button></div>';
   resetFor(path);
   const all = tasksOf(idx, path);
   const covered = projectNotes(idx, path);
-  const issues = fieldIssues(idx, covered);
+  const issues = everything ? [] : fieldIssues(idx, covered); // a tidy list over every note is for a project, not for All
   const visible = applyFilters(all, hubState.filters, justDone, today());
-  const dir = d.note.name.toLowerCase() === 'index' ? dirname(d.note.path) : '';
-  const name = dir ? (dir.split('/').pop() as string) : d.note.name;
+  const dir = !d.note ? '' : d.note.name.toLowerCase() === 'index' ? dirname(d.note.path) : '';
+  const name = !d.note ? '' : dir ? (dir.split('/').pop() as string) : d.note.name;
   const openCount = all.filter((t) => t.status !== 'done').length;
   const tabs: [Tab, string][] = [
     ['tasks', `Tasks ${openCount}`],
@@ -302,17 +306,39 @@ export function html(path: string): string {
   const log = logHtml();
   return (
     `<div class="hubwrap${hubState.selectMode || hubState.selected.size ? ' sel-on' : ''}">${rail(path)}<div class="hub-main">` +
-    `<label class="hub-pick small"><span class="muted">Project</span><select id="hub-pick" class="inp">${listProjects(idx).map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</select><button class="btn small" data-act="proj-back">All projects</button></label>` +
+    `<label class="hub-pick small"><span class="muted">Project</span><select id="hub-pick" class="inp"><option value="${ALL_PROJECTS}"${everything ? ' selected' : ''}>All tasks</option>${listProjects(idx).map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</select><button class="btn small" data-act="proj-back">All projects</button></label>` +
     `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${d.active ? 'Active' : 'Inactive'}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
-    `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
+    (everything ? '</div>' : `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
     `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></span>` +
-    `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>` +
+    `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>`) +
     (d.summary ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
     `<div class="pstats"><div class="pstat"><b>${openCount}</b><span>open</span></div><div class="pstat${d.overdue ? ' late' : ''}"><b>${d.overdue}</b><span>overdue</span></div><div class="pstat"><b>${all.length - openCount}</b><span>done</span></div><div class="pstat"><b>${d.notes.length}</b><span>notes</span></div><div class="pstat"><b>${d.followups.length}</b><span>follow-ups</span></div></div>` +
     `<div class="pprog"><progress max="${Math.max(all.length, 1)}" value="${all.length - openCount}" aria-label="Tasks done"></progress><span class="small muted">${all.length - openCount} of ${all.length} tasks done${all.length ? ` (${Math.round(((all.length - openCount) / all.length) * 100)}%)` : ''}</span></div>` +
     `<div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button role="tab" class="tab${hubState.tab === id ? ' on' : ''}" data-hub-tab="${id}" aria-selected="${hubState.tab === id}">${esc(l)}</button>`).join('')}</div>` +
     `<div class="hub-content">${hubState.tab === 'tasks' || hubState.tab === 'board' ? `<div id="hub-bulk">${bulkHtml()}</div>` : ''}${body}</div>${log ? `<div class="plog" aria-live="polite">${log}</div>` : ''}</div>${statusColumn(all, issues)}</div>`
   );
+}
+
+/** The numbers for "All tasks": the same shape as one project's dashboard, worked out over every note. */
+function allDashboard(idx: NonNullable<typeof state.index>): ProjectDashboard {
+  const notes = [...idx.notes.values()];
+  const tasks = hubTasks(idx, ALL_PROJECTS);
+  return {
+    note: undefined,
+    title: 'All tasks',
+    active: true,
+    summary: 'Every task from every project, and from notes that belong to none. Group by Project to see them side by side.',
+    created: undefined,
+    open: [],
+    overdue: tasks.filter((t) => t.status !== 'done' && t.due && t.due < today()).length,
+    done: tasks.filter((t) => t.status === 'done').length,
+    total: tasks.length,
+    notes: notes.filter((n) => !n.fileTask).sort((a, b) => b.mtime - a.mtime),
+    followups: notes.flatMap((n) => n.followups.map((f) => ({ path: n.path, line: f.line, title: f.title, from: n.title }))),
+    people: [],
+    tags: [],
+    lastChange: notes.reduce((m, n) => Math.max(m, n.mtime), 0),
+  };
 }
 
 function refreshBody(): void {

@@ -542,3 +542,22 @@ test.describe('portfolio table', () => {
   });
 });
 
+
+test('All tasks shows every task from every project and the notes outside any, grouped by project on request', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, {
+    'projects/a/index.md': '---\ntitle: Alpha\ntype: project\nactive: true\n---\n- [ ] Alpha job due:2999-01-01\n',
+    'projects/b/index.md': '---\ntitle: Beta\ntype: project\nactive: true\n---\n- [ ] Beta job due:2999-01-01\n',
+    'tasks/Shared.md': '---\ntitle: Shared job\nstatus: todo\nproject: [alpha, beta]\n---\n',
+    'loose.md': '- [ ] Loose job\n',
+  });
+  await nav(page, 'Projects').click();
+  await page.getByRole('button', { name: 'All tasks' }).click();
+  await expect(page.locator('.title')).toHaveText('All tasks');
+  for (const t of ['Alpha job', 'Beta job', 'Shared job', 'Loose job']) await expect(page.locator('.hub-content')).toContainText(t);
+  await page.locator('#hub-group').selectOption('project');
+  await expect(page.locator('.hub-group .grp', { hasText: 'Alpha' })).toBeVisible();
+  await expect(page.locator('.hub-group .grp', { hasText: 'No project' })).toBeVisible();
+  await page.locator('.hub-content li.task .t', { hasText: 'Loose job' }).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+});

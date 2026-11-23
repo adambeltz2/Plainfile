@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.47.0] - 2026-11-23
+
+### Added
+- **All tasks.** Projects → All tasks, or the All tasks button on Home, opens the project hub over every task in every project and in notes that belong to none. Group by the new **Project** option to see them side by side; a task in several projects appears under each. Tasks, board, timeline, filters and saved views work as in a project. No file moves: a task belongs to a project by link, wherever it lives.
+
 ## [0.46.1] - 2026-11-22
 
 ### Added

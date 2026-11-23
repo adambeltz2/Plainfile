@@ -1,7 +1,7 @@
 import { fieldOf, listOf, normalizeDate, normalizeStatus, type Status } from './fields';
 import type { TaskItem, VaultIndex } from './index';
 import type { Note } from './parse';
-import { listProjects, projectNotes, type Project } from './projects';
+import { ALL_PROJECTS, listProjects, projectNotes, type Project } from './projects';
 import { addDays } from './query';
 
 /**
@@ -17,9 +17,11 @@ export interface HubTask {
   people: string[];
   tags: string[];
   note: Note;
+  /** The projects it belongs to, by folder or by `project:`. Filled in for the "All tasks" view. */
+  projects?: string[];
 }
 
-export type GroupBy = 'due' | 'status' | 'person' | 'tag' | 'phase' | 'note';
+export type GroupBy = 'due' | 'status' | 'person' | 'tag' | 'phase' | 'note' | 'project';
 
 export interface Filters {
   text: string;
@@ -81,6 +83,15 @@ export function toHubTask(item: TaskItem, note: Note): HubTask {
 
 /** Every task that belongs to the project, fields read tolerantly. */
 export function hubTasks(index: VaultIndex, projectPath: string): HubTask[] {
+  if (projectPath === ALL_PROJECTS) {
+    // Which projects each note belongs to, by folder or `project:`, so the tasks can be grouped by project.
+    const of = new Map<string, string[]>();
+    for (const p of listProjects(index)) for (const n of projectNotes(index, p.path)) of.set(n.path, [...(of.get(n.path) ?? []), p.title]);
+    return index.tasks().flatMap((t) => {
+      const n = index.notes.get(t.path);
+      return n ? [{ ...toHubTask(t, n), projects: of.get(n.path) ?? [] }] : [];
+    });
+  }
   const covered = projectNotes(index, projectPath);
   const byPath = new Map(covered.map((n) => [n.path, n]));
   const out: HubTask[] = [];
@@ -132,11 +143,12 @@ export function groupTasks(tasks: HubTask[], by: GroupBy, today: string, keep?: 
       if (by === 'status') put(t.status, t);
       else if (by === 'person') for (const p of t.people.length ? t.people : ['']) put(p, t);
       else if (by === 'tag') for (const g of t.tags.length ? t.tags : ['']) put(g, t);
+      else if (by === 'project') for (const p of t.projects?.length ? t.projects : ['']) put(p.toLowerCase(), t);
       else if (by === 'phase') put(t.phase ?? '', t);
       else put(t.item.path, t);
     }
     const title = (k: string): string =>
-      by === 'status' ? ({ todo: 'To do', doing: 'Doing', waiting: 'Waiting', done: 'Done' } as Record<string, string>)[k] ?? k : by === 'person' ? (k ? `@${k}` : 'Unassigned') : by === 'tag' ? (k ? `#${k}` : 'No tag') : by === 'phase' ? k || 'No phase' : tasks.find((t) => t.item.path === k)?.note.title ?? k;
+      by === 'status' ? ({ todo: 'To do', doing: 'Doing', waiting: 'Waiting', done: 'Done' } as Record<string, string>)[k] ?? k : by === 'person' ? (k ? `@${k}` : 'Unassigned') : by === 'tag' ? (k ? `#${k}` : 'No tag') : by === 'phase' ? k || 'No phase' : by === 'project' ? (k ? tasks.flatMap((t) => t.projects ?? []).find((p) => p.toLowerCase() === k) ?? k : 'No project') : tasks.find((t) => t.item.path === k)?.note.title ?? k;
     const order = (k: string): number => (by === 'status' ? ['todo', 'doing', 'waiting', 'done'].indexOf(k) : k === '' ? 1 : 0);
     groups = [...m].sort((a, b) => order(a[0]) - order(b[0]) || title(a[0]).localeCompare(title(b[0]))).map(([k, v]) => make(k, title(k), v));
   }

@@ -153,3 +153,26 @@ describe('portfolio', () => {
     expect(site.lastChange).toBeGreaterThan(0);
   });
 });
+
+describe('all tasks across projects', () => {
+  it('covers every note and can group by project, with several projects and none', async () => {
+    const { VaultIndex } = await import('../src/index');
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const { ALL_PROJECTS } = await import('../src/projects');
+    const store = new MemoryStorage({
+      'projects/a/index.md': '---\ntitle: A\ntype: project\n---\n- [ ] In A\n',
+      'projects/b/index.md': '---\ntitle: B\ntype: project\n---\n',
+      'tasks/Shared.md': '---\ntitle: Shared\nstatus: todo\nproject: [a, b]\n---\n',
+      'loose.md': '- [ ] Nowhere\n',
+    });
+    const index = new VaultIndex(store);
+    await index.scan();
+    const all = hubTasks(index, ALL_PROJECTS);
+    expect(all.map((t) => t.item.title).sort()).toEqual(['In A', 'Nowhere', 'Shared']);
+    const groups = groupTasks(all, 'project', '2026-11-23');
+    const by = Object.fromEntries(groups.map((g) => [g.title, g.items.map((t) => t.item.title).sort()]));
+    expect(by['B']).toEqual(['Shared']);
+    expect(by['A']).toEqual(['In A', 'Shared']); // by folder or by project:
+    expect(by['No project']).toEqual(['Nowhere']);
+  });
+});

@@ -31,6 +31,7 @@ const cases: { name: string; go: (page: Page) => Promise<void>; click: string; e
   { name: 'People, person page note', go: async (p) => { await nav(p, 'People').click(); await p.locator('.portfolio [data-person]').first().click(); }, click: '.pnotes .res-btn, .pnotes button', expect: '' },
   { name: 'Board card', go: async (p) => nav(p, 'Board').click(), click: '.card .t, .card', expect: '' },
   { name: 'Project hub task row', go: async (p) => { await nav(p, 'Projects').click(); await p.locator('.pcard .pbtn').first().click(); }, click: '.hub-content li.task .t', expect: '' },
+  { name: 'All tasks list', go: async (p) => { await nav(p, 'Projects').click(); await p.getByRole('button', { name: 'All tasks' }).click(); }, click: '.hub-content li.task .t', expect: '' },
   { name: 'Project hub timeline item', go: async (p) => { await nav(p, 'Projects').click(); await p.locator('.pcard .pbtn').first().click(); await p.getByRole('tab', { name: 'Timeline' }).or(p.getByRole('button', { name: 'Timeline' })).first().click(); }, click: '.tlitem', expect: '' },
   { name: 'Search result', go: async (p) => { await nav(p, 'Search').click(); await p.locator('#search-q').fill('body'); }, click: '.res-btn', expect: '' },
   { name: 'Recent row', go: async (p) => nav(p, 'Recent').click(), click: '.recent-row td:first-child', expect: '' },

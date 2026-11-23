@@ -53,8 +53,12 @@ function scope(index: VaultIndex, n: Note): Note[] {
   return [...out.values()];
 }
 
+/** Not a real project: the hub opened on this path shows every task from every note, in or out of a project. */
+export const ALL_PROJECTS = '*';
+
 /** The notes a project covers: its folder, and notes elsewhere whose `project:` names it. */
 export function projectNotes(index: VaultIndex, path: string): Note[] {
+  if (path === ALL_PROJECTS) return [...index.notes.values()];
   const me = index.notes.get(path);
   return me ? scope(index, me) : [];
 }
@@ -120,7 +124,8 @@ export function listFollowUps(index: VaultIndex): FollowUp[] {
 
 /** Everything the project page shows, worked out from the notes. Nothing here is stored. */
 export interface ProjectDashboard {
-  note: Note;
+  /** The project's own note. Missing for the "All tasks" view, which belongs to no project. */
+  note?: Note;
   title: string;
   active: boolean;
   /** The goal or first lines of the note. */
