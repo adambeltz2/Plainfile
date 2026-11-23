@@ -152,6 +152,31 @@ export class FsaStorage implements VaultStorage {
     this.seen.delete(path);
   }
 
+  async removeEmptyFolders(dir: string): Promise<void> {
+    const parts = dir.split('/').filter(Boolean);
+    const name = parts.pop();
+    if (!name) return;
+    let parent = this.root;
+    try {
+      for (const p of parts) parent = await parent.getDirectoryHandle(p);
+      const top = await parent.getDirectoryHandle(name);
+      const prune = async (d: FileSystemDirectoryHandle): Promise<boolean> => {
+        let empty = true;
+        for await (const [entryName, h] of d as unknown as AsyncIterable<[string, FileSystemHandle]>) {
+          if (h.kind === 'directory' && (await prune(h as FileSystemDirectoryHandle))) {
+            await d.removeEntry(entryName);
+            continue;
+          }
+          empty = false;
+        }
+        return empty;
+      };
+      if (await prune(top)) await parent.removeEntry(name);
+    } catch {
+      /* a folder that cannot be tidied is only left behind, empty */
+    }
+  }
+
   async create(path: string, content: string): Promise<FileEntry> {
     const parts = path.split('/');
     const name = parts.pop() as string;

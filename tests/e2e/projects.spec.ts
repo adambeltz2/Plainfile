@@ -675,7 +675,7 @@ test('the Tasks tab shows the open count, and each number on a hub opens what it
   await expect(page.locator('.tab.on')).toContainText('Notes');
 });
 
-test('a finished project can be closed out to the Archive and reopened; only its note changes', async ({ page }) => {
+test('closing out with the folder move off changes only the project note', async ({ page }) => {
   await page.goto('/');
   const PROJ = '---\ntitle: Weekend\ntype: project\nactive: true\n---\n- [x] Everything done\n';
   const dir = await openVault(page, {
@@ -688,6 +688,7 @@ test('a finished project can be closed out to the Archive and reopened; only its
   await expect(page.locator('.hub-main .meta')).toContainText('Active');
   await page.getByRole('button', { name: 'Close out', exact: true }).first().click();
   await expect(page.getByRole('group', { name: 'Close out this project' })).toContainText('1 open task');
+  await page.getByLabel(/Also move the project folder/).uncheck();
   await page.getByRole('button', { name: 'Close out', exact: true }).last().click();
   await expect.poll(() => readFileOrEmpty(page, dir, 'projects/weekend/index.md')).toContain('active: false');
   const closed = await readFile(page, dir, 'projects/weekend/index.md');
@@ -705,4 +706,45 @@ test('a finished project can be closed out to the Archive and reopened; only its
   await page.locator('.pcard.off .pbtn', { hasText: 'Weekend' }).click();
   await page.getByRole('button', { name: 'Reopen' }).first().click();
   await expect.poll(() => readFileOrEmpty(page, dir, 'projects/weekend/index.md')).toBe(PROJ);
+});
+
+test('closing out can move the project folder to archive/ with every link updated, and reopening moves it back', async ({ page }) => {
+  await page.goto('/');
+  const FILES: Record<string, string> = {
+    'projects/weekend/index.md': '---\ntitle: Weekend\ntype: project\nactive: true\n---\n![logo](../../_attachments/logo.png)\n- [x] Done thing\n',
+    'projects/weekend/Plan.md': 'See [index](index.md).\n',
+    'people/ada.md': 'Works on [[projects/weekend/Plan]] and [the project](../projects/weekend/index.md).\n',
+  };
+  const dir = await openVault(page, FILES);
+  await nav(page, 'Projects').click();
+  await page.locator('.pcard .pbtn', { hasText: 'Weekend' }).click();
+  await page.getByRole('button', { name: 'Close out', exact: true }).first().click();
+  const box = page.getByRole('group', { name: 'Close out this project' });
+  await expect(box.locator('#close-to')).toHaveValue('archive/weekend');
+  await expect(box.locator('#close-preview')).toContainText('2 files will move to archive/weekend');
+  await expect(box.locator('#close-preview')).toContainText('1 link line in 1 note');
+  await box.locator('#close-to').fill('archive/weekend-2026');
+  await expect(box.locator('#close-preview')).toContainText('archive/weekend-2026');
+  await box.getByRole('button', { name: 'Close out', exact: true }).click();
+  await expect.poll(() => listFiles(page, dir)).toContain('archive/weekend-2026/Plan.md');
+  const files = await listFiles(page, dir);
+  expect(files.filter((f) => f.startsWith('projects/weekend'))).toEqual([]);
+  expect(await readFile(page, dir, 'archive/weekend-2026/index.md')).toContain('active: false');
+  expect(await readFile(page, dir, 'archive/weekend-2026/Plan.md')).toBe(FILES['projects/weekend/Plan.md']);
+  expect(await readFile(page, dir, 'people/ada.md')).toBe('Works on [[archive/weekend-2026/Plan]] and [the project](../archive/weekend-2026/index.md).\n');
+  // The page keeps showing the project at its new place.
+  await expect(page.locator('.hub-main .meta')).toContainText('Archived');
+  // Reopen offers to move it back.
+  await page.getByRole('button', { name: 'Reopen', exact: true }).first().click();
+  const back = page.getByRole('group', { name: 'Reopen this project' });
+  await expect(back.locator('#reopen-to')).toHaveValue('projects/weekend-2026');
+  await back.locator('#reopen-to').fill('projects/weekend');
+  await back.getByRole('button', { name: 'Reopen', exact: true }).click();
+  await expect.poll(() => listFiles(page, dir)).toContain('projects/weekend/Plan.md');
+  for (const [p, text] of Object.entries(FILES)) {
+    if (p === 'projects/weekend/index.md') continue; // active: true again, completed removed: compared below
+    expect(await readFile(page, dir, p), p).toBe(text);
+  }
+  expect(await readFile(page, dir, 'projects/weekend/index.md')).toBe(FILES['projects/weekend/index.md']);
+  expect((await listFiles(page, dir)).filter((f) => f.startsWith('archive/'))).toEqual([]);
 });

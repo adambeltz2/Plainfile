@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.6.0] - 2026-11-23
+
+### Added
+- **Move a project's folder to the archive when closing it out, and back when reopening.** The confirmation has an "Also move the project folder to…" option (on by default, `archive/<name>`, the destination editable) with a live preview: how many files move and how many link lines in how many notes will be updated. Reopening a project that is under `archive/` offers to move it back (default `projects/<name>`).
+  - Every file in the folder moves, notes and attachments, and every link that would break is rewritten, in the moved notes and in all the others: path wiki links (`[[projects/site/Plan]]`), markdown links and images. Links by plain name keep working untouched. A name clash with a note elsewhere is warned about.
+  - It is applied in a safe order: copies first, then links elsewhere (each guarded by modified time), then the old files are removed last. If anything fails, the copies are removed and the old files are untouched. Version history moves with each note, and the emptied folders are removed.
+  - Moving there and back leaves every file byte-for-byte as it began (tested).
+- The engine is `src/folder-move.ts`; storage adapters can offer an optional `removeEmptyFolders`.
+
+### Changed
+- The Archived banner no longer says the files are untouched, since closing out can now move them.
+
 ## [1.5.2] - 2026-11-23
 
 ### Added
