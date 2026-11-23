@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { listFiles, localDate, nav, openHubTools, openVault, readFile, readFileOrEmpty } from './helpers';
+import { listFiles, localDate, nav, openHubTools, openVault, readFile, readFileOrEmpty, showView } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 const TODAY = () => localDate(0);
 
 async function newProject(page: Page, name: string, goal = ''): Promise<void> {
-  await page.getByRole('button', { name: '+ New' }).click();
+  await page.getByRole('button', { name: '+ New', exact: true }).click();
   await page
     .locator('.modal')
     .getByRole('button', { name: /^Project/ })
@@ -58,7 +58,7 @@ test.describe('one-line quick add', () => {
 
   test('the New menu has one Task, which makes its own note with a created date and empty tags and people', async ({ page }) => {
     const dir = await openVault(page, { 'a.md': '# A\n' });
-    await page.getByRole('button', { name: '+ New' }).click();
+    await page.getByRole('button', { name: '+ New', exact: true }).click();
     await expect(page.locator('.modal').getByRole('button', { name: /^Task/ })).toHaveCount(1);
     await page.locator('.modal').getByRole('button', { name: /^Task/ }).click();
     await page.locator('#new-task-text').fill('Write launch email');
@@ -73,7 +73,7 @@ test.describe('one-line quick add', () => {
 test.describe('new project', () => {
   test('+ New > Project makes a folder with a numbered index note, and shows in Projects', async ({ page }) => {
     const dir = await openVault(page, { 'a.md': '# A\n' });
-    await page.getByRole('button', { name: '+ New' }).click();
+    await page.getByRole('button', { name: '+ New', exact: true }).click();
     // The project-only templates are not offered in the menu.
     await expect(page.locator('.modal').getByRole('button', { name: /^Project task/ })).toHaveCount(0);
     await expect(page.locator('.modal').getByRole('button', { name: /^Project note/ })).toHaveCount(0);
@@ -89,31 +89,19 @@ test.describe('new project', () => {
     expect(await readFile(page, dir, 'projects/kitchen-remodel/index.md')).toBe(
       `---\ntitle: Kitchen Remodel\ntype: project\nactive: true\nsortOrder: 1\ncreated: ${TODAY()}\ntags: []\n---\n\n## Goal\nNew cabinets\n\n## Milestones\n\n\n## Notes\n- \n\n## Tasks\n<!--\nAdd a task here as a checkbox line, one per line: a dash, a space, [ ], a space, then the text.\nFor example, the line  - [ ] Call the supplier @dana due:friday  makes a task with a person and a date.\nOr use "+ Task" at the top of this project to make a task as its own note.\n-->\n`,
     );
-    await nav(page, 'Today').click();
-    await page
-      .locator('.side')
-      .getByRole('button', { name: /^Projects/ })
-      .click();
+    await nav(page, 'Projects').click();
     await expect(page.locator('.pcard .pnum')).toHaveText('1');
     await expect(page.locator('.pcard .ptitle')).toHaveText('Kitchen Remodel');
     // The second project is number 2.
     await newProject(page, 'Taxes');
-    await nav(page, 'Today').click();
-    await page
-      .locator('.side')
-      .getByRole('button', { name: /^Projects/ })
-      .click();
+    await nav(page, 'Projects').click();
     await expect(page.locator('.pcard .pnum')).toHaveText(['1', '2']);
   });
 
   test('a project card files a task and a note into the project, and the project page lists them', async ({ page }) => {
     const dir = await openVault(page, { 'a.md': '# A\n' });
     await newProject(page, 'Kitchen Remodel');
-    await nav(page, 'Today').click();
-    await page
-      .locator('.side')
-      .getByRole('button', { name: /^Projects/ })
-      .click();
+    await nav(page, 'Projects').click();
 
     await page.locator('.pcard').getByRole('button', { name: '+ Task' }).click();
     // The same form as + New > Task: the task line takes @people, #tags, due: and (A), and the project is fixed.
@@ -127,12 +115,8 @@ test.describe('new project', () => {
       `---\ntitle: Order cabinets\nstatus: todo\ndue: 2026-11-28\npriority: A\ncreated: ${TODAY()}\nproject: kitchen-remodel\ntags: [kitchen]\npeople: [dana]\n---\n\n`,
     );
 
-    await nav(page, 'Today').click();
-    await page
-      .locator('.side')
-      .getByRole('button', { name: /^Projects/ })
-      .click();
-    await expect(page.locator('.pcard')).toContainText('1 task'); // only the new task file: a new project has no placeholder task
+    await nav(page, 'Projects').click();
+    await expect(page.locator('.pcard')).toContainText('1 open task'); // only the new task file: a new project has no placeholder task
     await page.locator('.pcard').getByRole('button', { name: '+ Note' }).click();
     await page.locator('#tpl-title').fill('Quote from Dana');
     await page.getByRole('button', { name: 'Create file' }).click();
@@ -157,12 +141,7 @@ test.describe('new project', () => {
     await page.setViewportSize({ width: 390, height: 800 });
     await openVault(page, { 'a.md': '# A\n' });
     await newProject(page, 'Kitchen Remodel');
-    await nav(page, 'Today').click();
-    await page.locator('.side-toggle').click();
-    await page
-      .locator('.side')
-      .getByRole('button', { name: /^Projects/ })
-      .click();
+    await nav(page, 'Projects').click();
     await page.locator('.pcard').getByRole('button', { name: '+ Task' }).click();
     await expect(page.locator('.modal')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
@@ -186,7 +165,7 @@ test.describe('quick add due date', () => {
 
   test('the New task form has the same picks', async ({ page }) => {
     await openVault(page, { 'a.md': '# A\n' });
-    await page.getByRole('button', { name: '+ New' }).click();
+    await page.getByRole('button', { name: '+ New', exact: true }).click();
     await page
       .locator('.modal')
       .getByRole('button', { name: /^Task\b/ })
@@ -274,8 +253,7 @@ test.describe('project dashboard', () => {
 
   test('+ Task and + Meeting start from this project, and the Today cards link to the dashboard', async ({ page }) => {
     await openVault(page, FILES);
-    await nav(page, 'Today').click();
-    await page.locator('.side [data-view="projects"]').click();
+    await nav(page, 'Projects').click();
     await page.locator('.pcard').getByRole('button', { name: 'Dashboard' }).click();
     await expect(page.locator('.title')).toHaveText('Website relaunch');
     await page.getByRole('button', { name: '+ Meeting' }).click();
@@ -666,6 +644,7 @@ test('All tasks shows every task from every project and the notes outside any, g
     'loose.md': '- [ ] Loose job\n',
   });
   await nav(page, 'Tasks').click();
+  await showView(page, 'All');
   await expect(page.locator('.title')).toHaveText('All tasks');
   await expect(page.locator('.nav [aria-current="true"]')).toContainText('Tasks');
   for (const t of ['Alpha job', 'Beta job', 'Shared job', 'Loose job']) await expect(page.locator('.hub-content')).toContainText(t);
@@ -692,6 +671,7 @@ test('Export CSV and JSON on the Tasks tab download what the filters show', asyn
   await page.goto('/');
   await openVault(page, { 'a.md': '- [ ] First job due:2999-01-01 #x\n- [ ] Second job\n' });
   await nav(page, 'Tasks').click();
+  await showView(page, 'All');
   await openHubTools(page);
   const [csv] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export CSV' }).click()]);
   expect(csv.suggestedFilename()).toMatch(/^tasks-all-\d{4}-\d{2}-\d{2}\.csv$/);
@@ -756,10 +736,10 @@ test('closing out with the folder move off changes only the project note', async
   await expect(page.locator('.hub-main .notice', { hasText: 'Archived.' })).toBeVisible();
   // The Archive: open tasks keep showing in the Tasks tab, and the project is under Archived on the Projects screen.
   await nav(page, 'Tasks').click();
+  await showView(page, 'All');
   await expect(page.locator('.hub-content')).toContainText('Other job');
   await expect(page.locator('.hub-content')).toContainText('Leftover'); // still open, so it still shows
   await nav(page, 'Projects').click();
-  await page.getByRole('button', { name: 'All projects' }).first().click();
   await expect(page.getByRole('heading', { name: /^Archived/ })).toBeVisible();
   await page.locator('.pcard.off .pbtn', { hasText: 'Weekend' }).click();
   await page.getByRole('button', { name: 'Reopen' }).first().click();
@@ -874,28 +854,53 @@ test('on a wide screen the project page uses the width, and an empty Board colum
   expect(todo).toBeGreaterThan(doing * 1.5);
 });
 
-test('the Tasks screen has quick views (All, Late, Today, This week, Waiting, No date) with counts, one click each', async ({ page }) => {
+test('the Tasks screen has quick views (All, Late, Today, Upcoming, Waiting, Inbox, No date) with counts, one click each', async ({ page }) => {
   const T = localDate(0);
-  await openVault(page, {
-    'a.md': `- [ ] Late one due:${localDate(-3)}\n- [ ] Today one due:${T}\n- [ ] Soon one due:${localDate(3)}\n- [ ] Far one due:${localDate(40)}\n- [ ] Undated one\n- [ ] Waiting one #waiting\n`,
-  });
-  await nav(page, 'Tasks').click();
+  await openVault(
+    page,
+    {
+      'a.md': `- [ ] Late one due:${localDate(-3)}\n- [ ] Today one due:${T}\n- [ ] Soon one due:${localDate(3)}\n- [ ] Far one due:${localDate(40)}\n- [ ] Undated one\n- [ ] Waiting one #waiting\n`,
+      'projects/p/index.md': '---\ntitle: P\ntype: project\nactive: true\n---\n- [ ] Filed one\n',
+    },
+    true,
+    'home',
+  );
+  await nav(page, 'Tasks').click(); // opens on Today: what needs attention
   const views = page.getByRole('group', { name: 'Show' });
-  await expect(views.getByRole('button', { name: /^All 6/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(views.getByRole('button', { name: /^Today/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.hub-content .task')).toHaveCount(3); // late, today, and soon (within a week)
+  await expect(page.locator('.hub-content')).not.toContainText('Far one');
   await views.getByRole('button', { name: /^Late/ }).click();
   await expect(page.locator('.hub-content .task')).toHaveCount(1);
-  await expect(page.locator('.hub-content')).toContainText('Late one');
-  await views.getByRole('button', { name: /^Today/ }).click();
-  await expect(page.locator('.hub-content .task')).toHaveCount(2); // late and today
-  await views.getByRole('button', { name: /^This week/ }).click();
-  await expect(page.locator('.hub-content')).toContainText('Today one');
+  await views.getByRole('button', { name: /^Upcoming/ }).click();
   await expect(page.locator('.hub-content')).toContainText('Soon one');
-  await expect(page.locator('.hub-content')).not.toContainText('Far one');
+  await expect(page.locator('.hub-content')).toContainText('Far one');
+  await expect(page.locator('.hub-content')).not.toContainText('Today one');
   await views.getByRole('button', { name: /^Waiting/ }).click();
   await expect(page.locator('.hub-content .task')).toHaveCount(1);
   await expect(page.locator('.hub-content')).toContainText('Waiting one');
+  await views.getByRole('button', { name: /^Inbox/ }).click();
+  await expect(page.locator('.hub-content')).toContainText('Undated one');
+  await expect(page.locator('.hub-content')).not.toContainText('Filed one'); // it is in a project
   await views.getByRole('button', { name: /^No date/ }).click();
   await expect(page.locator('.hub-content')).toContainText('Undated one');
   await views.getByRole('button', { name: /^All/ }).click();
-  await expect(page.locator('.hub-content .task')).toHaveCount(6);
+  await expect(page.locator('.hub-content .task')).toHaveCount(7);
+});
+
+test('Follow-ups is a view on the Tasks screen and a card on Home, listing the #followup lines', async ({ page }) => {
+  await openVault(page, { 'a.md': '# A\n- Ask Dana about the logo files #followup\n- plain line\n' }, true, 'home');
+  const card = page.locator('.home-card', { has: page.locator('h3', { hasText: 'Follow-ups' }) });
+  await expect(card).toContainText('Ask Dana about the logo files');
+  await nav(page, 'Tasks').click();
+  await page
+    .getByRole('group', { name: 'Show' })
+    .getByRole('button', { name: /^Follow-ups 1/ })
+    .click();
+  await expect(page.locator('.hub-content')).toContainText('Ask Dana about the logo files');
+  await page
+    .locator('.hub-content')
+    .getByRole('button', { name: /Open a\.md/ })
+    .click();
+  await expect(page.locator('.cm-content')).toContainText('Ask Dana');
 });

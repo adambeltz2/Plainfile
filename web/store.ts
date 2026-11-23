@@ -32,7 +32,6 @@ export type ScreenId =
   | 'guide'
   | 'changelog'
   | 'tasks';
-export type TodayViewId = 'today' | 'upcoming' | 'inbox' | 'waiting' | 'all' | 'followups' | 'projects';
 
 export type Modal =
   | { step: 'menu' }
@@ -76,8 +75,6 @@ export const state = {
   renames: [] as { from: string; to: string }[],
   modal: undefined as Modal | undefined,
   // Today
-  view: 'today' as TodayViewId,
-  tag: undefined as string | undefined,
   selected: undefined as string | undefined,
   context: undefined as Context | undefined,
   log: undefined as Log | undefined,
@@ -181,7 +178,6 @@ export async function loadVault(storage: VaultStorage, name: string, demo: boole
     state.selected = undefined;
     state.context = undefined;
     state.log = undefined;
-    state.tag = undefined;
     state.modal = undefined;
     state.renames = [];
     state.skippedHidden = false;

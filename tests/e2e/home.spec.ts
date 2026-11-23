@@ -90,10 +90,10 @@ test.describe('Home', () => {
     expect((await listFiles(page, dir)).some((f) => /^inbox\/\d{4}-\d{2}-\d{2} \d{4}\.md$/.test(f))).toBe(true);
   });
 
-  test('the buttons lead to Today and to the weekly review', async ({ page }) => {
+  test('the buttons lead to the Today view and to the weekly review', async ({ page }) => {
     await openVault(page, VAULT, true, 'home');
     await page.getByRole('button', { name: 'All of Today' }).click();
-    await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Show' }).getByRole('button', { name: /^Today/ })).toHaveAttribute('aria-pressed', 'true');
     await nav(page, 'Home').click();
     await page.getByRole('button', { name: /^File all|File them/ }).click();
     await expect(page.locator('.title')).toHaveText('Weekly review');

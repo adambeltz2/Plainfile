@@ -4,6 +4,7 @@ import { kindForPrompt } from '../src/vocabulary';
 import { openNote } from './notes';
 import { listProjects } from '../src/projects';
 import { findProject, parseQuickLine } from '../src/quickline';
+import { openTasks } from './project';
 import { errorMessage, quickAddTask, render, state, today, words } from './store';
 import { esc } from './util';
 
@@ -204,11 +205,8 @@ export async function click(target: HTMLElement): Promise<boolean> {
     } else {
       const stay = m.locked;
       state.modal = undefined;
-      if (!stay) {
-        state.screen = 'today';
-        state.view = 'inbox';
-      }
-      render();
+      if (!stay) openTasks('all');
+      else render();
     }
     return true;
   }

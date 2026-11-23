@@ -13,7 +13,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   a Word file, or print it to PDF, cleanly (no frontmatter or tags). A project **Report** builds a status snapshot
   you can copy, download or save as a note.
 - **Tasks (all projects):** the Tasks tab, a place to start the day and add tasks from one line, opens the project hub over every task, from every project and from notes outside any; group by Project, person, status or date, filter, and use the board and timeline as usual.
-- **Quick views:** All, Late, Today, This week, Waiting and No date, with counts, above the task list on Tasks and on any project.
+- **Tasks, opened on Today:** there is no separate Today screen: the **Tasks** tab opens on its **Today** view (late, due today and due in the next seven days). The quick views above the list are All, Late, Today, Upcoming, Waiting, Inbox (tasks in no project), No date and Follow-ups (the `#followup` lines, also a card on Home), with counts. Click a task's title to open its note, or its date to select it and see its lines in the file and Reschedule; j / k move down and up, x ticks, e opens, 1 2 3 0 set priority.
 - **Close out a project:** a project's page shows Active or Archived and has Close out / Reopen. Closing writes `active: false` and `completed:` in the project note and moves it under Archived. Its finished tasks leave the Tasks tab; any task still open keeps showing there and on Home, wherever it lives. It can also move the whole folder to `archive/` (and back on Reopen), rewriting every link, with a preview; nothing is deleted.
 - **Subtask progress:** a task with nested checkboxes shows "1 of 3" wherever tasks are listed.
 - **Export a project as one document:** Export notes in a project builds a contents list and a chapter per note, to copy, download as Word, print or save.
@@ -24,17 +24,15 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Home and the weekly review:** a landing screen (capture, today, what needs filing, what
   you are waiting on, the week ahead, project progress) and a four-step review that files, reschedules and plans
   with small guarded edits to your own notes.
-- **Priority:** `(A)`, `(B)`, `(C)` straight after the checkbox (or `priority: A` in a task note, or an Obsidian Tasks emoji) shows as a badge and sorts first. Start a quick add with `(A)`, press 1, 2, 3 or 0 on a selected task on Today, or filter and bulk-set it in a project. Each change edits one letter in the file.
+- **Priority:** `(A)`, `(B)`, `(C)` straight after the checkbox (or `priority: A` in a task note, or an Obsidian Tasks emoji) shows as a badge and sorts first. Start a quick add with `(A)`, press 1, 2, 3 or 0 on a selected task on Tasks, or filter and bulk-set it in a project. Each change edits one letter in the file.
 - **Status on a checkbox line:** `status:doing` or `status:waiting` on an inline task, like `due:`. It shows as a chip and in status groups, bulk Set status sets it, and ticking the box (done) removes it.
 - **When a task was finished:** ticking records `done:2026-11-23` on the line (`completed:` in a task note) and reopening removes it; Insight and Done per week use it instead of an estimate.
 - **Repeating tasks:** `rec:1w` (or `rec:+3d` from the day finished) on a checkbox line, or `repeat: weekly` in a task note. Finishing one makes the next, shown in the readout and undone by unticking. Quick add reads `every monday`, `every 2 weeks`, `daily`. Obsidian's 🔁 is read.
 - **Pinned on Home:** pinned notes (⋯ More, Pin to top) are on a Pinned card on Home.
-- **Today:** open tasks that are late, due today or due this week, plus Upcoming, Inbox, Waiting on,
-  All open, Follow-ups and Projects views. Ticking a box changes one character in the file and shows
-  the exact before and after lines.
+- **Ticking** a box changes one character (and adds the date it was done) in the file and shows the exact before and after lines.
 - **New task form:** + New > Task, and + Task on a project page (project fixed, you stay on the page), take a task line with `(A)`, `@people`, `#tags` and `due:` as well as a priority list, due-date picks, people and tags fields.
 - **Every task is its own note** (`tasks/<title>.md`, or inside its project), so it has room for details,
-  and it shows in Today, the Board and your Inbox.
+  and it shows in Tasks, the Board and your Inbox.
 - **One-line quick add:** `Call Dana +Website @dana #launch due:tomorrow`. Natural dates (`today`,
   `tomorrow`, `mon`, `next-week`, `+3d`), a preview before you save, and type-ahead for people, tags
   and projects, and `due:` day words. A date in plain words at the end of the line works too: `Call Dana
@@ -108,7 +106,7 @@ Design mockups are in [`mockups.html`](mockups.html).
 | Vault health checks | `src/health.ts` |
 | Folder storage and CLI | `src/node-storage.ts`, `src/cli.ts` |
 | Browser folder access (File System Access API) | `src/fsa-storage.ts`, `web/handle-store.ts` |
-| Browser app: shell and screens (Today, Projects, Notes, Search, Health, New menu) | `web/main.ts`, `web/today.ts`, `web/project.ts`, `web/notes.ts`, `web/search.ts`, `web/health.ts`, `web/newmenu.ts` |
+| Browser app: shell and screens (Tasks, Projects, Notes, Search, Health, New menu) | `web/main.ts`, `web/today.ts` (quick add and the selected-task panel), `web/project.ts`, `web/notes.ts`, `web/search.ts`, `web/health.ts`, `web/newmenu.ts` |
 | Live editor | `web/editor.ts` |
 | Board and Rename screens | `web/board.ts`, `web/rename.ts`, `src/rename.ts` |
 | Dropbox storage and sign-in | `src/dropbox-storage.ts`, `src/dropbox-auth.ts`, `web/cloud.ts` |

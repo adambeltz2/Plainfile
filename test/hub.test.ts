@@ -249,6 +249,7 @@ describe('quick views', () => {
           '- [x] Finished one due:2026-11-20',
           '',
         ].join('\n'),
+        'projects/p/index.md': '---\ntitle: P\ntype: project\nactive: true\n---\n- [ ] Filed one due:2026-11-25\n',
       }),
     );
     await index.scan();
@@ -256,14 +257,25 @@ describe('quick views', () => {
   }
 
   it('counts the open tasks in each view', async () => {
-    expect(viewCounts(await tasks(), TODAY)).toEqual({ all: 6, late: 1, today: 2, week: 2, waiting: 1, none: 1 });
+    // Today is late + due today + due in the next week; Upcoming is anything after today; Inbox is tasks in no project.
+    expect(viewCounts(await tasks(), TODAY, 2)).toEqual({ all: 7, late: 1, today: 4, upcoming: 4, waiting: 1, inbox: 6, none: 1, followups: 2 });
   });
 
-  it('Today is due today or late, and a finished task never shows', async () => {
+  it('Today is what needs attention: late, due today and due this week, never a finished task', async () => {
     const f = filtersForView(newFilters(), 'today');
-    expect(applyFilters(await tasks(), f, undefined, TODAY).map((t) => t.item.title)).toEqual(['Late one', 'Today one']);
+    expect(applyFilters(await tasks(), f, undefined, TODAY).map((t) => t.item.title)).toEqual(['Late one', 'Today one', 'Soon one', 'Filed one']);
     const fl = filtersForView(newFilters(false), 'late');
     expect(applyFilters(await tasks(), fl, undefined, TODAY).map((t) => t.item.title)).toEqual(['Late one']);
+  });
+
+  it('Upcoming is after today, Inbox is tasks in no project', async () => {
+    expect(applyFilters(await tasks(), filtersForView(newFilters(), 'upcoming'), undefined, TODAY).map((t) => t.item.title)).toEqual([
+      'Soon one',
+      'Far one',
+      'Waiting one',
+      'Filed one',
+    ]);
+    expect(applyFilters(await tasks(), filtersForView(newFilters(), 'inbox'), undefined, TODAY).map((t) => t.item.title)).not.toContain('Filed one');
   });
 
   it('switches view without losing the people, tags and text that were chosen, and knows which view it is on', async () => {
@@ -271,10 +283,12 @@ describe('quick views', () => {
     const w = filtersForView(f, 'waiting');
     expect(w).toMatchObject({ people: ['dana'], text: 'x', statuses: ['waiting'] });
     expect(currentView(w)).toBe('waiting');
-    const week = filtersForView(w, 'week');
-    expect(week.statuses).toEqual([]);
-    expect(currentView(week)).toBe('week');
-    expect(currentView(filtersForView(week, 'all'))).toBe('all');
+    const up = filtersForView(w, 'upcoming');
+    expect(up.statuses).toEqual([]);
+    expect(currentView(up)).toBe('upcoming');
+    expect(currentView(filtersForView(up, 'all'))).toBe('all');
+    expect(currentView(filtersForView(up, 'inbox'))).toBe('inbox');
+    expect(currentView(filtersForView(up, 'followups'))).toBe('followups');
     expect(currentView({ ...newFilters(), statuses: ['doing'] })).toBeUndefined(); // some other status filter: no quick view is on
   });
 });

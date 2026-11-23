@@ -12,7 +12,7 @@ async function openNoteInEditor(page: Page, title: string): Promise<void> {
 }
 
 test.describe('quick add and New menu', () => {
-  test('quick add makes each task its own note, shows it in the Inbox, and touches nothing else', async ({ page }) => {
+  test('quick add makes each task its own note, counts it in the Inbox, and touches nothing else', async ({ page }) => {
     const today = localDate(0);
     const dir = await openVault(page, { 'a.md': '# A\n' });
     await page.locator('#quick-text').fill('Call Dana due:today');
@@ -25,8 +25,8 @@ test.describe('quick add and New menu', () => {
 
     await page.locator('#quick-text').fill('Second one');
     await page.locator('#quick-text').press('Enter');
-    await expect(page.locator('.side [data-view="inbox"]')).toContainText('2');
-    await expect(page.locator('.task .t', { hasText: 'Second one' })).toBeVisible(); // no date, so it lands in the Inbox view
+    await expect(page.getByRole('group', { name: 'Show' }).getByRole('button', { name: /^Inbox 2/ })).toBeVisible();
+    await expect(page.locator('.task .t', { hasText: 'Second one' })).toBeVisible(); // no date, so the list switches to All to show it
     await expect.poll(() => readFileOrEmpty(page, dir, 'tasks/Second one.md')).toContain(`status: todo\ncreated: ${today}\n`);
     expect(await readFile(page, dir, 'a.md')).toBe('# A\n');
   });
@@ -349,18 +349,17 @@ test.describe('phone navigation', () => {
     await page.getByRole('button', { name: 'Try the sample vault' }).click();
     await expect(page.locator('.nav')).toBeHidden();
     const bar = page.locator('.tabbar');
-    for (const n of ['Home', 'Today', 'Projects', 'Notes', 'More']) await expect(bar.getByRole('button', { name: new RegExp(`^${n}`) })).toBeVisible();
+    for (const n of ['Home', 'Tasks', 'Projects', 'Notes', 'More']) await expect(bar.getByRole('button', { name: new RegExp(`^${n}`) })).toBeVisible();
     const box = await bar.boundingBox();
     expect(box!.y + box!.height).toBeGreaterThan(795); // pinned to the bottom edge
-    // Today: the views panel is folded, and the work starts near the top.
-    await bar.getByRole('button', { name: 'Today' }).click();
-    await expect(page.locator('.side-toggle')).toContainText('Views and filters');
-    await expect(page.locator('.side [data-view="today"]')).toBeHidden();
-    const h = await page.locator('.title', { hasText: 'Today' }).boundingBox();
-    expect(h!.y).toBeLessThan(400);
-    await page.locator('.side-toggle').click();
-    await expect(page.locator('.side [data-view="inbox"]')).toBeVisible();
-    await page.locator('.side [data-view="inbox"]').click();
+    // Tasks opens on its Today view, with the quick views in a row and the work near the top.
+    await bar.getByRole('button', { name: /^Tasks/ }).click();
+    const views = page.getByRole('group', { name: 'Show' });
+    await expect(views.getByRole('button', { name: /^Today/ })).toHaveAttribute('aria-pressed', 'true');
+    const h = await views.boundingBox();
+    expect(h!.y).toBeLessThan(500);
+    await views.getByRole('button', { name: /^Inbox/ }).click();
+    await expect(views.getByRole('button', { name: /^Inbox/ })).toHaveAttribute('aria-pressed', 'true');
     // More holds Board, Vault health, the cheat sheet, Check for changes and the theme.
     await bar.getByRole('button', { name: /^More/ }).click();
     const sheet = page.locator('.more-sheet');
@@ -381,10 +380,10 @@ test.describe('phone navigation', () => {
 
   test('on a wide screen there is no bottom bar and the side panels stay open', async ({ page }) => {
     await page.getByRole('button', { name: 'Try the sample vault' }).click();
-    await nav(page, 'Today').click();
+    await nav(page, 'Tasks').click();
     await expect(page.locator('.tabbar')).toBeHidden();
     await expect(page.locator('.side-toggle')).toBeHidden();
-    await expect(page.locator('.side [data-view="today"]')).toBeVisible();
+    await expect(page.locator('.hub-rail')).toBeVisible(); // the project list stays open beside the tasks
   });
 });
 

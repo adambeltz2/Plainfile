@@ -33,9 +33,14 @@ export interface Filters {
   /** Priority letters, and `-` for a task with none. */
   priorities: string[];
   /** 'overdue', 'week' (the next 7 days) or 'none' (no date). */
-  due?: 'overdue' | 'today' | 'week' | 'none';
+  /** `soon` is late, today and the next seven days (what Today shows); `later` is anything after today (Upcoming). */
+  due?: 'overdue' | 'soon' | 'later' | 'week' | 'none';
   /** Hide finished tasks. On by default. */
   hideDone: boolean;
+  /** Only tasks that are not filed in any project (the Inbox view). */
+  noProject?: boolean;
+  /** Show the follow-up lines (`#followup`) instead of tasks. */
+  followups?: boolean;
 }
 
 export const NO_FILTERS: Filters = { text: '', people: [], tags: [], statuses: [], phases: [], priorities: [], hideDone: true };
@@ -142,9 +147,13 @@ export function applyFilters(tasks: HubTask[], f: Filters, keep?: ReadonlySet<st
     if (f.tags.length && !f.tags.some((g) => t.tags.includes(g))) return false;
     if (f.statuses.length && !f.statuses.includes(t.status)) return false;
     if (f.priorities.length && !f.priorities.includes(t.item.priority ?? '-')) return false;
+    if (f.noProject && t.projects?.length) return false;
     if (f.phases.length && !f.phases.includes(t.phase ?? '')) return false;
-    if (f.due === 'overdue' && !(t.due && t.due < today && t.status !== 'done')) return false;
-    if (f.due === 'today' && !(t.due && t.due <= today && t.status !== 'done')) return false;
+    // A task just ticked stays in its place (struck through) instead of vanishing from the view it is in.
+    const stillOpen = t.status !== 'done' || !!keep?.has(t.item.id);
+    if (f.due === 'overdue' && !(t.due && t.due < today && stillOpen)) return false;
+    if (f.due === 'soon' && !(t.due && t.due <= week && stillOpen)) return false;
+    if (f.due === 'later' && !(t.due && t.due > today && stillOpen)) return false;
     if (f.due === 'week' && !(t.due && t.due >= today && t.due <= week)) return false;
     if (f.due === 'none' && t.due) return false;
     if (q && !`${t.item.title} ${t.people.join(' ')} ${t.tags.join(' ')} ${t.phase ?? ''} ${t.note.title}`.toLowerCase().includes(q)) return false;
@@ -152,50 +161,61 @@ export function applyFilters(tasks: HubTask[], f: Filters, keep?: ReadonlySet<st
   });
 }
 
-/** The quick views over the tasks: the choices that used to be the Today screen's tabs. */
-export type QuickView = 'all' | 'late' | 'today' | 'week' | 'waiting' | 'none';
+/** The quick views over the tasks: what the Today screen's tabs used to be. Today is what needs attention: late, due today, and due in the next seven days. */
+export type QuickView = 'all' | 'late' | 'today' | 'upcoming' | 'waiting' | 'inbox' | 'none' | 'followups';
 export const QUICK_VIEWS: [QuickView, string][] = [
   ['all', 'All'],
   ['late', 'Late'],
   ['today', 'Today'],
-  ['week', 'This week'],
+  ['upcoming', 'Upcoming'],
   ['waiting', 'Waiting'],
+  ['inbox', 'Inbox'],
   ['none', 'No date'],
+  ['followups', 'Follow-ups'],
 ];
+/** Views that only make sense across every project: tasks filed nowhere, and lines tagged #followup. */
+export const EVERYTHING_VIEWS: QuickView[] = ['inbox', 'followups'];
 
 /** Filters set to a quick view: its date and status, keeping any people, tags, text and the rest the user chose. */
 export function filtersForView(f: Filters, v: QuickView): Filters {
-  const next: Filters = { ...f, statuses: [], due: undefined };
+  const next: Filters = { ...f, statuses: [], due: undefined, noProject: undefined, followups: undefined };
   if (v === 'late') next.due = 'overdue';
-  else if (v === 'today') next.due = 'today';
-  else if (v === 'week') next.due = 'week';
+  else if (v === 'today') next.due = 'soon';
+  else if (v === 'upcoming') next.due = 'later';
   else if (v === 'none') next.due = 'none';
   else if (v === 'waiting') next.statuses = ['waiting'];
+  else if (v === 'inbox') next.noProject = true;
+  else if (v === 'followups') next.followups = true;
   return next;
 }
 
 /** Which quick view the filters are on, or undefined when the date and status filters are something else. */
 export function currentView(f: Filters): QuickView | undefined {
+  if (f.followups) return 'followups';
+  if (f.noProject && !f.due && !f.statuses.length) return 'inbox';
+  if (f.noProject) return undefined;
   if (f.due === 'overdue' && !f.statuses.length) return 'late';
-  if (f.due === 'today' && !f.statuses.length) return 'today';
-  if (f.due === 'week' && !f.statuses.length) return 'week';
+  if (f.due === 'soon' && !f.statuses.length) return 'today';
+  if (f.due === 'later' && !f.statuses.length) return 'upcoming';
   if (f.due === 'none' && !f.statuses.length) return 'none';
   if (!f.due && f.statuses.length === 1 && f.statuses[0] === 'waiting') return 'waiting';
   if (!f.due && !f.statuses.length) return 'all';
   return undefined;
 }
 
-/** How many open tasks each quick view would show. */
-export function viewCounts(tasks: HubTask[], today: string): Record<QuickView, number> {
+/** How many open tasks each quick view would show (`followups` is how many #followup lines there are). */
+export function viewCounts(tasks: HubTask[], today: string, followups = 0): Record<QuickView, number> {
   const open = tasks.filter((t) => t.status !== 'done');
   const week = addDays(today, 7);
   return {
     all: open.length,
     late: open.filter((t) => t.due && t.due < today).length,
-    today: open.filter((t) => t.due && t.due <= today).length,
-    week: open.filter((t) => t.due && t.due >= today && t.due <= week).length,
+    today: open.filter((t) => t.due && t.due <= week).length,
+    upcoming: open.filter((t) => t.due && t.due > today).length,
     waiting: open.filter((t) => t.status === 'waiting').length,
+    inbox: open.filter((t) => !t.projects?.length).length,
     none: open.filter((t) => !t.due).length,
+    followups,
   };
 }
 

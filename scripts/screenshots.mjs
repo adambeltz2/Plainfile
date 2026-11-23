@@ -24,7 +24,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png` });
 
 let page = await session({ width: 1280, height: 800 }, 'light');
 await shot(page, 'home');
-await nav(page, 'Today');
+await nav(page, 'Tasks');
 await shot(page, 'today');
 await page.locator('#quick-text').fill('Send logos +website-relaunch @dana #launch due:friday');
 await page.locator('#quick-text').blur();
@@ -82,7 +82,7 @@ await page
   .first()
   .click()
   .catch(() => undefined);
-await nav(page, 'Today');
+await nav(page, 'Tasks');
 await shot(page, 'today-dark');
 await page.context().close();
 
