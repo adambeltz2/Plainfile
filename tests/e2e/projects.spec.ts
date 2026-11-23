@@ -293,6 +293,25 @@ test.describe('project dashboard', () => {
   });
 });
 
+test('add people to a note from its properties like a project, with type-ahead, and remove one', async ({ page }) => {
+  const NOTE = '---\ntitle: 1x1\ncreated: 2026-11-23\npeople: [dana]\n---\nTalked.\n';
+  const dir = await openVault(page, { 'journal/1x1.md': NOTE, 'people/Ken Moore.md': '---\ntitle: Ken Moore\ntype: person\n---\n' });
+  await nav(page, 'Notes').click();
+  await page.locator('.note-item', { hasText: /^1x1$/ }).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  await expect(page.locator('.projchip', { hasText: 'dana' })).toBeVisible();
+  await page.locator('#prop-person').fill('Ken Mo');
+  await expect(page.locator('.suggest')).toContainText('ken-moore');
+  await page.locator('.suggest').getByText('ken-moore').click(); // replaces both words, not just the last
+  await expect(page.locator('#prop-person')).toHaveValue('ken-moore');
+  await page.locator('#prop-person').fill('Ken Moore');
+  await page.locator('#prop-person').press('Enter');
+  await expect(page.locator('.projchip', { hasText: 'Ken Moore' })).toBeVisible();
+  await expect.poll(() => readFileOrEmpty(page, dir, 'journal/1x1.md'), { timeout: 5000 }).toBe(NOTE.replace('[dana]', '[dana, Ken-Moore]'));
+  await page.getByRole('button', { name: 'Remove dana' }).click();
+  await expect.poll(() => readFileOrEmpty(page, dir, 'journal/1x1.md'), { timeout: 5000 }).toBe(NOTE.replace('[dana]', '[Ken-Moore]'));
+});
+
 test.describe('tagging a note with projects', () => {
   const FILES = {
     'projects/site/index.md': '---\ntitle: Website relaunch\nactive: true\n---\nGoal.\n',

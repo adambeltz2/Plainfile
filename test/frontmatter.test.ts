@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { addDefaultFrontmatter, setProjects, addFrontmatterListItem, frontmatterText, setFrontmatterField } from '../src/frontmatter';
+import {
+  addDefaultFrontmatter,
+  setProjects,
+  addFrontmatterListItem,
+  frontmatterText,
+  removeFrontmatterListItem,
+  setFrontmatterField,
+} from '../src/frontmatter';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 import { setTaskStatus } from '../src/writeback';
@@ -111,5 +118,29 @@ describe('titleFrontmatter', () => {
     expect(titleFrontmatter('---\ntitle: "Old"\n---\nB', 'Say "hi"')).toBe('---\ntitle: "Say \\"hi\\""\n---\nB');
     expect(titleFrontmatter('---\r\ntitle: Old\r\n---\r\nB', 'New')).toBe('---\r\ntitle: New\r\n---\r\nB');
     expect(titleFrontmatter('# Heading\nBody', 'Fresh')).toBe('---\ntitle: Fresh\n---\n# Heading\nBody');
+  });
+});
+
+describe('removeFrontmatterListItem', () => {
+  it('takes one name out of a short list and leaves the rest of the line alone', () => {
+    expect(removeFrontmatterListItem('---\npeople: [dana, Ken-Moore, sam] # who\n---\nbody\n', 'people', '@ken moore')).toBe(
+      '---\npeople: [dana, sam] # who\n---\nbody\n',
+    );
+  });
+  it('writes an empty list when the last name goes, as new notes do', () => {
+    expect(removeFrontmatterListItem('---\npeople: [dana]\n---\n', 'people', 'Dana')).toBe('---\npeople: []\n---\n');
+    expect(removeFrontmatterListItem('---\npeople: dana\n---\n', 'people', 'dana')).toBe('---\npeople: []\n---\n');
+  });
+  it('works on a block list and keeps CRLF', () => {
+    expect(removeFrontmatterListItem('---\r\npeople:\r\n  - dana\r\n  - sam\r\ntags: []\r\n---\r\n', 'people', 'dana')).toBe(
+      '---\r\npeople:\r\n  - sam\r\ntags: []\r\n---\r\n',
+    );
+    expect(removeFrontmatterListItem('---\npeople:\n  - dana\ntags: []\n---\n', 'people', 'dana')).toBe('---\npeople: []\ntags: []\n---\n');
+  });
+  it('does nothing when the name or key is not there', () => {
+    const t = '---\npeople: [dana]\n---\n';
+    expect(removeFrontmatterListItem(t, 'people', 'sam')).toBe(t);
+    expect(removeFrontmatterListItem(t, 'tags', 'x')).toBe(t);
+    expect(removeFrontmatterListItem('no frontmatter', 'people', 'x')).toBe('no frontmatter');
   });
 });

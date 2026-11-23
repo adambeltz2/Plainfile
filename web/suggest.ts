@@ -26,6 +26,8 @@ let quiet = false;
 
 function tokenAt(input: HTMLInputElement): { start: number; end: number; token: string } {
   const v = input.value;
+  // A box that takes one name (a person, with a space in it) is matched as a whole, not word by word.
+  if (input.dataset.suggestOne !== undefined) return { start: 0, end: v.length, token: v };
   const pos = input.selectionStart ?? v.length;
   let s = pos;
   while (s > 0 && !/[\s,]/.test(v[s - 1] ?? '')) s--;
@@ -69,7 +71,7 @@ export function show(input: HTMLInputElement): void {
   if (!kind || !idx) return close();
   const { start, end, token } = tokenAt(input);
   let prefix = /^[#@]/.exec(token)?.[0] ?? '';
-  let word = token;
+  let word = input.dataset.suggestOne !== undefined ? token.trim().replace(/\s+/g, '-') : token;
   if (kind === 'line' && /^due:/i.test(token)) {
     // Day words for the one-line quick add. The line parser reads them, so the word itself is written.
     const typed = token.slice(4).toLowerCase();

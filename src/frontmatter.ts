@@ -102,6 +102,55 @@ export function addFrontmatterListItem(text: string, key: string, item: string):
   return lines.join('\n');
 }
 
+/**
+ * Take one item out of a list-valued key such as `people`. A list left empty is written as `key: []` (the way new
+ * notes write it) instead of removing the key. Does nothing if the item is not there.
+ */
+export function removeFrontmatterListItem(text: string, key: string, item: string): string {
+  const lines = text.split('\n');
+  const fm = fences(lines);
+  if (!fm) return text;
+  const at = findKey(lines, fm.end, key);
+  if (at < 0) return text;
+  const norm = (x: string): string =>
+    x
+      .replace(/^["']|["']$/g, '')
+      .replace(/^@/, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .toLowerCase();
+  const gone = norm(item);
+  const line = strip(lines[at] as string);
+  const cr = (lines[at] as string).endsWith('\r') ? '\r' : '';
+  const m = /^(.*?:\s*)(.*?)(\s+#.*)?$/.exec(line);
+  const value = (m?.[2] ?? '').trim();
+  if (value.startsWith('[') && value.endsWith(']')) {
+    const inner = value.slice(1, -1).trim();
+    const items = inner ? inner.split(',').map((x) => x.trim()) : [];
+    const keep = items.filter((x) => norm(x) !== gone);
+    if (keep.length === items.length) return text;
+    lines[at] = `${spaced(m?.[1], key)}[${keep.join(', ')}]${m?.[3] ?? ''}${cr}`;
+    return lines.join('\n');
+  }
+  if (value === '') {
+    const stop = continuationEnd(lines, at, fm.end);
+    const block = lines.slice(at + 1, stop);
+    const keep = block.filter((l) => norm(strip(l).replace(/^\s*-\s*/, '')) !== gone);
+    if (keep.length === block.length) return text;
+    if (keep.length === 0) {
+      lines.splice(at, stop - at, `${spaced(m?.[1], key)}[]${cr}`);
+      return lines.join('\n');
+    }
+    lines.splice(at + 1, block.length, ...keep);
+    return lines.join('\n');
+  }
+  if (norm(value) === gone) {
+    lines[at] = `${spaced(m?.[1], key)}[]${m?.[3] ?? ''}${cr}`;
+    return lines.join('\n');
+  }
+  return text;
+}
+
 /** The raw frontmatter text without the fences, or null. */
 export function frontmatterText(text: string): string | null {
   const lines = text.split('\n');

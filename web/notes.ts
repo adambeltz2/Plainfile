@@ -3,7 +3,16 @@ import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type De
 import { lineDiff, type LineChange } from '../src/diff';
 import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type Version } from '../src/history';
 import { bestLinkTarget } from '../src/fixes';
-import { frontmatterText, addDefaultFrontmatter, setFrontmatterField, setProjects, titleFrontmatter } from '../src/frontmatter';
+import {
+  addFrontmatterListItem,
+  frontmatterText,
+  addDefaultFrontmatter,
+  removeFrontmatterListItem,
+  setFrontmatterField,
+  setProjects,
+  titleFrontmatter,
+} from '../src/frontmatter';
+import { listOf } from '../src/fields';
 import { localDateOf } from '../src/dates';
 import { saveImage, mimeFor } from '../src/attachments';
 import { dirname, joinPath } from '../src/index';
@@ -607,10 +616,21 @@ function propsHtml(): string {
     );
   }
   for (const [k, v] of Object.entries(fm)) {
-    if (k === 'status' || k === 'due' || k === 'project') continue;
+    if (k === 'status' || k === 'due' || k === 'project' || k === 'people') continue;
     const val = Array.isArray(v) ? v.map((x) => `<span class="chip mono">${esc(String(x))}</span>`).join(' ') : esc(String(v));
     rows.push(`<dt>${esc(k)}</dt><dd>${val}</dd>`);
   }
+  const who = listOf(fm.people).map((x) => x.replace(/^@/, ''));
+  rows.push(
+    `<dt>people</dt><dd class="projrow">${who
+      .map(
+        (name) =>
+          `<span class="chip projchip"><span>${esc(name.replace(/-/g, ' '))}</span><button class="plain-btn x" data-act="person-remove" data-name="${esc(name)}" aria-label="Remove ${esc(name.replace(/-/g, ' '))}">×</button></span>`,
+      )
+      .join(
+        '',
+      )}<form data-person-add class="projadd"><input id="prop-person" class="inp" type="text" autocomplete="off" data-suggest="people" data-suggest-one data-suggest-sep="" placeholder="${who.length ? '+ Another person' : '+ Add a person'}" aria-label="Add a person"><button class="btn small" type="submit">Add</button></form></dd>`,
+  );
   const mine = noteProjects(n);
   const known = state.index ? listProjects(state.index) : [];
   rows.push(
@@ -707,7 +727,18 @@ async function restoreVersion(path: string): Promise<void> {
   updateHistoryButtons();
 }
 
+/** The little buttons that collapse a side panel, and the edge tabs that bring it back. Wide screens only. */
+function paneHide(which: 'list' | 'details'): string {
+  return which === 'list'
+    ? '<button class="pane-hide only-wide" data-act="pane-list" aria-label="Collapse left pane" title="Hide this list for more room">« Hide</button>'
+    : '<button class="pane-hide only-wide" data-act="pane-details" aria-label="Collapse right pane" title="Hide the details for more room">Hide »</button>';
+}
+
 function sideHtml(): string {
+  return paneHide('details') + sideBody();
+}
+
+function sideBody(): string {
   const idx = state.index;
   if (!notes.path || !idx) return '<h2>Note</h2><p class="muted small" style="margin:0">Open a note to see its properties, links and what changed.</p>';
   const back = idx.backlinks(notes.path);
@@ -788,7 +819,13 @@ export function html(): string {
   }
   return (
     `<div class="frame notes${notes.path ? ' has-note' : ''}${notes.panes.list ? '' : ' no-list'}${notes.panes.details ? '' : ' no-details'}">` +
-    `<aside class="side"><div class="side-head"><input id="note-filter" class="inp" type="text" placeholder="Filter notes" aria-label="Filter notes" value="${esc(notes.filter)}">` +
+    (notes.panes.list
+      ? ''
+      : '<button class="edge-tab edge-left only-wide" data-act="pane-list" aria-label="Expand left pane" title="Show the list of notes">»</button>') +
+    (notes.panes.details
+      ? ''
+      : '<button class="edge-tab edge-right only-wide" data-act="pane-details" aria-label="Expand right pane" title="Show properties, links and history">«</button>') +
+    `<aside class="side">${paneHide('list')}<div class="side-head"><input id="note-filter" class="inp" type="text" placeholder="Filter notes" aria-label="Filter notes" value="${esc(notes.filter)}">` +
     '<button class="btn primary" data-act="new-note">+ New note</button><button class="btn" data-quick-note title="Titled with the date and time, ready to type (Alt+N)">Quick note</button></div>' +
     `<div id="note-list" class="note-list">${listHtml()}</div><div id="note-trash">${trashHtml()}</div></aside>` +
     `<section class="main editor-main">${main}</section>` +
@@ -892,6 +929,13 @@ export async function click(target: HTMLElement): Promise<boolean> {
       if (!h || !notes.path) return true;
       const note = parseNote(notes.path, h.getText(), { mtime: 0, size: 0 });
       h.applyText(addDefaultFrontmatter(h.getText(), note.title, today()));
+      refreshSide();
+      return true;
+    }
+    case 'person-remove': {
+      const h = notes.handle;
+      if (!h || !notes.path) return true;
+      h.applyText(removeFrontmatterListItem(h.getText(), 'people', act.dataset.name ?? ''));
       refreshSide();
       return true;
     }
@@ -1070,6 +1114,22 @@ export function change(e: Event): boolean {
 }
 
 /** The "Add to a project" form in the properties panel. The name must be a project that exists. */
+/** Add the person typed in the Properties panel to `people:`, as the same hyphenated name a quick add writes. */
+export function addPerson(): void {
+  const h = notes.handle;
+  const input = document.getElementById('prop-person') as HTMLInputElement | null;
+  if (!h || !notes.path || !input) return;
+  const name = input.value
+    .trim()
+    .replace(/^@/, '')
+    .replace(/[,\s]+$/, '')
+    .replace(/\s+/g, '-');
+  if (!name) return;
+  h.applyText(addFrontmatterListItem(h.getText(), 'people', name));
+  refreshSide();
+  document.getElementById('prop-person')?.focus();
+}
+
 export function addProject(): void {
   const h = notes.handle;
   const input = document.getElementById('prop-project') as HTMLInputElement | null;

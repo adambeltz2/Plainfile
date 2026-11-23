@@ -776,3 +776,13 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .pri.b { border: 1.5px solid var(--fg); font-weight: 700; }
 .pri.c { border: 1px solid var(--mute); color: var(--mute); }
 .pri.q { color: var(--mute); border: 1px dashed var(--line); }
+
+/* Collapse and expand the Notes side panels: a small Hide button in each panel, and an edge tab when one is hidden. */
+.frame.notes { position: relative; }
+.pane-hide { display: block; margin: 0 0 8px auto; padding: 0 6px; font-size: 12px; color: var(--mute); background: transparent; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
+.pane-hide:hover, .pane-hide:focus-visible { color: var(--fg); border-color: var(--fg); }
+.edge-tab { position: absolute; top: 12px; z-index: 5; width: 22px; height: 44px; padding: 0; font-size: 16px; line-height: 1; color: var(--fg); background: var(--bg); border: 1px solid var(--fg); cursor: pointer; }
+.edge-tab:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.edge-left { left: 0; border-left: 0; border-radius: 0 6px 6px 0; }
+.edge-right { right: 0; border-right: 0; border-radius: 6px 0 0 6px; }
+@media (max-width: 960px) { .pane-hide, .edge-tab { display: none; } }
