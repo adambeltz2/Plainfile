@@ -411,3 +411,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - [FEATURE] Draw Mermaid diagrams in Word/PDF/copy export. `src/render.ts`, `src/docx.ts`, `web/export.ts`.
 - [DEBT] Verify the SRI hash against the live jsDelivr file (computed from the npm package, which should be identical). `web/mermaid.ts`.
 - [FEATURE] Click a diagram to enlarge it. `web/mermaid-widget.ts`.
+
+## Filing
+- [FEATURE] Offer to move a task note into its project folder (`<project>/tasks/`) when a project is assigned later; today only `project:` changes and the file stays put. `src/home.ts` (fileItem), `src/move.ts`, `web/review.ts`, `web/notes.ts`.
