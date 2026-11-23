@@ -244,12 +244,25 @@ async function select(id: string): Promise<void> {
   render();
 }
 
+/**
+ * Add the typed line as a task. The box is emptied the moment you press Enter, so the next line can be typed while
+ * the save finishes (it used to be cleared afterwards, which could wipe a line typed in the meantime). If the save
+ * fails, the line is put back, unless you have already started typing something else.
+ */
 export async function submitQuick(): Promise<void> {
-  const due = planQuickLine(quick.text).parsed.due;
-  const err = await quickAddLine(quick.text);
+  const line = quick.text;
+  if (!line.trim()) return;
+  const due = planQuickLine(line).parsed.due;
+  quick.text = '';
+  const box = document.getElementById('quick-text') as HTMLInputElement | null;
+  if (box) box.value = '';
+  const prev = document.getElementById('quick-preview');
+  if (prev) prev.innerHTML = quickPreview('');
+  const err = await quickAddLine(line);
   quick.error = err ?? '';
-  if (!err) {
-    quick.text = '';
+  if (err) {
+    if (!quick.text) quick.text = line;
+  } else {
     // Show the new task: in Today if it is due within the week, otherwise in the Inbox.
     state.view = due && due <= addDays(today(), 7) ? 'today' : state.view === 'all' ? 'all' : 'inbox';
     if (state.selected) await loadContext(state.selected).catch(() => undefined);

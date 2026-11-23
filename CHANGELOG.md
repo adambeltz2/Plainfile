@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.6.1] - 2026-11-23
+
+### Fixed
+- **The quick add box empties the moment you press Enter**, not after the save finishes. Typing the next task straight away could lose it; now it can't. If a line cannot be added (for example, an unknown `+Project`), it is put back in the box.
+
 ## [1.6.0] - 2026-11-23
 
 ### Added

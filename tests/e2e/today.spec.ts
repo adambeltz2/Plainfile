@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { localDate, openVault, readFile, writeFileExternally, nav } from './helpers';
+import { listFiles, localDate, openVault, readFile, writeFileExternally, nav } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -134,4 +134,28 @@ test('works at phone width without sideways scrolling', async ({ page }) => {
   await expect(page.getByText('File estimated tax payment')).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test('the quick add box empties at once, so a line typed during the save is not lost', async ({ page }) => {
+  await page.goto('/');
+  const dir = await openVault(page, { 'a.md': '# A\n' });
+  const box = page.locator('#quick-text');
+  await box.fill('First task');
+  await box.press('Enter');
+  await expect(box).toHaveValue(''); // emptied straight away
+  await box.fill('Second task');
+  await box.press('Enter');
+  await expect
+    .poll(async () => (await listFiles(page, dir)).filter((f) => f.startsWith('tasks/')).sort())
+    .toEqual(['tasks/First task.md', 'tasks/Second task.md']);
+});
+
+test('a line that cannot be added is put back in the box', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { 'a.md': '# A\n' });
+  const box = page.locator('#quick-text');
+  await box.fill('Task +NoSuchProject');
+  await box.press('Enter');
+  await expect(page.locator('.notice.err, .err-text').first()).toContainText('No project called');
+  await expect(box).toHaveValue('Task +NoSuchProject');
 });
