@@ -24,7 +24,7 @@ helper, per-screen event routing).
 - [x] PWA shortcuts (1.7.3; opening `.md` files with the app is still open)
 
 **Tier 2: moderate, self-contained**
-- [ ] Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]`
+- [x] Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]` (1.8.0)
 - [ ] Keyboard-first Today (`j`/`k`/`x`/`e`)
 - [ ] Insight: choose a time range
 - [ ] Reschedule buttons in Today (tomorrow, next Monday, pick a date)
@@ -291,8 +291,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` Tag manager: rename, merge or delete a tag across every note, a tag tree for
   `area/home` style tags, unused tags, and a warning for `Launch` versus `launch`. _Affected: new
   `src/tags.ts`, `web/tags.ts`._
-- `[FEATURE]` Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]` links.
-  _Affected: `src/fixes.ts`._
 
 ## Search
 

@@ -1,4 +1,4 @@
-import { bestLinkTarget, retargetWikiLink } from '../src/fixes';
+import { bestLinkTarget, retargetMarkdownLink, retargetWikiLink } from '../src/fixes';
 import { newNoteForLink } from '../src/linknote';
 import { ExistsError } from '../src/storage';
 import { errorMessage, getHealth, rescan, render, state, today, writeFailure, type Log } from './store';
@@ -32,7 +32,9 @@ function sections(): Section[] {
       const fixTo = u.kind === 'wiki' && u.suggestionPath ? bestLinkTarget(idx, u.from, u.suggestionPath) : '';
       const fix = fixTo
         ? `<button class="btn small primary" data-fix-from="${esc(u.from)}" data-fix-line="${u.line}" data-fix-old="${esc(u.target)}" data-fix-to="${esc(fixTo)}">Link to ${esc(fixTo)}</button>`
-        : '';
+        : u.kind === 'md' && u.suggestionPath
+          ? `<button class="btn small primary" data-fixmd-from="${esc(u.from)}" data-fixmd-line="${u.line}" data-fixmd-old="${esc(u.target)}" data-fixmd-to="${esc(u.suggestionPath)}">Link to ${esc(u.suggestionPath)}</button>`
+          : '';
       const create = `<button class="btn small" data-create-from="${esc(u.from)}" data-create-kind="${u.kind}" data-create-target="${esc(u.target.split('#')[0] ?? u.target)}" title="Make this note, beside the one that links to it">Create note</button>`;
       return item(
         `${u.kind === 'wiki' ? `[[${esc(u.target)}]]` : esc(u.target)}`,
@@ -154,6 +156,27 @@ export async function click(target: HTMLElement): Promise<boolean> {
     }
     await rescan(); // the list is worked out again from the files
     healthState.log = log;
+    render();
+    return true;
+  }
+  const fixMd = target.closest<HTMLElement>('[data-fixmd-from]');
+  if (fixMd) {
+    const { storage, index } = state;
+    if (!storage || !index) return true;
+    try {
+      healthState.log = await retargetMarkdownLink(
+        storage,
+        index,
+        fixMd.dataset.fixmdFrom ?? '',
+        Number(fixMd.dataset.fixmdLine),
+        fixMd.dataset.fixmdOld ?? '',
+        fixMd.dataset.fixmdTo ?? '',
+      );
+    } catch (e) {
+      const friendly = writeFailure(e);
+      if (friendly) await rescan();
+      healthState.log = { message: friendly ?? `Could not save that change. ${errorMessage(e)}` };
+    }
     render();
     return true;
   }

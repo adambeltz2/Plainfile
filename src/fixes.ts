@@ -1,4 +1,6 @@
-import type { VaultIndex } from './index';
+import { retarget } from './folder-move';
+import { dirname, type VaultIndex } from './index';
+import { relativePath } from './move';
 import type { VaultStorage } from './storage';
 import { StaleError, type ChangeResult } from './writeback';
 
@@ -30,6 +32,32 @@ export async function retargetWikiLink(
   if (!re.test(body)) throw new StaleError(path, line);
   re.lastIndex = 0;
   const next = body.replace(re, () => `[[${newTarget}`);
+  lines[line - 1] = hasCR ? `${next}\r` : next;
+  await storage.write(path, lines.join('\n'), stat.mtime);
+  await index.refreshFile(path);
+  return { path, line, before: body, after: next, written: true };
+}
+
+/**
+ * Point a markdown link `[text](old.md)` at another note: the address becomes the path from the linking note to
+ * `newPath`. Only that address changes; an `#anchor` after it is kept. Guarded by the file's modified time.
+ */
+export async function retargetMarkdownLink(
+  storage: VaultStorage,
+  index: VaultIndex,
+  path: string,
+  line: number,
+  oldTarget: string,
+  newPath: string,
+): Promise<ChangeResult> {
+  const stat = await storage.stat(path);
+  const lines = (await storage.read(path)).split('\n');
+  const raw = lines[line - 1];
+  if (raw === undefined) throw new StaleError(path, line);
+  const hasCR = raw.endsWith('\r');
+  const body = hasCR ? raw.slice(0, -1) : raw;
+  const next = retarget(body, oldTarget, relativePath(dirname(path), newPath));
+  if (next === undefined) throw new StaleError(path, line);
   lines[line - 1] = hasCR ? `${next}\r` : next;
   await storage.write(path, lines.join('\n'), stat.mtime);
   await index.refreshFile(path);

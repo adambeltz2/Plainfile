@@ -42,7 +42,7 @@ const esc = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const external = (t: string): boolean => /^([a-z][a-z0-9+.-]*:|#|\/\/)/i.test(t);
 
 /** Replace one `](old` with `](new` in a line, trying the plain and the percent-encoded spelling. */
-function retarget(line: string, oldTarget: string, newTarget: string): string | undefined {
+export function retarget(line: string, oldTarget: string, newTarget: string): string | undefined {
   for (const [cand, repl] of [
     [oldTarget, newTarget],
     [encodeURI(oldTarget), encodeURI(newTarget)],

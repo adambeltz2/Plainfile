@@ -208,6 +208,15 @@ test.describe('vault health', () => {
     await expect(page.locator('.empty')).toContainText('Nothing to fix');
   });
 
+  test('a broken markdown link with a close match is fixed by editing only its address', async ({ page }) => {
+    const text = 'Intro\nSee [the plan](../plans/pricing-reserach.md#goals) now.\n';
+    const dir = await openVault(page, { 'notes/a.md': text, 'plans/pricing-research.md': 'x' });
+    await nav(page, /^Vault health/).click();
+    await page.getByRole('button', { name: 'Link to plans/pricing-research.md' }).click();
+    await expect(page.locator('.diff .add')).toContainText('](../plans/pricing-research.md#goals)');
+    expect(await readFile(page, dir, 'notes/a.md')).toBe(text.replace('reserach', 'research'));
+  });
+
   test('a link that points nowhere can be turned into the note it names, beside the note that links to it', async ({ page }) => {
     const text = 'Plan: see [[Open Questions]] and [[notes/Deeper Idea]].\n';
     const dir = await openVault(page, { 'projects/a/index.md': text });

@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.8.0] - 2026-11-23
+
+### Added
+- **Fix broken markdown links, not only `[[wiki]]` ones.** In Vault health a broken `[text](path.md)` link with a close match gets a **Link to …** button that changes only its address (the text and any `#anchor` stay), written as the path from the linking note.
+
 ## [1.7.3] - 2026-11-23
 
 ### Added
