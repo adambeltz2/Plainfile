@@ -15,7 +15,7 @@ helper, per-screen event routing).
 **Tier 1: small and additive**
 - [x] Plain-words dates in quick add (1.6.2)
 - [x] More template variables (1.6.3)
-- [ ] An Install button (browser install prompt)
+- [x] An Install button (1.6.4)
 - [ ] Show the line each back-link sits on in the Notes panel
 - [ ] Paste a URL over selected text to make a link
 - [ ] Tab and Shift+Tab indent list items; move a line up or down
@@ -340,8 +340,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   and a shortcut overlay on `?`. _Affected: `web/today.ts`, `web/main.ts`._
 - `[FEATURE]` First-run setup for an empty folder: offer to create `inbox/`, a README note and the
   starter templates. _Affected: `web/main.ts`._
-- `[FEATURE]` An Install button in the app using the browser's install prompt. _Affected:
-  `web/main.ts`._
 - `[FEATURE]` PWA shortcuts (New task, Search, Today) and file handling so `.md` files can be opened
   with Plainfile. _Affected: `web/manifest.json`._
 - `[FEATURE]` Toasts for results, instead of readouts only inside panels. _Affected: `web/store.ts`._

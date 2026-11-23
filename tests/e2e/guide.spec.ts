@@ -69,3 +69,23 @@ test.describe('cheat sheet', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
 });
+
+test.describe('install button', () => {
+  test('appears when the browser offers to install, asks once, and goes away', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('.foot').getByRole('button', { name: 'Install' })).toHaveCount(0);
+    await page.evaluate(() => {
+      const e = new Event('beforeinstallprompt', { cancelable: true }) as Event & { prompt(): Promise<void>; userChoice: Promise<{ outcome: string }> };
+      e.prompt = async () => {
+        (window as unknown as { __prompted: number }).__prompted = ((window as unknown as { __prompted?: number }).__prompted ?? 0) + 1;
+      };
+      e.userChoice = Promise.resolve({ outcome: 'accepted' });
+      window.dispatchEvent(e);
+    });
+    const btn = page.locator('.foot').getByRole('button', { name: 'Install' });
+    await expect(btn).toBeVisible();
+    await btn.click();
+    await expect(btn).toHaveCount(0);
+    expect(await page.evaluate(() => (window as unknown as { __prompted: number }).__prompted)).toBe(1);
+  });
+});

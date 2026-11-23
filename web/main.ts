@@ -19,6 +19,7 @@ import * as peopleScreen from './people';
 import * as palette from './palette';
 import * as projectScreen from './project';
 import { installDiagnostics } from './diagnostics';
+import { install, installButton, listenForInstall } from './install';
 import { ALL_PROJECTS } from '../src/projects';
 import * as rename from './rename';
 import * as search from './search';
@@ -135,6 +136,7 @@ function footer(): string {
     '<footer class="foot">' +
     `<span class="mono">Plainfile v${esc(__APP_VERSION__)}</span>` +
     '<button class="link" data-nav="changelog">What is new</button>' +
+    installButton() +
     `<a href="${REPO}" target="_blank" rel="noopener noreferrer">GitHub</a>` +
     (state.index ? '<button class="link" data-nav="guide">Cheat sheet</button>' : '') +
     '</footer>'
@@ -446,6 +448,8 @@ app.addEventListener('click', (e) => {
       case 'more-close':
         moreOpen = false;
         return requestRender();
+      case 'install':
+        return void install();
       case 'palette-open':
         return palette.openPalette();
       case 'skipped-hide':
@@ -714,6 +718,7 @@ window.__plainfile = {
 };
 
 installDiagnostics();
+listenForInstall();
 requestRender();
 void (async () => {
   if (await cloudUi.finishConnect()) return;
