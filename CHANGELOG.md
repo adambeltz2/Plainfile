@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.4.1] - 2026-11-23
+
+### Added
+- **`npm run coverage`** reports how much of `src/` the unit tests reach (`@vitest/coverage-v8`, dev only). Today: about 89% of lines, 78% of branches. The two files at 0% are `src/cli.ts` (tested by running the real command) and `src/fsa-storage.ts` (browser-only, exercised by the Playwright tests).
+
 ## [1.4.0] - 2026-11-23
 
 ### Added

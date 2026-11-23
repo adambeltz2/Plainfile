@@ -10,3 +10,4 @@ playwright-report/
 *.json
 *.svg
 web/sw.js
+coverage/
