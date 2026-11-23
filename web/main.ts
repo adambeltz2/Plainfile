@@ -486,6 +486,7 @@ app.addEventListener('click', (e) => {
 
     const open = target.closest<HTMLElement>('[data-open]');
     if (open?.dataset.open) {
+      if (state.screen === 'search') search.rememberCurrent();
       return void notes.openNote(open.dataset.open, { line: open.dataset.line ? Number(open.dataset.line) : undefined });
     }
     const folder = target.closest<HTMLElement>('[data-folder]')?.dataset.folder;

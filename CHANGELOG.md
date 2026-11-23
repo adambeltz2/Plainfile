@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.7.1] - 2026-11-23
+
+### Added
+- **Recent searches.** The Search screen lists the last eight searches that led you to a result, as chips that re-run with a click, with a Clear link. They are kept in this browser only.
+
 ## [1.7.0] - 2026-11-23
 
 ### Added

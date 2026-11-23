@@ -77,6 +77,37 @@ export function finder(active: 'search' | 'explore'): string {
   return `<div class="seg finder" role="group" aria-label="Find or explore"><button data-nav="search" aria-pressed="${active === 'search'}">Search</button><button data-nav="explore" aria-pressed="${active === 'explore'}">Explore connections</button></div>`;
 }
 
+/** The last few searches that led somewhere, kept in this browser only. */
+const RECENT_KEY = 'plainfile.recentSearches';
+export function recentSearches(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]') as unknown;
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, 8) : [];
+  } catch {
+    return [];
+  }
+}
+function rememberSearch(q: string): void {
+  const query = q.trim();
+  if (!query) return;
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify([query, ...recentSearches().filter((x) => x !== query)].slice(0, 8)));
+  } catch {
+    /* a private window just forgets */
+  }
+}
+/** A result was opened: keep the search that found it. */
+export function rememberCurrent(): void {
+  rememberSearch(searchState.q);
+}
+
+function recentRow(): string {
+  const r = recentSearches();
+  return r.length
+    ? `<div class="examples" id="search-recent"><span class="muted small">Recent</span>${r.map((e) => `<button class="chip mono ex" data-q="${esc(e)}">${esc(e)}</button>`).join('')}<button class="link small" data-recent-clear>Clear</button></div>`
+    : '';
+}
+
 export function html(): string {
   const r = results();
   return (
@@ -87,6 +118,7 @@ export function html(): string {
     '<h2 class="title">Search</h2>' +
     `<div class="sbox"><input id="search-q" type="text" autocomplete="off" spellcheck="false" aria-label="Search every note and task" placeholder="Search notes and tasks" value="${esc(searchState.q)}"></div>` +
     `<div class="examples" id="search-quick" role="group" aria-label="Find by date"><span class="muted small">When</span>${QUICK.map(([l, v]) => `<button class="chip ex" data-q="${esc(v)}" aria-pressed="${searchState.q.trim() === v}">${esc(l)}</button>`).join('')}</div>` +
+    recentRow() +
     `<div class="examples"><span class="muted small">Try</span>${EXAMPLES.map((e) => `<button class="chip mono ex" data-q="${esc(e)}">${esc(e)}</button>`).join('')}</div>` +
     `<p class="meta" id="search-count">${esc(r.count)}</p><div id="search-results">${r.list}</div></section></div>`
   );
@@ -124,6 +156,15 @@ export async function click(target: HTMLElement): Promise<boolean> {
       el.focus();
     }
     update();
+    return true;
+  }
+  if (target.closest('[data-recent-clear]')) {
+    try {
+      localStorage.removeItem(RECENT_KEY);
+    } catch {
+      /* nothing to forget */
+    }
+    document.getElementById('search-recent')?.remove();
     return true;
   }
   const open = target.closest<HTMLElement>('[data-open]');

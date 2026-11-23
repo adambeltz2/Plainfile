@@ -19,7 +19,7 @@ helper, per-screen event routing).
 - [x] Show the line each back-link sits on in the Notes panel (1.6.5)
 - [x] Paste a URL over selected text to make a link (1.7.0)
 - [x] Tab and Shift+Tab indent list items; move a line up or down (1.7.0, Alt+Up/Down already moved lines)
-- [ ] Recent searches
+- [x] Recent searches (1.7.1)
 - [ ] Create a note from a broken link in Vault health
 - [ ] PWA shortcuts (New task, Search, Today)
 
@@ -299,7 +299,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 - `[FEATURE]` Ranked search (BM25) with typo tolerance, and several matches per note with a jump to
   each. _Affected: `src/query.ts`._
-- `[FEATURE]` Saved searches and recent searches. _Affected: `web/search.ts`._
+- `[FEATURE]` Saved (named) searches. _Affected: `web/search.ts`._
 - `[FEATURE]` Find and replace across the vault with a full preview and per-line checkboxes.
   _Affected: new `src/replace.ts`, `web/search.ts`._
 - `[FEATURE]` Open a search result with the match highlighted in the editor. _Affected:
