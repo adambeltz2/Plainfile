@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.6.2] - 2026-11-23
+
+### Added
+- **Dates in plain words in the quick add.** End a line with `tomorrow`, `friday`, `next fri` (the Friday of next week), `on thu`, `in 3 days`, `in 2 weeks`, `next week`, `next month`, `end of month` or `eom` and it becomes the due date, shown in the preview and written as `due:YYYY-MM-DD`. Only the last words are read, so `Plan tomorrow's talk` is left alone, `@people`, `#tags` and `+Project` may follow the date, and an explicit `due:` always wins.
+
 ## [1.6.1] - 2026-11-23
 
 ### Fixed

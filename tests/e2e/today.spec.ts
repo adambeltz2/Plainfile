@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { listFiles, localDate, openVault, readFile, writeFileExternally, nav } from './helpers';
+import { listFiles, localDate, openVault, readFile, readFileOrEmpty, writeFileExternally, nav } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -158,4 +158,16 @@ test('a line that cannot be added is put back in the box', async ({ page }) => {
   await box.press('Enter');
   await expect(page.locator('.notice.err, .err-text').first()).toContainText('No project called');
   await expect(box).toHaveValue('Task +NoSuchProject');
+});
+
+test('a date in plain words ends up as the due date, in the preview and in the file', async ({ page }) => {
+  await page.goto('/');
+  const dir = await openVault(page, { 'a.md': '# A\n' });
+  const box = page.locator('#quick-text');
+  await box.fill('Call Dana tomorrow @dana');
+  await expect(page.locator('#quick-preview')).toContainText('Task note "Call Dana"');
+  await expect(page.locator('#quick-preview')).toContainText('due');
+  await box.press('Enter');
+  const tomorrow = localDate(1);
+  await expect.poll(async () => readFileOrEmpty(page, dir, 'tasks/Call Dana.md')).toContain(`due: ${tomorrow}`);
 });

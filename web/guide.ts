@@ -29,7 +29,10 @@ tags:                          # or one per line
 See #launch and #area/home     # tags can sit in the text too`,
   quick: `Send logo files +website-relaunch @dana #launch due:friday
 
-plus: due:today  due:tomorrow  due:mon  due:next-week  due:+3d  due:2026-11-23`,
+plus: due:today  due:tomorrow  due:mon  due:next-week  due:+3d  due:2026-11-23
+
+or dates in plain words at the end of the line:
+Call Dana tomorrow  ·  Send report next fri  ·  Renew in 3 days  ·  Pay rent end of month`,
   task: `- [ ] Send logo files @dana #launch due:2026-11-23 created:2026-11-21
 - [x] Share staging link`,
   taskfile: `---
