@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findProject, parseDueWord, parseQuickLine } from '../src/quickline';
+import { findProject, looksLikeTask, parseDueWord, parseQuickLine } from '../src/quickline';
 import type { Project } from '../src/projects';
 
 const TODAY = '2026-11-21'; // a Saturday
@@ -91,5 +91,22 @@ describe('a repeat in the quick add', () => {
     expect(parseQuickLine('Plan rec:+3d due:friday', TODAY)).toMatchObject({ rec: '+3d', title: 'Plan' });
     expect(parseQuickLine('Fix every bug in the list', TODAY).rec).toBeUndefined();
     expect(parseQuickLine('Fix every bug in the list', TODAY).title).toBe('Fix every bug in the list');
+  });
+});
+
+describe('looksLikeTask', () => {
+  it('is true for a sentence or a line that uses the quick-add marks, false for a short name', () => {
+    for (const t of [
+      'Call Dana about the logo',
+      'Pay @sam',
+      'Draft #launch',
+      'Email +site',
+      'Renew due:friday',
+      '(A) Ring',
+      'Standup every monday',
+      'Water rec:1w',
+    ])
+      expect(looksLikeTask(t), t).toBe(true);
+    for (const t of ['', '  ', 'ken', 'Ken Moore', 'plan']) expect(looksLikeTask(t), t).toBe(false);
   });
 });
