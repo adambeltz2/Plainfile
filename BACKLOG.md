@@ -414,3 +414,13 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 ## Filing
 - [DECISION] A task belongs to projects by link (`project:` can list several), not by folder, so assigning a project never moves the file. Do not build "move into project folder". Open question: tasks created with `+Project` are written into that project's `tasks/` folder; with several projects that location is arbitrary, so consider always creating in `tasks/`. `src/capture.ts` (addTaskNote).
+
+## From an outside review (checked against the code)
+- [DEBT] Add ESLint and Prettier; there is only `tsc` today. `package.json`, new config files.
+- [DEBT] Generate API docs from the JSDoc (typedoc) and add a short `CONTRIBUTING.md`. `src/`, `docs/`.
+- [FEATURE] `plainfile check --json` (and a non-zero exit when problems are found) so Vault health can run in CI. `src/cli.ts`, `src/health.ts`.
+- [FEATURE] Shell completions for the CLI; `--help` already exists. `src/cli.ts`.
+- [DEBT] Make the file-read concurrency (16, in `src/index.ts`) configurable; the browser adapter may want a lower number on phones. `src/index.ts`, `src/fsa-storage.ts`.
+- [DEBT] Test UTF-16 byte-order marks and mixed line endings on read; UTF-8 BOM and CRLF are covered. `src/parse.ts`, `test/parse.test.ts`.
+- [DEBT] Add direct tests for `setTaskStatus` transitions, if the existing writeback and board tests leave gaps. `test/writeback.test.ts`.
+- [FEATURE] Treat remote (`https:`) embeds separately from local ones in `resolveEmbed`. `src/index.ts`.

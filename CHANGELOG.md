@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.47.3] - 2026-11-23
+
+### Fixed
+- The folder adapter used by the command line (`NodeStorage`) now refuses any path that would leave the vault folder, such as `../file.md`, for every read, write and delete. The browser adapters were already confined by the browser. An outside review pointed at path safety; the rest of its list is in `BACKLOG.md`.
+
 ## [0.47.2] - 2026-11-23
 
 ### Added

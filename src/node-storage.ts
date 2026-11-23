@@ -1,5 +1,5 @@
 import { promises as fs } from 'node:fs';
-import { dirname, join, sep } from 'node:path';
+import { dirname, join, relative, resolve, sep, isAbsolute } from 'node:path';
 import { ConflictError, ExistsError, type FileEntry, type ListOptions, type VaultStorage } from './storage';
 
 const SKIP_DIRS = new Set(['node_modules']);
@@ -8,8 +8,12 @@ const SKIP_DIRS = new Set(['node_modules']);
 export class NodeStorage implements VaultStorage {
   constructor(private root: string) {}
 
+  /** The real path of a vault path. Refuses anything that would land outside the vault folder, such as `../x` or an absolute path. */
   private abs(path: string): string {
-    return join(this.root, ...path.split('/'));
+    const full = resolve(join(this.root, ...path.split('/')));
+    const rel = relative(resolve(this.root), full);
+    if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) throw new Error(`Path is outside the vault: ${path}`);
+    return full;
   }
 
   async list(_opts?: ListOptions): Promise<FileEntry[]> {
