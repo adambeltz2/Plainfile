@@ -1,6 +1,7 @@
-import { addFrontmatterListItem, setFrontmatterField } from './frontmatter';
+import { addFrontmatterListItem, frontmatterText, setFrontmatterField } from './frontmatter';
 import type { VaultIndex } from './index';
 import { STATUSES, type Status } from './fields';
+import { withCompletion } from './completion';
 import { inlineWithStatus, stripInlineStatus } from './inline-status';
 import { PRIORITY_EMOJI } from './priority';
 import { ConflictError, type VaultStorage } from './storage';
@@ -12,8 +13,8 @@ import { StaleError, type ChangeResult } from './writeback';
  * it was planned. The same edits reversed give Undo.
  */
 export type BulkAction =
-  | { kind: 'done'; done: boolean }
-  | { kind: 'status'; status: Status }
+  | { kind: 'done'; done: boolean; /** Today, to record when it was finished. */ on?: string }
+  | { kind: 'status'; status: Status; on?: string }
   | { kind: 'due'; date: string | null }
   | { kind: 'priority'; letter: string | null }
   | { kind: 'person'; name: string }
@@ -56,9 +57,11 @@ export function editInlineLine(line: string, a: BulkAction): string | null {
   let out: string | null = null;
   if (a.kind === 'done') {
     const ticked = CHECKBOX.test(body) ? body.replace(CHECKBOX, (_m, a1: string, a2: string) => `${a1}${a.done ? 'x' : ' '}${a2}`) : null;
-    out = ticked !== null && a.done ? stripInlineStatus(ticked) : ticked; // a finished task no longer says "doing"
-  } else if (a.kind === 'status') out = inlineWithStatus(body, a.status);
-  else if (a.kind === 'priority') out = withPriority(body, a.letter);
+    out = ticked === null ? null : withCompletion(a.done ? stripInlineStatus(ticked) : ticked, a.done, a.on); // a finished task no longer says "doing"
+  } else if (a.kind === 'status') {
+    const next = inlineWithStatus(body, a.status);
+    out = next === null ? null : withCompletion(next, a.status === 'done', a.on);
+  } else if (a.kind === 'priority') out = withPriority(body, a.letter);
   else if (a.kind === 'due') {
     if (a.date === null) out = body.replace(/\s*#?\bdue:\d{4}-\d{2}-\d{2}/i, '');
     else out = DUE.test(body) ? body.replace(DUE, (_m, k: string) => `${k}${a.date}`) : `${body.replace(/\s+$/, '')} due:${a.date}`;
@@ -72,13 +75,20 @@ export function editInlineLine(line: string, a: BulkAction): string | null {
   return out === null ? null : out + cr;
 }
 
+/** `completed:` in a task note: today's date when it is finished (if given), removed when it is reopened. */
+function stamp(text: string, done: boolean, on?: string): string {
+  if (on === undefined) return text;
+  if (done && /^completed\s*:/m.test(frontmatterText(text) ?? '')) return text; // keep the day it was first finished
+  return setFrontmatterField(text, 'completed', done ? on : null);
+}
+
 /** A task note's text after the action. */
 export function editFileText(text: string, a: BulkAction): string | null {
   switch (a.kind) {
     case 'done':
-      return setFrontmatterField(text, 'status', a.done ? 'done' : 'todo');
+      return stamp(setFrontmatterField(text, 'status', a.done ? 'done' : 'todo'), a.done, a.on);
     case 'status':
-      return setFrontmatterField(text, 'status', a.status);
+      return stamp(setFrontmatterField(text, 'status', a.status), a.status === 'done', a.on);
     case 'due':
       return setFrontmatterField(text, 'due', a.date);
     case 'priority':

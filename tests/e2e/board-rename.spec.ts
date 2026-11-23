@@ -52,7 +52,10 @@ test.describe('board', () => {
     await nav(page, 'Board').click();
     await page.locator('[data-card]').dragTo(page.locator('[data-col="done"]'));
     await expect(page.locator('[data-col="done"] .card')).toContainText('Alpha');
-    expect(await readFile(page, dir, 'tasks/a.md')).toBe(text.replace('status: todo', 'status: done'));
+    // Moving a card to done also records the day, in the frontmatter; nothing else changes.
+    expect(await readFile(page, dir, 'tasks/a.md')).toBe(
+      text.replace('status: todo', 'status: done').replace('due: 2026-12-01\n', `due: 2026-12-01\ncompleted: ${new Date().toLocaleDateString('en-CA')}\n`),
+    );
   });
 
   test('explains itself when there are no task files', async ({ page }) => {

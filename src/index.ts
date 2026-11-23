@@ -16,6 +16,8 @@ export interface TaskItem {
   created?: string;
   /** A to Z, A first. */
   priority?: string;
+  /** The day it was finished, if the task says so. */
+  completed?: string;
   who: string[];
   tags: string[];
   status?: string;
@@ -91,7 +93,7 @@ export interface IndexCache {
 }
 
 /** Bump when parsing changes in a way that makes saved notes wrong, so every cache is dropped. */
-export const PARSER_VERSION = 4; // 4: inline tasks carry status:doing/waiting; 3: tasks carry a priority; 2: inline tasks carry nested-checkbox counts
+export const PARSER_VERSION = 5; // 5: tasks carry a completion date; 4: inline tasks carry status:doing/waiting; 3: tasks carry a priority; 2: inline tasks carry nested-checkbox counts
 
 export class VaultIndex {
   /** Increases every time the index changes, so derived results can be cached. */
@@ -353,6 +355,7 @@ export class VaultIndex {
           due: f.due,
           created: f.created,
           priority: f.priority,
+          completed: f.completed,
           who: peopleOf(n.frontmatter.people),
           tags: n.tags,
           status: f.status,
@@ -388,6 +391,7 @@ function inlineItem(n: Note, t: InlineTask): TaskItem {
     created: t.created,
     priority: t.priority,
     status: t.status,
+    completed: t.completed,
     who: t.who,
     tags: t.tags,
     sub: t.sub,

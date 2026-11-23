@@ -60,6 +60,7 @@ sortOrder: 1
 ---
 Cabinet quote came in at $14,200.`,
   dates: `created:2026-11-21      when it was added (filled in for you)
+done:2026-11-23         when it was finished (filled in when you tick it)
 due:2026-11-23          what Plainfile writes
 #due:2026-11-23         from the first Notebook app
 📅 2026-11-23           Obsidian Tasks

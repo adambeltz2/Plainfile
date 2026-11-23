@@ -270,7 +270,9 @@ export function summarize(all: HubTask[], today: string, nowMs: number): HubSumm
   const weekly = Array<number>(6).fill(0);
   for (const t of all) {
     if (t.status !== 'done') continue;
-    const ago = Math.floor((nowMs - t.note.mtime) / weekMs);
+    // The finish date where the task has one, otherwise when its note last changed (an estimate).
+    const at = t.item.completed ? Date.parse(`${t.item.completed}T12:00:00`) : t.note.mtime;
+    const ago = Math.floor((nowMs - at) / weekMs);
     if (ago >= 0 && ago < 6) weekly[5 - ago] = (weekly[5 - ago] ?? 0) + 1;
   }
   return {

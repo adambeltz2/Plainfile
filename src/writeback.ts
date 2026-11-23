@@ -1,6 +1,9 @@
 import type { TaskItem, VaultIndex } from './index';
 import type { Note } from './parse';
+import { withCompletion } from './completion';
 import { inlineWithStatus, stripInlineStatus } from './inline-status';
+import { normalizeStatus } from './fields';
+import { setFrontmatterField } from './frontmatter';
 import type { VaultStorage } from './storage';
 
 /** The file no longer looks the way the index last saw it. Rescan and try again. */
@@ -21,6 +24,8 @@ export interface ChangeResult {
   after: string;
   /** False when the task was already in the requested state and nothing was written. */
   written: boolean;
+  /** A second changed line in the same file, such as `completed:` in a task note's frontmatter. */
+  also?: { line: number; before: string; after: string };
 }
 
 export interface TaskStatusOptions {
@@ -28,6 +33,8 @@ export interface TaskStatusOptions {
   doneStatus?: string;
   /** Frontmatter status written when a completed file task is reopened. */
   reopenStatus?: string;
+  /** Today's date. When given, finishing a task also writes the day it was finished, and reopening it removes that. */
+  completedOn?: string;
 }
 
 /**
@@ -41,6 +48,8 @@ async function editLine(
   task: TaskItem,
   expectedRaw: (note: Note) => string | undefined,
   compute: (body: string, note: Note) => string | null,
+  /** A change to the rest of the file, made in the same write (for example the `completed:` line). */
+  fix?: (text: string) => string,
 ): Promise<ChangeResult> {
   const note = index.notes.get(task.path);
   if (!note) throw new Error(`no such note: ${task.path}`);
@@ -59,9 +68,19 @@ async function editLine(
   if (next === null || next === body) return { path: task.path, line: task.line, before: body, after: body, written: false };
 
   lines[idx] = hasCR ? `${next}\r` : next;
-  await storage.write(task.path, lines.join('\n'), stat.mtime);
+  const edited = lines.join('\n');
+  const text = fix ? fix(edited) : edited;
+  await storage.write(task.path, text, stat.mtime);
   await index.refreshFile(task.path);
-  return { path: task.path, line: task.line, before: body, after: next, written: true };
+  const result: ChangeResult = { path: task.path, line: task.line, before: body, after: next, written: true };
+  if (text !== edited) {
+    const a = edited.split('\n');
+    const b = text.split('\n');
+    let i = 0;
+    while (i < a.length && i < b.length && a[i] === b[i]) i++;
+    result.also = { line: i + 1, before: (a[i] ?? '').replace(/\r$/, ''), after: (b[i] ?? '').replace(/\r$/, '') };
+  }
+  return result;
 }
 
 function replaceStatus(body: string, value: string): string {
@@ -91,7 +110,7 @@ export async function setTaskDone(storage: VaultStorage, index: VaultIndex, id: 
         const want = done ? 'x' : ' ';
         if ((body[t.col] === 'x' || body[t.col] === 'X' ? 'x' : ' ') === want) return null;
         const next = body.slice(0, t.col) + want + body.slice(t.col + 1);
-        return done ? stripInlineStatus(next) : next; // a finished task no longer says "doing"
+        return withCompletion(done ? stripInlineStatus(next) : next, done, opts.completedOn); // a finished task no longer says "doing"
       },
     );
   }
@@ -104,11 +123,18 @@ export async function setTaskDone(storage: VaultStorage, index: VaultIndex, id: 
       if (n.fileTask?.done === done) return null;
       return replaceStatus(body, done ? (opts.doneStatus ?? 'done') : (opts.reopenStatus ?? 'todo'));
     },
+    opts.completedOn === undefined ? undefined : (text) => setFrontmatterField(text, 'completed', done ? opts.completedOn! : null),
   );
 }
 
 /** Set a task file's status to any value, for example when a card moves between board columns. */
-export async function setTaskStatus(storage: VaultStorage, index: VaultIndex, id: string, status: string): Promise<ChangeResult> {
+export async function setTaskStatus(
+  storage: VaultStorage,
+  index: VaultIndex,
+  id: string,
+  status: string,
+  opts: { completedOn?: string } = {},
+): Promise<ChangeResult> {
   const task = index.getTask(id);
   if (!task) throw new Error(`no such task: ${id}`);
   if (task.kind === 'inline') {
@@ -118,7 +144,10 @@ export async function setTaskStatus(storage: VaultStorage, index: VaultIndex, id
       index,
       task,
       (n) => n.tasks.find((x) => x.line === task.line)?.raw,
-      (body) => inlineWithStatus(body, status),
+      (body) => {
+        const next = inlineWithStatus(body, status);
+        return next === null ? null : withCompletion(next, normalizeStatus(status) === 'done', opts.completedOn);
+      },
     );
   }
   return editLine(
@@ -127,5 +156,8 @@ export async function setTaskStatus(storage: VaultStorage, index: VaultIndex, id
     task,
     (n) => n.fileTask?.statusRaw,
     (body, n) => (n.fileTask?.status === status.toLowerCase() ? null : replaceStatus(body, status)),
+    opts.completedOn === undefined
+      ? undefined
+      : (text) => setFrontmatterField(text, 'completed', normalizeStatus(status) === 'done' ? opts.completedOn! : null),
   );
 }

@@ -207,6 +207,22 @@ for (const { name, make } of ADAPTERS) {
       await setTaskDone(s, index, logos2.id, true);
       expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @dana due:2026-11-23');
 
+      // Finishing a task records the day on the same line (and in a task note's frontmatter); reopening removes it.
+      await setTaskDone(s, index, logos2.id, false, { completedOn: '2026-11-23' });
+      await setTaskDone(s, index, logos2.id, true, { completedOn: '2026-11-23' });
+      expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @dana due:2026-11-23 done:2026-11-23');
+      await setTaskDone(s, index, logos2.id, false, { completedOn: '2026-11-23' });
+      await setTaskDone(s, index, logos2.id, true);
+      expect((await s.read('inbox/Kickoff.md')).split('\n')[3]).toBe('- [x] Send logos @dana due:2026-11-23');
+      const doneAt = await addTaskNote(s, index, { title: 'Dated task', created: '2026-11-21' });
+      await setTaskDone(s, index, doneAt.taskId, true, { completedOn: '2026-11-23' });
+      expect(await s.read(doneAt.path)).toContain('status: done\n');
+      expect(await s.read(doneAt.path)).toContain('completed: 2026-11-23\n');
+      await setTaskDone(s, index, doneAt.taskId, false, { completedOn: '2026-11-23' });
+      expect((await s.read(doneAt.path)).includes('completed')).toBe(false);
+      await s.remove(doneAt.path, (await s.stat(doneAt.path)).mtime);
+      await index.scan();
+
       const mv = planMove(index, 'inbox/Kickoff.md', 'projects/site');
       await applyMove(s, index, mv, new Set(mv.inbound.map((e) => e.id)));
       expect(await s.read('ref/Other.md')).toBe('# Other\nback to [[projects/site/Kickoff]]\n');

@@ -59,7 +59,7 @@ test('connect Dropbox, open a folder from it, tick a task, and the file changes 
 
   await page.getByRole('button', { name: /Mark done: Call Dana/ }).click();
   await expect(page.locator('.diff .add')).toContainText('- [x] Call Dana');
-  expect(fake.files.get('/notes/hello.md')?.content).toBe('# Hello\n- [x] Call Dana due:2026-11-21\n');
+  expect(fake.files.get('/notes/hello.md')?.content).toBe(`# Hello\n- [x] Call Dana due:2026-11-21 done:${new Date().toLocaleDateString('en-CA')}\n`);
   expect(fake.files.get('/other/skip.md')?.content).toBe('not mine');
 });
 

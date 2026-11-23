@@ -75,7 +75,7 @@ export async function move(id: string, status: string): Promise<void> {
   const { storage, index } = state;
   if (!storage || !index || !status) return;
   try {
-    boardState.log = await setTaskStatus(storage, index, id, status);
+    boardState.log = await setTaskStatus(storage, index, id, status, { completedOn: today() });
   } catch (e) {
     const friendly = writeFailure(e);
     if (friendly) await rescan();

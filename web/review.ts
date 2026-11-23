@@ -195,7 +195,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
   const done = get('data-rv-done');
   if (done) {
     const task = index.getTask(done);
-    if (task) await run(() => finish(storage, index, task));
+    if (task) await run(() => finish(storage, index, task, today()));
     return true;
   }
   return false;

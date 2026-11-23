@@ -86,7 +86,7 @@ export function monthStats(index: VaultIndex, today: string, month: string = tod
     edited,
     notesCreated,
     tasksCreated: tasks.filter((t) => (t.item.created ?? '').startsWith(month)).length,
-    tasksDone: tasks.filter((t) => t.status === 'done' && localDateOf(t.note.mtime).startsWith(month)).length,
+    tasksDone: tasks.filter((t) => t.status === 'done' && (t.item.completed ?? localDateOf(t.note.mtime)).startsWith(month)).length,
     overdue: tasks.filter((t) => t.status !== 'done' && t.due && t.due < today).length,
     open: tasks.filter((t) => t.status !== 'done').length,
   };
@@ -140,8 +140,8 @@ export function drillItems(index: VaultIndex, today: string, kind: Drill, month:
     );
   if (kind === 'tasksDone')
     return pick(
-      tasks.filter((t) => t.status === 'done' && localDateOf(t.note.mtime).startsWith(month)),
-      (t) => localDateOf(t.note.mtime),
+      tasks.filter((t) => t.status === 'done' && (t.item.completed ?? localDateOf(t.note.mtime)).startsWith(month)),
+      (t) => t.item.completed ?? localDateOf(t.note.mtime),
     );
   if (kind === 'overdue')
     return pick(
