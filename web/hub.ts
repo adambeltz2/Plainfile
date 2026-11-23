@@ -37,6 +37,8 @@ export const hubState = {
   toolsOpen: false,
   /** The close-out confirmation is showing. */
   closing: false,
+  /** Set while a close out or reopen is writing (the note, then the folder move), so the screen can say so. */
+  busy: '',
   /** Reopen is asking whether to move the folder back. */
   reopening: false,
   closeMove: true,
@@ -93,6 +95,7 @@ export function resetFor(path: string): void {
     facetsOpen: false,
     toolsOpen: false,
     closing: false,
+    busy: '',
     reopening: false,
     closeMove: true,
     closeTo: '',
@@ -199,7 +202,7 @@ function moveOption(kind: 'close' | 'reopen', dir: string): string {
   const to = (kind === 'close' ? hubState.closeTo : hubState.reopenTo) || (kind === 'close' ? archiveDir(dir) : restoreDir(dir));
   const prev = on ? movePreview(dir, to) : { html: '', ok: true };
   return (
-    `<div class="mv-opt"><label class="check"><input type="checkbox" id="${kind}-move"${on ? ' checked' : ''}> Also move the project folder (<code>${esc(dir)}</code>) to </label> ` +
+    `<div class="mv-opt"><label class="check"><input type="checkbox" id="${kind}-move"${on ? ' checked' : ''}><span>Also move the project folder (<code>${esc(dir)}</code>) to</span></label> ` +
     `<input id="${kind}-to" class="inp" type="text" value="${esc(to)}" aria-label="Folder to move the project to" autocomplete="off"${on ? '' : ' disabled'}>` +
     `<div id="${kind}-preview" class="small muted" aria-live="polite">${prev.html}</div></div>`
   );
@@ -208,6 +211,8 @@ function moveOption(kind: 'close' | 'reopen', dir: string): string {
 /** The close-out confirmation, a nudge when every task is done, or a note that the project is archived. */
 function projectBanner(d: ProjectDashboard, open: number, total: number): string {
   const dir = d.note ? projectFolder(d.note.path) : '';
+  if (hubState.busy)
+    return `<div class="notice loading" role="status" aria-live="polite"><b>${esc(hubState.busy)}</b><span class="small muted">Files are being changed one at a time. This can take a little while on Dropbox or a phone. Keep this page open.</span></div>`;
   if (!d.active) {
     if (hubState.reopening) {
       return (
@@ -616,12 +621,15 @@ export const hubHooks: { moved?: (newPath: string) => void } = {};
  */
 async function setActive(active: boolean): Promise<void> {
   const { storage, index } = state;
-  if (!storage || !index || !hubState.project) return;
+  if (!storage || !index || !hubState.project || hubState.busy) return;
   hubState.closing = false;
   hubState.reopening = false;
   const dir = projectFolder(hubState.project);
   const wantMove = dir && (active ? hubState.reopenMove : hubState.closeMove);
   const to = (active ? hubState.reopenTo || restoreDir(dir) : hubState.closeTo || archiveDir(dir)).trim();
+  hubState.busy = active ? 'Reopening the project…' : 'Closing out the project…';
+  render();
+  await new Promise((r) => setTimeout(r, 0)); // let the browser paint the working state before the slow part
   try {
     state.log = await setProjectActive(storage, index, hubState.project, active, today());
     hubState.error = '';
@@ -629,10 +637,14 @@ async function setActive(active: boolean): Promise<void> {
     const friendly = writeFailure(e);
     if (friendly) await rescan();
     hubState.error = friendly ?? `Could not save that change. ${errorMessage(e)}`;
+    hubState.busy = '';
     render();
     return;
   }
   if (wantMove) {
+    hubState.busy = `${active ? 'Reopened' : 'Closed out'}. Moving the folder to ${to}…`;
+    render();
+    await new Promise((r) => setTimeout(r, 0));
     try {
       const r = await applyFolderMove(storage, index, planFolderMove(index, dir, to));
       const links = new Set(r.changes.map((c) => c.path)).size;
@@ -647,6 +659,7 @@ async function setActive(active: boolean): Promise<void> {
       hubState.error = `The project is ${active ? 'reopened' : 'closed out'}, but its folder was not moved. ${friendly ?? errorMessage(e)}`;
     }
   }
+  hubState.busy = '';
   render();
 }
 

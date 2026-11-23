@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.16.1] - 2026-11-23
+
+### Fixed
+- Close out and Reopen now show a working message at once ("Closing out the project…", then "Moving the folder to …") and ignore a second tap while files are written. Before, the confirmation just sat there until the folder move finished, which can take a while on Dropbox or a phone.
+- The "Also move the project folder" line no longer breaks into pieces on a narrow screen.
+
 ## [1.16.0] - 2026-11-23
 
 ### Added

@@ -765,3 +765,29 @@ test('Export notes turns a project into one document, to copy, download as Word,
   const [download] = await Promise.all([page.waitForEvent('download'), dlg.getByRole('button', { name: 'Download Word' }).click()]);
   expect(download.suggestedFilename()).toBe('Website.docx');
 });
+
+test('closing out shows a working state straight away while the files are written, and disables a second click', async ({ page }) => {
+  await page.goto('/');
+  const FILES: Record<string, string> = {
+    'projects/weekend/index.md': '---\ntitle: Weekend\ntype: project\nactive: true\n---\n- [x] Done thing\n',
+    'projects/weekend/Plan.md': 'A plan.\n',
+  };
+  await openVault(page, FILES);
+  await nav(page, 'Projects').click();
+  await page.locator('.pcard .pbtn', { hasText: 'Weekend' }).click();
+  await page.getByRole('button', { name: 'Close out', exact: true }).first().click();
+  // Make every write slow, the way Dropbox or a phone is, so the working state can be seen.
+  await page.evaluate(() => {
+    const orig = FileSystemFileHandle.prototype.createWritable;
+    FileSystemFileHandle.prototype.createWritable = async function (this: FileSystemFileHandle, ...a: []) {
+      await new Promise((r) => setTimeout(r, 400));
+      return orig.apply(this, a);
+    };
+  });
+  await page.getByRole('group', { name: 'Close out this project' }).getByRole('button', { name: 'Close out', exact: true }).click();
+  const working = page.locator('.hub-main .notice.loading');
+  await expect(working).toContainText('Closing out the project');
+  await expect(working.getByRole('button')).toHaveCount(0);
+  await expect(page.locator('.hub-main .notice', { hasText: 'Archived.' })).toBeVisible({ timeout: 20000 });
+  await expect(page.locator('.hub-main .notice.loading')).toHaveCount(0);
+});
