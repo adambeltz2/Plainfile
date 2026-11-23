@@ -1,4 +1,5 @@
 import type { HubTask } from './hub';
+import type { InsightReport } from './insight';
 
 /** The columns of a task export, in order. */
 export const TASK_COLUMNS = ['title', 'status', 'due', 'created', 'project', 'people', 'tags', 'phase', 'file', 'line'] as const;
@@ -38,4 +39,15 @@ export function tasksToJson(tasks: HubTask[]): string {
     null,
     2,
   );
+}
+
+/** The Insight report as one flat CSV: a `section` column says which table a row belongs to. */
+export function insightToCsv(r: InsightReport): string {
+  const rows: (string | number)[][] = [['section', 'name', 'value', 'detail']];
+  for (const d of r.activity) rows.push(['activity', d.date, d.changed, 'notes changed']);
+  for (const [k, v] of Object.entries(r.month)) rows.push(['month', k, v, '']);
+  for (const t of r.topics) rows.push(['topic', t.tag, t.notes, 'notes']);
+  for (const p of r.people) rows.push(['person', p.name, p.open, `waiting ${p.waiting}; overdue ${p.overdue}; mentioned in ${p.notes} notes`]);
+  for (const f of r.folders) rows.push(['folder', f.folder, f.notes, 'notes']);
+  return rows.map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n';
 }

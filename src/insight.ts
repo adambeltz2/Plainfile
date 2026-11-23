@@ -3,6 +3,8 @@ import { allTasks } from './home';
 import type { VaultIndex } from './index';
 import { localDateOf } from './dates';
 import { weekStart } from './calendar';
+import { buildPeople } from './people';
+import { tagCounts } from './vocabulary';
 import { addDays } from './query';
 
 /**
@@ -153,4 +155,29 @@ export function notesChangedOn(index: VaultIndex, date: string): DrillItem[] {
     .filter((n) => localDateOf(n.mtime) === date)
     .sort((a, b) => b.mtime - a.mtime)
     .map((n) => ({ path: n.path, title: n.title, hint: new Date(n.mtime).toTimeString().slice(0, 5) }));
+}
+
+export interface InsightReport {
+  generated: string;
+  activity: { date: string; changed: number }[];
+  month: MonthStats;
+  topics: { tag: string; notes: number }[];
+  people: { name: string; open: number; waiting: number; overdue: number; notes: number }[];
+  folders: { folder: string; notes: number }[];
+}
+
+/** Everything the Insight screen shows, as data, for export. Days with nothing changed are left out of `activity`. */
+export function insightReport(index: VaultIndex, today: string): InsightReport {
+  const a = activity(index, today);
+  return {
+    generated: today,
+    activity: a.weeks
+      .flat()
+      .filter((d) => d.count > 0)
+      .map((d) => ({ date: d.date, changed: d.count })),
+    month: monthStats(index, today),
+    topics: tagCounts(index).map((t) => ({ tag: t.tag, notes: t.count })),
+    people: buildPeople(index, today).people.map((p) => ({ name: p.name, open: p.open, waiting: p.waiting, overdue: p.overdue, notes: p.notes })),
+    folders: folderSizes(index, 1000),
+  };
 }

@@ -34,3 +34,23 @@ describe('task export', () => {
     expect(typeof plan.line).toBe('number');
   });
 });
+
+import { insightReport } from '../src/insight';
+import { insightToCsv } from '../src/export';
+describe('insight export', () => {
+  it('gathers what the screen shows and flattens it to one CSV', async () => {
+    const index = new VaultIndex(new MemoryStorage({ 'a.md': '---\ntags: [x]\n---\n- [ ] Call @dana due:2020-01-01\n', 'sub/b.md': '# B\n#x\n' }));
+    await index.scan();
+    const today = '2026-11-23';
+    const r = insightReport(index, today);
+    expect(r.topics).toEqual([{ tag: 'x', notes: 2 }]);
+    expect(r.people.map((p) => p.name)).toContain('dana');
+    expect(r.folders.map((f) => f.folder).sort()).toEqual(['(top level)', 'sub']);
+    expect(r.month.open).toBe(1);
+    const csv = insightToCsv(r);
+    expect(csv.split('\r\n')[0]).toBe('section,name,value,detail');
+    expect(csv).toContain('topic,x,2,notes');
+    expect(csv).toContain('month,open,1,');
+    expect(csv).toContain('person,dana,1,');
+  });
+});
