@@ -79,7 +79,7 @@ export async function copyFormatted(md: string, notePath: string): Promise<strin
   }
 }
 
-function save(bytes: Uint8Array | string, name: string, type: string): void {
+export function save(bytes: Uint8Array | string, name: string, type: string): void {
   const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type }));
   const a = document.createElement('a');
   a.href = url;
@@ -94,6 +94,19 @@ export async function downloadDocx(md: string, title: string, notePath: string):
   const o = await options(md, notePath);
   save(toDocx(md, o, title), `${safeName(title)}.docx`, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
   return 'Downloaded as a Word file.';
+}
+
+/** The note as a markdown file, exactly as written (or the selected part). */
+export function downloadMarkdown(md: string, title: string): string {
+  save(md, `${safeName(title)}.md`, 'text/markdown;charset=utf-8');
+  return 'Downloaded as a markdown file.';
+}
+
+/** The note as one self-contained web page: styles inline, images embedded, nothing to link to. */
+export async function downloadHtml(md: string, title: string, notePath: string): Promise<string> {
+  const o = await options(md, notePath);
+  save(printPage(title, toHtml(md, o)), `${safeName(title)}.html`, 'text/html;charset=utf-8');
+  return 'Downloaded as a web page.';
 }
 
 /** Open the browser's print dialog for a clean copy, where Save as PDF is one of the choices. */

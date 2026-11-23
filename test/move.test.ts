@@ -115,3 +115,23 @@ describe('duplicateNote', () => {
     expect(await storage.read('b/plain copy.md')).toBe('no frontmatter\r\n');
   });
 });
+
+describe('history follows a note', () => {
+  it('moves saved versions with the note on a move and on a rename', async () => {
+    const { storage, index } = await setup({ 'a/note.md': 'now\n' });
+    const { snapshot, listVersions } = await import('../src/history');
+    await snapshot(storage, 'a/note.md', 'old one\n', '2026-11-20T10-00-00');
+    await snapshot(storage, 'a/note.md', 'old two\n', '2026-11-20T11-00-00');
+    const plan = planMove(index, 'a/note.md', 'b');
+    await applyMove(storage, index, plan, all(plan));
+    expect((await listVersions(storage, 'b/note.md')).map((v) => v.stamp)).toEqual(['2026-11-20T11-00-00', '2026-11-20T10-00-00']);
+    expect(await listVersions(storage, 'a/note.md')).toEqual([]);
+    expect(await storage.read((await listVersions(storage, 'b/note.md'))[0]!.path)).toBe('old two\n');
+
+    const { planRename, applyRename } = await import('../src/rename');
+    const rp = planRename(index, 'b/note.md', 'renamed');
+    await applyRename(storage, index, rp, { include: new Set(rp.edits.map((e) => e.id)), keepAlias: false });
+    expect((await listVersions(storage, 'b/renamed.md')).length).toBe(2);
+    expect(await listVersions(storage, 'b/note.md')).toEqual([]);
+  });
+});

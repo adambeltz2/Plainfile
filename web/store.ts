@@ -211,7 +211,7 @@ export async function reopenSaved(): Promise<void> {
 }
 
 export function openSample(sample: Record<string, string>): Promise<void> {
-  return loadVault(new MemoryStorage(sample), 'Sample vault', true);
+  return loadVault(new MemoryStorage(sample, { clockStart: Date.now() - 3 * 86400000 }), 'Sample vault', true);
 }
 
 /** Re-read the folder. Returns true if anything changed. */

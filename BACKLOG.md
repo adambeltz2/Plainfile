@@ -6,14 +6,11 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 ## Suggested next
 
-1. Import the first Notebook app's projects (same browser, no export needed).
-2. Undo for every write the app makes.
-3. Drag a note onto a folder, move several at once, and a folder tree in the Notes list.
-4. Recurring tasks and quick reschedule buttons in Today.
-5. Autocomplete for `[[links]]`, `#tags` and `@people` in the editor.
-6. Calendar view.
-7. Saved views and a view builder.
-8. Local server mode, or a Dropbox adapter, so Safari, iPhone and Firefox can use a real folder.
+1. Edit tasks in place (status, due, name) and drag Board cards and Timeline bars.
+2. Recurring tasks, and a review note saved when the weekly review finishes.
+3. Move several notes at once, a folder tree in the Notes list, and rename or move a folder.
+4. OneDrive adapter, then Google Drive; read offline from the saved copy.
+5. Split `web/notes.ts` and give each screen its own click handling (`web/main.ts` ordering).
 
 ## Refactors
 
@@ -27,25 +24,19 @@ Nothing here is a promise of order. Remove an item when it ships.
   checks. Give each screen a `handles(target)` so ordering stops mattering (a `data-project`
   clash with the Board already cost a failed test).
 
-- `[BUG]` **Sample vault shows "Thu 1 Jan" as last change** on the project dashboard and in search, because
-  the in-memory demo storage uses tiny fake modified times. Give `MemoryStorage` real times for the demo. Affects `src/memory-storage.ts`, `web/store.ts`.
-- `[DEBT]` **Sample project has no `## Goal`**, so the dashboard summary shows a raw preview. Affects `sample-vault/projects/website-relaunch/index.md`.
 
 ## Sharing and export
 
 - `[FEATURE]` **Images in the Word file** (they are in copies and print, but the .docx shows a description). Affects `src/docx.ts`.
 - `[FEATURE]` **Export a whole folder or several notes as one document** (a table of contents and each note as a chapter). Affects `src/render.ts`, `web/export.ts`.
 - `[FEATURE]` **Export presets and a custom report template** kept in `.plainfile/`. Affects `src/report.ts`.
-- `[FEATURE]` **Markdown and HTML file downloads** alongside Word. Affects `web/export.ts`.
 
 ## Move and organise
 
 - `[FEATURE]` **Folder tree in the Notes list**, with drag a note onto a folder to move it. Affects `web/notes.ts`, `web/move.ts`.
 - `[FEATURE]` **Move several notes at once** (tick notes in the list). Affects `web/notes.ts`, `src/move.ts`.
 - `[FEATURE]` **Rename a folder** and move a whole folder, rewriting links. Affects `src/move.ts`.
-- `[DEBT]` **History stays under the old path** after a move (`.plainfile/history/<old path>`). Move it with the note. Affects `src/history.ts`, `src/move.ts`.
 - `[DEBT]` **A move can change which note a short link means** when two notes share a name and one was chosen because it sat in the same folder; today only full-path links are rewritten in that case. Affects `src/move.ts`.
-- `[FEATURE]` **Ctrl/Cmd+N** for a new note (browsers reserve it; needs an in-app alternative such as Alt+N). Affects `web/main.ts`.
 
 ## Insight
 
@@ -66,7 +57,6 @@ Nothing here is a promise of order. Remove an item when it ships.
 
 ## Phones
 
-- `[FEATURE]` **Insert an image from a file picker** for phones where pasting an image is limited. Affects `web/editor.ts`.
 - `[DEBT]` **Phone check on real devices** (Android Chrome, iPhone Safari with Dropbox): safe-area insets, keyboard behaviour with the bottom bar, long-press menus. Affects `web/app.css`.
 
 ## Project hub
@@ -81,7 +71,6 @@ Nothing here is a promise of order. Remove an item when it ships.
 Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.ts`. Suggested order below.
 
 - `[REFACTOR]` **An optional `move`** on `VaultStorage` so providers can rename without copying. Binary reads and creates are done. Affects `src/storage.ts`, adapters.
-- `[FEATURE]` **Insert image from a file picker and resize or caption an image**, for phones where paste of images is limited. Affects `web/editor.ts`.
 - `[DEBT]` **Pasted images are never deleted** with their note; Vault health lists unused attachments for cleanup. Affects `src/health.ts`.
 - `[FEATURE]` **Read offline from the saved copy**: when Dropbox cannot be reached, open the saved notes read-only with a clear banner. Affects `web/store.ts`, `web/cloud.ts`.
 - `[FEATURE]` **OneDrive adapter** (Microsoft Graph, MSAL PKCE, path addressing, `eTag` and delta queries). Sign-in
@@ -105,8 +94,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` Export the whole vault, or a project, as a zip, and import a zip (mode C for browsers
   with no folder access). The browser has no zip writer, so write a small stored-method one first.
   _Affected: new `src/zip.ts`, `web/main.ts`._
-- `[FEATURE]` CSV and JSON export of tasks, with columns for due date, status, tags and file.
-  _Affected: new `src/export.ts`._
 
 ## Platform, storage and sync
 
@@ -114,15 +101,10 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   serve <folder>`, bound to localhost with a token, plus an `HttpStorage` adapter in the web app
   that implements the same `VaultStorage` interface. _Affected: new `src/server.ts`,
   `src/http-storage.ts`._
-- `[FEATURE]` Dropbox storage adapter, reusing the flow the first Notebook app had (OAuth implicit
-  grant, one file per note), so iPhone and Safari can use the same folder the desktop app edits.
-  _Affected: new `src/dropbox-storage.ts`._
 - `[FEATURE]` GitHub repository adapter: a vault in a private repo through the contents API, one
   commit per save, conflicts caught by file `sha`. Gives history and sync for free.
   _Affected: new `src/github-storage.ts`._
 - `[FEATURE]` WebDAV adapter (Nextcloud and similar). _Affected: new `src/webdav-storage.ts`._
-- `[FEATURE]` Binary file support in storage (`readBytes`, `createBytes`), so attachments can be
-  copied, moved and saved. _Affected: `src/storage.ts` and every adapter._
 - `[FEATURE]` Several vaults: remember more than one folder and switch between them.
   _Affected: `web/handle-store.ts`, `web/store.ts`._
 - `[FEATURE]` "Forget this folder" control, using `forgetHandle`. _Affected: `web/main.ts`,
@@ -177,8 +159,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   _Affected: `src/projects.ts`._
 - `[FEATURE]` Task dependencies: `blocked by [[note]]`, with blocked tasks hidden from Today until
   the other is done. _Affected: `src/parse.ts`, `src/query.ts`._
-- `[FEATURE]` Select several tasks and change date, tag, status or location together, with a
-  preview of every line that will change. _Affected: `web/today.ts`, `src/writeback.ts`._
 - `[FEATURE]` Time estimates and a day planner: drag tasks into today's plan and see the total.
   _Affected: new `web/planner.ts`._
 - `[FEATURE]` Optional reminders: a badge with the overdue count on the installed app icon
@@ -188,10 +168,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 - `[FEATURE]` Move a task or note into a project (and out of one) with every link updated.
   _Affected: `src/rename.ts`, `web/today.ts`._
-- `[FEATURE]` Choose the project when quick-adding a task, so it goes to that project's tasks instead
-  of the Inbox. _Affected: `src/capture.ts`, `web/today.ts`._
-- `[FEATURE]` A project page with progress (done and open counts), the next due task, recent
-  activity and its follow-ups in one place. _Affected: new `web/project.ts`._
 - `[FEATURE]` Finish or archive a project: set `active: false`, and offer to move it to `archive/`.
   _Affected: `src/frontmatter.ts`, `web/notes.ts`._
 - `[FEATURE]` Reorder projects by dragging cards, writing `sortOrder` for each. _Affected:
@@ -199,23 +175,10 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 ## Views
 
-- `[FEATURE]` **Calendar** (month and week) showing tasks by due date and notes by `date`.
-  _Affected: new `web/calendar.ts`._
-- `[FEATURE]` **Saved views** stored as markdown in `.plainfile/views/`, and a view builder with
-  filters, sorting, grouping and a choice of list, board, table or calendar. _Affected: new
-  `src/views.ts`, `web/views.ts`._
 - `[FEATURE]` Table view over frontmatter fields: sortable columns, filters, and editing a cell as a
   one-line frontmatter edit. _Affected: new `web/table.ts`._
-- `[FEATURE]` Timeline view for projects with start and due dates, in the spirit of Simple Gantt.
-  _Affected: new `web/timeline.ts`._
-- `[FEATURE]` Weekly review: a guided pass through Inbox, overdue, waiting, follow-ups and projects.
-  _Affected: new `web/review.ts`._
-- `[FEATURE]` Journal: an Open today button, previous and next day, and a small calendar to jump
-  between journal notes. _Affected: `src/templates.ts`, new `web/journal.ts`._
 - `[FEATURE]` Board: group by owner or due week, and show checkbox tasks as cards too. _Affected:
   `web/board.ts`._
-- `[FEATURE]` Insights: completed per week, tags over time, notes written per day, all computed
-  locally. _Affected: new `src/stats.ts`, `web/insights.ts`._
 - `[FEATURE]` Make the Today rails and layout configurable. _Affected: `web/today.ts`._
 
 ## Notes and the editor
@@ -236,23 +199,17 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   and numbered lists that continue. _Affected: `web/editor.ts`._
 - `[FEATURE]` Tab and Shift Tab to indent list items, and move a line up or down. _Affected:
   `web/editor.ts`._
-- `[FEATURE]` Paste an image or drag a file into the editor: save it under `_attachments/` with a
-  timestamped name, insert the link, and show images inline. Needs binary storage. _Affected:
-  `web/editor.ts`, `src/storage.ts`._
 - `[FEATURE]` Paste a URL over selected text to make a link, and fetch a title for a bare URL.
   _Affected: `web/editor.ts`._
 - `[FEATURE]` Hover a `[[link]]` to preview the note. _Affected: `web/editor.ts`._
 - `[FEATURE]` Outline panel from headings, fold sections, and find in note (Ctrl F). _Affected:
   `web/editor.ts`, `web/notes.ts`._
 - `[FEATURE]` Several notes open as tabs, and a recent notes list. _Affected: `web/notes.ts`._
-- `[FEATURE]` Pin or star notes for quick access. _Affected: `.plainfile/config.md`, `web/notes.ts`._
 - `[FEATURE]` Properties panel: edit tags as chips with autocomplete, add any key, a date picker for
   every date-like key, and a type menu. _Affected: `web/notes.ts`._
 - `[FEATURE]` Insert a template into the current note at the cursor. _Affected: `src/templates.ts`,
   `web/editor.ts`._
 - `[FEATURE]` Callouts, math and diagrams rendered in place. _Affected: `web/editor.ts`._
-- `[FEATURE]` Print and export a note as HTML or PDF, and copy it as formatted text. _Affected: new
-  `web/export-note.ts`._
 - `[FEATURE]` A formatting toolbar for phones with checkbox, heading, link and date buttons.
   _Affected: `web/editor.ts`, `web/app.css`._
 - `[DEBT]` Mixed line endings: a file with both CRLF and LF keeps stray carriage returns visible in
@@ -262,8 +219,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 ## Files and folders
 
-- `[FEATURE]` **Move and duplicate a note**, and create a folder, with every link updated.
-  Delete and the trash are built. _Affected: `src/rename.ts`, `web/notes.ts`._
 - `[FEATURE]` Delete from Explore, Board and Today as well, and delete several notes at once.
   _Affected: `web/explore.ts`, `web/board.ts`, `web/today.ts`._
 - `[FEATURE]` Empty the trash, and clear items older than 30 days automatically. _Affected:
@@ -314,8 +269,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` Tag manager: rename, merge or delete a tag across every note, a tag tree for
   `area/home` style tags, unused tags, and a warning for `Launch` versus `launch`. _Affected: new
   `src/tags.ts`, `web/tags.ts`._
-- `[FEATURE]` People: notes with `type: person` as a contact list, with everything that mentions
-  each person in one place. _Affected: new `web/people.ts`._
 - `[FEATURE]` Show the line each back-link sits on in the Notes panel, not only the file.
   _Affected: `web/notes.ts`._
 - `[FEATURE]` Create a note or task from a link that points nowhere. _Affected: `web/health.ts`._
@@ -327,8 +280,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` Ranked search (BM25) with typo tolerance, and several matches per note with a jump to
   each. _Affected: `src/query.ts`._
 - `[FEATURE]` Saved searches and recent searches. _Affected: `web/search.ts`._
-- `[FEATURE]` `created:` and `modified:` operators, and a date range filter. _Affected:
-  `src/query.ts`, `src/parse.ts`._
 - `[FEATURE]` Find and replace across the vault with a full preview and per-line checkboxes.
   _Affected: new `src/replace.ts`, `web/search.ts`._
 - `[FEATURE]` Open a search result with the match highlighted in the editor. _Affected:
@@ -384,10 +335,8 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[DEBT]` Opening a 6,000-note folder reads every file (about 4.5 s on a fast machine, much slower
   on a phone). Persist the index and only read files whose modified time changed. _Affected:
   `src/index.ts`, `src/fsa-storage.ts`._
-- `[FEATURE]` Show a progress bar while a big folder is first read. _Affected: `web/main.ts`._
 - `[DEBT]` Load CodeMirror only when Notes opens, to shrink the first download (about 650 KB now).
   _Affected: `web/main.ts`, `scripts/build.mjs`._
-- `[DEBT]` Do not publish source maps to Pages. _Affected: `.github/workflows/deploy-pages.yml`._
 - `[DEBT]` Accessibility pass with automated checks (axe) in the browser tests, a contrast check in
   both themes, and focus handling after dialogs. _Affected: `tests/e2e/`._
 - `[DEBT]` Performance tests with a synthetic vault of 5,000 and 20,000 notes. _Affected: `test/`._
@@ -395,17 +344,12 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   across redraws, but a proper view layer would be cleaner. _Affected: `web/main.ts`._
 - `[DEBT]` The note list is not virtualized and the whole index is rebuilt after each save. Fine for
   thousands of notes, not tens of thousands. _Affected: `web/notes.ts`, `src/index.ts`._
-- `[DEBT]` `VaultIndex.tasks()` rebuilds the list on each call. Cache it per scan. _Affected:
-  `src/index.ts`._
-- `[FEATURE]` Lint and format settings (ESLint, Prettier) and a pre-commit check. _Affected: repo
-  root._
 - `[FEATURE]` Release automation: tag, GitHub Release notes from `CHANGELOG.md`, and a Pages preview
   for pull requests. _Affected: `.github/workflows/`._
 - `[FEATURE]` Screenshot comparison tests for the main screens in both themes. _Affected:
   `tests/e2e/`._
 - `[FEATURE]` A friendly error screen with a "copy diagnostics" button. No usage data is collected.
   _Affected: `web/main.ts`._
-- `[FEATURE]` `CONTRIBUTING.md` and issue and pull request templates. _Affected: repo root._
 
 ## Mermaid (experimental)
 - [FEATURE] Draw Mermaid diagrams in Word/PDF/copy export. `src/render.ts`, `src/docx.ts`, `web/export.ts`.
@@ -424,3 +368,4 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - [DEBT] Test UTF-16 byte-order marks and mixed line endings on read; UTF-8 BOM and CRLF are covered. `src/parse.ts`, `test/parse.test.ts`.
 - [DEBT] Add direct tests for `setTaskStatus` transitions, if the existing writeback and board tests leave gaps. `test/writeback.test.ts`.
 - [FEATURE] Treat remote (`https:`) embeds separately from local ones in `resolveEmbed`. `src/index.ts`.
+- [FEATURE] Lint (ESLint) once typescript-eslint supports TypeScript 7, and a pre-commit check that runs `npm run format:check`. Repo root.

@@ -3,9 +3,11 @@ import { ConflictError, ExistsError, type FileEntry, type ListOptions, type Vaul
 /** In-memory vault for tests and demos. */
 export class MemoryStorage implements VaultStorage {
   private files = new Map<string, { text: string; mtime: number; bytes?: Uint8Array }>();
-  private clock = 1000;
+  private clock: number;
 
-  constructor(initial: Record<string, string> = {}) {
+  /** `clockStart` sets the first modified time (ms); the demo uses real time so its notes do not look like 1970. */
+  constructor(initial: Record<string, string> = {}, opts: { clockStart?: number } = {}) {
+    this.clock = opts.clockStart ?? 1000;
     for (const [p, t] of Object.entries(initial)) this.put(p, t);
   }
 

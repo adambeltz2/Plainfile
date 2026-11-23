@@ -46,6 +46,28 @@ export async function listVersions(storage: VaultStorage, notePath: string): Pro
   return out.sort((a, b) => b.stamp.localeCompare(a.stamp) || b.n - a.n).map(({ n: _n, ...v }) => v);
 }
 
+/**
+ * Carry a note's saved versions to its new path after a move or rename, so Version history still shows them.
+ * Best effort, like all of history: a version that cannot be copied is left behind, and nothing here ever throws.
+ */
+export async function moveHistory(storage: VaultStorage, from: string, to: string): Promise<void> {
+  if (from === to) return;
+  try {
+    const dest = versionDir(to);
+    for (const v of await listVersions(storage, from)) {
+      try {
+        const content = await storage.read(v.path);
+        await storage.create(`${dest}/${v.path.split('/').pop()}`, content);
+        await storage.remove(v.path, (await storage.stat(v.path)).mtime);
+      } catch {
+        /* leave this one where it is */
+      }
+    }
+  } catch {
+    /* history is a safety net, not part of the move */
+  }
+}
+
 export function readVersion(storage: VaultStorage, v: Version): Promise<string> {
   return storage.read(v.path);
 }

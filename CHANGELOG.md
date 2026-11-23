@@ -4,6 +4,21 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.1.0] - 2026-11-23
+
+### Added
+- **Export tasks as CSV or JSON.** On the Tasks tab and in a project, Export CSV and Export JSON download the tasks currently shown (filters applied). CSV opens in a spreadsheet, with cells that could run as formulas defused.
+- **Download a note as markdown or as a web page** (⋯ More), beside Word and PDF. The web page is one self-contained file with its images embedded.
+- **Insert image…** in ⋯ More opens a file picker and puts the image in at the cursor, saved like a pasted one. Useful on phones.
+
+### Changed
+- **A note's version history now follows it** when it is moved or renamed (it used to stay under the old path).
+- Reading tasks is faster: the task list is worked out once per change instead of on every call.
+- Source maps are no longer published with the site (set `SOURCEMAP=1` when profiling).
+- Issue and pull request templates, and a tidier `BACKLOG.md` (shipped items removed).
+- The ⋯ More menu is measured after it is drawn and moved up if its last item (Delete) would fall below the screen.
+- The demo vault has real modified times (no more "Thu 1 Jan"), and the sample project has a goal.
+
 ## [1.0.0] - 2026-11-23
 
 First major version, for a project that is ready for outside contributions.

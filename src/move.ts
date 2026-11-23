@@ -1,4 +1,5 @@
 import { frontmatterText, setFrontmatterField } from './frontmatter';
+import { moveHistory } from './history';
 import { dirname, joinPath, type VaultIndex } from './index';
 import { applyEdits, type RenameEdit } from './rename';
 import { ExistsError, type VaultStorage } from './storage';
@@ -166,6 +167,7 @@ export async function applyMove(storage: VaultStorage, index: VaultIndex, plan: 
     )),
   );
   await storage.remove(plan.from, oldStat.mtime);
+  await moveHistory(storage, plan.from, plan.to);
   await index.scan();
   return { from: plan.from, to: plan.to, changes };
 }

@@ -323,7 +323,17 @@ export class VaultIndex {
     return this.backlinkMap.get(path) ?? [];
   }
 
+  private taskCache: { version: number; list: TaskItem[] } | undefined;
+
+  /** Every task, inline and file. Worked out once per change to the index; callers must not modify the list. */
   tasks(): TaskItem[] {
+    if (this.taskCache?.version === this.version) return this.taskCache.list;
+    const out = this.buildTasks();
+    this.taskCache = { version: this.version, list: out };
+    return out;
+  }
+
+  private buildTasks(): TaskItem[] {
     const out: TaskItem[] = [];
     for (const n of this.notes.values()) {
       for (const t of n.tasks) out.push(inlineItem(n, t));

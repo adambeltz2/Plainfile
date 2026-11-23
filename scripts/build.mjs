@@ -29,7 +29,7 @@ await build({
   format: 'esm',
   target: 'es2022',
   minify: !process.env.NO_MINIFY, // set NO_MINIFY=1 to keep function names for profiling
-  sourcemap: true,
+  sourcemap: !!process.env.SOURCEMAP, // set SOURCEMAP=1 for profiling; they are not published
   define: {
     __SAMPLE_VAULT__: JSON.stringify(readTree(sampleRoot)),
     __APP_VERSION__: JSON.stringify(version),

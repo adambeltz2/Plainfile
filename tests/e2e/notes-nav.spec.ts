@@ -256,6 +256,21 @@ test.describe('paste an image', () => {
     await expect(page.locator('.cm-line', { hasText: '![](../../_attachments/' }).first()).toBeVisible();
   });
 
+  test('Insert image… in the ⋯ menu saves a picked file the same way as a paste', async ({ page }) => {
+    const dir = await openVault(page, { 'Note.md': 'Intro text\n' });
+    await nav(page, 'Notes').click();
+    await page.locator('.note-item', { hasText: /^Note$/ }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+End');
+    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), noteMenu(page, /^Insert image/)]);
+    await chooser.setFiles({ name: 'shot.png', mimeType: 'image/png', buffer: Buffer.from(PNG, 'base64') });
+    await expect(page.locator('.cm-img-el')).toBeVisible();
+    const files = (await listFiles(page, dir)).filter((f) => f.startsWith('_attachments/'));
+    expect(files).toHaveLength(1);
+    await expect.poll(() => readFileOrEmpty(page, dir, 'Note.md'), { timeout: 5000 }).toContain(`![](_attachments/${files[0]!.replace('_attachments/', '')})`);
+  });
+
   test('a note that is not editable by paste still ignores text pastes normally', async ({ page }) => {
     await openVault(page, { 'n.md': 'x' });
     await nav(page, 'Notes').click();

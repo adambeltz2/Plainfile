@@ -1,5 +1,5 @@
 // Measures how long the app takes to create a note in a large vault, with the CPU slowed down like a phone.
-//   NO_MINIFY=1 npm run build && node scripts/serve.mjs & node scripts/perf.mjs [notes] [slowdown]
+//   NO_MINIFY=1 SOURCEMAP=1 npm run build && node scripts/serve.mjs & node scripts/perf.mjs [notes] [slowdown]
 import { chromium } from '@playwright/test';
 
 const N = Number(process.argv[2] ?? 2000);

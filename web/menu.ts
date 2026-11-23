@@ -1,7 +1,7 @@
 import { frontmatterText } from '../src/frontmatter';
 import { duplicateNote } from '../src/move';
 import * as explore from './explore';
-import { copyFormatted, downloadDocx, keepMarkers, printDocument, setKeepMarkers } from './export';
+import { copyFormatted, downloadDocx, downloadHtml, downloadMarkdown, keepMarkers, printDocument, setKeepMarkers } from './export';
 import { MOD } from './keys';
 import * as move from './move';
 import { applyProperty, notes, openNote, click as notesClick } from './notes';
@@ -16,6 +16,9 @@ import { esc } from './util';
 export type NoteAction =
   | 'copyrich'
   | 'docx'
+  | 'image'
+  | 'markdown'
+  | 'html'
   | 'print'
   | 'markers'
   | 'open'
@@ -69,10 +72,13 @@ export function itemsFor(path: string, inNote: boolean): (Item | '-')[] {
     '-',
     { action: 'copyrich', label: 'Copy as formatted text' },
     { action: 'docx', label: 'Download as Word (.docx)' },
+    { action: 'markdown', label: 'Download as markdown (.md)' },
+    { action: 'html', label: 'Download as a web page (.html)' },
     { action: 'print', label: 'Print or save as PDF' },
     { action: 'markers', label: keepMarkers() ? 'Copies keep tags (switch to clean)' : 'Copies are clean (switch to keep tags)' },
     '-',
   );
+  if (inNote) items.push({ action: 'image', label: 'Insert image…' });
   if (inNote && !hasFrontmatter(path)) items.push({ action: 'frontmatter', label: 'Add default frontmatter' });
   items.push({ action: 'delete', label: 'Delete…' });
   return items;
@@ -97,7 +103,16 @@ export function html(): string {
 export function openMenu(path: string, inNote: boolean, x: number, y: number): void {
   menu.open = { path, inNote, x, y };
   render();
+  fitOnScreen();
   document.querySelector<HTMLElement>('.ctx [role="menuitem"]')?.focus();
+}
+
+/** Once drawn, nudge the menu up so its last item is on screen. The height depends on the list, so it is measured, not guessed. */
+function fitOnScreen(): void {
+  const el = document.querySelector<HTMLElement>('.ctx');
+  if (!el) return;
+  const over = el.getBoundingClientRect().bottom - (window.innerHeight - 8);
+  if (over > 0) el.style.top = `${Math.max(8, el.getBoundingClientRect().top - over)}px`;
 }
 
 export function closeMenu(): void {
@@ -115,7 +130,7 @@ export async function run(action: NoteAction, path: string): Promise<void> {
     for (const [k, v] of Object.entries(data)) b.dataset[k] = v;
     return b;
   };
-  const noOpen = new Set<NoteAction>(['copylink', 'open', 'copyrich', 'docx', 'print', 'markers']);
+  const noOpen = new Set<NoteAction>(['copylink', 'open', 'copyrich', 'docx', 'markdown', 'html', 'print', 'markers']);
   if (!noOpen.has(action) && notes.path !== path) await openNote(path);
   switch (action) {
     case 'open':
@@ -148,6 +163,8 @@ export async function run(action: NoteAction, path: string): Promise<void> {
       return render();
     case 'copyrich':
     case 'docx':
+    case 'markdown':
+    case 'html':
     case 'print': {
       const note = state.index?.notes.get(path);
       if (!note) return;
@@ -156,7 +173,15 @@ export async function run(action: NoteAction, path: string): Promise<void> {
       const md = selection.trim() ? selection : open ? (notes.handle?.getText() ?? '') : ((await state.storage?.read(path)) ?? '');
       const title = note.title;
       notes.status =
-        action === 'copyrich' ? await copyFormatted(md, path) : action === 'docx' ? await downloadDocx(md, title, path) : await printDocument(md, title, path);
+        action === 'copyrich'
+          ? await copyFormatted(md, path)
+          : action === 'docx'
+            ? await downloadDocx(md, title, path)
+            : action === 'markdown'
+              ? downloadMarkdown(md, title)
+              : action === 'html'
+                ? await downloadHtml(md, title, path)
+                : await printDocument(md, title, path);
       return render();
     }
     case 'markers':
@@ -177,6 +202,16 @@ export async function run(action: NoteAction, path: string): Promise<void> {
         notes.status = `Link: ${link}`;
       }
       return render();
+    }
+    case 'image': {
+      // A file picker, for phones and anywhere pasting an image is awkward.
+      const pick = document.createElement('input');
+      pick.type = 'file';
+      pick.accept = 'image/*';
+      pick.multiple = true;
+      pick.addEventListener('change', () => void notes.handle?.insertImageFiles([...(pick.files ?? [])]));
+      pick.click();
+      return;
     }
     case 'frontmatter':
       await notesClick(fake('add-frontmatter'));

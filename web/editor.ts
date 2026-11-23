@@ -463,6 +463,8 @@ export interface EditorHandle {
   canUndo(): boolean;
   canRedo(): boolean;
   goToLine(line: number): void;
+  /** Save image files (from a file picker) beside the note and put them in at the cursor, as if pasted. */
+  insertImageFiles(files: File[]): Promise<void>;
   goToOffset(offset: number): void;
   /** Replace the whole text with `next` using the smallest change, so undo and the cursor survive. */
   applyText(next: string): void;
@@ -605,6 +607,14 @@ export function createEditor(o: {
     },
     canUndo: () => undoDepth(view.state) > 0,
     canRedo: () => redoDepth(view.state) > 0,
+    async insertImageFiles(files) {
+      if (o.pasteImage)
+        await insertImages(
+          view,
+          files.filter((f) => f.type.startsWith('image/')),
+          o.pasteImage,
+        );
+    },
     goToLine(n) {
       const line = view.state.doc.line(Math.max(1, Math.min(n, view.state.doc.lines)));
       view.dispatch({ selection: { anchor: line.from }, effects: EditorView.scrollIntoView(line.from, { y: 'center' }) });

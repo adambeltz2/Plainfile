@@ -1,4 +1,5 @@
 import { addFrontmatterListItem } from './frontmatter';
+import { moveHistory } from './history';
 import { dirname, type VaultIndex } from './index';
 import type { LinkRef, Note } from './parse';
 import type { VaultStorage } from './storage';
@@ -182,6 +183,7 @@ export async function applyRename(storage: VaultStorage, index: VaultIndex, plan
     )),
   );
   await storage.remove(plan.from, oldStat.mtime);
+  await moveHistory(storage, plan.from, plan.to);
   await index.scan();
   return { from: plan.from, to: plan.to, changes };
 }

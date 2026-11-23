@@ -1,4 +1,6 @@
 import { fmtDate, localDateOf } from '../src/dates';
+import { save } from './export';
+import { tasksToCsv, tasksToJson } from '../src/export';
 import { applyBulk, planBulk, type BulkAction, type BulkPlan } from '../src/bulk';
 import { applyFieldFix, fieldIssues, STATUSES, type FieldIssue, type Status } from '../src/fields';
 import { applyFilters, groupTasks, hubTasks, newFilters, summarize, type Filters, type GroupBy, type HubTask } from '../src/hub';
@@ -144,7 +146,7 @@ function toolbar(all: HubTask[]): string {
       : `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` +
         `<label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>`) +
     (hubState.tab === 'tasks'
-      ? `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button>`
+      ? `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button><button class="btn small" data-hub-export="csv" title="Download the tasks shown as a spreadsheet file">Export CSV</button><button class="btn small" data-hub-export="json" title="Download the tasks shown as JSON">Export JSON</button>`
       : '') +
     '</div>' +
     `<div class="chips hub-quick">${quick('overdue', 'Overdue')}${quick('week', 'Due this week')}${quick('none', 'No date')}<form class="hub-saveview" data-hub-saveview><input id="hub-view-name" class="inp" autocomplete="off" placeholder="Name this view" aria-label="Name for this view" value="${esc(hubState.viewName)}"><button class="btn small" type="submit">Save view</button></form></div>` +
@@ -569,6 +571,20 @@ export async function click(target: HTMLElement): Promise<boolean> {
     else hubState.selected.add(id);
     hubState.preview = undefined;
     render();
+    return true;
+  }
+  const exp = q('data-hub-export');
+  if (exp) {
+    const idx = state.index;
+    if (idx) {
+      const shown = applyFilters(tasksOf(idx, hubState.project), hubState.filters, justDone, today());
+      const base = `tasks-${hubState.project === ALL_PROJECTS ? 'all' : (idx.notes.get(hubState.project)?.name ?? 'project')}-${today()}`.replace(
+        /[^\w.-]+/g,
+        '-',
+      );
+      if (exp === 'csv') save('\ufeff' + tasksToCsv(shown), `${base}.csv`, 'text/csv;charset=utf-8');
+      else save(tasksToJson(shown), `${base}.json`, 'application/json');
+    }
     return true;
   }
   if (target.closest('[data-hub-selectall]')) {

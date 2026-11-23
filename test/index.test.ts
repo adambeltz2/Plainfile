@@ -146,3 +146,31 @@ describe('performance budget', () => {
     expect(ms).toBeLessThan(1500); // typically tens of milliseconds; the old version with suggestions took many seconds
   });
 });
+
+describe('MemoryStorage clock', () => {
+  it('can start at a real time, for the demo', async () => {
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const start = Date.now() - 86400000;
+    const s = new MemoryStorage({ 'a.md': 'x' }, { clockStart: start });
+    const [e] = await s.list();
+    expect(e!.mtime).toBeGreaterThan(start);
+    expect(e!.mtime).toBeLessThan(Date.now());
+  });
+});
+
+describe('tasks() is cached per change', () => {
+  it('returns the same list until the index changes, then a fresh one', async () => {
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const store = new MemoryStorage({ 'a.md': '- [ ] One\n' });
+    const index = new VaultIndex(store);
+    await index.scan();
+    const first = index.tasks();
+    expect(index.tasks()).toBe(first);
+    expect(index.getTask(first[0]!.id)?.title).toBe('One');
+    store.external('a.md', '- [ ] One\n- [ ] Two\n');
+    await index.scan();
+    const second = index.tasks();
+    expect(second).not.toBe(first);
+    expect(second.map((t) => t.title)).toEqual(['One', 'Two']);
+  });
+});

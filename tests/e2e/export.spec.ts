@@ -89,6 +89,21 @@ test.describe('export', () => {
     expect(text).not.toContain('title: Kickoff');
   });
 
+  test('Download as markdown gives the note exactly, and as a web page a self-contained file', async ({ page }) => {
+    await openKickoff(page);
+    const [md] = await Promise.all([page.waitForEvent('download'), noteMenu(page, /^Download as markdown/)]);
+    expect(md.suggestedFilename()).toBe('Kickoff.md');
+    const mdText = readFileSync((await md.path())!, 'utf8');
+    expect(mdText).toContain('title: Kickoff');
+    expect(mdText).toContain('Send logos');
+    const [html] = await Promise.all([page.waitForEvent('download'), noteMenu(page, /^Download as a web page/)]);
+    expect(html.suggestedFilename()).toBe('Kickoff.html');
+    const htmlText = readFileSync((await html.path())!, 'utf8');
+    expect(htmlText).toContain('<!doctype html>');
+    expect(htmlText).toContain('Send logos');
+    expect(htmlText).not.toContain('title: Kickoff');
+  });
+
   test('Print or save as PDF is in the menu and the palette, and tells you what it is doing', async ({ page }) => {
     await openKickoff(page);
     await page.evaluate(() => {

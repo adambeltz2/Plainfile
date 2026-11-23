@@ -660,3 +660,26 @@ test('a project picked beside the quick add files the task there, and a typed +P
   await page.locator('#quick-text').press('Enter');
   await expect.poll(async () => (await listFiles(page, dir)).includes('projects/b/tasks/Typed job.md')).toBe(true);
 });
+
+test('Export CSV and JSON on the Tasks tab download what the filters show', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { 'a.md': '- [ ] First job due:2999-01-01 #x\n- [ ] Second job\n' });
+  await nav(page, 'Tasks').click();
+  const [csv] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export CSV' }).click()]);
+  expect(csv.suggestedFilename()).toMatch(/^tasks-all-\d{4}-\d{2}-\d{2}\.csv$/);
+  const text = (await readStream(csv)).replace(/^﻿/, '');
+  expect(text.split('\r\n')[0]).toBe('title,status,due,created,project,people,tags,phase,file,line');
+  expect(text).toContain('First job');
+  expect(text).toContain('Second job');
+  await page.locator('#hub-q').fill('First');
+  const [json] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export JSON' }).click()]);
+  const rows = JSON.parse(await readStream(json)) as { title: string }[];
+  expect(rows.map((r) => r.title)).toEqual(['First job']);
+});
+
+async function readStream(d: import('@playwright/test').Download): Promise<string> {
+  const stream = await d.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const c of stream) chunks.push(c as Buffer);
+  return Buffer.concat(chunks).toString('utf8');
+}
