@@ -307,3 +307,14 @@ test('Rename person previews every line that names them, rewrites the mentions a
   await page.getByRole('button', { name: 'Undo the note changes' }).click();
   await expect.poll(() => readFile(page, dir, 'journal/1x1.md')).toBe(FILES['journal/1x1.md']);
 });
+
+test('status:doing on a checkbox line shows as a status, stays out of the title, and ticking removes it', async ({ page }) => {
+  const NOTE = `- [ ] Draft the memo status:doing due:${localDate(0)}\n- [ ] Plain one due:${localDate(0)}\n`;
+  const dir = await openVault(page, { 'work.md': NOTE });
+  await nav(page, 'Today').click();
+  const row = page.locator('li.task', { hasText: 'Draft the memo' });
+  await expect(row.locator('.t')).toHaveText('Draft the memo');
+  await expect(row.locator('.chip', { hasText: /^doing$/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Mark done: Draft the memo' }).click();
+  await expect.poll(() => readFile(page, dir, 'work.md')).toBe(NOTE.replace('- [ ] Draft the memo status:doing due', '- [x] Draft the memo due'));
+});

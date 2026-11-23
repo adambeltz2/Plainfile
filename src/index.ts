@@ -91,7 +91,7 @@ export interface IndexCache {
 }
 
 /** Bump when parsing changes in a way that makes saved notes wrong, so every cache is dropped. */
-export const PARSER_VERSION = 3; // 3: tasks carry a priority; 2: inline tasks carry nested-checkbox counts
+export const PARSER_VERSION = 4; // 4: inline tasks carry status:doing/waiting; 3: tasks carry a priority; 2: inline tasks carry nested-checkbox counts
 
 export class VaultIndex {
   /** Increases every time the index changes, so derived results can be cached. */
@@ -387,6 +387,7 @@ function inlineItem(n: Note, t: InlineTask): TaskItem {
     due: t.due,
     created: t.created,
     priority: t.priority,
+    status: t.status,
     who: t.who,
     tags: t.tags,
     sub: t.sub,

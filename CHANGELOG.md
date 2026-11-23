@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.19.0] - 2026-11-23
+
+### Added
+- Ctrl/Cmd+B makes the selection bold and Ctrl/Cmd+I italic in the editor: they wrap it in `**` or `*`, and pressing again takes the marks off (bold and italic together work too). With nothing selected they type a pair of marks and leave the cursor between them.
+- A checkbox line can carry a status, the way it carries a due date: `- [ ] Draft the memo status:doing` or `status:waiting`. It shows as a status chip and in the project page's status grouping, bulk Set status works on it, and the project board moves it between columns. The word stays out of the title, ticking the box means done and removes it, and `#waiting` still works as before.
+
 ## [1.18.1] - 2026-11-23
 
 ### Fixed

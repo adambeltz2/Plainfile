@@ -1,5 +1,6 @@
 import type { TaskItem, VaultIndex } from './index';
 import type { Note } from './parse';
+import { inlineWithStatus, stripInlineStatus } from './inline-status';
 import type { VaultStorage } from './storage';
 
 /** The file no longer looks the way the index last saw it. Rescan and try again. */
@@ -89,7 +90,8 @@ export async function setTaskDone(storage: VaultStorage, index: VaultIndex, id: 
         if (!t) throw new StaleError(task.path, task.line);
         const want = done ? 'x' : ' ';
         if ((body[t.col] === 'x' || body[t.col] === 'X' ? 'x' : ' ') === want) return null;
-        return body.slice(0, t.col) + want + body.slice(t.col + 1);
+        const next = body.slice(0, t.col) + want + body.slice(t.col + 1);
+        return done ? stripInlineStatus(next) : next; // a finished task no longer says "doing"
       },
     );
   }
@@ -108,7 +110,17 @@ export async function setTaskDone(storage: VaultStorage, index: VaultIndex, id: 
 /** Set a task file's status to any value, for example when a card moves between board columns. */
 export async function setTaskStatus(storage: VaultStorage, index: VaultIndex, id: string, status: string): Promise<ChangeResult> {
   const task = index.getTask(id);
-  if (!task || task.kind !== 'file') throw new Error(`not a task file: ${id}`);
+  if (!task) throw new Error(`no such task: ${id}`);
+  if (task.kind === 'inline') {
+    // A checkbox line keeps its status as a word on the line: status:doing, status:waiting.
+    return editLine(
+      storage,
+      index,
+      task,
+      (n) => n.tasks.find((x) => x.line === task.line)?.raw,
+      (body) => inlineWithStatus(body, status),
+    );
+  }
   return editLine(
     storage,
     index,

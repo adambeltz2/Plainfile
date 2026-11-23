@@ -28,7 +28,7 @@ describe('single edits', () => {
     expect(editInlineLine('- [x] Three #launch', { kind: 'tag', tag: 'launch' })).toBe('- [x] Three #launch');
     expect(editInlineLine('- [x] Three #launch', { kind: 'tag', tag: 'home' })).toBe('- [x] Three #launch #home');
     expect(editInlineLine('- [ ] Two', { kind: 'done', done: true })).toBe('- [x] Two');
-    expect(editInlineLine('- [ ] Two', { kind: 'status', status: 'doing' })).toBeNull();
+    expect(editInlineLine('- [ ] Two', { kind: 'status', status: 'doing' })).toBe('- [ ] Two status:doing');
     expect(editInlineLine('Plain line', { kind: 'done', done: true })).toBeNull();
   });
   it('change one key in a task note', () => {
@@ -62,11 +62,11 @@ describe('planBulk and applyBulk', () => {
     for (const [p, t] of Object.entries(FILES)) expect(await store.read(p)).toBe(t);
   });
 
-  it('counts what it cannot change, and a status set on checkbox lines only maps todo and done', async () => {
+  it('counts what it cannot change, and sets a status on checkbox lines as a word on the line', async () => {
     const { store, index, ids } = await setup();
     const plan = await planBulk(store, index, [ids('One'), ids('Two'), ids('A')], { kind: 'status', status: 'doing' });
-    expect(plan.skipped).toBe(2);
-    expect(plan.edits.map((e) => e.path)).toEqual(['p/tasks/a.md']);
+    expect(plan.skipped).toBe(0);
+    expect(plan.edits.map((e) => e.path)).toEqual(['p/index.md', 'p/tasks/a.md']);
     const done = await planBulk(store, index, [ids('One'), ids('A')], { kind: 'done', done: true });
     expect(done.edits.map((e) => e.path)).toEqual(['p/index.md', 'p/tasks/a.md']);
     expect(done.edits[1]!.now).toBe('status: done');

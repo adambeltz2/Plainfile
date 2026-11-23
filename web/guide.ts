@@ -19,7 +19,8 @@ aliases: [Dana call]
 
 ## Decisions
 - Launch date is **Dec 8**
-- [ ] Send logo files @dana due:2026-11-23`,
+- [ ] Send logo files @dana due:2026-11-23
+- [ ] Draft the memo status:doing       # or status:waiting`,
   tags: `tags: [launch, meeting]        # a short list in the frontmatter
 
 tags:                          # or one per line
@@ -96,6 +97,7 @@ const SHORTCUTS: [string, string][] = [
   ['Ctrl/Cmd + P', 'Go to a note by a few letters, make a new one, or run an action. Try "move kick" to move the note whose name matches'],
   ['Ctrl/Cmd + K', 'Search'],
   ['Ctrl/Cmd + S', 'Save the open note now (it also saves by itself)'],
+  ['Ctrl/Cmd + B / I', 'Bold or italic the selection (press again to take it off); with nothing selected, type between the marks'],
   ['Ctrl/Cmd + V on an image', 'Paste a screenshot into the open note: it is saved in _attachments and shown inline'],
   [
     '⋯ More, then Copy as formatted text',
