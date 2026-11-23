@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.2.1] - 2026-11-23
+
+### Changed
+- **The repository is now `adambeltz2/Plainfile`**, and the live app is at <https://adambeltz2.github.io/Plainfile/>. The README, the footer's GitHub and change log links, release notes and `package.json` point there. The Dropbox page explains that the redirect address must match the site's address.
+
 ## [1.2.0] - 2026-11-23
 
 ### Added

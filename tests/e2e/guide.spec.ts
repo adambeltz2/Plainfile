@@ -17,7 +17,7 @@ test.describe('footer', () => {
       await expect(a).toHaveAttribute('target', '_blank');
       await expect(a).toHaveAttribute('rel', /noopener/);
     }
-    await expect(page.locator('.foot').getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', /Simple-Productivity/);
+    await expect(page.locator('.foot').getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', /Plainfile/);
   });
 });
 

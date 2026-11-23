@@ -72,7 +72,7 @@ including Safari and iPhone, **connect Dropbox** instead (see below), or try the
 device.
 
 The previous app, Notebook, is preserved at commit
-[`76ac8ba`](https://github.com/adambeltz2/Simple-Productivity/tree/76ac8bab2b96dbd24463fea5f825702dc1c3a441).
+[`76ac8ba`](https://github.com/adambeltz2/Plainfile/tree/76ac8bab2b96dbd24463fea5f825702dc1c3a441).
 Design mockups are in [`mockups.html`](mockups.html).
 
 ## What exists so far (checklist)

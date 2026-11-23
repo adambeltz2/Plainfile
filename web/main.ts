@@ -128,7 +128,7 @@ async function go(screen: ScreenId): Promise<void> {
   if (screen === 'search') document.getElementById('search-q')?.focus();
 }
 
-const REPO = 'https://github.com/adambeltz2/Simple-Productivity';
+const REPO = 'https://github.com/adambeltz2/Plainfile';
 
 function footer(): string {
   return (
