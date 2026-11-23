@@ -17,3 +17,17 @@ describe('changelogByVersion', () => {
     expect(changelogByVersion(readFileSync('CHANGELOG.md', 'utf8'))).toContain(`## ${v}\n`);
   });
 });
+
+import { changelogSection } from '../src/changelog';
+describe('changelogSection', () => {
+  it('returns one version, trimmed, and nothing for an unknown one', () => {
+    const md = '# C\n\n## [0.2.0] - 2026-11-22\n\n### Added\n- B\n\n## [0.1.0] - 2026-11-01\n- A\n';
+    expect(changelogSection(md, '0.2.0')).toBe('### Added\n- B');
+    expect(changelogSection(md, '0.1.0')).toBe('- A');
+    expect(changelogSection(md, '9.9.9')).toBe('');
+  });
+  it('exists for the version being shipped, with dates kept', () => {
+    const v = JSON.parse(readFileSync('package.json', 'utf8')).version as string;
+    expect(changelogSection(readFileSync('CHANGELOG.md', 'utf8'), v).length).toBeGreaterThan(10);
+  });
+});
