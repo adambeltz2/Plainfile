@@ -378,3 +378,15 @@ test('a link typed just now can be clicked right away, and creating it opens the
   await page.getByRole('button', { name: /^Create / }).click();
   await expect(page.locator('#note-title')).toHaveValue('Fresh idea');
 });
+
+test('the note header shows a word count and reading time that follow what you type', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { 'a.md': '---\ntitle: Alpha\n---\nOne two three four five.\n' });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Alpha')).click();
+  await expect(page.locator('#note-stats')).toHaveText('5 words · 1 min read');
+  await page.locator('.cm-content').click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type(' six seven');
+  await expect(page.locator('#note-stats')).toHaveText('7 words · 1 min read');
+});

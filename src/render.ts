@@ -357,3 +357,14 @@ export function toPlain(md: string, o: RenderOptions = {}): string {
 export function printPage(title: string, bodyHtml: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font:12pt/1.45 Calibri,Arial,sans-serif;max-width:46em;margin:2em auto;color:#000}h1,h2,h3{line-height:1.2}table{border-collapse:collapse}td,th{border:1px solid #888;padding:4px 8px}img{max-width:100%}@media print{body{margin:0}}</style></head><body>${bodyHtml}</body></html>`;
 }
+
+/** Words in a note's body (frontmatter, code fences and link addresses left out) and a reading time at 220 words a minute. */
+export function readingStats(md: string): { words: number; minutes: number } {
+  const body = stripFrontmatter(md)
+    .replace(/^(```|~~~)[\s\S]*?^\1/gm, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[\[([^\]|]*\|)?([^\]]*)\]\]/g, '$2');
+  const words = (body.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu) ?? []).length;
+  return { words, minutes: words ? Math.max(1, Math.round(words / 220)) : 0 };
+}

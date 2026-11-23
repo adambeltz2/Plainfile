@@ -182,7 +182,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 ## Notes and the editor
 
-- `[FEATURE]` Word count and reading time. Focus mode is built. _Affected: `web/notes.ts`._
 - `[FEATURE]` History: keep versions on a timer while you type, label a version ("before the
   rewrite"), see a word-level diff, and clear a note's history. _Affected: `src/history.ts`,
   `web/notes.ts`._
