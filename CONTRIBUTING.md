@@ -17,6 +17,7 @@ npm run format       # Prettier: run it, and your code matches the rest
 npm run typecheck
 npm test             # unit tests (Vitest)
 npm run test:e2e     # browser tests (Playwright); run `npx playwright install chromium` once
+npm run coverage     # optional: how much of src/ the unit tests reach (about 89% of lines today)
 ```
 
 CI runs the format check, type check, unit tests and browser tests on every push. A red run is fixed before merging.
