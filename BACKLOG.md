@@ -33,7 +33,7 @@ helper, per-screen event routing).
 - [x] Open a search result with the match highlighted (1.12.0)
 - [x] "Fix all" safe fixes in Vault health, with a preview (1.13.0; broken links only)
 
-**Tier 3: larger, still no decision needed**
+**Tier 3: larger, still no decision needed** (all shipped; see docs/NEXT-VERSION.md for what comes after)
 - [x] Export a project or several notes as one document (1.15.0; a project today, not an arbitrary selection)
 - [x] Images in the Word file (1.16.0)
 - [x] Load CodeMirror only when Notes opens (1.14.0)
