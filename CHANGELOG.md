@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.5.2] - 2026-11-23
+
+### Added
+- **The open task count on a phone.** Tasks in the More sheet now shows the same small number as the desktop header.
+
 ## [1.5.1] - 2026-11-23
 
 ### Added
