@@ -424,7 +424,7 @@ function statusColumn(all: HubTask[], issues: FieldIssue[]): string {
     (s.next.length
       ? `<h3>Next up</h3><ol class="small hub-next">${s.next.map((t) => `<li><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button>${t.due ? ` <span class="muted">${esc(fmtDate(t.due))}</span>` : ''}</li>`).join('')}</ol>`
       : '') +
-    `<h3>Done per week <span class="muted" title="Worked out from when each note was last changed">(estimate)</span></h3><div class="spark" aria-label="Tasks finished in each of the last six weeks">${s.weekly.map((n) => `<i style="height:${Math.max(6, Math.round((n / spark) * 100))}%" title="${n} done"></i>`).join('')}</div>` +
+    `<h3>Done per week <span class="muted" title="From the day a task was finished where it says so, otherwise from when its note was last changed">(estimate)</span></h3><div class="spark" aria-label="Tasks finished in each of the last six weeks">${s.weekly.map((n) => `<i style="height:${Math.max(6, Math.round((n / spark) * 100))}%" title="${n} done"></i>`).join('')}</div>` +
     `<h3 style="margin-top:12px">Tidy <span class="n">${issues.length}</span></h3><button class="btn small" data-hub-tidy aria-expanded="${hubState.tidy}">${hubState.tidy ? 'Hide' : issues.length ? 'Review' : 'All uniform'}</button>${hubState.tidy ? `<div class="hub-tidy">${tidyHtml(issues)}</div>` : ''}` +
     '</details></aside>'
   );
@@ -565,9 +565,9 @@ async function planFor(kind: string): Promise<void> {
   if (!storage || !index) return;
   const i = hubState.inputs;
   const map: Record<string, [BulkAction, string]> = {
-    done: [{ kind: 'done', done: true }, 'Mark done'],
-    reopen: [{ kind: 'done', done: false }, 'Reopen'],
-    status: [{ kind: 'status', status: i.status as Status }, `Set status to ${i.status}`],
+    done: [{ kind: 'done', done: true, on: today() }, 'Mark done'],
+    reopen: [{ kind: 'done', done: false, on: today() }, 'Reopen'],
+    status: [{ kind: 'status', status: i.status as Status, on: today() }, `Set status to ${i.status}`],
     due: [{ kind: 'due', date: i.due || '' }, `Set due date to ${i.due}`],
     nodue: [{ kind: 'due', date: null }, 'Clear the due date'],
     person: [{ kind: 'person', name: i.person }, `Assign ${i.person.startsWith('@') ? i.person : `@${i.person}`}`],
@@ -681,7 +681,7 @@ async function move(id: string, status: string): Promise<void> {
   const { storage, index } = state;
   if (!storage || !index) return;
   try {
-    state.log = await setTaskStatus(storage, index, id, status);
+    state.log = await setTaskStatus(storage, index, id, status, { completedOn: today() });
   } catch (e) {
     const friendly = writeFailure(e);
     if (friendly) await rescan();

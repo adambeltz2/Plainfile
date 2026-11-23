@@ -56,7 +56,8 @@ export interface Context {
   lines: string[];
   hi: number;
 }
-export type Log = { path: string; line: number; before: string; after: string; written: boolean } | { message: string };
+export type Log =
+  { path: string; line: number; before: string; after: string; written: boolean; also?: { line: number; before: string; after: string } } | { message: string };
 
 export const state = {
   storage: undefined as VaultStorage | undefined,

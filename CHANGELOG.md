@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.20.0] - 2026-11-23
+
+### Added
+- Finishing a task now records the day it was finished. Ticking a checkbox line adds `done:2026-11-23` to the end of the line; finishing a task note (or moving its card to Done) adds `completed: 2026-11-23` to its frontmatter. Reopening removes it. The "What changed on disk" readout shows both changed lines. Obsidian's ✅ date and Dataview's `[completion:: date]` are read too, and a task that already says when it was finished keeps that date.
+- "Done per week" and the finished-tasks counts and lists in Insight use the real finish date where a task has one, and fall back to the old estimate (when its note last changed) where it does not. A task ticked in another editor has no date, which is fine.
+
+### Changed
+- Ticking a task now changes two things on its line: the box and the date, so the file is no longer "one character" different. Everything else in the file is still left byte for byte.
+
 ## [1.19.1] - 2026-11-23
 
 ### Fixed

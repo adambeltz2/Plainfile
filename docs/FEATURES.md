@@ -25,6 +25,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   with small guarded edits to your own notes.
 - **Priority:** `(A)`, `(B)`, `(C)` straight after the checkbox (or `priority: A` in a task note, or an Obsidian Tasks emoji) shows as a badge and sorts first. Start a quick add with `(A)`, press 1, 2, 3 or 0 on a selected task on Today, or filter and bulk-set it in a project. Each change edits one letter in the file.
 - **Status on a checkbox line:** `status:doing` or `status:waiting` on an inline task, like `due:`. It shows as a chip and in status groups, bulk Set status sets it, and ticking the box (done) removes it.
+- **When a task was finished:** ticking records `done:2026-11-23` on the line (`completed:` in a task note) and reopening removes it; Insight and Done per week use it instead of an estimate.
 - **Today:** open tasks that are late, due today or due this week, plus Upcoming, Inbox, Waiting on,
   All open, Follow-ups and Projects views. Ticking a box changes one character in the file and shows
   the exact before and after lines.

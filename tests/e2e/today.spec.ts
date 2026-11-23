@@ -28,7 +28,7 @@ test('ticking a task shows exactly what changed on disk and keeps it on screen',
   await page.getByRole('button', { name: 'Mark done: Send logo files' }).click();
   const diff = page.locator('.diff');
   await expect(diff.locator('.del')).toHaveText('−- [ ] Send logo files @dana due:2026-11-23');
-  await expect(diff.locator('.add')).toHaveText('+- [x] Send logo files @dana due:2026-11-23');
+  await expect(diff.locator('.add')).toHaveText(`+- [x] Send logo files @dana due:2026-11-23 done:2026-11-21`); // ticking also records the day (the sample vault pins "today" to 2026-11-21)
   await expect(page.locator('.task.done')).toHaveCount(1);
   await expect(page.locator('.ln.hi')).toContainText('- [x] Send logo files');
   // Undo it again.
@@ -92,7 +92,7 @@ test('real folder: reads files, ticks one character, leaves everything else byte
   await expect(page.locator('.task.done')).toHaveCount(1);
 
   const after = await readFile(page, dir, 'notes/a.md');
-  expect(after).toBe(text.replace('- [ ] Call Dana', '- [x] Call Dana'));
+  expect(after).toBe(text.replace(`- [ ] Call Dana due:${today}`, `- [x] Call Dana due:${today} done:${today}`));
 });
 
 test('real folder: a file edited elsewhere is never overwritten', async ({ page }) => {
@@ -188,7 +188,9 @@ test.describe('keys on the Today list', () => {
     await page.keyboard.press('k');
     await expect(page.locator('li.task.sel')).toContainText('Second');
     await page.keyboard.press('x');
-    await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] First due:${TODAY}\n- [x] Second due:${TODAY}\n- [ ] Third due:${TODAY}\n`);
+    await expect
+      .poll(() => readFileOrEmpty(page, dir, 'a.md'))
+      .toBe(`- [ ] First due:${TODAY}\n- [x] Second due:${TODAY} done:${TODAY}\n- [ ] Third due:${TODAY}\n`);
     await page.keyboard.press('e');
     await expect(page.locator('.cm-content')).toBeVisible();
   });
@@ -316,7 +318,14 @@ test('status:doing on a checkbox line shows as a status, stays out of the title,
   await expect(row.locator('.t')).toHaveText('Draft the memo');
   await expect(row.locator('.chip', { hasText: /^doing$/ })).toBeVisible();
   await page.getByRole('button', { name: 'Mark done: Draft the memo' }).click();
-  await expect.poll(() => readFile(page, dir, 'work.md')).toBe(NOTE.replace('- [ ] Draft the memo status:doing due', '- [x] Draft the memo due'));
+  await expect
+    .poll(() => readFile(page, dir, 'work.md'))
+    .toBe(
+      NOTE.replace('- [ ] Draft the memo status:doing due', '- [x] Draft the memo due').replace(
+        `Draft the memo due:${localDate(0)}`,
+        `Draft the memo due:${localDate(0)} done:${localDate(0)}`,
+      ),
+    );
 });
 
 test('clicking a task selects it, and clicking the selected task again (or double-clicking) opens its note at that line', async ({ page }) => {
@@ -334,4 +343,18 @@ test('clicking a task selects it, and clicking the selected task again (or doubl
   await nav(page, 'Today').click();
   await page.locator('li.task', { hasText: 'Second job' }).locator('.t').dblclick();
   await expect(page.locator('.cm-content')).toContainText('Second job');
+});
+
+test('ticking a task note records when it was finished, shows both changed lines, and unticking removes it', async ({ page }) => {
+  const NOTE = `---\ntitle: Send invoice\nstatus: todo\ndue: ${localDate(0)}\n---\nBody\n`;
+  const dir = await openVault(page, { 'tasks/Send invoice.md': NOTE });
+  await nav(page, 'Today').click();
+  await page.getByRole('button', { name: 'Mark done: Send invoice' }).click();
+  await expect(page.locator('.diff .add').first()).toHaveText('+status: done');
+  await expect(page.locator('.diff .add').nth(1)).toHaveText(`+completed: ${localDate(0)}`);
+  await expect
+    .poll(() => readFile(page, dir, 'tasks/Send invoice.md'))
+    .toBe(NOTE.replace('status: todo', 'status: done').replace('---\nBody', `completed: ${localDate(0)}\n---\nBody`));
+  await page.getByRole('button', { name: 'Mark not done: Send invoice' }).click();
+  await expect.poll(() => readFile(page, dir, 'tasks/Send invoice.md')).toBe(NOTE);
 });

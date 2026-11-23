@@ -126,9 +126,12 @@ async function main(): Promise<void> {
     case 'undo': {
       const id = rest[0];
       if (!id) throw new Error(`${cmd} needs a task id such as notes/todo.md:12`);
-      const r = await setTaskDone(storage, index, id, cmd === 'done');
+      const r = await setTaskDone(storage, index, id, cmd === 'done', { completedOn: today });
       if (!r.written) console.log('Already in that state. Nothing changed.');
-      else console.log(`${r.path}:${r.line}\n- ${r.before}\n+ ${r.after}`);
+      else
+        console.log(
+          `${r.path}:${r.line}\n- ${r.before}\n+ ${r.after}${r.also ? `\n${r.path}:${r.also.line}\n${r.also.before ? `- ${r.also.before}\n` : ''}+ ${r.also.after}` : ''}`,
+        );
       break;
     }
     default:

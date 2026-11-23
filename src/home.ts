@@ -138,8 +138,8 @@ export async function setPriority(storage: VaultStorage, index: VaultIndex, task
 }
 
 /** Mark a task done through the same edit. */
-export async function finish(storage: VaultStorage, index: VaultIndex, task: TaskItem): Promise<ChangeResult> {
-  const plan = await planBulk(storage, index, [task.id], { kind: 'done', done: true });
+export async function finish(storage: VaultStorage, index: VaultIndex, task: TaskItem, on?: string): Promise<ChangeResult> {
+  const plan = await planBulk(storage, index, [task.id], { kind: 'done', done: true, on });
   const edit = plan.edits[0];
   if (!edit) return { path: task.path, line: task.line, before: '', after: '', written: false };
   const [change] = await applyBulk(storage, index, [edit]);

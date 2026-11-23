@@ -45,7 +45,7 @@ export async function toggleTask(id: string): Promise<void> {
   const t = index?.getTask(id);
   if (!index || !storage || !t) return;
   try {
-    const r = await setTaskDone(storage, index, id, !t.done);
+    const r = await setTaskDone(storage, index, id, !t.done, { completedOn: today() });
     if (!t.done) justDone.add(id);
     else justDone.delete(id);
     state.log = r;
@@ -73,7 +73,11 @@ export function logHtml(): string {
   return (
     `<div class="diff"><div class="cap">What changed on disk</div><div class="muted">${esc(log.path)}:${log.line}</div>` +
     (log.before ? `<div class="del"><span class="sg">−</span><span>${esc(log.before)}</span></div>` : '') +
-    `<div class="add"><span class="sg">+</span><span>${esc(log.after)}</span></div></div>`
+    `<div class="add"><span class="sg">+</span><span>${esc(log.after)}</span></div>` +
+    (log.also
+      ? `<div class="muted">${esc(log.path)}:${log.also.line}</div>${log.also.before ? `<div class="del"><span class="sg">−</span><span>${esc(log.also.before)}</span></div>` : ''}<div class="add"><span class="sg">+</span><span>${esc(log.also.after)}</span></div>`
+      : '') +
+    '</div>'
   );
 }
 
