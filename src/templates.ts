@@ -42,6 +42,8 @@ export interface Template {
   source: string;
   /** Not shown in the New menu. Used from a project's own buttons. */
   hidden?: boolean;
+  /** If the note this makes already exists (a daily note, say), open it instead of making a numbered copy. */
+  reuse?: boolean;
 }
 
 export const BUILT_IN: Template[] = [
@@ -140,6 +142,7 @@ export const BUILT_IN: Template[] = [
     fm: 'title: {{date}}\ntype: journal\ndate: {{date}}',
     body: '\n## Tasks\n- [ ] {{cursor}}\n\n## Notes\n\n## End of day\n',
     source: 'built-in',
+    reuse: true,
   },
   {
     name: 'Person',
@@ -287,6 +290,7 @@ export function parseTemplateFile(path: string, text: string): Template | null {
   return {
     name,
     description: String(settings.description ?? ''),
+    reuse: settings.reuse === true,
     folder,
     filename,
     prompts,

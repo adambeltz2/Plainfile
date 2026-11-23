@@ -383,3 +383,25 @@ test.describe('recent searches', () => {
     await expect(page.locator('#search-recent')).toHaveCount(0);
   });
 });
+
+test.describe('daily journal', () => {
+  test('opens today’s note if it exists, and makes it if not, never a numbered copy', async ({ page }) => {
+    await page.goto('/');
+    const day = localDate(0);
+    const dir = await openVault(page, { [`journal/${day}.md`]: `---\ntitle: ${day}\ntype: journal\ndate: ${day}\n---\nAlready here\n` });
+    await page.getByRole('button', { name: '+ New' }).click();
+    await page.getByRole('button', { name: /^Daily journal/ }).click();
+    await expect(page.locator('.cm-content')).toContainText('Already here');
+    expect((await listFiles(page, dir)).filter((f) => f.startsWith('journal/'))).toEqual([`journal/${day}.md`]);
+  });
+
+  test('without one it offers the form and creates the note', async ({ page }) => {
+    await page.goto('/');
+    const day = localDate(0);
+    const dir = await openVault(page, { 'a.md': '# A\n' });
+    await page.getByRole('button', { name: '+ New' }).click();
+    await page.getByRole('button', { name: /^Daily journal/ }).click();
+    await page.getByRole('button', { name: /^Create/ }).click();
+    await expect.poll(() => listFiles(page, dir)).toContain(`journal/${day}.md`);
+  });
+});

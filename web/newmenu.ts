@@ -31,6 +31,15 @@ export function openNew(): void {
 export function openTemplate(name: string, extras: Record<string, string> = {}): void {
   const t = state.templates.find((x) => x.name === name);
   if (!t) return;
+  // A daily note that already exists is opened, not copied.
+  if (t.reuse && !t.prompts.length && state.index) {
+    const r = renderTemplate(t, { ...templateExtras(state.index), ...extras }, today());
+    if (state.index.files.has(r.path)) {
+      state.modal = undefined;
+      void openNote(r.path);
+      return;
+    }
+  }
   state.modal = { step: 'template', name, values: Object.fromEntries(t.prompts.map((p) => [p.id, promptDefault(p, today())])), extras, error: '' };
   render();
 }

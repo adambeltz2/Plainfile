@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.11.1] - 2026-11-23
+
+### Changed
+- **The daily journal opens today's note if it exists** instead of offering a numbered copy. A template file can ask for the same with `reuse: true` in its `plainfile:` settings.
+
 ## [1.11.0] - 2026-11-23
 
 ### Added

@@ -347,3 +347,16 @@ describe('date variables', () => {
     expect(r.content).toBe('---\ntitle: Week 48, Monday 23 November 2026\n---\nMonday November\n');
   });
 });
+
+describe('reuse', () => {
+  it('is on for the daily journal, and a template file can ask for it', async () => {
+    const { BUILT_IN, parseTemplateFile } = await import('../src/templates');
+    expect(BUILT_IN.find((t) => t.name === 'Daily journal')?.reuse).toBe(true);
+    expect(BUILT_IN.find((t) => t.name === 'Note')?.reuse).toBeFalsy();
+    const t = parseTemplateFile(
+      '.plainfile/templates/Daily.md',
+      '---\nplainfile:\n  name: Daily\n  folder: days\n  filename: "{{date}}"\n  reuse: true\n---\nbody\n',
+    );
+    expect(t?.reuse).toBe(true);
+  });
+});
