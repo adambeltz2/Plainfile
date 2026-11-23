@@ -300,6 +300,7 @@ export async function quickAddTask(input: {
   title: string;
   due?: string;
   priority?: string;
+  repeat?: string;
   tags?: string[];
   people?: string[];
   project?: Project;
@@ -311,6 +312,7 @@ export async function quickAddTask(input: {
       title: input.title,
       due: input.due || undefined,
       priority: input.priority,
+      repeat: input.repeat,
       created: today(),
       tags: input.tags,
       people: input.people,
@@ -343,7 +345,15 @@ export async function quickAddLine(line: string): Promise<string | null> {
   const plan = planQuickLine(line);
   if (plan.error) return plan.error;
   const { parsed, project } = plan;
-  return quickAddTask({ title: parsed.title || parsed.text, due: parsed.due, priority: parsed.priority, tags: parsed.tags, people: parsed.people, project });
+  return quickAddTask({
+    title: parsed.title || parsed.text,
+    due: parsed.due,
+    priority: parsed.priority,
+    repeat: parsed.rec,
+    tags: parsed.tags,
+    people: parsed.people,
+    project,
+  });
 }
 
 export async function loadContext(id: string): Promise<void> {

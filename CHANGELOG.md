@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.22.0] - 2026-11-23
+
+### Added
+- **Repeating tasks.** Write `rec:1w` on a checkbox line (`d` days, `w` weeks, `m` months, `y` years; `rec:+3d` counts from the day you finish it), or `repeat: weekly` (or `1w`, `every 2 weeks`) in a task note. Finishing the task makes the next one, and the readout shows exactly what was written. On a checkbox line the next copy is added just below it (and its sub-items), unticked, with the new due date and today as its created date; unticking the finished one takes that copy away again if it is still unchanged. A task note stays a to-do and its due date moves on in the same file. A task that is several periods late makes one next task, due today or later, not one per missed week. Obsidian Tasks' `🔁 every week` is read but never rewritten. A bulk Mark done leaves repeating tasks alone, so you finish them one at a time. Lists show a ↻ chip.
+- Quick add understands it: `Team sync every week`, `Check in every 2 weeks`, `Water plants daily`, and `Standup every monday` (weekly, first due next Monday). The preview says "repeats every week".
+- **Pinned on Home.** Home has a Pinned card with your pinned notes (⋯ More, Pin to top), one click to open, and a hint on how to pin when there are none.
+
 ## [1.21.0] - 2026-11-23
 
 ### Added

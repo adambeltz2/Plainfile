@@ -72,3 +72,24 @@ describe('findProject', () => {
     expect(findProject(list, 'nope')).toBeUndefined();
   });
 });
+
+describe('a repeat in the quick add', () => {
+  it('reads every week, every 2 weeks, every monday and weekly at the end of the line', () => {
+    expect(parseQuickLine('Team sync every week', TODAY)).toMatchObject({ rec: '1w', title: 'Team sync', text: 'Team sync rec:1w' });
+    expect(parseQuickLine('Pay rent +site every month', TODAY)).toMatchObject({ rec: '1m', title: 'Pay rent', project: 'site' });
+    expect(parseQuickLine('Check in every 2 weeks', TODAY)).toMatchObject({ rec: '2w', title: 'Check in' });
+    expect(parseQuickLine('Water plants daily', TODAY)).toMatchObject({ rec: '1d', title: 'Water plants' });
+  });
+  it('makes `every monday` repeat weekly and first due on the next Monday', () => {
+    const q = parseQuickLine('Standup every monday', TODAY);
+    expect(q.rec).toBe('1w');
+    expect(q.due).toBe('2026-11-23');
+    expect(q.title).toBe('Standup');
+    expect(q.text).toBe('Standup rec:1w due:2026-11-23');
+  });
+  it('takes rec: typed by hand, and leaves a title that only mentions every alone', () => {
+    expect(parseQuickLine('Plan rec:+3d due:friday', TODAY)).toMatchObject({ rec: '+3d', title: 'Plan' });
+    expect(parseQuickLine('Fix every bug in the list', TODAY).rec).toBeUndefined();
+    expect(parseQuickLine('Fix every bug in the list', TODAY).title).toBe('Fix every bug in the list');
+  });
+});

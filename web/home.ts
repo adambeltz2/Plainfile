@@ -6,6 +6,8 @@ import { justDone, render, state, today } from './store';
 import { logHtml, openTaskRow, row, toggleTask } from './tasks';
 import { quickBar } from './today';
 import { esc } from './util';
+import { kindIcon } from './kind-icon';
+import { pinnedNotes } from '../src/pins';
 
 /**
  * Home: one screen for "what should I do now?". A capture box, today's tasks, where you left off, what needs
@@ -38,6 +40,15 @@ export function html(): string {
   if (notice.text) h += `<div class="notice ok" role="status">${esc(notice.text)} <button class="btn small" data-home-dismiss>Dismiss</button></div>`;
   h += `<div class="home-stats"><div class="home-bars" role="img" aria-label="Open tasks due each day for the next seven days">${week.map((d) => `<div class="wday${d.date === t ? ' today' : ''}"><i style="height:${Math.round((d.open / peak) * 100)}%"></i><b>${d.open}</b><span>${esc(fmtDate(d.date).slice(0, 3))}</span></div>`).join('')}</div><div class="home-links"><button class="btn small" data-nav="notes" data-count title="${idx.files.size} files in the folder, ${idx.notes.size} of them notes. Open the list.">${idx.notes.size.toLocaleString()} note${idx.notes.size === 1 ? '' : 's'}</button><button class="btn small" data-nav="tasks">All tasks</button><button class="btn small" data-nav="search">Search</button><button class="btn small" data-nav="explore">Explore</button><button class="btn small" data-nav="review">Weekly review</button><button class="btn small" data-nav="today">Upcoming</button><button class="btn small" data-nav="recent">Recent</button></div></div>`;
   h += '<div class="home-grid">';
+  const pins = pinnedNotes(idx);
+  h += card(
+    'Pinned',
+    pins.length
+      ? list(pins.slice(0, 8).map((p) => `<button class="item note-quick" data-open="${esc(p.path)}"><span>${kindIcon(p)}${esc(p.title)}</span></button>`)) +
+          (pins.length > 8 ? `<p class="small muted">and ${pins.length - 8} more in Notes</p>` : '')
+      : '<p class="muted small" style="margin:0">Nothing pinned. Open a note, then ⋯ More, then Pin to top, and it waits here.</p>',
+    pins.length ? ` <span class="n">${pins.length}</span>` : '',
+  );
   h += card(
     'Projects',
     rows.length

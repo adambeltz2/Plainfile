@@ -1,6 +1,7 @@
 import { parse as parseYaml } from 'yaml';
 import { extractInlineStatus, INLINE_STATUS_RE } from './inline-status';
 import { extractPriority, normalizePriority, stripPriority } from './priority';
+import { parseRecurrence, parseRepeatField, stripRecurrence, type Recurrence } from './recur';
 
 /**
  * Reading is tolerant: any markdown file parses, with or without frontmatter,
@@ -34,6 +35,8 @@ export interface InlineTask {
   status?: 'doing' | 'waiting';
   /** The day it was finished, if it says so (`done:2026-11-23`). */
   completed?: string;
+  /** `rec:1w` (or Obsidian's 🔁 every week): it comes back when finished. */
+  recur?: Recurrence;
   /** `(A)` after the checkbox (or an Obsidian Tasks priority emoji): A is first. */
   priority?: string;
   who: string[];
@@ -50,6 +53,8 @@ export interface FileTask {
   created?: string;
   /** `completed: 2026-11-23` in the frontmatter. */
   completed?: string;
+  /** `repeat: weekly` in the frontmatter. */
+  recur?: Recurrence;
   /** `priority: A` in the frontmatter. */
   priority?: string;
   statusLine: number; // 1-based line of `status:` in the frontmatter
@@ -158,7 +163,7 @@ function toIsoDate(v: unknown): string | undefined {
 }
 
 function cleanTitle(text: string): string {
-  let t = stripPriority(text).replace(new RegExp(INLINE_STATUS_RE.source, 'gi'), '$1');
+  let t = stripRecurrence(stripPriority(text)).replace(new RegExp(INLINE_STATUS_RE.source, 'gi'), '$1');
   for (const p of [...DUE_PATTERNS, ...CREATED_PATTERNS, ...COMPLETED_PATTERNS]) t = t.replace(new RegExp(p.source, p.flags + 'g'), ' ');
   t = t.replace(WHO, '$1').replace(TAG, '$1');
   return t.replace(/\s+/g, ' ').trim();
@@ -277,6 +282,7 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         priority: extractPriority(rest),
         status: extractInlineStatus(rest),
         completed: extractCompleted(rest),
+        recur: parseRecurrence(rest),
         who: [...rest.matchAll(WHO)].map((x) => `@${(x[2] ?? '').toLowerCase()}`),
         tags: taskTags,
       });
@@ -312,6 +318,7 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         created: toIsoDate(fm.created),
         priority: normalizePriority(fm.priority),
         completed: toIsoDate(fm.completed),
+        recur: parseRepeatField(fm.repeat),
         statusLine: idx + 2,
         statusRaw: lines[idx + 1] ?? '',
       };

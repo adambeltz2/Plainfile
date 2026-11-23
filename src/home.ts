@@ -7,7 +7,7 @@ import type { TaskItem, VaultIndex } from './index';
 import type { Note } from './parse';
 import { addDays } from './query';
 import type { VaultStorage } from './storage';
-import { StaleError, type ChangeResult } from './writeback';
+import { StaleError, setTaskDone, type ChangeResult } from './writeback';
 
 /**
  * What the Home screen and the weekly review show, all worked out from the notes and nothing stored:
@@ -139,6 +139,7 @@ export async function setPriority(storage: VaultStorage, index: VaultIndex, task
 
 /** Mark a task done through the same edit. */
 export async function finish(storage: VaultStorage, index: VaultIndex, task: TaskItem, on?: string): Promise<ChangeResult> {
+  if (task.recur && on !== undefined) return setTaskDone(storage, index, task.id, true, { completedOn: on }); // a repeating task makes its next copy
   const plan = await planBulk(storage, index, [task.id], { kind: 'done', done: true, on });
   const edit = plan.edits[0];
   if (!edit) return { path: task.path, line: task.line, before: '', after: '', written: false };
