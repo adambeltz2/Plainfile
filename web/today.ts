@@ -3,6 +3,7 @@ import { dirname, type TaskItem } from '../src/index';
 import { listFollowUps, listProjects } from '../src/projects';
 import { addDays, todayView } from '../src/query';
 import { reschedule, setPriority } from '../src/home';
+import { describeRecurrence, parseRepeatField, type Recurrence } from '../src/recur';
 import { byPriority } from '../src/priority';
 import { errorMessage, loadContext, justDone, planQuickLine, quickAddLine, render, rescan, state, today, writeFailure, type TodayViewId } from './store';
 import { openNote } from './notes';
@@ -30,6 +31,7 @@ export function quickPreview(line: string): string {
   if (error) return `<span class="err-text">${esc(error)}</span>`;
   const bits = [`Task note "${esc(parsed.title || parsed.text)}" in <b>${esc(project ? project.title : 'Inbox')}</b>`];
   if (parsed.priority) bits.push(`priority <b>${esc(parsed.priority)}</b>`);
+  if (parsed.rec) bits.push(`repeats <b>${esc(describeRecurrence(parseRepeatField(parsed.rec) as Recurrence))}</b>`);
   if (parsed.due) bits.push(`due <b>${esc(fmtDate(parsed.due))}</b>`);
   if (parsed.people.length) bits.push(`with ${parsed.people.map((p) => `<b>@${esc(p)}</b>`).join(' ')}`);
   if (parsed.tags.length) bits.push(`tagged ${parsed.tags.map((x) => `<b>#${esc(x)}</b>`).join(' ')}`);

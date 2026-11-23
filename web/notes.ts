@@ -14,6 +14,7 @@ import {
 } from '../src/frontmatter';
 import { listOf } from '../src/fields';
 import { kindIcon } from './kind-icon';
+import { pinnedNotes as pinned } from '../src/pins';
 import { dropboxPath, fullPath } from '../src/filepath';
 import { localDateOf } from '../src/dates';
 import { saveImage, mimeFor } from '../src/attachments';
@@ -409,11 +410,7 @@ const idxNotes = (): Note[] => [...(state.index?.notes.values() ?? [])];
 const noteBtn = (path: string, title: string, cls: string, extra = ''): string =>
   `<button class="${cls}" data-note="${esc(path)}" aria-current="${path === notes.path}"><span>${kindIcon(state.index?.notes.get(path))}${esc(title)}</span>${extra}</button>`;
 
-function pinnedNotes(): Note[] {
-  return [...(state.index?.notes.values() ?? [])]
-    .filter((n) => n.frontmatter.pinned === true || String(n.frontmatter.pinned).toLowerCase() === 'true')
-    .sort((a, b) => a.title.localeCompare(b.title));
-}
+const pinnedNotes = (): Note[] => (state.index ? pinned(state.index) : []);
 
 /** What the Notes screen shows when no note is open: where you can go next. */
 function homeHtml(): string {

@@ -121,6 +121,12 @@ export async function planBulk(storage: VaultStorage, index: VaultIndex, ids: st
       skipped++;
       continue;
     }
+    // A repeating task is finished one at a time, so its next copy is made; a bulk change leaves it alone.
+    const finishing = (action.kind === 'done' && action.done) || (action.kind === 'status' && action.status === 'done');
+    if (finishing && t.recur && !t.done) {
+      skipped++;
+      continue;
+    }
     const e = byPath.get(t.path) ?? { lines: [], file: t.kind === 'file' };
     if (t.kind === 'file') e.file = true;
     else e.lines.push(t.line);

@@ -192,6 +192,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
             title: line.title || line.text,
             due: m.due || line.due,
             priority: m.priority || line.priority,
+            repeat: line.rec,
             tags: [...new Set([...line.tags, ...words(m.tags)])],
             people: [...new Set([...line.people, ...words(m.people)])],
             project,

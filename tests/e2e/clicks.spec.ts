@@ -112,3 +112,25 @@ test.describe('clickability audit', () => {
     });
   }
 });
+
+test('Home shows a Pinned card with the pinned notes, and clicking one opens it', async ({ page }) => {
+  await openVault(
+    page,
+    {
+      'ideas/Brand.md': '---\ntitle: Brand ideas\npinned: true\n---\nBrand body text\n',
+      'ideas/Other.md': '---\ntitle: Other\n---\nOther body\n',
+    },
+    true,
+    'home',
+  );
+  const pinned = page.locator('.home-card', { has: page.locator('h3', { hasText: 'Pinned' }) });
+  await expect(pinned).toContainText('Brand ideas');
+  await expect(pinned).not.toContainText('Other');
+  await pinned.getByRole('button', { name: /Brand ideas/ }).click();
+  await opened(page, 'Brand body text');
+});
+
+test('Home says how to pin when nothing is pinned', async ({ page }) => {
+  await openVault(page, { 'a.md': '# A\n' }, true, 'home');
+  await expect(page.locator('.home-card', { has: page.locator('h3', { hasText: 'Pinned' }) })).toContainText('Pin to top');
+});

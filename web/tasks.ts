@@ -1,4 +1,5 @@
 import { fmtDate } from '../src/dates';
+import { describeRecurrence } from '../src/recur';
 import type { TaskItem } from '../src/index';
 import { setTaskDone } from '../src/writeback';
 import { openNote } from './notes';
@@ -20,6 +21,7 @@ function chips(t: TaskItem): string {
     const late = t.due < today() && !t.done;
     out.push(`<span class="chip${late ? ' late' : ''}">${late ? 'Overdue · ' : ''}${esc(fmtDate(t.due))}</span>`);
   }
+  if (t.recur) out.push(`<span class="chip" title="Finishing it makes the next one">↻ ${esc(describeRecurrence(t.recur))}</span>`);
   if (t.status) out.push(`<span class="chip">${esc(t.status)}</span>`);
   if (t.created) out.push(`<span class="chip quiet" title="Created ${esc(t.created)}">added ${esc(fmtDate(t.created))}</span>`);
   for (const w of t.who) out.push(`<span class="chip mono">${esc(w)}</span>`);
@@ -75,7 +77,7 @@ export function logHtml(): string {
     (log.before ? `<div class="del"><span class="sg">−</span><span>${esc(log.before)}</span></div>` : '') +
     `<div class="add"><span class="sg">+</span><span>${esc(log.after)}</span></div>` +
     (log.also
-      ? `<div class="muted">${esc(log.path)}:${log.also.line}</div>${log.also.before ? `<div class="del"><span class="sg">−</span><span>${esc(log.also.before)}</span></div>` : ''}<div class="add"><span class="sg">+</span><span>${esc(log.also.after)}</span></div>`
+      ? `<div class="muted">${esc(log.path)}:${log.also.line}</div>${log.also.before ? `<div class="del"><span class="sg">−</span><span>${esc(log.also.before)}</span></div>` : ''}${log.also.after ? `<div class="add"><span class="sg">+</span><span>${esc(log.also.after)}</span></div>` : ''}`
       : '') +
     '</div>'
   );

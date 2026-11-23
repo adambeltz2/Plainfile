@@ -223,6 +223,17 @@ for (const { name, make } of ADAPTERS) {
       await s.remove(doneAt.path, (await s.stat(doneAt.path)).mtime);
       await index.scan();
 
+      // Finishing a repeating task adds its next copy just below it, and unticking takes that copy away.
+      await s.create('rep.md', '- [ ] Team sync due:2026-11-24 rec:1w\n');
+      await index.refreshFile('rep.md');
+      const rep = index.tasks().find((t) => t.title === 'Team sync')!;
+      await setTaskDone(s, index, rep.id, true, { completedOn: '2026-11-24' });
+      expect(await s.read('rep.md')).toBe('- [x] Team sync due:2026-11-24 rec:1w done:2026-11-24\n- [ ] Team sync due:2026-12-01 rec:1w\n');
+      await setTaskDone(s, index, rep.id, false, { completedOn: '2026-11-24' });
+      expect(await s.read('rep.md')).toBe('- [ ] Team sync due:2026-11-24 rec:1w\n');
+      await s.remove('rep.md', (await s.stat('rep.md')).mtime);
+      await index.scan();
+
       const mv = planMove(index, 'inbox/Kickoff.md', 'projects/site');
       await applyMove(s, index, mv, new Set(mv.inbound.map((e) => e.id)));
       expect(await s.read('ref/Other.md')).toBe('# Other\nback to [[projects/site/Kickoff]]\n');

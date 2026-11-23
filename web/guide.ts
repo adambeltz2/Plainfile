@@ -31,6 +31,7 @@ See #launch and #area/home     # tags can sit in the text too`,
   quick: `Send logo files +website-relaunch @dana #launch due:friday
 
 start with (A) for a priority: (A) Call Dana +site
+repeat at the end: Team sync every week  ·  Standup every monday
 plus: due:today  due:tomorrow  due:mon  due:next-week  due:+3d  due:2026-11-23
 
 or dates in plain words at the end of the line:
@@ -61,6 +62,7 @@ sortOrder: 1
 Cabinet quote came in at $14,200.`,
   dates: `created:2026-11-21      when it was added (filled in for you)
 done:2026-11-23         when it was finished (filled in when you tick it)
+rec:1w                  repeats a week after its due date (rec:+3d: 3 days after you finish it)
 due:2026-11-23          what Plainfile writes
 #due:2026-11-23         from the first Notebook app
 📅 2026-11-23           Obsidian Tasks

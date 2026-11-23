@@ -12,7 +12,7 @@ const UNIT = /^(day|days|week|weeks|month|months)$/;
 const dow = (iso: string): number => new Date(`${iso}T00:00:00Z`).getUTCDay();
 
 /** Add whole months, keeping the day when the month has it and otherwise using its last day. */
-function addMonths(iso: string, n: number): string {
+export function addMonths(iso: string, n: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
   const day = d.getUTCDate();
   d.setUTCDate(1);

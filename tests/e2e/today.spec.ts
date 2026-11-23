@@ -358,3 +358,39 @@ test('ticking a task note records when it was finished, shows both changed lines
   await page.getByRole('button', { name: 'Mark not done: Send invoice' }).click();
   await expect.poll(() => readFile(page, dir, 'tasks/Send invoice.md')).toBe(NOTE);
 });
+
+test.describe('repeating tasks', () => {
+  test('ticking one adds the next copy right below it, shows both changed lines, and unticking takes the copy away', async ({ page }) => {
+    const T = localDate(0);
+    const NEXT = localDate(7);
+    const NOTE = `- [ ] Team sync due:${T} rec:1w\n- [ ] Other due:${T}\n`;
+    const dir = await openVault(page, { 'a.md': NOTE });
+    await nav(page, 'Today').click();
+    await expect(page.locator('li.task', { hasText: 'Team sync' }).locator('.chip', { hasText: 'every week' })).toBeVisible();
+    await page.getByRole('button', { name: 'Mark done: Team sync' }).click();
+    await expect
+      .poll(() => readFile(page, dir, 'a.md'))
+      .toBe(`- [x] Team sync due:${T} rec:1w done:${T}\n- [ ] Team sync due:${NEXT} rec:1w\n- [ ] Other due:${T}\n`);
+    await expect(page.locator('.diff .add').nth(1)).toHaveText(`+- [ ] Team sync due:${NEXT} rec:1w`);
+    await page.getByRole('button', { name: 'Mark not done: Team sync' }).click();
+    await expect.poll(() => readFile(page, dir, 'a.md')).toBe(NOTE);
+  });
+
+  test('a quick add that ends in "every monday" makes a task note that repeats, and finishing it moves its date on in the same file', async ({ page }) => {
+    const dir = await openVault(page, { 'a.md': '# A\n' });
+    await nav(page, 'Today').click();
+    await page.locator('#quick-text').fill('Standup every monday');
+    await expect(page.locator('#quick-preview')).toContainText('repeats every week');
+    await page.locator('#quick-text').press('Enter');
+    await expect.poll(() => listFiles(page, dir)).toContain('tasks/Standup.md');
+    const note = await readFile(page, dir, 'tasks/Standup.md');
+    expect(note).toContain('title: Standup\nstatus: todo\n');
+    expect(note).toMatch(/due: \d{4}-\d{2}-\d{2}\nrepeat: 1w\n/);
+    const due = /due: (\d{4}-\d{2}-\d{2})/.exec(note)![1]!;
+    await page.getByRole('button', { name: 'Mark done: Standup' }).click();
+    await expect.poll(() => readFile(page, dir, 'tasks/Standup.md')).not.toContain(`due: ${due}\n`);
+    const after = await readFile(page, dir, 'tasks/Standup.md');
+    expect(after).toContain('status: todo\n');
+    expect(after).toContain('repeat: 1w\n');
+  });
+});

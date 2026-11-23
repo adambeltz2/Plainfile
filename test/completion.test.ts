@@ -61,7 +61,7 @@ describe('writing a completion date', () => {
     const r = await setTaskDone(store, index, id('Note task'), true, { completedOn: ON });
     expect(r.before).toBe('status: todo');
     expect(r.after).toBe('status: done');
-    expect(r.also).toEqual({ line: 5, before: '---', after: 'completed: 2026-11-23' });
+    expect(r.also).toEqual({ line: 5, before: '', after: 'completed: 2026-11-23' }); // added, not replaced
     expect(await store.read('tasks/Note task.md')).toBe('---\ntitle: Note task\nstatus: done\ndue: 2026-11-30 # keep\ncompleted: 2026-11-23\n---\nbody\n');
     await setTaskDone(store, index, id('Note task'), false, { completedOn: ON });
     expect(await store.read('tasks/Note task.md')).toBe(FILES['tasks/Note task.md']);

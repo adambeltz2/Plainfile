@@ -1,5 +1,6 @@
 import { parseNote, type InlineTask, type LinkRef, type Note } from './parse';
 import { mapPool, throwIfAborted } from './pool';
+import type { Recurrence } from './recur';
 import { isMarkdown, type FileEntry, type ListProgress, type VaultStorage } from './storage';
 
 /** One row in a task list, whether it came from a checkbox line or from a task file. */
@@ -18,6 +19,8 @@ export interface TaskItem {
   priority?: string;
   /** The day it was finished, if the task says so. */
   completed?: string;
+  /** It comes back when finished: `rec:1w` on a line, `repeat:` in a task note. */
+  recur?: Recurrence;
   who: string[];
   tags: string[];
   status?: string;
@@ -93,7 +96,7 @@ export interface IndexCache {
 }
 
 /** Bump when parsing changes in a way that makes saved notes wrong, so every cache is dropped. */
-export const PARSER_VERSION = 5; // 5: tasks carry a completion date; 4: inline tasks carry status:doing/waiting; 3: tasks carry a priority; 2: inline tasks carry nested-checkbox counts
+export const PARSER_VERSION = 6; // 6: tasks carry a repeat rule; 5: tasks carry a completion date; 4: inline tasks carry status:doing/waiting; 3: tasks carry a priority; 2: inline tasks carry nested-checkbox counts
 
 export class VaultIndex {
   /** Increases every time the index changes, so derived results can be cached. */
@@ -356,6 +359,7 @@ export class VaultIndex {
           created: f.created,
           priority: f.priority,
           completed: f.completed,
+          recur: f.recur,
           who: peopleOf(n.frontmatter.people),
           tags: n.tags,
           status: f.status,
@@ -392,6 +396,7 @@ function inlineItem(n: Note, t: InlineTask): TaskItem {
     priority: t.priority,
     status: t.status,
     completed: t.completed,
+    recur: t.recur,
     who: t.who,
     tags: t.tags,
     sub: t.sub,

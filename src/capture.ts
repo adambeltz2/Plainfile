@@ -85,6 +85,8 @@ export interface TaskNoteInput {
   due?: string;
   /** A to Z, written as `priority:`. */
   priority?: string;
+  /** `1w`, `+3d`: written as `repeat:`, so the task comes back when it is finished. */
+  repeat?: string;
   created: string;
   tags?: string[];
   people?: string[];
@@ -108,6 +110,7 @@ export async function addTaskNote(storage: VaultStorage, index: VaultIndex, inpu
     const fm = [`title: ${yamlText(shown)}`, 'status: todo'];
     if (input.due) fm.push(`due: ${input.due}`);
     if (input.priority && /^[A-Z]$/.test(input.priority)) fm.push(`priority: ${input.priority}`);
+    if (input.repeat && /^\+?\d{1,3}[dwmy]$/i.test(input.repeat)) fm.push(`repeat: ${input.repeat.toLowerCase()}`);
     fm.push(`created: ${input.created}`);
     if (input.project) fm.push(`project: ${yamlText(input.project.name)}`);
     fm.push(`tags: ${flow(clean(input.tags, /^#/))}`, `people: ${flow(clean(input.people, /^@/))}`);
