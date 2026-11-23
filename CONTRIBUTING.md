@@ -20,6 +20,8 @@ npm run test:e2e     # browser tests (Playwright); run `npx playwright install c
 npm run coverage     # optional: how much of src/ the unit tests reach (about 89% of lines today)
 ```
 
+The browser tests include an accessibility scan (axe) of every main screen in light and dark; a new screen should be added to `tests/e2e/a11y.spec.ts`.
+
 CI runs the format check, type check, unit tests and browser tests on every push. A red run is fixed before merging.
 
 ## Branches, pull requests and releases

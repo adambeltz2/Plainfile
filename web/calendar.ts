@@ -37,14 +37,14 @@ function monthHtml(): string {
   for (const e of ev) by.set(e.date, [...(by.get(e.date) ?? []), e]);
   const month = cal.anchor.slice(0, 7);
   return (
-    `<div class="cal-grid" role="grid" aria-label="${esc(monthLabel(cal.anchor))}">${DOW.map((d) => `<div class="cal-h" role="columnheader">${d}</div>`).join('')}` +
+    `<div class="cal-grid" aria-label="${esc(monthLabel(cal.anchor))}">${DOW.map((d) => `<div class="cal-h">${d}</div>`).join('')}` +
     weeks
       .flat()
       .map((d) => {
         const list = by.get(d) ?? [];
         const open = list.filter((e) => !e.done).length;
         return (
-          `<div class="cal-cell${d.slice(0, 7) !== month ? ' out' : ''}${d === today() ? ' today' : ''}${d === cal.selected ? ' sel' : ''}" role="gridcell" data-cal-day="${d}">` +
+          `<div class="cal-cell${d.slice(0, 7) !== month ? ' out' : ''}${d === today() ? ' today' : ''}${d === cal.selected ? ' sel' : ''}" data-cal-day="${d}">` +
           `<button class="cal-num" data-cal-pick="${d}" aria-label="${esc(fmtDateLong(d))}${list.length ? `, ${list.length} item${list.length === 1 ? '' : 's'}` : ''}">${Number(d.slice(8))}${list.length ? `<span class="cal-count">${open || list.length}</span>` : ''}</button>` +
           list.slice(0, MAX_CHIPS).map(chip).join('') +
           (list.length > MAX_CHIPS ? `<button class="cal-more" data-cal-pick="${d}">+${list.length - MAX_CHIPS} more</button>` : '') +

@@ -37,7 +37,7 @@ function portfolioTable(idx: NonNullable<typeof state.index>): string {
     return projectState.desc ? -c : c;
   });
   const th = (id: string, label: string): string =>
-    `<th><button class="plain-btn" data-port-sort="${id}" aria-sort="${projectState.sort === id ? (projectState.desc ? 'descending' : 'ascending') : 'none'}">${label}${projectState.sort === id ? (projectState.desc ? ' ▾' : ' ▴') : ''}</button></th>`;
+    `<th aria-sort="${projectState.sort === id ? (projectState.desc ? 'descending' : 'ascending') : 'none'}"><button class="plain-btn" data-port-sort="${id}">${label}${projectState.sort === id ? (projectState.desc ? ' ▾' : ' ▴') : ''}</button></th>`;
   return (
     '<div class="table-wrap"><table class="portfolio"><thead><tr>' +
     th('number', '#') +
