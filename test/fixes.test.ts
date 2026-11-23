@@ -62,3 +62,23 @@ describe('lineDiff', () => {
     expect(lineDiff('same', 'same')).toBeNull();
   });
 });
+
+import { retargetMarkdownLink } from '../src/fixes';
+describe('retargetMarkdownLink', () => {
+  it('changes only the address, keeps text, anchor and the rest of the line', async () => {
+    const { store, index } = await setup({
+      'notes/a.md': 'See [the plan](../plans/pricing-reserach.md#goals) and [other](keep.md).  \r\nTail\n',
+      'plans/pricing-research.md': 'x',
+      'notes/keep.md': 'y',
+    });
+    const r = await retargetMarkdownLink(store, index, 'notes/a.md', 1, '../plans/pricing-reserach.md', 'plans/pricing-research.md');
+    expect(r).toMatchObject({ written: true, line: 1 });
+    expect(await store.read('notes/a.md')).toBe('See [the plan](../plans/pricing-research.md#goals) and [other](keep.md).  \r\nTail\n');
+  });
+  it('writes a path relative to the linking note, and refuses when the line has changed', async () => {
+    const { store, index } = await setup({ 'a.md': 'See [x](old.md).\n', 'deep/er/Target.md': 'x' });
+    await retargetMarkdownLink(store, index, 'a.md', 1, 'old.md', 'deep/er/Target.md');
+    expect(await store.read('a.md')).toBe('See [x](deep/er/Target.md).\n');
+    await expect(retargetMarkdownLink(store, index, 'a.md', 1, 'old.md', 'deep/er/Target.md')).rejects.toThrow(StaleError);
+  });
+});
