@@ -1,4 +1,5 @@
 import { parse as parseYaml } from 'yaml';
+import { extractPriority, normalizePriority, stripPriority } from './priority';
 
 /**
  * Reading is tolerant: any markdown file parses, with or without frontmatter,
@@ -28,6 +29,8 @@ export interface InlineTask {
   due?: string;
   /** When the task was added, from `created:2026-11-21` (or Obsidian Tasks' ➕ date). */
   created?: string;
+  /** `(A)` after the checkbox (or an Obsidian Tasks priority emoji): A is first. */
+  priority?: string;
   who: string[];
   tags: string[];
   /** Checkboxes nested under this one, at any depth: how many, and how many are ticked. */
@@ -40,6 +43,8 @@ export interface FileTask {
   done: boolean;
   due?: string;
   created?: string;
+  /** `priority: A` in the frontmatter. */
+  priority?: string;
   statusLine: number; // 1-based line of `status:` in the frontmatter
   statusRaw: string;
 }
@@ -139,7 +144,7 @@ function toIsoDate(v: unknown): string | undefined {
 }
 
 function cleanTitle(text: string): string {
-  let t = text;
+  let t = stripPriority(text);
   for (const p of [...DUE_PATTERNS, ...CREATED_PATTERNS]) t = t.replace(new RegExp(p.source, p.flags + 'g'), ' ');
   t = t.replace(WHO, '$1').replace(TAG, '$1');
   return t.replace(/\s+/g, ' ').trim();
@@ -247,6 +252,7 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         title: cleanTitle(rest),
         due: extractDue(rest),
         created: extractCreated(rest),
+        priority: extractPriority(rest),
         who: [...rest.matchAll(WHO)].map((x) => `@${(x[2] ?? '').toLowerCase()}`),
         tags: taskTags,
       });
@@ -280,6 +286,7 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         done: DONE_STATUSES.has(status),
         due: toIsoDate(fm.due),
         created: toIsoDate(fm.created),
+        priority: normalizePriority(fm.priority),
         statusLine: idx + 2,
         statusRaw: lines[idx + 1] ?? '',
       };

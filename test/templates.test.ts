@@ -232,6 +232,15 @@ describe('addTaskNote', () => {
     return { store, index };
   }
 
+  it('writes a priority into the frontmatter, and ignores one that is not a letter', async () => {
+    const { store, index } = await setup();
+    const r = await addTaskNote(store, index, { title: 'Urgent', created: '2026-11-21', priority: 'A' });
+    expect(await store.read(r.path)).toBe('---\ntitle: Urgent\nstatus: todo\npriority: A\ncreated: 2026-11-21\ntags: []\npeople: []\n---\n\n');
+    expect(index.getTask(r.taskId)?.priority).toBe('A');
+    const s = await addTaskNote(store, index, { title: 'Odd', created: '2026-11-21', priority: 'high' });
+    expect(await store.read(s.path)).not.toContain('priority');
+  });
+
   it('makes the task its own note with status, dates, people and tags, and indexes it as a task', async () => {
     const { store, index } = await setup();
     const r = await addTaskNote(store, index, { title: 'Call Dana', due: '2026-11-24', created: '2026-11-21', tags: ['#launch'], people: ['@dana', 'sam'] });

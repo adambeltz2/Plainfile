@@ -2,7 +2,8 @@ import { fmtDate, fmtDateLong } from '../src/dates';
 import { dirname, type TaskItem } from '../src/index';
 import { listFollowUps, listProjects } from '../src/projects';
 import { addDays, todayView } from '../src/query';
-import { reschedule } from '../src/home';
+import { reschedule, setPriority } from '../src/home';
+import { byPriority } from '../src/priority';
 import { errorMessage, loadContext, justDone, planQuickLine, quickAddLine, render, rescan, state, today, writeFailure, type TodayViewId } from './store';
 import { openNote } from './notes';
 import { logHtml, row, toggleTask } from './tasks';
@@ -28,6 +29,7 @@ export function quickPreview(line: string): string {
   const { parsed, project, error } = planQuickLine(line);
   if (error) return `<span class="err-text">${esc(error)}</span>`;
   const bits = [`Task note "${esc(parsed.title || parsed.text)}" in <b>${esc(project ? project.title : 'Inbox')}</b>`];
+  if (parsed.priority) bits.push(`priority <b>${esc(parsed.priority)}</b>`);
   if (parsed.due) bits.push(`due <b>${esc(fmtDate(parsed.due))}</b>`);
   if (parsed.people.length) bits.push(`with ${parsed.people.map((p) => `<b>@${esc(p)}</b>`).join(' ')}`);
   if (parsed.tags.length) bits.push(`tagged ${parsed.tags.map((x) => `<b>#${esc(x)}</b>`).join(' ')}`);
@@ -56,7 +58,8 @@ function visible(): TaskItem[] {
 }
 
 const keep = (t: TaskItem): boolean => !t.done || justDone.has(t.id);
-const byDue = (a: TaskItem, b: TaskItem): number => (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.path.localeCompare(b.path) || a.line - b.line;
+const byDue = (a: TaskItem, b: TaskItem): number =>
+  byPriority(a.priority, b.priority) || (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.path.localeCompare(b.path) || a.line - b.line;
 
 interface Group {
   title: string;
@@ -142,6 +145,22 @@ async function moveDue(date: string): Promise<void> {
     state.log = { message: friendly ?? `Could not save that change. ${errorMessage(e)}` };
   }
   // The task may now be due elsewhere, so its id (path:line) is unchanged but the lists are not.
+  if (state.selected) await loadContext(state.selected).catch(() => undefined);
+  render();
+}
+
+/** Set (A, B, C) or clear the selected task's priority. */
+async function movePriority(letter: string | null): Promise<void> {
+  const { storage, index } = state;
+  const t = state.selected ? index?.getTask(state.selected) : undefined;
+  if (!storage || !index || !t) return;
+  try {
+    state.log = await setPriority(storage, index, t, letter);
+  } catch (e) {
+    const friendly = writeFailure(e);
+    if (friendly) await rescan();
+    state.log = { message: friendly ?? `Could not save that change. ${errorMessage(e)}` };
+  }
   if (state.selected) await loadContext(state.selected).catch(() => undefined);
   render();
 }
@@ -372,7 +391,7 @@ export function input(e: Event): boolean {
 export function listKey(e: KeyboardEvent): boolean {
   if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return false;
   const k = e.key.toLowerCase();
-  if (!['j', 'k', 'x', 'e'].includes(k)) return false;
+  if (!['j', 'k', 'x', 'e', '1', '2', '3', '0'].includes(k)) return false;
   if ((e.target as HTMLElement | null)?.closest('input, textarea, select, button:not(.cb), [contenteditable="true"]')) return false;
   const rows = [...document.querySelectorAll<HTMLElement>('.main li.task[data-id]')];
   if (!rows.length) return false;
@@ -388,6 +407,7 @@ export function listKey(e: KeyboardEvent): boolean {
   if (!task) return false;
   e.preventDefault();
   if (k === 'x') void toggleTask(task.id);
+  else if ('1230'.includes(k)) void movePriority(k === '1' ? 'A' : k === '2' ? 'B' : k === '3' ? 'C' : null);
   else void openNote(task.path, { line: task.line });
   return true;
 }

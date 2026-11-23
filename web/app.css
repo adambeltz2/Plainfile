@@ -769,3 +769,10 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .backline { overflow-wrap: anywhere; border-left: 2px solid var(--line); padding-left: 8px; margin-top: 2px; }
 .fixall-list { max-height: 14rem; overflow: auto; margin: 8px 0; }
 .fixall-list .del, .fixall-list .add { display: flex; gap: 6px; font-family: var(--mono); }
+
+/* Priority badge: A inverted, B bold outline, C thin outline, the rest grey. Weight and inversion, never colour. */
+.pri { display: inline-block; margin-right: 6px; min-width: 1.5em; text-align: center; font: 600 11px/1.5 var(--mono); border-radius: 3px; vertical-align: 1px; }
+.pri.a { background: var(--fg); color: var(--bg); font-weight: 700; }
+.pri.b { border: 1.5px solid var(--fg); font-weight: 700; }
+.pri.c { border: 1px solid var(--mute); color: var(--mute); }
+.pri.q { color: var(--mute); border: 1px dashed var(--line); }

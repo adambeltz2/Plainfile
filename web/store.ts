@@ -284,13 +284,21 @@ export function projectRef(p: Project): { name: string; dir: string } {
 }
 
 /** Create a task as its own note (it also shows in the Inbox view). Returns an error message, or null on success. */
-export async function quickAddTask(input: { title: string; due?: string; tags?: string[]; people?: string[]; project?: Project }): Promise<string | null> {
+export async function quickAddTask(input: {
+  title: string;
+  due?: string;
+  priority?: string;
+  tags?: string[];
+  people?: string[];
+  project?: Project;
+}): Promise<string | null> {
   const { storage, index } = state;
   if (!storage || !index) return 'Open a folder first.';
   try {
     const r = await addTaskNote(storage, index, {
       title: input.title,
       due: input.due || undefined,
+      priority: input.priority,
       created: today(),
       tags: input.tags,
       people: input.people,
@@ -323,7 +331,7 @@ export async function quickAddLine(line: string): Promise<string | null> {
   const plan = planQuickLine(line);
   if (plan.error) return plan.error;
   const { parsed, project } = plan;
-  return quickAddTask({ title: parsed.title || parsed.text, due: parsed.due, tags: parsed.tags, people: parsed.people, project });
+  return quickAddTask({ title: parsed.title || parsed.text, due: parsed.due, priority: parsed.priority, tags: parsed.tags, people: parsed.people, project });
 }
 
 export async function loadContext(id: string): Promise<void> {

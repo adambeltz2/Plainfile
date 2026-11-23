@@ -209,4 +209,23 @@ describe('all tasks across projects', () => {
         .sort(),
     ).toEqual(['Call someone', 'Still to do']);
   });
+
+  it('never drops an open task for an odd status or a project that is not recognised', async () => {
+    const { VaultIndex } = await import('../src/index');
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const { ALL_PROJECTS } = await import('../src/projects');
+    const store = new MemoryStorage({
+      'archive/gone/index.md': '---\ntitle: Gone\ntype: project\nactive: false\n---\n',
+      'archive/gone/tasks/Odd status.md': '---\ntitle: Odd status\nstatus: on hold\nproject: gone\n---\n',
+      'tasks/Ghost project.md': '---\ntitle: Ghost project\nstatus: todo\nproject: does-not-exist\n---\n',
+      'random/notes.md': '- [ ] Buried in a random folder\n',
+    });
+    const index = new VaultIndex(store);
+    await index.scan();
+    expect(
+      hubTasks(index, ALL_PROJECTS)
+        .map((t) => t.item.title)
+        .sort(),
+    ).toEqual(['Buried in a random folder', 'Ghost project', 'Odd status']);
+  });
 });

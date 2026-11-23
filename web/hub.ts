@@ -6,6 +6,7 @@ import { applyFieldFix, fieldIssues, STATUSES, type FieldIssue, type Status } fr
 import { applyFilters, groupTasks, hubTasks, newFilters, summarize, type Filters, type GroupBy, type HubTask } from '../src/hub';
 import { dirname } from '../src/index';
 import { applyFolderMove, planFolderMove } from '../src/folder-move';
+import { priorityRank } from '../src/priority';
 import { ALL_PROJECTS, listProjects, projectDashboard, projectNotes, setProjectActive, type ProjectDashboard } from '../src/projects';
 import { addDays } from '../src/query';
 import { setTaskStatus } from '../src/writeback';
@@ -128,6 +129,7 @@ function activeChips(): string {
   for (const g of f.tags) out.push(chip('tags', g, `#${g}`));
   for (const s of f.statuses) out.push(chip('statuses', s, s));
   for (const p of f.phases) out.push(chip('phases', p, p || 'No phase'));
+  for (const p of f.priorities) out.push(chip('priorities', p, p === '-' ? 'No priority' : `Priority ${p}`));
   if (f.due)
     out.push(
       `<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'week' ? 'Due this week' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`,
@@ -147,9 +149,12 @@ function toolbar(all: HubTask[]): string {
   const tags = count(all.flatMap((t) => t.tags)).map(([v, n]): [string, string, number] => [v, `#${v}`, n]);
   const phases = count(all.map((t) => t.phase ?? '')).map(([v, n]): [string, string, number] => [v, v || 'No phase', n]);
   const statuses = count(all.map((t) => t.status)).map(([v, n]): [string, string, number] => [v, v, n]);
+  const priorities = count(all.map((t) => t.item.priority ?? '-'))
+    .sort((a, b) => priorityRank(a[0] === '-' ? undefined : a[0]) - priorityRank(b[0] === '-' ? undefined : b[0]))
+    .map(([v, n]): [string, string, number] => [v, v === '-' ? 'No priority' : `Priority ${v}`, n]);
   const quick = (k: 'overdue' | 'week' | 'none', l: string): string =>
     `<button class="chip${f.due === k ? ' on' : ''}" data-hub-due="${k}" aria-pressed="${f.due === k}">${l}</button>`;
-  const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + (f.due ? 1 : 0);
+  const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + f.priorities.length + (f.due ? 1 : 0);
   return (
     `<div class="hub-find"><input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="${hubState.project === ALL_PROJECTS ? 'Filter all tasks…' : 'Filter this project…'}" aria-label="Filter tasks in this project" value="${esc(f.text)}">${hubState.tab === 'tasks' ? `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}</div>` +
     `<details class="hub-tools"${hubState.toolsOpen ? ' open' : ''}><summary class="small">Filter &amp; group${active ? ` · ${active} on` : ''}</summary>` +
@@ -160,7 +165,7 @@ function toolbar(all: HubTask[]): string {
       : '') +
     '</div>' +
     `<div class="chips hub-quick">${quick('overdue', 'Overdue')}${quick('week', 'Due this week')}${quick('none', 'No date')}</div>` +
-    `<details class="hub-facets"${hubState.facetsOpen || f.people.length || f.tags.length || f.phases.length || f.statuses.length ? ' open' : ''}><summary class="small">More filters: people, tags, phases, status</summary>${facet('People', 'people', people, f.people)}${facet('Tags', 'tags', tags, f.tags)}${facet('Phases', 'phases', phases, f.phases)}${facet('Status', 'statuses', statuses, f.statuses)}</details>` +
+    `<details class="hub-facets"${hubState.facetsOpen || f.people.length || f.tags.length || f.phases.length || f.statuses.length || f.priorities.length ? ' open' : ''}><summary class="small">More filters: priority, people, tags, phases, status</summary>${facet('Priority', 'priorities', priorities.length > 1 || f.priorities.length ? priorities : [], f.priorities)}${facet('People', 'people', people, f.people)}${facet('Tags', 'tags', tags, f.tags)}${facet('Phases', 'phases', phases, f.phases)}${facet('Status', 'statuses', statuses, f.statuses)}</details>` +
     '</details>' +
     activeChips()
   );
@@ -298,6 +303,7 @@ function bulkHtml(): string {
       '<button class="btn small" data-hub-bulk="done">Done</button><button class="btn small" data-hub-bulk="reopen">Reopen</button>' +
       `<select id="bulk-status" class="inp" aria-label="Status">${STATUSES.map((s) => `<option${s === i.status ? ' selected' : ''}>${s}</option>`).join('')}</select><button class="btn small" data-hub-bulk="status">Set status</button>` +
       `<input id="bulk-due" class="inp date" type="date" aria-label="Due date" value="${esc(i.due)}"><button class="btn small" data-hub-bulk="due">Set due</button><button class="btn small" data-hub-bulk="nodue">Clear due</button>` +
+      `<span class="small muted">Priority</span>${['A', 'B', 'C'].map((l) => `<button class="btn small" data-hub-bulk="pri-${l}" aria-label="Set priority ${l}">${l}</button>`).join('')}<button class="btn small" data-hub-bulk="pri-none">None</button>` +
       `<input id="bulk-person" class="inp" autocomplete="off" data-suggest="people" placeholder="@person" aria-label="Person" value="${esc(i.person)}"><button class="btn small" data-hub-bulk="person">Assign</button>` +
       `<input id="bulk-tag" class="inp" autocomplete="off" data-suggest="tags" placeholder="#tag" aria-label="Tag" value="${esc(i.tag)}"><button class="btn small" data-hub-bulk="tag">Tag</button>` +
       '<button class="btn small" data-hub-bulk-clear>Clear selection</button></div>';
@@ -543,7 +549,7 @@ function refreshBody(): void {
 
 function toggleFilter(kind: string, value: string): void {
   const f = hubState.filters;
-  const list = f[kind as 'people' | 'tags' | 'statuses' | 'phases'] as string[] | undefined;
+  const list = f[kind as 'people' | 'tags' | 'statuses' | 'phases' | 'priorities'] as string[] | undefined;
   if (!list) return;
   const at = list.indexOf(value);
   if (at >= 0) list.splice(at, 1);
@@ -565,6 +571,12 @@ async function planFor(kind: string): Promise<void> {
     person: [{ kind: 'person', name: i.person }, `Assign ${i.person.startsWith('@') ? i.person : `@${i.person}`}`],
     tag: [{ kind: 'tag', tag: i.tag }, `Add tag ${i.tag.startsWith('#') ? i.tag : `#${i.tag}`}`],
   };
+  const pri = /^pri-([A-Z]|none)$/.exec(kind);
+  if (pri)
+    map[kind] = [
+      { kind: 'priority', letter: pri[1] === 'none' ? null : (pri[1] as string) },
+      pri[1] === 'none' ? 'Clear the priority' : `Set priority ${pri[1]}`,
+    ];
   const pick = map[kind];
   if (!pick) return;
   hubState.error = '';

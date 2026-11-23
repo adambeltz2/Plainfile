@@ -83,6 +83,8 @@ const flow = (xs: string[]): string => `[${xs.map((x) => (/^[\w][\w./-]*$/.test(
 export interface TaskNoteInput {
   title: string;
   due?: string;
+  /** A to Z, written as `priority:`. */
+  priority?: string;
   created: string;
   tags?: string[];
   people?: string[];
@@ -105,6 +107,7 @@ export async function addTaskNote(storage: VaultStorage, index: VaultIndex, inpu
   const build = (shown: string): string[] => {
     const fm = [`title: ${yamlText(shown)}`, 'status: todo'];
     if (input.due) fm.push(`due: ${input.due}`);
+    if (input.priority && /^[A-Z]$/.test(input.priority)) fm.push(`priority: ${input.priority}`);
     fm.push(`created: ${input.created}`);
     if (input.project) fm.push(`project: ${yamlText(input.project.name)}`);
     fm.push(`tags: ${flow(clean(input.tags, /^#/))}`, `people: ${flow(clean(input.people, /^@/))}`);

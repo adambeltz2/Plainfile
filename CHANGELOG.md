@@ -4,10 +4,13 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
-## [1.16.2] - 2026-11-23
+## [1.17.0] - 2026-11-23
 
-### Fixed
-- Adding a task to a project that is closed out now says so, in the preview and after saving, instead of the task silently missing from the Tasks tab. A Reopen button brings the project (and the task) back in one click.
+### Added
+- Priority, the todo.txt way: a capital letter in parentheses straight after the checkbox, `- [ ] (A) Call Dana`, or `priority: A` in a task note. A shows as an inverted badge, B bold outlined, C thin outlined, D to Z grey. Plainfile also reads the Obsidian Tasks emoji (🔺 ⏫ 🔼 🔽 ⏬) and never rewrites them unless you change that task's priority.
+- Tasks sort by priority first (A, then B, then none), then by date, in every list.
+- Start a quick add with `(A)` to set a priority. On Today, select a task and press 1, 2 or 3 to set A, B or C, and 0 to clear it. In a project, the Priority filter and the bulk bar set it for many tasks, with a preview and Undo.
+- Each change edits one letter, shows the exact lines written, and leaves the rest of the file byte for byte.
 
 ## [1.16.2] - 2026-11-23
 

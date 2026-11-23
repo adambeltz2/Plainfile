@@ -5,6 +5,13 @@ import { openNote } from './notes';
 import { errorMessage, justDone, loadContext, render, rescan, state, today, writeFailure } from './store';
 import { esc } from './util';
 
+/** A to C are drawn with weight and inversion (no colour); D to Z are quiet. */
+export function priorityBadge(p: string | undefined): string {
+  if (!p) return '';
+  const tier = p === 'A' ? 'a' : p === 'B' ? 'b' : p === 'C' ? 'c' : 'q';
+  return `<span class="pri ${tier}" title="Priority ${esc(p)}" role="img" aria-label="Priority ${esc(p)}">${esc(p)}</span>`;
+}
+
 /** A task as a list row, shared by Today and the project page: tick box, title, and its chips. */
 function chips(t: TaskItem): string {
   const out: string[] = [];
@@ -28,7 +35,7 @@ export function row(t: TaskItem, pick?: { on: boolean }): string {
     `<li class="task${t.done ? ' done' : ''}${t.id === state.selected ? ' sel' : ''}${pick?.on ? ' picked' : ''}" data-id="${esc(t.id)}" tabindex="0">` +
     (pick ? `<input type="checkbox" class="selbox" data-hub-select="${esc(t.id)}"${pick.on ? ' checked' : ''} aria-label="Select: ${esc(t.title)}">` : '') +
     `<button class="cb" data-toggle="${esc(t.id)}" aria-pressed="${t.done}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${t.done ? '✓' : ''}</button>` +
-    `<div class="body"><div class="t">${esc(t.title)}</div><div class="chips">${chips(t)}</div></div></li>`
+    `<div class="body"><div class="t">${priorityBadge(t.priority)}${esc(t.title)}</div><div class="chips">${chips(t)}</div></div></li>`
   );
 }
 
