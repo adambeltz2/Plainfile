@@ -338,3 +338,23 @@ test.describe('phone navigation', () => {
     await expect(page.locator('.side [data-view="today"]')).toBeVisible();
   });
 });
+
+test.describe('recent searches', () => {
+  test('a search that led to a note is remembered, re-runs with a click, and can be cleared', async ({ page }) => {
+    await page.goto('/');
+    await openVault(page, { 'alpha.md': '# Alpha\nlaunch plan\n', 'beta.md': '# Beta\nother\n' });
+    await nav(page, 'Search').click();
+    await expect(page.locator('#search-recent')).toHaveCount(0);
+    await page.locator('#search-q').fill('launch');
+    await page.locator('.res-btn').first().click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    await nav(page, 'Search').click();
+    const recent = page.locator('#search-recent');
+    await expect(recent).toContainText('launch');
+    await recent.getByRole('button', { name: 'launch' }).click();
+    await expect(page.locator('#search-q')).toHaveValue('launch');
+    await expect(page.locator('.res-btn')).toHaveCount(1);
+    await recent.getByRole('button', { name: 'Clear' }).click();
+    await expect(page.locator('#search-recent')).toHaveCount(0);
+  });
+});
