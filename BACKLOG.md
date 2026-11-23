@@ -20,7 +20,7 @@ helper, per-screen event routing).
 - [x] Paste a URL over selected text to make a link (1.7.0)
 - [x] Tab and Shift+Tab indent list items; move a line up or down (1.7.0, Alt+Up/Down already moved lines)
 - [x] Recent searches (1.7.1)
-- [ ] Create a note from a broken link in Vault health
+- [x] Create a note from a broken link in Vault health (1.7.2)
 - [ ] PWA shortcuts (New task, Search, Today)
 
 **Tier 2: moderate, self-contained**
@@ -291,7 +291,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` Tag manager: rename, merge or delete a tag across every note, a tag tree for
   `area/home` style tags, unused tags, and a warning for `Launch` versus `launch`. _Affected: new
   `src/tags.ts`, `web/tags.ts`._
-- `[FEATURE]` Create a note or task from a link that points nowhere. _Affected: `web/health.ts`._
 - `[FEATURE]` Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]` links.
   _Affected: `src/fixes.ts`._
 

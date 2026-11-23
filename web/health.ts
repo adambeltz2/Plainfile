@@ -1,5 +1,7 @@
 import { bestLinkTarget, retargetWikiLink } from '../src/fixes';
-import { errorMessage, getHealth, rescan, render, state, writeFailure, type Log } from './store';
+import { newNoteForLink } from '../src/linknote';
+import { ExistsError } from '../src/storage';
+import { errorMessage, getHealth, rescan, render, state, today, writeFailure, type Log } from './store';
 import { esc } from './util';
 
 type Cat = 'links' | 'dups' | 'orphans' | 'embeds' | 'attachments';
@@ -31,10 +33,11 @@ function sections(): Section[] {
       const fix = fixTo
         ? `<button class="btn small primary" data-fix-from="${esc(u.from)}" data-fix-line="${u.line}" data-fix-old="${esc(u.target)}" data-fix-to="${esc(fixTo)}">Link to ${esc(fixTo)}</button>`
         : '';
+      const create = `<button class="btn small" data-create-from="${esc(u.from)}" data-create-kind="${u.kind}" data-create-target="${esc(u.target.split('#')[0] ?? u.target)}" title="Make this note, beside the one that links to it">Create note</button>`;
       return item(
         `${u.kind === 'wiki' ? `[[${esc(u.target)}]]` : esc(u.target)}`,
         `${esc(u.from)}:${u.line}${u.suggestion ? ` · closest match: ${esc(u.suggestion)}` : ' · no close match'}`,
-        fix + openBtn(u.from, u.line),
+        fix + create + openBtn(u.from, u.line),
       );
     }),
     ...r.ambiguous.map((u) =>
@@ -128,6 +131,29 @@ export async function click(target: HTMLElement): Promise<boolean> {
   if (cat) {
     healthState.cat = cat;
     healthState.log = undefined;
+    render();
+    return true;
+  }
+  const create = target.closest<HTMLElement>('[data-create-from]');
+  if (create) {
+    const { storage, index } = state;
+    if (!storage || !index) return true;
+    let log: Log;
+    try {
+      const plan = newNoteForLink(
+        create.dataset.createFrom ?? '',
+        { kind: create.dataset.createKind === 'md' ? 'md' : 'wiki', target: create.dataset.createTarget ?? '' },
+        today(),
+      );
+      await storage.create(plan.path, plan.content);
+      await index.refreshFile(plan.path);
+      log = { path: plan.path, line: 2, before: '', after: `title: ${plan.title}`, written: true };
+    } catch (e) {
+      const friendly = e instanceof ExistsError ? 'That note already exists. Rescan to update this list.' : writeFailure(e);
+      log = { message: friendly ?? `Could not create the note. ${errorMessage(e)}` };
+    }
+    await rescan(); // the list is worked out again from the files
+    healthState.log = log;
     render();
     return true;
   }
