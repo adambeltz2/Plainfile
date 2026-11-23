@@ -82,3 +82,37 @@ describe('retargetMarkdownLink', () => {
     await expect(retargetMarkdownLink(store, index, 'a.md', 1, 'old.md', 'deep/er/Target.md')).rejects.toThrow(StaleError);
   });
 });
+
+import { applyLinkFixes, planLinkFixes } from '../src/fixes';
+import { checkHealth } from '../src/health';
+describe('fix all', () => {
+  it('plans only the links with a close match, shows exact lines, and applies them all', async () => {
+    const files = {
+      'a.md': 'See [[pricing-reserach|the research]] and [doc](../plans/overveiw.md#top).\nPlain [[nothing-like-it]].\n',
+      'plans/pricing-research.md': 'x',
+      'plans/overview.md': 'y',
+    };
+    const { store, index } = await setup(files);
+    const report = checkHealth(index);
+    const plan = planLinkFixes(index, report.unresolved);
+    expect(plan.map((f) => [f.kind, f.line, f.after])).toEqual([
+      ['wiki', 1, 'See [[pricing-research|the research]] and [doc](../plans/overveiw.md#top).'],
+      ['md', 1, 'See [[pricing-reserach|the research]] and [doc](plans/overview.md#top).'],
+    ]);
+    const { changes, skipped } = await applyLinkFixes(store, index, plan);
+    expect(changes).toHaveLength(2);
+    expect(skipped).toBe(0);
+    expect(await store.read('a.md')).toBe('See [[pricing-research|the research]] and [doc](plans/overview.md#top).\nPlain [[nothing-like-it]].\n');
+    // Nothing is left to fix with a close match.
+    expect(planLinkFixes(index, checkHealth(index).unresolved)).toEqual([]);
+  });
+
+  it('skips a fix whose line has changed since, instead of forcing it', async () => {
+    const { store, index } = await setup({ 'a.md': 'See [[pricing-reserach]].\n', 'pricing-research.md': 'x' });
+    const plan = planLinkFixes(index, checkHealth(index).unresolved);
+    store.external('a.md', 'Edited: nothing links here now.\n');
+    const r = await applyLinkFixes(store, index, plan);
+    expect(r).toMatchObject({ skipped: 1, changes: [] });
+    expect(await store.read('a.md')).toBe('Edited: nothing links here now.\n');
+  });
+});

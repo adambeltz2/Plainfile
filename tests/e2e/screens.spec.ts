@@ -217,6 +217,28 @@ test.describe('vault health', () => {
     expect(await readFile(page, dir, 'notes/a.md')).toBe(text.replace('reserach', 'research'));
   });
 
+  test('Fix all shows every line it would change, and applies them only when approved', async ({ page }) => {
+    const A = 'One [[pricing-reserach]] here.\n';
+    const B = 'Two [[kickof-call|call]] there.\n';
+    const C = 'Three [[nothing-like-it]] stays.\n';
+    const dir = await openVault(page, { 'a.md': A, 'b.md': B, 'c.md': C, 'pricing-research.md': 'x', 'kickoff-call.md': 'y' });
+    await nav(page, /^Vault health/).click();
+    await page.getByRole('button', { name: /^Fix all 2 with a close match/ }).click();
+    const box = page.getByRole('group', { name: 'Fix all links with a close match' });
+    await expect(box).toContainText('2 links will change');
+    await expect(box).toContainText('One [[pricing-research]] here.');
+    await expect(box).toContainText('Two [[kickoff-call|call]] there.');
+    expect(await readFile(page, dir, 'a.md')).toBe(A); // nothing written yet
+    await box.getByRole('button', { name: 'Cancel' }).click();
+    await expect(box).toHaveCount(0);
+    await page.getByRole('button', { name: /^Fix all 2/ }).click();
+    await page.getByRole('button', { name: 'Apply all 2' }).click();
+    await expect.poll(() => readFile(page, dir, 'a.md')).toBe('One [[pricing-research]] here.\n');
+    expect(await readFile(page, dir, 'b.md')).toBe('Two [[kickoff-call|call]] there.\n');
+    expect(await readFile(page, dir, 'c.md')).toBe(C); // no close match: left alone
+    await expect(page.locator('.res')).toHaveCount(1);
+  });
+
   test('a link that points nowhere can be turned into the note it names, beside the note that links to it', async ({ page }) => {
     const text = 'Plan: see [[Open Questions]] and [[notes/Deeper Idea]].\n';
     const dir = await openVault(page, { 'projects/a/index.md': text });

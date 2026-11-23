@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.13.0] - 2026-11-23
+
+### Added
+- **Fix all, with a preview, in Vault health.** When two or more broken links (wiki or markdown) have a close match, **Fix all N with a close match…** lists the exact line before and after for each, and writes only when you press Apply. Only link addresses change, each write is guarded, and a line that changed since is skipped, not forced.
+
 ## [1.12.0] - 2026-11-23
 
 ### Added
