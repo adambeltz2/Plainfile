@@ -710,7 +710,7 @@ function sideHtml(): string {
   let h = `<h2>Properties <button class="btn small" data-act="yaml" aria-pressed="${notes.yaml}">${notes.yaml ? 'Show form' : 'Show YAML'}</button></h2>${propsHtml()}`;
   h += '<h2 style="margin-top:16px">Linked from</h2>';
   h += back.length
-    ? `<ul class="plain">${back.map((b) => `<li><button class="link mono" data-open="${esc(b.from)}" data-line="${b.line}">${esc(b.from)}:${b.line}</button></li>`).join('')}</ul>`
+    ? `<ul class="plain backlinks">${back.map((b) => backlinkItem(idx, b)).join('')}</ul>`
     : '<p class="muted small" style="margin:0">No other note links here.</p>';
   const me = idx.notes.get(notes.path);
   if (me && isProjectNote(me)) {
@@ -741,6 +741,17 @@ function sideHtml(): string {
 function refreshList(): void {
   const el = document.getElementById('note-list');
   if (el) el.innerHTML = listHtml();
+}
+
+/** One back-link: the note's title, and the line the link sits on, so you can tell what each mention says. */
+function backlinkItem(idx: NonNullable<typeof state.index>, b: { from: string; line: number }): string {
+  const n = idx.notes.get(b.from);
+  const raw = (n?.text.split('\n')[b.line - 1] ?? '').replace(/\r$/, '').trim();
+  const line = raw.length > 140 ? `${raw.slice(0, 139)}…` : raw;
+  return (
+    `<li><button class="link" data-open="${esc(b.from)}" data-line="${b.line}" title="${esc(b.from)}:${b.line}">${esc(n?.title ?? b.from)}</button>` +
+    `${line ? `<div class="backline small muted">${esc(line)}</div>` : ''}</li>`
+  );
 }
 
 export function refreshSide(): void {

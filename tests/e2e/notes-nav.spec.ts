@@ -390,3 +390,23 @@ test('the note header shows a word count and reading time that follow what you t
   await page.keyboard.type(' six seven');
   await expect(page.locator('#note-stats')).toHaveText('7 words · 1 min read');
 });
+
+test('Linked from shows each linking note by title with the line the link is on, and opens it there', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, {
+    'target.md': '---\ntitle: Target\n---\nBody\n',
+    'one.md': '---\ntitle: First source\n---\nIntro\nSee the [[Target]] for the plan, it matters.\n',
+    'two.md': '# Second source\n\nAlso [[target|this one]].\n',
+    'none.md': 'Nothing here.\n',
+  });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Target')).click();
+  const list = page.locator('#note-side .backlinks');
+  await expect(list.locator('li')).toHaveCount(2);
+  await expect(list).toContainText('First source');
+  await expect(list).toContainText('See the [[Target]] for the plan, it matters.');
+  await expect(list).toContainText('Second source');
+  await expect(list).toContainText('Also [[target|this one]].');
+  await list.getByRole('button', { name: 'First source' }).click();
+  await expect(page.locator('#note-title')).toHaveValue('First source');
+});

@@ -16,7 +16,7 @@ helper, per-screen event routing).
 - [x] Plain-words dates in quick add (1.6.2)
 - [x] More template variables (1.6.3)
 - [x] An Install button (1.6.4)
-- [ ] Show the line each back-link sits on in the Notes panel
+- [x] Show the line each back-link sits on in the Notes panel (1.6.5)
 - [ ] Paste a URL over selected text to make a link
 - [ ] Tab and Shift+Tab indent list items; move a line up or down
 - [ ] Recent searches
@@ -294,8 +294,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` Tag manager: rename, merge or delete a tag across every note, a tag tree for
   `area/home` style tags, unused tags, and a warning for `Launch` versus `launch`. _Affected: new
   `src/tags.ts`, `web/tags.ts`._
-- `[FEATURE]` Show the line each back-link sits on in the Notes panel, not only the file.
-  _Affected: `web/notes.ts`._
 - `[FEATURE]` Create a note or task from a link that points nowhere. _Affected: `web/health.ts`._
 - `[FEATURE]` Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]` links.
   _Affected: `src/fixes.ts`._

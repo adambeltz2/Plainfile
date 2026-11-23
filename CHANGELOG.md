@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.6.5] - 2026-11-23
+
+### Changed
+- **Linked from shows the line itself.** In a note's Details panel each back-link now shows the linking note's title and the line the link is on, not just `path:line`, so you can tell what each mention says. Clicking still opens the note at that line.
+
 ## [1.6.4] - 2026-11-23
 
 ### Added
