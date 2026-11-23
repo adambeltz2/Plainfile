@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.6.4] - 2026-11-23
+
+### Added
+- **An Install button in the footer** for browsers that offer to install Plainfile as an app. It appears only while the browser is willing and the app is not already installed, and asks once.
+
 ## [1.6.3] - 2026-11-23
 
 ### Added
