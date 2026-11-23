@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.18.0] - 2026-11-23
+
+### Added
+- Rename person. On a person's page in People, **Rename person** asks for the new name and previews every line that would change: each `@mention` in text and tasks, and each name in `people:`, `attendees:`, `owner:` and `assignee:`. Rename then rewrites just those names (one guarded write per note, line endings and everything else untouched). If the person has a note, it is renamed too with the links to it, its title follows, and the old name can be kept as an alias so old links still work. If the new name is someone who already exists, the preview says the two will become one. Undo puts the text changes back.
+
+### Changed
+- An `@handle` inside a fenced code block is no longer counted as a person.
+
 ## [1.17.5] - 2026-11-23
 
 ### Fixed

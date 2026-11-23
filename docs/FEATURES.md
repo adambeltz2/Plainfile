@@ -4,6 +4,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 
 - **Insight:** an activity heatmap, this month at a glance, topics, people, folders and vault health, with a
   vault-wide tidy list for non-standard fields.
+- **Rename a person:** on their page, Rename person previews every `@mention` and `people:` value that would change, rewrites them with guarded writes, renames their person note and the links to it (keeping the old name as an alias if you like), and offers Undo for the text changes.
 - **People:** everyone in your notes (from @mentions and people fields, joined by person notes), with their open
   tasks, what you are waiting on, meetings and notes.
 - **Calendar:** month, week and agenda views of tasks and dated notes. Drag a task to another day to change its

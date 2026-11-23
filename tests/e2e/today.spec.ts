@@ -274,3 +274,36 @@ test.describe('priority', () => {
     expect(await readFile(page, dir, 'tasks/Call Dana.md')).toContain('title: Call Dana\n');
   });
 });
+
+test('Rename person previews every line that names them, rewrites the mentions and people fields, renames their note, and Undo restores the lines', async ({
+  page,
+}) => {
+  const FILES: Record<string, string> = {
+    'people/Ken Moore.md': '---\ntitle: Ken Moore\ntype: person\n---\nRuns data.\n',
+    'journal/1x1.md': '---\ntitle: 1x1\npeople: [dana, Ken-Moore]\n---\nTalked to @ken-moore today.\n- [ ] Send @ken-moore the deck\n',
+    'ref.md': 'See [[Ken Moore]].\n',
+  };
+  const dir = await openVault(page, FILES);
+  await nav(page, 'More').click();
+  await page.getByRole('menuitem', { name: 'People' }).click();
+  await page
+    .getByRole('button', { name: /Ken Moore/ })
+    .first()
+    .click();
+  await page.getByRole('button', { name: 'Rename person' }).click();
+  await page.locator('#person-new-name').fill('Ken Smith');
+  const prev = page.locator('#person-rename-preview');
+  await expect(prev).toContainText('3 lines in 1 note will change');
+  await expect(prev).toContainText('people/Ken Smith.md');
+  await expect(prev).toContainText('Talked to @Ken-Smith today.');
+  expect(await readFile(page, dir, 'journal/1x1.md')).toBe(FILES['journal/1x1.md']); // nothing is written until Rename
+  await page.getByRole('group', { name: 'Rename person' }).getByRole('button', { name: 'Rename', exact: true }).click();
+  await expect.poll(() => listFiles(page, dir)).toContain('people/Ken Smith.md');
+  expect(await readFile(page, dir, 'journal/1x1.md')).toBe(
+    '---\ntitle: 1x1\npeople: [dana, Ken-Smith]\n---\nTalked to @Ken-Smith today.\n- [ ] Send @Ken-Smith the deck\n',
+  );
+  expect(await readFile(page, dir, 'ref.md')).toBe('See [[Ken Smith]].\n');
+  await expect(page.getByRole('heading', { name: 'Ken Smith' })).toBeVisible();
+  await page.getByRole('button', { name: 'Undo the note changes' }).click();
+  await expect.poll(() => readFile(page, dir, 'journal/1x1.md')).toBe(FILES['journal/1x1.md']);
+});
