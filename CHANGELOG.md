@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [0.47.1] - 2026-11-23
+
+### Added
+- **Add tasks from the Tasks tab.** The same one-line quick add as Home (`Call Dana +Website @dana due:friday`, with the live preview and a Quick note button) sits at the top of the Tasks tab. Home and Tasks share one piece of code for it.
+
 ## [0.47.0] - 2026-11-23
 
 ### Added

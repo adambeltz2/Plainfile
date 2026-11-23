@@ -10,6 +10,7 @@ import { setTaskStatus } from '../src/writeback';
 import { errorMessage, justDone, render, rescan, state, today, writeFailure } from './store';
 import { openNote } from './notes';
 import { logHtml, row } from './tasks';
+import { quickBar } from './today';
 import { esc } from './util';
 
 /**
@@ -311,6 +312,7 @@ export function html(path: string): string {
     (everything ? '</div>' : `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
     `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></span>` +
     `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>`) +
+    (everything ? `${quickBar('hub-quick').form}${quickBar().below}` : '') +
     (d.summary ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
     `<div class="pstats"><div class="pstat"><b>${openCount}</b><span>open</span></div><div class="pstat${d.overdue ? ' late' : ''}"><b>${d.overdue}</b><span>overdue</span></div><div class="pstat"><b>${all.length - openCount}</b><span>done</span></div><div class="pstat"><b>${d.notes.length}</b><span>notes</span></div><div class="pstat"><b>${d.followups.length}</b><span>follow-ups</span></div></div>` +
     `<div class="pprog"><progress max="${Math.max(all.length, 1)}" value="${all.length - openCount}" aria-label="Tasks done"></progress><span class="small muted">${all.length - openCount} of ${all.length} tasks done${all.length ? ` (${Math.round(((all.length - openCount) / all.length) * 100)}%)` : ''}</span></div>` +

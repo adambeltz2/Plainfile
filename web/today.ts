@@ -8,6 +8,17 @@ import { esc } from './util';
 
 export const quick = { text: '', error: '' };
 
+/**
+ * The one-line quick add used on Home and on the Tasks tab: the form (with a Quick note button), a live preview of
+ * how the line will be filed, and the last error. Home puts the form beside the date, so the parts come separately.
+ */
+export function quickBar(cls = ''): { form: string; below: string } {
+  return {
+    form: `<form class="quick ${cls}" data-quick><label class="sr" for="quick-text">Add a task</label><input id="quick-text" class="inp" type="text" autocomplete="off" data-suggest="line" placeholder="Quick add: Call Dana +Website @dana #launch due:friday" value="${esc(quick.text)}"><button class="btn primary" type="submit">Add</button><button class="btn" type="button" data-quick-note>Quick note</button></form>`,
+    below: `<div id="quick-preview" class="qprev small muted" aria-live="polite">${quickPreview(quick.text)}</div>${quick.error ? `<div class="notice err small">${esc(quick.error)}</div>` : ''}`,
+  };
+}
+
 /** One line under the box saying how the typed text will be filed: where it goes, who, what tags, which day. */
 export function quickPreview(line: string): string {
   if (!line.trim()) return '<span class="qhint">One line is enough: <code>Email Sam +Project @sam #tag due:tomorrow</code>. It becomes a task note, shown in your Inbox (or filed in the project), dated today.</span>';

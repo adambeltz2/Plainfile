@@ -4,7 +4,7 @@ import { triage, waitingOn, weekAhead } from '../src/home';
 import { todayView } from '../src/query';
 import { justDone, render, state, today } from './store';
 import { logHtml, openTaskRow, row, toggleTask } from './tasks';
-import { quick, quickPreview } from './today';
+import { quickBar } from './today';
 import { esc } from './util';
 
 /**
@@ -30,10 +30,8 @@ export function html(): string {
   const card = (title: string, body: string, extra = ''): string => `<section class="card home-card"><h3>${esc(title)}${extra}</h3>${body}</section>`;
   const list = (items: string[]): string => `<ul class="plain home-rows">${items.map((x) => `<li>${x}</li>`).join('')}</ul>`;
 
-  let h = `<div class="home"><div class="home-top"><span class="meta home-date">${esc(fmtDateLong(t))}</span>` +
-    `<form class="quick home-quick" data-quick><label class="sr" for="quick-text">Add a task</label><input id="quick-text" class="inp" type="text" autocomplete="off" data-suggest="line" placeholder="Quick add: Call Dana +Website @dana #launch due:friday" value="${esc(quick.text)}"><button class="btn primary" type="submit">Add</button><button class="btn" type="button" data-quick-note>Quick note</button></form></div>` +
-    `<div id="quick-preview" class="qprev small muted" aria-live="polite">${quickPreview(quick.text)}</div>`;
-  if (quick.error) h += `<div class="notice err small">${esc(quick.error)}</div>`;
+  const qb = quickBar('home-quick');
+  let h = `<div class="home"><div class="home-top"><span class="meta home-date">${esc(fmtDateLong(t))}</span>${qb.form}</div>${qb.below}`;
   if (logHtml()) h += `<div class="home-log">${logHtml()}</div>`;
   if (notice.text) h += `<div class="notice ok" role="status">${esc(notice.text)} <button class="btn small" data-home-dismiss>Dismiss</button></div>`;
   h += `<div class="home-stats" role="img" aria-label="Open tasks due each day for the next seven days">${week.map((d) => `<div class="wday${d.date === t ? ' today' : ''}"><i style="height:${Math.round((d.open / peak) * 100)}%"></i><b>${d.open}</b><span>${esc(fmtDate(d.date).slice(0, 3))}</span></div>`).join('')}<div class="home-links"><button class="btn small" data-nav="notes" data-count title="${idx.files.size} files in the folder, ${idx.notes.size} of them notes. Open the list.">${idx.notes.size.toLocaleString()} note${idx.notes.size === 1 ? '' : 's'}</button><button class="btn small" data-nav="tasks">All tasks</button><button class="btn small" data-nav="search">Search</button><button class="btn small" data-nav="explore">Explore</button><button class="btn small" data-nav="review">Weekly review</button><button class="btn small" data-nav="today">Upcoming</button><button class="btn small" data-nav="recent">Recent</button></div></div>`;

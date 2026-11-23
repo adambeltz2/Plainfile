@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { localDate, openVault, readFile, readFileOrEmpty, nav } from './helpers';
+import { listFiles, localDate, openVault, readFile, readFileOrEmpty, nav } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -560,4 +560,16 @@ test('All tasks shows every task from every project and the notes outside any, g
   await expect(page.locator('.hub-group .grp', { hasText: 'No project' })).toBeVisible();
   await page.locator('.hub-content li.task .t', { hasText: 'Loose job' }).click();
   await expect(page.locator('.cm-content')).toBeVisible();
+});
+
+test('the Tasks tab adds a task from one line, like Home, and it shows up in the list', async ({ page }) => {
+  await page.goto('/');
+  const dir = await openVault(page, { 'projects/a/index.md': '---\ntitle: Alpha\ntype: project\nactive: true\n---\n' });
+  await nav(page, 'Tasks').click();
+  await page.locator('#quick-text').fill('Call Dana +Alpha @dana due:2999-01-01');
+  await expect(page.locator('#quick-preview')).toContainText('Call Dana');
+  await page.locator('#quick-text').press('Enter');
+  await expect.poll(async () => (await listFiles(page, dir)).filter((f) => f.startsWith('projects/a/tasks/')).length).toBe(1);
+  await expect(page.locator('.hub-content')).toContainText('Call Dana');
+  await expect(page.locator('#quick-text')).toHaveValue('');
 });
