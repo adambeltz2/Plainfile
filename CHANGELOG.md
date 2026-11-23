@@ -4,6 +4,16 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [1.16.2] - 2026-11-23
+
+### Fixed
+- Adding a task to a project that is closed out now says so, in the preview and after saving, instead of the task silently missing from the Tasks tab. A Reopen button brings the project (and the task) back in one click.
+
+## [1.16.2] - 2026-11-23
+
+### Fixed
+- A task that is still open now shows in the Tasks tab even when its project is archived. Only finished tasks of a closed-out project are left out of the list. Before, adding a task to an archived project made it vanish.
+
 ## [1.16.1] - 2026-11-23
 
 ### Fixed

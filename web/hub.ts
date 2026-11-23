@@ -221,11 +221,11 @@ function projectBanner(d: ProjectDashboard, open: number, total: number): string
         ' <button class="btn primary small" data-hub-reopen-go>Reopen</button> <button class="btn small" data-hub-close-cancel>Cancel</button></div>'
       );
     }
-    return `<div class="notice small" role="status"><b>Archived.</b> This project is closed out${d.completed ? ` (${esc(fmtDate(d.completed))})` : ''}. It is kept out of Home and the Tasks tab. <button class="btn small" data-hub-reopen>Reopen</button></div>`;
+    return `<div class="notice small" role="status"><b>Archived.</b> This project is closed out${d.completed ? ` (${esc(fmtDate(d.completed))})` : ''}. Its open tasks still show in Tasks and Home. <button class="btn small" data-hub-reopen>Reopen</button></div>`;
   }
   if (hubState.closing) {
     return (
-      `<div class="notice" role="group" aria-label="Close out this project"><b>Close out “${esc(d.title)}”?</b> It moves to the Archive: ${open ? `its ${open} open task${open === 1 ? '' : 's'} leave the Tasks tab and Home, and stay in the files. ` : ''}` +
+      `<div class="notice" role="group" aria-label="Close out this project"><b>Close out “${esc(d.title)}”?</b> It moves to the Archive: ${open ? `its ${open} open task${open === 1 ? '' : 's'} stay in Tasks and Home until you finish them. ` : ''}` +
       'The project note gets <code>active: false</code> and <code>completed:</code>. You can reopen it any time.' +
       (dir ? moveOption('close', dir) : '') +
       ' <button class="btn primary small" data-hub-close-go>Close out</button> <button class="btn small" data-hub-close-cancel>Cancel</button></div>'

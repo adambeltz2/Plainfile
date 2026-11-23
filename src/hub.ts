@@ -110,12 +110,14 @@ export function hubTasks(index: VaultIndex, projectPath: string): HubTask[] {
         if (p.active) live.add(n.path);
       }
     }
-    // A task whose only projects are archived is left out: a closed project should not crowd the day's list.
+    // A finished task whose only projects are archived is left out, so closed work does not crowd the list. An open
+    // task always shows, wherever it lives: if it is still to do, it is still to do.
     return index.tasks().flatMap((t) => {
       const n = index.notes.get(t.path);
       if (!n) return [];
       const ps = of.get(n.path) ?? [];
-      return ps.length && !live.has(n.path) ? [] : [{ ...toHubTask(t, n), projects: ps }];
+      const h = { ...toHubTask(t, n), projects: ps };
+      return ps.length && !live.has(n.path) && h.status === 'done' ? [] : [h];
     });
   }
   const covered = projectNotes(index, projectPath);

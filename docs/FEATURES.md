@@ -12,7 +12,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   a Word file, or print it to PDF, cleanly (no frontmatter or tags). A project **Report** builds a status snapshot
   you can copy, download or save as a note.
 - **Tasks (all projects):** the Tasks tab, a place to start the day and add tasks from one line, opens the project hub over every task, from every project and from notes outside any; group by Project, person, status or date, filter, and use the board and timeline as usual.
-- **Close out a project:** a project's page shows Active or Archived and has Close out / Reopen. Closing writes `active: false` and `completed:` in the project note and moves it under Archived; its tasks leave the Tasks tab and Home. It can also move the whole folder to `archive/` (and back on Reopen), rewriting every link, with a preview; nothing is deleted.
+- **Close out a project:** a project's page shows Active or Archived and has Close out / Reopen. Closing writes `active: false` and `completed:` in the project note and moves it under Archived. Its finished tasks leave the Tasks tab; any task still open keeps showing there and on Home, wherever it lives. It can also move the whole folder to `archive/` (and back on Reopen), rewriting every link, with a preview; nothing is deleted.
 - **Subtask progress:** a task with nested checkboxes shows "1 of 3" wherever tasks are listed.
 - **Export a project as one document:** Export notes in a project builds a contents list and a chapter per note, to copy, download as Word, print or save.
 - **If something breaks:** an error bar offers Copy details for a bug report, and Reload. Nothing is sent or collected.
