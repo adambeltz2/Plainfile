@@ -27,14 +27,14 @@ function hitHtml(h: SearchHit, words: string[]): string {
   if (h.kind === 'task') {
     const late = !!h.due && h.due < today() && !h.done;
     return (
-      `<li class="res"><button class="res-btn" data-open="${esc(h.path)}" data-line="${h.line ?? 1}">` +
+      `<li class="res"><button class="res-btn" data-open="${esc(h.path)}" data-line="${h.line ?? 1}" data-find="${esc(words[0] ?? '')}">` +
       `<span class="rt"><span class="mini-cb${h.done ? ' on' : ''}" aria-hidden="true">${h.done ? '✓' : ''}</span> ${highlight(h.title, words)}</span>` +
       `<span class="chips">${h.due ? `<span class="chip${late ? ' late' : ''}">${late ? 'Overdue · ' : ''}${esc(fmtDate(h.due))}</span>` : ''}${chips}` +
       `<span class="chip src mono">${highlight(h.path, words)}:${h.line}</span></span></button></li>`
     );
   }
   return (
-    `<li class="res"><button class="res-btn" data-open="${esc(h.path)}">` +
+    `<li class="res"><button class="res-btn" data-open="${esc(h.path)}" data-find="${esc(words[0] ?? '')}">` +
     `<span class="rt">${highlight(h.title, words)}</span>` +
     (h.snippet ? `<span class="sn">${highlight(h.snippet, words)}</span>` : '') +
     `<span class="chips">${h.mtime ? `<span class="chip quiet">${esc(editedLabel(h.mtime))}</span>` : ''}<span class="chip src mono">${highlight(h.path, words)}</span>${chips}</span></button></li>`
