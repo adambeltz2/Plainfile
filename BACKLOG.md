@@ -25,7 +25,7 @@ helper, per-screen event routing).
 
 **Tier 2: moderate, self-contained**
 - [x] Fix markdown-style `[text](path.md)` broken links, not only `[[wiki]]` (1.8.0)
-- [ ] Keyboard-first Today (`j`/`k`/`x`/`e`)
+- [x] Keyboard-first Today (`j`/`k`/`x`/`e`) (1.8.1; `d` to set a date is still open)
 - [ ] Insight: choose a time range
 - [ ] Reschedule buttons in Today (tomorrow, next Monday, pick a date)
 - [ ] Subtask progress ("3 of 5")
@@ -328,8 +328,7 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[FEATURE]` **Settings screen** stored in `.plainfile/config.md` so it travels with the vault:
   folder names for inbox and tasks, week start, date format, whether a typed `*` becomes `-`,
   autosave delay, text size and line width. _Affected: new `src/config.ts`, `web/settings.ts`._
-- `[FEATURE]` Keyboard-first Today: `j` and `k` to move, `x` to tick, `e` to open, `d` to set a date,
-  and a shortcut overlay on `?`. _Affected: `web/today.ts`, `web/main.ts`._
+- `[FEATURE]` Keyboard-first Today, part two: `d` to set a date and `s` to change status on the chosen task. _Affected: `web/today.ts`._
 - `[FEATURE]` First-run setup for an empty folder: offer to create `inbox/`, a README note and the
   starter templates. _Affected: `web/main.ts`._
 - `[FEATURE]` PWA file handling so `.md` files can be opened with the installed app. _Affected: `web/manifest.json`, `web/main.ts`._

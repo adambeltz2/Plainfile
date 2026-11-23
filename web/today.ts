@@ -3,6 +3,7 @@ import { dirname, type TaskItem } from '../src/index';
 import { listFollowUps, listProjects } from '../src/projects';
 import { addDays, todayView } from '../src/query';
 import { loadContext, justDone, planQuickLine, quickAddLine, render, state, today, type TodayViewId } from './store';
+import { openNote } from './notes';
 import { logHtml, row, toggleTask } from './tasks';
 import { esc } from './util';
 
@@ -317,6 +318,33 @@ export function input(e: Event): boolean {
     return true;
   }
   return false;
+}
+
+/**
+ * Keys for working down the list without the mouse: j and k move to the next and previous task, x ticks it, e opens
+ * its note. Only when no box has the focus and no modifier is held, so typing is never affected.
+ */
+export function listKey(e: KeyboardEvent): boolean {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return false;
+  const k = e.key.toLowerCase();
+  if (!['j', 'k', 'x', 'e'].includes(k)) return false;
+  if ((e.target as HTMLElement | null)?.closest('input, textarea, select, button:not(.cb), [contenteditable="true"]')) return false;
+  const rows = [...document.querySelectorAll<HTMLElement>('.main li.task[data-id]')];
+  if (!rows.length) return false;
+  const at = rows.findIndex((r) => r.dataset.id === state.selected);
+  if (k === 'j' || k === 'k') {
+    const next = rows[k === 'j' ? Math.min(rows.length - 1, at + 1) : Math.max(0, at < 0 ? 0 : at - 1)];
+    if (next?.dataset.id) void select(next.dataset.id);
+    e.preventDefault();
+    return true;
+  }
+  const id = state.selected;
+  const task = id ? state.index?.getTask(id) : undefined;
+  if (!task) return false;
+  e.preventDefault();
+  if (k === 'x') void toggleTask(task.id);
+  else void openNote(task.path, { line: task.line });
+  return true;
 }
 
 export function keydown(e: KeyboardEvent): boolean {

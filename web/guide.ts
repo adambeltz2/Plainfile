@@ -101,6 +101,7 @@ const SHORTCUTS: [string, string][] = [
     'Copy the note (or the selection) cleanly for Word, Docs or email. Also under Download as Word and Print or save as PDF',
   ],
   ['Alt + N', 'Quick note: titled with the date and time, ready to type'],
+  ['J and K, then X or E (on Today)', 'Move down and up the task list, tick the chosen task (X), or open its note (E)'],
   ['F2', 'Rename the open note'],
   ['Ctrl/Cmd + Shift + M', 'Move the open note to another folder'],
   ['Ctrl/Cmd + Shift + X', 'Toggle X-ray'],
