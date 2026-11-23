@@ -13,6 +13,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   you can copy, download or save as a note.
 - **Tasks (all projects):** the Tasks tab, a place to start the day and add tasks from one line, opens the project hub over every task, from every project and from notes outside any; group by Project, person, status or date, filter, and use the board and timeline as usual.
 - **Close out a project:** a project's page shows Active or Archived and has Close out / Reopen. Closing writes `active: false` and `completed:` in the project note and moves it under Archived; its tasks leave the Tasks tab and Home. Nothing is moved or deleted.
+- **If something breaks:** an error bar offers Copy details for a bug report, and Reload. Nothing is sent or collected.
 - **Insight export:** the activity grid, month numbers, topics, people and folders download as CSV or JSON.
 - **Home and the weekly review:** a landing screen (capture, today, what needs filing, what
   you are waiting on, the week ahead, project progress) and a four-step review that files, reschedules and plans

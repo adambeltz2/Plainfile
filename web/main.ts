@@ -18,6 +18,7 @@ import * as notes from './notes';
 import * as peopleScreen from './people';
 import * as palette from './palette';
 import * as projectScreen from './project';
+import { installDiagnostics } from './diagnostics';
 import { ALL_PROJECTS } from '../src/projects';
 import * as rename from './rename';
 import * as search from './search';
@@ -710,6 +711,7 @@ window.__plainfile = {
   openHandle: (h, name) => loadVault(new FsaStorage(h), name ?? h.name, false),
 };
 
+installDiagnostics();
 requestRender();
 void (async () => {
   if (await cloudUi.finishConnect()) return;
