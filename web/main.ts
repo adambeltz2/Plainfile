@@ -185,6 +185,7 @@ const SIDE_LABEL: Record<string, string> = {
 
 /** The bottom tab bar for phones: the screens used all day, with the rest under More. */
 function tabbar(hc: number): string {
+  const open = state.index ? state.index.tasks().filter((t) => !t.done).length : 0;
   const tab = (id: ScreenId, label: string): string => `<button class="tab-b" data-nav="${id}" aria-current="${isCurrent(id)}">${label}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
@@ -202,7 +203,8 @@ function tabbar(hc: number): string {
       ]
         .map((x) => {
           const [id, label] = x.split(':') as [ScreenId, string];
-          return `<button class="btn" data-nav="${id}" data-more-item>${label}${id === 'health' && hc ? ` <span class="badge">${hc}</span>` : ''}</button>`;
+          const n = id === 'health' ? hc : id === 'tasks' ? open : 0;
+          return `<button class="btn" data-nav="${id}" data-more-item>${label}${n ? ` <span class="badge"${id === 'tasks' ? ` aria-label="${n} open task${n === 1 ? '' : 's'}"` : ''}>${n}</span>` : ''}</button>`;
         })
         .join('') +
       '<button class="btn" data-act="rescan" data-more-item>Rescan</button>' +

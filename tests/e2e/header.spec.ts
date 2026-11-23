@@ -30,3 +30,15 @@ test.describe('the header on a wide screen', () => {
     await expect(page.locator('.cal-bar')).toBeVisible();
   });
 });
+
+test('on a phone the open task count is on Tasks in the More sheet', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openVault(page, { 'a.md': '- [ ] One\n- [ ] Two\n- [x] Done\n' }, true, 'home');
+  await page.locator('.tabbar').getByRole('button', { name: /^More/ }).click();
+  await expect(
+    page
+      .locator('.more-sheet')
+      .getByRole('button', { name: /^Tasks/ })
+      .locator('.badge'),
+  ).toHaveText('2');
+});
