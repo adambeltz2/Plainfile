@@ -76,3 +76,24 @@ for (const [go, check] of [
     expect(new URL(page.url()).search).toBe('');
   });
 }
+
+test('the editor is split off and loaded when a note is first opened, and the worker keeps it for offline', async ({ page, request }) => {
+  let chunkBytes = 0;
+  const pending: Promise<void>[] = [];
+  page.on('response', (r) => {
+    if (/\/chunk-[^/]+\.js$/.test(r.url())) pending.push(r.body().then((b) => void (chunkBytes += b.length)));
+  });
+  await page.goto('/');
+  await openVault(page, { 'a.md': '# A\n' }, true, 'home');
+  await page.waitForTimeout(300);
+  await Promise.all(pending);
+  const before = chunkBytes;
+  expect(before).toBeLessThan(250_000); // the big editor chunk is not needed yet
+  await nav(page, 'Notes').click();
+  await page.locator('.note-item', { hasText: /^A$/ }).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  await Promise.all(pending);
+  expect(chunkBytes).toBeGreaterThan(before + 300_000);
+  const sw = await (await request.get('/sw.js')).text();
+  expect(sw).toMatch(/"\.\/chunk-[A-Z0-9]+\.js"/);
+});

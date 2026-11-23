@@ -36,7 +36,7 @@ helper, per-screen event routing).
 **Tier 3: larger, still no decision needed**
 - [ ] Export a project or several notes as one document
 - [ ] Images in the Word file
-- [ ] Load CodeMirror only when Notes opens
+- [x] Load CodeMirror only when Notes opens (1.14.0)
 - [x] Performance tests with a synthetic 5,000-note vault (1.13.1; a 20,000-note case and phone-speed throttling are still open)
 
 ## Refactors
@@ -340,8 +340,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 - `[DEBT]` Opening a 6,000-note folder reads every file (about 4.5 s on a fast machine, much slower
   on a phone). Persist the index and only read files whose modified time changed. _Affected:
   `src/index.ts`, `src/fsa-storage.ts`._
-- `[DEBT]` Load CodeMirror only when Notes opens, to shrink the first download (about 650 KB now).
-  _Affected: `web/main.ts`, `scripts/build.mjs`._
 - `[DEBT]` Accessibility pass with automated checks (axe) in the browser tests, a contrast check in
   both themes, and focus handling after dialogs. _Affected: `tests/e2e/`._
 - `[DEBT]` Extend the performance tests to 20,000 notes and to the rendering path (browser, throttled CPU). `test/perf.test.ts`, `scripts/perf.mjs`.

@@ -18,6 +18,7 @@ const SHELL = [
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
   './icons/icon.svg',
+  ...__CHUNKS__, // filled in by the build: the code split off the main file
 ];
 
 self.addEventListener('install', (event) => {
