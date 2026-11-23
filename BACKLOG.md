@@ -14,7 +14,7 @@ helper, per-screen event routing).
 
 **Tier 1: small and additive**
 - [x] Plain-words dates in quick add (1.6.2)
-- [ ] More template variables (`{{weekday}}` and friends)
+- [x] More template variables (1.6.3)
 - [ ] An Install button (browser install prompt)
 - [ ] Show the line each back-link sits on in the Notes panel
 - [ ] Paste a URL over selected text to make a link
@@ -316,8 +316,8 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 
 - `[FEATURE]` Template manager: create, edit and delete templates in the app, and "Save this note as
   a template". _Affected: new `web/templates.ts`._
-- `[FEATURE]` More variables: `{{time}}`, `{{weekday}}`, `{{clipboard}}`, `{{selection}}`, and
-  prompt types (menu, date, yes or no). _Affected: `src/templates.ts`._
+- `[FEATURE]` More variables: `{{clipboard}}`, `{{selection}}`, and prompt types (menu, date, yes or no).
+  _Affected: `src/templates.ts`._
 - `[FEATURE]` Project scaffolds with more than one file: for example a project that starts with a kickoff note and three task files. _Affected:
   `src/templates.ts`._
 - `[FEATURE]` Create the daily or weekly note automatically on first open of the day. _Affected:

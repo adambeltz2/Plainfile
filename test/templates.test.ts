@@ -323,3 +323,27 @@ describe('the same title twice', () => {
     expect(index.getTask(b.taskId)?.title).toBe('Call Dana 2');
   });
 });
+
+import { dateParts } from '../src/templates';
+describe('date variables', () => {
+  it('gives the weekday, month, year, day, ISO week and a long date', () => {
+    expect(dateParts('2026-11-23')).toEqual({ weekday: 'Monday', month: 'November', year: '2026', day: '23', week: '48', datelong: 'Monday 23 November 2026' });
+    expect(dateParts('2026-01-01').week).toBe('1');
+    expect(dateParts('2027-01-01').week).toBe('53'); // a Friday in the last ISO week of 2026
+    expect(dateParts('2024-12-30').week).toBe('1'); // already week 1 of 2025
+  });
+  it('expands in a rendered template', async () => {
+    const { renderTemplate } = await import('../src/templates');
+    const t = {
+      name: 'Weekly',
+      folder: 'weeks',
+      filename: '{{year}}-W{{week}}',
+      prompts: [],
+      fm: 'title: Week {{week}}, {{datelong}}',
+      body: '{{weekday}} {{month}}\n{{cursor}}',
+    };
+    const r = renderTemplate(t as never, {}, '2026-11-23');
+    expect(r.path).toBe('weeks/2026-W48.md');
+    expect(r.content).toBe('---\ntitle: Week 48, Monday 23 November 2026\n---\nMonday November\n');
+  });
+});

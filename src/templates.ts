@@ -18,7 +18,8 @@ import { ExistsError, type VaultStorage } from './storage';
  *   ## Agenda
  *   - {{cursor}}
  *
- * Variables: {{date}}, {{date+7d}}, {{cursor}} and any {{name}}, which becomes a prompt.
+ * Variables: {{date}}, {{date+7d}}, {{time}}, {{weekday}}, {{month}}, {{year}}, {{day}}, {{week}}, {{datelong}}, {{cursor}} and any
+ * other {{name}}, which becomes a prompt.
  */
 export const TEMPLATE_DIR = '.plainfile/templates';
 
@@ -190,10 +191,35 @@ export function templateExtras(index: VaultIndex): Record<string, string> {
 }
 
 /** Replace {{date}}, {{date+Nd}} and prompt values. {{cursor}} is left for the caller. */
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** The pieces of a date a template can use: `{{weekday}}` is Monday, `{{week}}` the ISO week number, and so on. */
+export function dateParts(iso: string): Record<string, string> {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const day = d.getUTCDate();
+  // ISO week: the week containing this date's Thursday.
+  const thu = new Date(d);
+  thu.setUTCDate(d.getUTCDate() + 3 - ((d.getUTCDay() + 6) % 7));
+  const week = Math.ceil(((thu.getTime() - Date.UTC(thu.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7);
+  const weekday = WEEKDAYS[d.getUTCDay()] ?? '';
+  const month = MONTHS[d.getUTCMonth()] ?? '';
+  return {
+    weekday,
+    month,
+    year: String(d.getUTCFullYear()),
+    day: String(day),
+    week: String(week),
+    datelong: `${weekday} ${day} ${month} ${d.getUTCFullYear()}`,
+  };
+}
+
 function expand(s: string, values: Record<string, string>, today: string): string {
   return s.replace(VAR, (m, name: string, plus?: string, mod?: string) => {
     if (name === 'date') return plus ? addDays(today, Number(plus)) : today;
     if (name === 'cursor') return m;
+    const part = dateParts(today)[name];
+    if (part !== undefined) return part;
     if (name === 'time') return values.time ?? clock();
     if (name === 'timefile') return values.timefile ?? clock(new Date(), true);
     const v = values[name] ?? '';
