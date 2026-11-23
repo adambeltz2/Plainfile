@@ -29,7 +29,7 @@ helper, per-screen event routing).
 - [x] Insight: choose a time range (1.9.0)
 - [x] Reschedule buttons in Today (1.10.0)
 - [x] Subtask progress (1.11.0; project cards do not show it yet)
-- [ ] Daily journal: open today's note if it exists
+- [x] Daily journal: open today's note if it exists (1.11.1)
 - [ ] Open a search result with the match highlighted
 - [ ] "Fix all" safe fixes in Vault health, with a preview
 
@@ -254,8 +254,6 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
   _Affected: new `web/attachments.ts`._
 - `[FEATURE]` Folder rules in `.plainfile/config.md` that give files a type and template without
   editing them. _Affected: new `src/config.ts`._
-- `[FEATURE]` Daily journal: open today's note if it exists instead of numbering a copy.
-  _Affected: `src/templates.ts`._
 - `[DEBT]` Rename detection of outside renames matches identical content only, so a renamed and
   edited file is not noticed. _Affected: `src/index.ts`._
 - `[DEBT]` A rename that fails part-way leaves both files and some updated links. It says so and
