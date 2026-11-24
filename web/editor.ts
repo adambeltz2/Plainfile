@@ -5,7 +5,8 @@ import { defaultKeymap, history, historyKeymap, indentLess, indentMore, redo, re
 import { parseDueWord } from '../src/quickline';
 import { acceptCompletion, autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
 import { markdown } from '@codemirror/lang-markdown';
-import { Compartment, EditorSelection, EditorState, Transaction, type Range } from '@codemirror/state';
+import { Compartment, EditorSelection, EditorState, StateField, Transaction, type Range } from '@codemirror/state';
+import { findTables, tableSkeleton, type TableBlock } from '../src/tables';
 import { Decoration, EditorView, ViewPlugin, WidgetType, keymap, tooltips, type DecorationSet, type ViewUpdate } from '@codemirror/view';
 import { addDays } from '../src/query';
 import type { LinkTarget, SuggestKind } from '../src/vocabulary';
@@ -265,6 +266,86 @@ function build(view: EditorView): { all: DecorationSet; atomic: DecorationSet } 
   return { all: Decoration.set(items, true), atomic: Decoration.set(atomic, true) };
 }
 
+/** A markdown table drawn as a table while the cursor is elsewhere. Clicking it (or arrowing into it) shows the markdown to edit. */
+class TableWidget extends WidgetType {
+  constructor(readonly t: TableBlock) {
+    super();
+  }
+  eq(o: TableWidget): boolean {
+    return JSON.stringify([o.t.head, o.t.align, o.t.rows]) === JSON.stringify([this.t.head, this.t.align, this.t.rows]);
+  }
+  toDOM(view: EditorView): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'cm-table';
+    wrap.tabIndex = 0;
+    wrap.setAttribute('role', 'group');
+    wrap.setAttribute('aria-label', 'Table. Press Enter to edit its markdown.');
+    const table = document.createElement('table');
+    const cell = (tag: 'th' | 'td', text: string, c: number): HTMLElement => {
+      const el = document.createElement(tag);
+      el.textContent = text
+        .replace(/\*\*|__|`/g, '')
+        .replace(/\[\[(?:[^\]|]*\|)?([^\]]*)\]\]/g, '$1')
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
+      const a = this.t.align[c];
+      if (a) el.style.textAlign = a;
+      return el;
+    };
+    const hr = document.createElement('tr');
+    this.t.head.forEach((h, c) => hr.appendChild(cell('th', h, c)));
+    const thead = document.createElement('thead');
+    thead.appendChild(hr);
+    const tbody = document.createElement('tbody');
+    for (const r of this.t.rows) {
+      const tr = document.createElement('tr');
+      this.t.head.forEach((_, c) => tr.appendChild(cell('td', r[c] ?? '', c)));
+      tbody.appendChild(tr);
+    }
+    table.append(thead, tbody);
+    wrap.appendChild(table);
+    const edit = (): void => {
+      const pos = view.posAtDOM(wrap);
+      view.dispatch({ selection: { anchor: pos }, scrollIntoView: true });
+      view.focus();
+    };
+    wrap.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      edit();
+    });
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        edit();
+      }
+    });
+    return wrap;
+  }
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
+function tableDecorations(state: EditorState): DecorationSet {
+  const doc = state.doc;
+  const lines: string[] = [];
+  for (let n = 1; n <= doc.lines; n++) lines.push(doc.line(n).text);
+  const items: Range<Decoration>[] = [];
+  for (const t of findTables(lines)) {
+    const from = doc.line(t.start + 1).from;
+    const to = doc.line(t.end + 1).to;
+    if (state.selection.ranges.some((r) => r.from <= to && r.to >= from)) continue; // being edited: show the markdown
+    items.push(Decoration.replace({ widget: new TableWidget(t), block: true }).range(from, to));
+  }
+  return Decoration.set(items, true);
+}
+
+/** Tables drawn as tables. A block decoration has to come from a state field, not from the plugin above. */
+const tableView = StateField.define<DecorationSet>({
+  create: tableDecorations,
+  update: (v, tr) => (tr.docChanged || tr.selection ? tableDecorations(tr.state) : v),
+  provide: (f) => EditorView.decorations.from(f),
+});
+
 const livePreview = ViewPlugin.fromClass(
   class {
     deco: DecorationSet;
@@ -391,6 +472,7 @@ function applyLink(insert: string) {
 }
 
 const SCALAR_KEYS: Record<string, SuggestKind> = { project: 'projects', type: 'types', status: 'statuses' };
+const PRIORITY_OPTIONS = ['A', 'B', 'C'].map((l) => ({ label: l, detail: l === 'A' ? 'first' : undefined, type: 'keyword' }));
 const LIST_KEYS: Record<string, SuggestKind> = { tags: 'tags', people: 'people', attendees: 'people' };
 
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -405,6 +487,26 @@ function dueOptions(today: string): { label: string; detail: string; apply: stri
     if (iso) out.push({ label: w, detail: fmt(iso), apply: iso, type: 'keyword' });
   }
   return out;
+}
+
+/** The `/` commands: typed at the start of a line, they put a block in the note. */
+function slashOptions(): { label: string; detail: string; apply: (view: EditorView, c: unknown, from: number, to: number) => void; type: string }[] {
+  return [
+    {
+      label: '/table',
+      detail: 'Insert a table',
+      type: 'keyword',
+      apply: (view, _c, from, to) => {
+        const start = view.state.doc.lineAt(from).from; // the table starts at the left edge, whatever the slash was indented by
+        const sk = tableSkeleton();
+        view.dispatch({
+          changes: { from: start, to, insert: sk.text },
+          selection: { anchor: start + sk.select.from, head: start + sk.select.to },
+          userEvent: 'input.complete',
+        });
+      },
+    },
+  ];
 }
 
 function suggestSource(s: Suggester, today: () => string): CompletionSource {
@@ -432,6 +534,8 @@ function suggestSource(s: Suggester, today: () => string): CompletionSource {
           validFor: /^[^\]|#]*$/,
         };
       }
+      const slash = /^\s*(\/[A-Za-z]*)$/.exec(before);
+      if (slash) return { from: ctx.pos - (slash[1] ?? '').length, options: slashOptions(), validFor: /^\/[A-Za-z]*$/ };
       const due = /(?:^|[\s(])#?due:([A-Za-z0-9+-]*)$/i.exec(before);
       if (due) return { from: ctx.pos - (due[1] ?? '').length, options: dueOptions(today()), validFor: /^[A-Za-z0-9+-]*$/ };
       const tag = /(?:^|[\s(])#([\p{L}\p{N}_/-]*)$/u.exec(before);
@@ -446,6 +550,7 @@ function suggestSource(s: Suggester, today: () => string): CompletionSource {
     const key = (m[1] ?? '').toLowerCase();
     const rest = m[2] ?? '';
     if (key === 'due' && !rest.includes('[')) return { from: ctx.pos - rest.length, options: dueOptions(today()), validFor: /^[A-Za-z0-9+-]*$/ };
+    if (key === 'priority' && !rest.includes('[')) return { from: ctx.pos - rest.length, options: PRIORITY_OPTIONS, validFor: /^[A-Za-z]*$/ };
     const scalar = SCALAR_KEYS[key];
     if (scalar && !rest.includes('[')) return { from: ctx.pos - rest.length, options: options(scalar), validFor: /^[^\s,\]]*$/ };
     const list = LIST_KEYS[key];
@@ -630,7 +735,7 @@ export function createEditor(o: {
             tooltips({ parent: document.body, position: 'fixed' }),
           ]
         : []),
-      mode.of(livePreview),
+      mode.of([livePreview, tableView]),
       EditorView.domEventHandlers({
         mousedown(e, view) {
           const el = e.target as HTMLElement;
@@ -674,7 +779,7 @@ export function createEditor(o: {
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: t } });
     },
     setXray(on) {
-      view.dispatch({ effects: mode.reconfigure(on ? EditorView.contentAttributes.of({ class: 'cm-xray' }) : livePreview) });
+      view.dispatch({ effects: mode.reconfigure(on ? EditorView.contentAttributes.of({ class: 'cm-xray' }) : [livePreview, tableView]) });
     },
     focus: () => view.focus(),
     hasFocus: () => view.hasFocus,
