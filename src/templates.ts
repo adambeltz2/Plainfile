@@ -49,6 +49,8 @@ export interface Template {
 export const BUILT_IN: Template[] = [
   {
     name: 'Note',
+    // Not in the New menu: Quick note is the way to start a note. This is still used when you type a name in Add or go to… and choose "New note".
+    hidden: true,
     description: 'A blank note. You give it a title first.',
     folder: 'inbox',
     filename: '{{title}}',

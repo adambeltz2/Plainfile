@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.1.0] - 2026-11-24
+
+### Changed
+- **Quick note is the way to start a note.** The New menu no longer has a separate **Note** entry, and the Notes screen's **+ New note** button is gone: Quick note (one tap, or Alt+N) makes a note named with the date and time, ready to type, and you rename it afterwards. If you want a note with a name from the start, type the name in **Add or go to…** and choose **New note**; that still asks for the title.
+
 ## [2.0.1] - 2026-11-23
 
 ### Fixed

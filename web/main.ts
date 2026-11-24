@@ -500,8 +500,6 @@ app.addEventListener('click', (e) => {
         return requestRender();
       case 'load-cancel':
         return cancelLoad();
-      case 'new-note':
-        return newmenu.openTemplate('Note');
       case 'new-task-file':
         return newmenu.openTemplate('Task');
       case 'proj-task':
