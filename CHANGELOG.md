@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.7.1] - 2026-11-24
+
+### Changed
+- **The Plainfile name in the header is a button to Home**, on a wide screen and on a phone.
+
 ## [2.7.0] - 2026-11-24
 
 ### Changed
