@@ -38,8 +38,6 @@ await shot(page, 'project');
 await page.getByRole('tab', { name: 'Board' }).click();
 await shot(page, 'project-board');
 await page.getByRole('tab', { name: 'Tasks' }).click();
-await nav(page, 'Board');
-await shot(page, 'board');
 await nav(page, 'Notes');
 await page
   .locator('.notes-home')
@@ -67,8 +65,6 @@ await nav(page, 'Tasks');
 await shot(page, 'tasks');
 await page.locator('#hub-group').selectOption('project');
 await shot(page, 'tasks-by-project');
-await nav(page, 'Recent');
-await shot(page, 'recent');
 await nav(page, 'Insight');
 await shot(page, 'insight');
 await nav(page, 'Search');

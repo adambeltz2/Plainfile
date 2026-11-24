@@ -69,7 +69,8 @@ describe('hubTasks', () => {
     expect(f({ tags: ['launch'] })).toEqual(['Write copy']);
     expect(f({ statuses: ['doing', 'waiting'] })).toEqual(['Logo', 'Waiting for legal']);
     expect(f({ due: 'overdue' })).toEqual(['Pick a host']);
-    expect(f({ due: 'week' })).toEqual(['Logo', 'Write copy']);
+    expect(f({ due: 'soon' })).toEqual(['Logo', 'Pick a host', 'Write copy']); // late, and due within a week
+    expect(f({ due: 'later' })).toEqual(['Logo', 'Send notes', 'Write copy']); // anything after today
     expect(f({ due: 'none' })).toEqual(['Loose task', 'Waiting for legal']);
     expect(f({ phases: ['Phase 2'] })).toEqual(['Waiting for legal', 'Write copy']);
     expect(f({ text: 'LOGO' })).toEqual(['Logo']);

@@ -366,14 +366,14 @@ test.describe('phone navigation', () => {
     expect(h!.y).toBeLessThan(500);
     await views.getByRole('button', { name: /^Inbox/ }).click();
     await expect(views.getByRole('button', { name: /^Inbox/ })).toHaveAttribute('aria-pressed', 'true');
-    // More holds Board, Vault health, the cheat sheet, Check for changes and the theme.
+    // More holds Calendar, Vault health, the cheat sheet, Check for changes and the theme.
     await bar.getByRole('button', { name: /^More/ }).click();
     const sheet = page.locator('.more-sheet');
-    for (const n of ['Search', 'Board', 'Weekly review', /^Vault health/, 'Cheat sheet', 'Check for changes', 'Light', 'Dark', 'Auto'])
+    for (const n of ['Search', 'Calendar', 'Weekly review', /^Vault health/, 'Cheat sheet', 'Check for changes', 'Light', 'Dark', 'Auto'])
       await expect(sheet.getByRole('button', { name: n })).toBeVisible();
-    await sheet.getByRole('button', { name: 'Board' }).click();
+    await sheet.getByRole('button', { name: 'Calendar' }).click();
     await expect(page.locator('.more-sheet')).toHaveCount(0);
-    await expect(page.locator('.title')).toContainText('Board');
+    await expect(page.locator('.cal-bar')).toBeVisible();
     // Opening a note hides the bar so the keyboard has room, and All notes brings it back.
     await bar.getByRole('button', { name: 'Notes' }).click();
     await page.locator('.side-toggle').click();

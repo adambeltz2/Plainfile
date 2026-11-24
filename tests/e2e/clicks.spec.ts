@@ -45,7 +45,6 @@ const cases: { name: string; go: (page: Page) => Promise<void>; click: string; e
     click: '.pnotes .res-btn, .pnotes button',
     expect: '',
   },
-  { name: 'Board card', go: async (p) => nav(p, 'Board').click(), click: '.card .t, .card', expect: '' },
   {
     name: 'Project hub task row',
     go: async (p) => {
@@ -87,7 +86,6 @@ const cases: { name: string; go: (page: Page) => Promise<void>; click: string; e
     click: '.res-btn',
     expect: '',
   },
-  { name: 'Recent row', go: async (p) => nav(p, 'Recent').click(), click: '.recent-row td:first-child', expect: '' },
   {
     name: 'Insight drill list',
     go: async (p) => {
