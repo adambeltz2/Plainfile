@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.6.1] - 2026-11-24
+
+### Changed
+- The header button is **Go to…** again, not **Add or go to…**. It still opens the same box (Ctrl/Cmd+P): type a note name to open it, or a sentence to add a task. Adding is also under **+ New** and in the quick add on Home and Tasks.
+
 ## [2.6.0] - 2026-11-24
 
 ### Added

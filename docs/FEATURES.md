@@ -59,7 +59,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Comments:** `<!-- a note to yourself -->` shows quietly in the editor and is left out of copies and exports.
 - **Copy file path:** beside a note's path (and in ⋯ More), copies its full path on your computer (you tell the app where the folder is once; browsers cannot know), its Dropbox path, or the path inside the folder.
 - **Quick note:** one click or Alt+N makes a note titled with the date and time, ready to type; tag it later.
-- **Add or go to… and quick keys:** Ctrl/Cmd+P finds a note by a few letters, adds a task from a typed sentence (`Call Dana @dana due:friday`), creates a note, or runs an action
+- **Go to… and quick keys:** Ctrl/Cmd+P finds a note by a few letters, adds a task from a typed sentence (`Call Dana @dana due:friday`), creates a note, or runs an action
   ("move kick"). F2 renames, Ctrl/Cmd+Shift+M moves, Ctrl/Cmd+Shift+X toggles X-ray.
 - **Paste images:** paste a screenshot or drop an image into a note; it is saved in `_attachments/`, linked
 - **Contents:** a note with two or more headings gets a Contents list in the side panel, under Properties. Click a heading to jump to it; **Hide** folds it away. It updates as you type and never writes to the file.
@@ -77,7 +77,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   `created:`, with "Modified today" chips and a recent-notes list.
 - **Explore** (under the Search tab, switch at the top): related notes (shared tags, links, project, similar text) and a graph.
 - **Templates:** markdown files in `.plainfile/templates/`, with questions, date variables and a
-  cursor position. Built in: Quick note, Task, Project, Meeting (people and project), Journal, Person. A note with a title of your choosing is made from Add or go to…: type its name and choose New note.
+  cursor position. Built in: Quick note, Task, Project, Meeting (people and project), Journal, Person. A note with a title of your choosing is made from Go to…: type its name and choose New note.
 - **Rename and links:** renaming a note rewrites every link to it, with a preview. Renames made
   outside the app are detected and offered as a one-click fix.
 - **Vault health:** broken links, duplicates, orphans and unused attachments, with one-click fixes.
