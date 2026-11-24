@@ -155,7 +155,7 @@ export function html(): string {
   const list = items();
   pal.sel = Math.min(pal.sel, Math.max(0, list.length - 1));
   return (
-    '<div class="modal-back pal-back" data-pal-backdrop><div class="modal pal" role="dialog" aria-modal="true" aria-label="Add or go to">' +
+    '<div class="modal-back pal-back" data-pal-backdrop><div class="modal pal" role="dialog" aria-modal="true" aria-label="Go to">' +
     `<input id="pal-q" class="inp" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="pal-list" placeholder="Open a note, or type a task: Call Dana @dana due:friday" value="${esc(pal.q)}">` +
     `<ul id="pal-list" class="plain pal-list" role="listbox">${list
       .map(

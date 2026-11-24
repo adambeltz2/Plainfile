@@ -242,8 +242,7 @@ function shell(): string {
       : '') +
     '</span>';
   h += '</nav><span class="grow"></span>';
-  h +=
-    '<button class="btn" data-act="palette-open" title="Open a note, add a task, or run an action (Ctrl/Cmd+P)" aria-label="Add or go to">Add or go to…</button>';
+  h += '<button class="btn" data-act="palette-open" title="Open a note, add a task, or run an action (Ctrl/Cmd+P)" aria-label="Go to">Go to…</button>';
   h += '<button class="btn primary" data-act="new">+ New</button>';
   const rest =
     `<span class="hdr-menu-wrap"><button class="btn" data-act="hdr-menu" aria-haspopup="menu" aria-expanded="${hdrMenuOpen}" aria-label="Folder actions" title="Check for changes, open another folder">⋯</button>` +

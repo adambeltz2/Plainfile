@@ -593,11 +593,11 @@ test('Copy path asks once where the folder is on this computer, remembers it, an
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('inbox/Kickoff.md');
 });
 
-test('the header box is "Add or go to": a sentence offers Add task first, and Enter makes it; a short word lists the note first', async ({ page }) => {
+test('the header box is "Go to": a sentence offers Add task first, and Enter makes it; a short word lists the note first', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 });
   await page.goto('/');
   const dir = await openVault(page, { 'people/Ken Moore.md': '---\ntitle: Ken Moore\ntype: person\n---\n', 'a.md': '# A\n' });
-  await page.getByRole('button', { name: 'Add or go to' }).click();
+  await page.getByRole('button', { name: 'Go to', exact: true }).click();
   await page.locator('#pal-q').fill('Call Dana about logos @dana due:2026-12-01');
   const first = page.locator('.pal-item').first();
   await expect(first).toContainText('Add task: Call Dana about logos');
