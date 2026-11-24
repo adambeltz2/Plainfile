@@ -24,6 +24,7 @@ import { isProjectNote, listProjects, noteProjects, projectContents } from '../s
 import { findProject } from '../src/quickline';
 import { addDays } from '../src/query';
 import { normalizePriority } from '../src/priority';
+import { outline } from '../src/outline';
 import { linkTargets, suggestionsFor, type LinkTarget } from '../src/vocabulary';
 import { ConflictError } from '../src/storage';
 import { readingStats } from '../src/render';
@@ -82,6 +83,8 @@ export const notes = {
   purgeArm: undefined as string | undefined,
   versions: [] as Version[],
   historyOpen: false,
+  /** The Contents list in the side panel: open unless folded away. */
+  tocOpen: true,
   lastSnapshotAt: undefined as number | undefined,
   compare: undefined as undefined | { path: string; text: string },
   /** Focus mode: the editor alone, centred, with everything else hidden. */
@@ -807,11 +810,26 @@ function sideHtml(): string {
   return paneHide('details') + sideBody();
 }
 
+/** The headings of the open note, each a button that jumps the editor to it. Shown from two headings up. */
+function contentsHtml(): string {
+  const heads = outline(notes.handle?.getText() ?? '');
+  if (heads.length < 2) return '';
+  const top = Math.min(...heads.map((x) => x.level));
+  let h = `<h2 style="margin-top:16px">Contents <button class="btn small" data-act="toc-toggle" aria-expanded="${notes.tocOpen}">${notes.tocOpen ? 'Hide' : `Show ${heads.length}`}</button></h2>`;
+  if (!notes.tocOpen) return h;
+  h += '<ul class="plain outline small">';
+  for (const x of heads) {
+    h += `<li style="padding-left:${Math.min(x.level - top, 4) * 12}px"><button class="link" data-act="toc-go" data-line="${x.line}">${esc(x.title)}</button></li>`;
+  }
+  return `${h}</ul>`;
+}
+
 function sideBody(): string {
   const idx = state.index;
   if (!notes.path || !idx) return '<h2>Note</h2><p class="muted small" style="margin:0">Open a note to see its properties, links and what changed.</p>';
   const back = idx.backlinks(notes.path);
   let h = `<h2>Properties <button class="btn small" data-act="yaml" aria-pressed="${notes.yaml}">${notes.yaml ? 'Show form' : 'Show YAML'}</button></h2>${propsHtml()}`;
+  h += contentsHtml();
   h += '<h2 style="margin-top:16px">Linked from</h2>';
   h += back.length
     ? `<ul class="plain backlinks">${back.map((b) => backlinkItem(idx, b)).join('')}</ul>`
@@ -1068,6 +1086,13 @@ export async function click(target: HTMLElement): Promise<boolean> {
       notes.peek = undefined;
       notes.wantFocus = true;
       render();
+      return true;
+    case 'toc-toggle':
+      notes.tocOpen = !notes.tocOpen;
+      refreshSide();
+      return true;
+    case 'toc-go':
+      notes.handle?.goToLine(Number(act.dataset.line));
       return true;
     case 'history-toggle':
       notes.historyOpen = !notes.historyOpen;
