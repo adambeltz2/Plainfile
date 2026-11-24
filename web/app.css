@@ -709,12 +709,6 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .home-bars { display: grid; grid-template-columns: repeat(7, 56px); gap: 6px; height: 56px; align-items: end; }
 .home-links { display: flex; gap: 6px; flex-wrap: wrap; align-self: center; justify-content: flex-end; }
 @media (max-width: 700px) { .home-stats { grid-template-columns: 1fr; } .home-bars { grid-template-columns: repeat(7, 1fr); } .home-bars .wday { height: 56px; } .home-links { grid-column: 1 / -1; justify-content: flex-start; } }
-.recent-table .r { text-align: right; white-space: nowrap; }
-.recent-row { cursor: pointer; }
-.recent-row:hover { background: var(--line); }
-.recent-table td:first-child { max-width: 32ch; }
-.recent-table .link { text-align: left; font-weight: 600; }
-@media (max-width: 700px) { .recent-table th:nth-child(2), .recent-table td:nth-child(2), .recent-table th:nth-child(4), .recent-table td:nth-child(4) { display: none; } }
 .title-input { font: inherit; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: inherit; background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 2px 6px; margin: -2px -6px; width: 100%; min-width: 0; }
 .title-input:hover { border-color: var(--line); }
 .title-input:focus { border-color: var(--fg); outline: none; background: var(--bg); }

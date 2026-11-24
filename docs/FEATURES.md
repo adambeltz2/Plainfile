@@ -32,7 +32,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Ticking** a box changes one character (and adds the date it was done) in the file and shows the exact before and after lines.
 - **New task form:** + New > Task, and + Task on a project page (project fixed, you stay on the page), take a task line with `(A)`, `@people`, `#tags` and `due:` as well as a priority list, due-date picks, people and tags fields.
 - **Every task is its own note** (`tasks/<title>.md`, or inside its project), so it has room for details,
-  and it shows in Tasks, the Board and your Inbox.
+  and it shows in Tasks and your Inbox.
 - **One-line quick add:** `Call Dana +Website @dana #launch due:tomorrow`. Natural dates (`today`,
   `tomorrow`, `mon`, `next-week`, `+3d`), a preview before you save, and type-ahead for people, tags
   and projects, and `due:` day words. A date in plain words at the end of the line works too: `Call Dana
@@ -108,7 +108,7 @@ Design mockups are in [`mockups.html`](mockups.html).
 | Browser folder access (File System Access API) | `src/fsa-storage.ts`, `web/handle-store.ts` |
 | Browser app: shell and screens (Tasks, Projects, Notes, Search, Health, New menu) | `web/main.ts`, `web/today.ts` (quick add and the selected-task panel), `web/project.ts`, `web/notes.ts`, `web/search.ts`, `web/health.ts`, `web/newmenu.ts` |
 | Live editor | `web/editor.ts` |
-| Board and Rename screens | `web/board.ts`, `web/rename.ts`, `src/rename.ts` |
+| Rename screen | `web/rename.ts`, `src/rename.ts` |
 | Dropbox storage and sign-in | `src/dropbox-storage.ts`, `src/dropbox-auth.ts`, `web/cloud.ts` |
 | Move and duplicate notes | `src/move.ts`, `web/move.ts`, `web/menu.ts`, `web/palette.ts` |
 | Templates, quick add and its one-line parser, link fixes, frontmatter edits | `src/templates.ts`, `src/capture.ts`, `src/quickline.ts`, `src/fixes.ts`, `src/frontmatter.ts` |

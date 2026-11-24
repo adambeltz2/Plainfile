@@ -38,12 +38,10 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 |---|---|
 | **Home**: a one-line capture bar, week bars and projects at the top, today, filing, waiting, the week | ![Home](docs/screenshots/home.png) |
 | **Tasks**: every task from every project, one place to start the day (grouped by due date; or by project) | ![Tasks](docs/screenshots/tasks.png) |
-| **Recent**: every note by when it last changed, grouped by day, with a filter | ![Recent](docs/screenshots/recent.png) |
 | **Calendar**: tasks and dated notes by day, drag to reschedule | ![Calendar](docs/screenshots/calendar.png) |
 | **Insight**: activity, this month, topics, people, health | ![Insight](docs/screenshots/insight.png) |
 | **Today view** (the Tasks tab opens on it): everything late, due today or due this week, one-line quick add, a readout of the exact change on disk | ![Today](docs/screenshots/today.png) |
 | **Quick add**: `Send logos +website-relaunch @dana #launch due:friday`, with a live preview | ![Quick add](docs/screenshots/quick-add.png) |
-| **Board**: task files in status columns | ![Board](docs/screenshots/board.png) |
 | **Project hub**: tasks grouped and filtered, status column, tabs, bulk changes | ![Project hub](docs/screenshots/project.png) |
 | **Project board**: the same tasks by status | ![Project board](docs/screenshots/project-board.png) |
 | **Notes**: a live editor with X-ray, a properties panel, history and focus mode | ![Notes](docs/screenshots/notes.png) |
@@ -58,7 +56,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 
 ## Highlights
 
-- **One list of tasks** from inline `- [ ]` lines and one-file-per-task notes, with Tasks (opens on Today; also All, Late, Upcoming, Waiting, Inbox and Follow-ups), a project hub, Board, Calendar and a weekly review.
+- **One list of tasks** from inline `- [ ]` lines and one-file-per-task notes, with Tasks (opens on Today; also All, Late, Upcoming, Waiting, Inbox and Follow-ups), a project hub (with a Board of status columns), Calendar and a weekly review.
 - **A live editor** with `[[links]]`, `#tags`, `@people` and type-ahead; click a link to go there, or to create it.
 - **Safe by design:** every write is the smallest edit, guarded by the file's modified time, with history, a trash, and a readout of the exact lines changed.
 - **Yours:** plain files, no account or server; sync with whatever you already use. Export to Word, PDF, markdown, HTML, CSV and JSON.

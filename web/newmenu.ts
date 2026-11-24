@@ -81,7 +81,7 @@ export function html(): string {
     body =
       '<h2>New</h2><ul class="plain menu">' +
       `<li><button class="menu-item" data-quick-note><b>Quick note</b><span>No questions: named with the date and time, ready to type. Rename and tag it later. Alt+N</span></button></li>` +
-      '<li><button class="menu-item" data-new-task><b>Task</b><span>A task with its own note. It shows in Tasks, the Board and your Inbox.</span></button></li>' +
+      '<li><button class="menu-item" data-new-task><b>Task</b><span>A task with its own note. It shows in Tasks and your Inbox.</span></button></li>' +
       state.templates
         .filter((t) => !t.hidden && t.name !== 'Quick note')
         .map(

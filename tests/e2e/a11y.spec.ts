@@ -38,8 +38,6 @@ const screens: { name: string; go: (p: Page) => Promise<void> }[] = [
   { name: 'Search', go: (p) => nav(p, 'Search').click() },
   { name: 'Calendar', go: (p) => nav(p, 'Calendar').click() },
   { name: 'People', go: (p) => nav(p, 'People').click() },
-  { name: 'Board', go: (p) => nav(p, 'Board').click() },
-  { name: 'Recent', go: (p) => nav(p, 'Recent').click() },
   { name: 'Insight', go: (p) => nav(p, 'Insight').click() },
   { name: 'Vault health', go: (p) => nav(p, /^Vault health/).click() },
 ];

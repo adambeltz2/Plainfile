@@ -32,9 +32,8 @@ export interface Filters {
   phases: string[];
   /** Priority letters, and `-` for a task with none. */
   priorities: string[];
-  /** 'overdue', 'week' (the next 7 days) or 'none' (no date). */
   /** `soon` is late, today and the next seven days (what Today shows); `later` is anything after today (Upcoming). */
-  due?: 'overdue' | 'soon' | 'later' | 'week' | 'none';
+  due?: 'overdue' | 'soon' | 'later' | 'none';
   /** Hide finished tasks. On by default. */
   hideDone: boolean;
   /** Only tasks that are not filed in any project (the Inbox view). */
@@ -154,7 +153,6 @@ export function applyFilters(tasks: HubTask[], f: Filters, keep?: ReadonlySet<st
     if (f.due === 'overdue' && !(t.due && t.due < today && stillOpen)) return false;
     if (f.due === 'soon' && !(t.due && t.due <= week && stillOpen)) return false;
     if (f.due === 'later' && !(t.due && t.due > today && stillOpen)) return false;
-    if (f.due === 'week' && !(t.due && t.due >= today && t.due <= week)) return false;
     if (f.due === 'none' && t.due) return false;
     if (q && !`${t.item.title} ${t.people.join(' ')} ${t.tags.join(' ')} ${t.phase ?? ''} ${t.note.title}`.toLowerCase().includes(q)) return false;
     return true;

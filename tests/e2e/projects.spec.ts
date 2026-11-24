@@ -130,11 +130,6 @@ test.describe('new project', () => {
     await expect(panel).toContainText('Order cabinets');
     await expect(panel).toContainText('Quote from Dana');
     await expect(panel.getByRole('button', { name: '+ Task' })).toBeVisible();
-
-    // And the Board groups the task under the project.
-    await nav(page, 'Board').click();
-    await page.getByRole('button', { name: /^kitchen-remodel/ }).click();
-    await expect(page.locator('[data-col="todo"] .card')).toContainText('Order cabinets');
   });
 
   test('works at phone width', async ({ page }) => {
@@ -414,7 +409,7 @@ test.describe('project hub', () => {
     expect(await page.locator('.hub-content .task').count()).toBeGreaterThan(n);
     await page.getByRole('button', { name: 'Clear all' }).click();
     await expect(page.locator('.hub-active')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Overdue', exact: true }).click();
+    await page.getByRole('button', { name: /^Late/ }).click();
     await expect(page.locator('.hub-content .task')).toHaveCount(1);
     await expect(page.locator('.hub-content')).toContainText('Inline in phase one');
   });
@@ -473,26 +468,6 @@ test.describe('project hub', () => {
     await expect(page.locator('.hub-tl .rowh', { hasText: 'Phase 1' })).toBeVisible();
     await expect(page.locator('.hub-tl .cell.late .tlitem', { hasText: 'Inline in phase one' })).toBeVisible();
     await expect(page.locator('.hub-tl .h', { hasText: 'No date' })).toBeVisible();
-  });
-
-  test('Tidy lists notes that differ from the standard fields and fixes one line at a time', async ({ page }) => {
-    const dir = await openVault(page, {
-      'projects/p/index.md': '---\ntitle: P\ntype: project\nactive: true\n---\nx\n',
-      'projects/p/tasks/a.md': '---\ntitle: A\nstatus: In Progress\ndeadline: Nov 23 2026\n---\n',
-      'projects/p/tasks/b.md': '---\ntitle: B\nstatus: todo\n---\n',
-    });
-    await nav(page, 'Projects').click();
-    await page.locator('.pcard .pbtn').click();
-    await expect(page.locator('.hub-status h3', { hasText: 'Tidy' })).toContainText('2');
-    await page.getByRole('button', { name: 'Review' }).click();
-    await expect(page.locator('.hub-tidy')).toContainText('status: In Progress → status: doing');
-    await page.locator('.hub-tidy li', { hasText: 'In Progress' }).getByRole('button', { name: 'Fix' }).click();
-    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/p/tasks/a.md')).toContain('status: doing');
-    await page.getByRole('button', { name: /Fix all/ }).click();
-    await expect.poll(() => readFileOrEmpty(page, dir, 'projects/p/tasks/a.md')).toBe('---\ntitle: A\nstatus: doing\ndue: 2026-11-23\n---\n');
-    expect(await readFile(page, dir, 'projects/p/tasks/b.md')).toBe('---\ntitle: B\nstatus: todo\n---\n');
-    await expect(page.locator('.hub-tidy')).toContainText('follows the standard fields');
-    await expect(page.locator('.hub-status h3', { hasText: 'Tidy' })).toContainText('0');
   });
 
   test('fits a phone: no sideways scroll, the project picker replaces the rail', async ({ page }) => {

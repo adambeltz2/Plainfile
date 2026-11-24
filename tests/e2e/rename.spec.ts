@@ -5,66 +5,6 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-const task = (title: string, status: string, project = 'site') =>
-  `---\ntitle: ${title}\nstatus: ${status}\nproject: ${project}\ndue: 2026-12-01\n---\nBody of ${title}.\n`;
-
-test.describe('board', () => {
-  test('shows task files in status columns and filters by project', async ({ page }) => {
-    await openVault(page, {
-      'tasks/a.md': task('Alpha', 'todo'),
-      'tasks/b.md': task('Beta', 'doing'),
-      'tasks/c.md': task('Gamma', 'done', 'other'),
-    });
-    await nav(page, 'Board').click();
-    await expect(page.locator('[data-col="todo"] .card')).toHaveCount(1);
-    await expect(page.locator('[data-col="doing"] .card')).toContainText('Beta');
-    await expect(page.locator('[data-col="done"] .card')).toContainText('Gamma');
-    await page.getByRole('button', { name: /^other/ }).click();
-    await expect(page.locator('.card')).toHaveCount(1);
-    await page.getByRole('button', { name: /^All task files/ }).click();
-    await expect(page.locator('.card')).toHaveCount(3);
-  });
-
-  test('clicking a card opens its note, and the arrow buttons still only move it', async ({ page }) => {
-    const dir = await openVault(page, { 'tasks/a.md': task('Alpha', 'todo') });
-    await nav(page, 'Board').click();
-    await page
-      .locator('[data-col="todo"] .card .t, [data-col="todo"] .card')
-      .first()
-      .click({ position: { x: 20, y: 12 } });
-    await expect(page.locator('.cm-content')).toContainText('Body of Alpha');
-    expect(await readFile(page, dir, 'tasks/a.md')).toBe(task('Alpha', 'todo'));
-  });
-
-  test('the arrow buttons change one status line and show what changed', async ({ page }) => {
-    const text = task('Alpha', 'todo');
-    const dir = await openVault(page, { 'tasks/a.md': text });
-    await nav(page, 'Board').click();
-    await page.getByRole('button', { name: 'Move Alpha to doing' }).click();
-    await expect(page.locator('.diff .add')).toHaveText('+status: doing');
-    expect(await readFile(page, dir, 'tasks/a.md')).toBe(text.replace('status: todo', 'status: doing'));
-    await expect(page.locator('[data-col="doing"] .card')).toContainText('Alpha');
-  });
-
-  test('dragging a card to another column changes its status', async ({ page }) => {
-    const text = task('Alpha', 'todo');
-    const dir = await openVault(page, { 'tasks/a.md': text });
-    await nav(page, 'Board').click();
-    await page.locator('[data-card]').dragTo(page.locator('[data-col="done"]'));
-    await expect(page.locator('[data-col="done"] .card')).toContainText('Alpha');
-    // Moving a card to done also records the day, in the frontmatter; nothing else changes.
-    expect(await readFile(page, dir, 'tasks/a.md')).toBe(
-      text.replace('status: todo', 'status: done').replace('due: 2026-12-01\n', `due: 2026-12-01\ncompleted: ${new Date().toLocaleDateString('en-CA')}\n`),
-    );
-  });
-
-  test('explains itself when there are no task files', async ({ page }) => {
-    await openVault(page, { 'a.md': 'text' });
-    await nav(page, 'Board').click();
-    await expect(page.locator('.empty')).toContainText('No task files yet');
-  });
-});
-
 test.describe('rename', () => {
   const VAULT = {
     'notes/pricing-research.md': '---\ntitle: Pricing research\n---\nBody.\n',
@@ -154,11 +94,9 @@ test.describe('rename', () => {
   });
 });
 
-test('Board and Rename fit a phone', async ({ page }) => {
+test('Rename fits a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
-  await nav(page, 'Board').click();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   await nav(page, 'Notes').click();
   await (await noteItem(page, 'Pricing research')).click();
   await noteMenu(page, /^Rename/);

@@ -11,7 +11,7 @@ test.describe('the header on a wide screen', () => {
     const nav = page.locator('.nav');
     for (const t of ['Home', 'Tasks', 'Projects', 'Notes', 'Search']) await expect(nav.getByRole('button', { name: t, exact: true })).toBeVisible();
     await expect(nav.getByRole('button', { name: 'Today', exact: true })).toHaveCount(0); // it is the Tasks tab's first view now
-    for (const t of ['Calendar', 'People', 'Board', 'Recent', 'Insight']) await expect(nav.getByRole('button', { name: t, exact: true })).toHaveCount(0);
+    for (const t of ['Calendar', 'People', 'Insight']) await expect(nav.getByRole('button', { name: t, exact: true })).toHaveCount(0);
   });
 
   test('More opens a menu, goes to a screen, marks it current, and closes on Escape or an outside click', async ({ page }) => {

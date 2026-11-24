@@ -1,5 +1,4 @@
 import { fsaSupported, FsaStorage } from '../src/fsa-storage';
-import * as board from './board';
 import * as calendarScreen from './calendar';
 import * as cloudUi from './cloud';
 import * as explore from './explore';
@@ -13,7 +12,6 @@ import * as newmenu from './newmenu';
 import * as menu from './menu';
 import * as move from './move';
 import * as insightScreen from './insight';
-import * as recentScreen from './recent';
 import * as notes from './notes';
 import * as peopleScreen from './people';
 import * as palette from './palette';
@@ -107,8 +105,6 @@ const NAV: { id: ScreenId; label: string }[] = [
 const NAV_MORE: { id: ScreenId; label: string }[] = [
   { id: 'calendar', label: 'Calendar' },
   { id: 'people', label: 'People' },
-  { id: 'board', label: 'Board' },
-  { id: 'recent', label: 'Recent' },
   { id: 'insight', label: 'Insight' },
   { id: 'health', label: 'Vault health' },
 ];
@@ -202,7 +198,6 @@ let moreOpen = false;
 const sideOpen = new Set<string>();
 const SIDE_LABEL: Record<string, string> = {
   notes: 'All notes',
-  board: 'Projects',
   search: 'Narrow by folder or tag',
   explore: 'Most connected notes',
 };
@@ -214,17 +209,7 @@ function tabbar(hc: number): string {
     `<button class="tab-b" data-nav="${id}" aria-current="${isCurrent(id)}">${label}${id === 'tasks' && open ? ` <span class="badge" aria-label="${open} open task${open === 1 ? '' : 's'}">${open}</span>` : ''}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
-      [
-        'recent:Recent',
-        'search:Search',
-        'calendar:Calendar',
-        'people:People',
-        'board:Board',
-        'review:Weekly review',
-        'insight:Insight',
-        'health:Vault health',
-        'guide:Cheat sheet',
-      ]
+      ['search:Search', 'calendar:Calendar', 'people:People', 'review:Weekly review', 'insight:Insight', 'health:Vault health', 'guide:Cheat sheet']
         .map((x) => {
           const [id, label] = x.split(':') as [ScreenId, string];
           const n = id === 'health' ? hc : id === 'tasks' ? open : 0;
@@ -294,9 +279,6 @@ function shell(): string {
     h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside Plainfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
   }
   switch (state.screen) {
-    case 'recent':
-      h += recentScreen.html();
-      break;
     case 'insight':
       h += insightScreen.html();
       break;
@@ -314,9 +296,6 @@ function shell(): string {
       break;
     case 'projects':
       h += projectScreen.html();
-      break;
-    case 'board':
-      h += board.html();
       break;
     case 'guide':
       h += guide.html();
@@ -541,9 +520,6 @@ app.addEventListener('click', (e) => {
       case 'today':
         await todayScreen.click(target);
         break;
-      case 'recent':
-        recentScreen.click(target);
-        break;
       case 'insight':
         await insightScreen.click(target);
         break;
@@ -561,9 +537,6 @@ app.addEventListener('click', (e) => {
         break;
       case 'projects':
         await projectScreen.click(target);
-        break;
-      case 'board':
-        await board.click(target);
         break;
       case 'rename':
         await rename.click(target);
@@ -602,7 +575,6 @@ app.addEventListener('input', (e) => {
   suggest.onInput(e);
   if (!state.index && cloudUi.input(e)) return;
   if (palette.input(e)) return;
-  if (state.screen === 'recent' && recentScreen.input(e)) return;
   if (move.input(e)) return;
   if (state.modal && newmenu.input(e)) return;
   if (state.screen === 'projects' && projectScreen.input(e)) return;
@@ -626,10 +598,10 @@ app.addEventListener('change', (e) => {
   notes.change(e);
 });
 
-app.addEventListener('dragstart', (e) => (board.dragStart(e), calendarScreen.dragStart(e)));
-app.addEventListener('dragover', (e) => (board.dragOver(e), calendarScreen.dragOver(e)));
-app.addEventListener('drop', (e) => (board.drop(e), calendarScreen.drop(e)));
-app.addEventListener('dragend', () => (board.dragEnd(), calendarScreen.dragEnd()));
+app.addEventListener('dragstart', (e) => calendarScreen.dragStart(e));
+app.addEventListener('dragover', (e) => calendarScreen.dragOver(e));
+app.addEventListener('drop', (e) => calendarScreen.drop(e));
+app.addEventListener('dragend', () => calendarScreen.dragEnd());
 
 // CodeMirror closes its suggestion list while handling Escape, before this page-level handler runs,
 // so note whether one was open at the start of the key press.

@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.2.0] - 2026-11-24
+
+### Removed
+- **Board screen** (under More). The Board tab on Tasks and on every project does the same job and also covers tasks written as checkbox lines.
+- **Recent screen** (under More) and the Recent button on Home. The Notes screen already lists recent notes first, and Home shows where you left off.
+- The **Overdue / Due this week / No date** buttons in the Tasks "Filter & group" drawer: the quick views above the list (Late, Today, Upcoming, No date) do this. A date filter that is on still shows as a chip you can remove.
+- The per-project **Tidy** panel. Vault health and Insight still list and fix non-standard fields across the whole folder.
+
 ## [2.1.0] - 2026-11-24
 
 ### Changed

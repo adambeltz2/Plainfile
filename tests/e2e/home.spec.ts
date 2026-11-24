@@ -48,14 +48,12 @@ test.describe('Home', () => {
     await expect(page.locator('.cm-content')).toBeVisible();
   });
 
-  test('on a phone Home has no sideways scroll and the quick bar, stats and Recent link work', async ({ page }) => {
+  test('on a phone Home has no sideways scroll and the quick bar and stats show', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await openVault(page, { 'a.md': '# A\n' }, true, 'home');
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
     await expect(page.locator('#quick-text')).toBeVisible();
     await expect(page.locator('.wday')).toHaveCount(7);
-    await page.locator('.home-links').getByRole('button', { name: 'Recent' }).click();
-    await expect(page.locator('.title')).toHaveText('Recent');
   });
 
   test('clicking a task on Home opens its note', async ({ page }) => {

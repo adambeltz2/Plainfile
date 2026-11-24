@@ -3,7 +3,7 @@ import { save } from './export';
 import { quickHooks, taskPanelHtml } from './today';
 import { tasksToCsv, tasksToJson } from '../src/export';
 import { applyBulk, planBulk, type BulkAction, type BulkPlan } from '../src/bulk';
-import { applyFieldFix, fieldIssues, STATUSES, type FieldIssue, type Status } from '../src/fields';
+import { STATUSES, type Status } from '../src/fields';
 import {
   applyFilters,
   currentView,
@@ -47,7 +47,6 @@ export const hubState = {
   /** Groups the user opened or closed, against their default (finished work starts closed). */
   toggled: new Set<string>(),
   limits: new Map<string, number>(),
-  tidy: false,
   /** The "more filters" drawer stays open while you pick several. */
   facetsOpen: false,
   /** The Filter & group drawer on a phone, and whether row tick boxes are showing there. */
@@ -108,7 +107,6 @@ export function resetFor(path: string): void {
     filters: newFilters(),
     toggled: new Set<string>(),
     limits: new Map<string, number>(),
-    tidy: false,
     facetsOpen: false,
     toolsOpen: false,
     closing: false,
@@ -148,7 +146,7 @@ function activeChips(): string {
   for (const p of f.priorities) out.push(chip('priorities', p, p === '-' ? 'No priority' : `Priority ${p}`));
   if (f.due)
     out.push(
-      `<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'soon' ? 'Late or due within a week' : f.due === 'later' ? 'Due later' : f.due === 'week' ? 'Due this week' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`,
+      `<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'soon' ? 'Late or due within a week' : f.due === 'later' ? 'Due later' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`,
     );
   return out.length ? `<div class="chips hub-active">${out.join('')}<button class="btn small" data-hub-clear>Clear all</button></div>` : '';
 }
@@ -168,8 +166,6 @@ function toolbar(all: HubTask[]): string {
   const priorities = count(all.map((t) => t.item.priority ?? '-'))
     .sort((a, b) => priorityRank(a[0] === '-' ? undefined : a[0]) - priorityRank(b[0] === '-' ? undefined : b[0]))
     .map(([v, n]): [string, string, number] => [v, v === '-' ? 'No priority' : `Priority ${v}`, n]);
-  const quick = (k: 'overdue' | 'week' | 'none', l: string): string =>
-    `<button class="chip${f.due === k ? ' on' : ''}" data-hub-due="${k}" aria-pressed="${f.due === k}">${l}</button>`;
   const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + f.priorities.length + (f.due ? 1 : 0);
   const everything = hubState.project === ALL_PROJECTS;
   const counts = viewCounts(all, today(), state.index ? listFollowUps(state.index).length : 0);
@@ -193,7 +189,6 @@ function toolbar(all: HubTask[]): string {
       ? `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button><button class="btn small" data-hub-export="csv" title="Download the tasks shown as a spreadsheet file">Export CSV</button><button class="btn small" data-hub-export="json" title="Download the tasks shown as JSON">Export JSON</button>`
       : '') +
     '</div>' +
-    `<div class="chips hub-quick">${quick('overdue', 'Overdue')}${quick('week', 'Due this week')}${quick('none', 'No date')}</div>` +
     `<details class="hub-facets"${hubState.facetsOpen || f.people.length || f.tags.length || f.phases.length || f.statuses.length || f.priorities.length ? ' open' : ''}><summary class="small">More filters: priority, people, tags, phases, status</summary>${facet('Priority', 'priorities', priorities.length > 1 || f.priorities.length ? priorities : [], f.priorities)}${facet('People', 'people', people, f.people)}${facet('Tags', 'tags', tags, f.tags)}${facet('Phases', 'phases', phases, f.phases)}${facet('Status', 'statuses', statuses, f.statuses)}</details>` +
     '</details>' +
     activeChips()
@@ -425,25 +420,7 @@ function timelineHtml(all: HubTask[]): string {
   return `${h}</div>${phases.length ? '' : '<div class="empty">No tasks match.</div>'}`;
 }
 
-function tidyHtml(issues: FieldIssue[]): string {
-  if (!issues.length) return '<p class="muted small">Everything in this project follows the standard fields.</p>';
-  const fixable = issues.filter((i) => i.fix);
-  return (
-    `<p class="small muted" style="margin:0 0 6px">Your notes can be written any way. These would make them uniform. Each fix changes one line in one note, and nothing is changed until you press it.</p>` +
-    (fixable.length
-      ? `<div class="row-gap" style="margin:0 0 8px"><button class="btn small primary" data-hub-fixall>Fix all ${fixable.length}</button></div>`
-      : '') +
-    `<ul class="plain tidy">${issues
-      .slice(0, 60)
-      .map(
-        (i) =>
-          `<li><div><button class="link" data-open="${esc(i.path)}">${esc(i.title)}</button> <span class="muted small">${esc(i.message)}</span></div>${i.fix ? `<div class="mono small">${esc(i.fix.before)} → ${esc(i.fix.after)} <button class="btn small" data-hub-fix="${esc(i.id)}">Fix</button></div>` : ''}</li>`,
-      )
-      .join('')}${issues.length > 60 ? `<li class="muted">and ${issues.length - 60} more</li>` : ''}</ul>`
-  );
-}
-
-function statusColumn(all: HubTask[], issues: FieldIssue[]): string {
+function statusColumn(all: HubTask[]): string {
   const s = summarize(all, today(), Date.now());
   const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
   const f = hubState.filters;
@@ -455,7 +432,7 @@ function statusColumn(all: HubTask[], issues: FieldIssue[]): string {
   return (
     '<aside class="hub-status" aria-label="Project status">' +
     panel +
-    `<details class="hub-status-d"${isNarrow() && !hubState.statusOpen ? '' : ' open'}><summary class="small">Status: ${s.done} of ${s.total} done${s.overdue ? `, ${s.overdue} overdue` : ''}${issues.length ? `, ${issues.length} to tidy` : ''}</summary>` +
+    `<details class="hub-status-d"${isNarrow() && !hubState.statusOpen ? '' : ' open'}><summary class="small">Status: ${s.done} of ${s.total} done${s.overdue ? `, ${s.overdue} overdue` : ''}</summary>` +
     `<h3>Progress</h3><div class="prog"><i style="width:${pct}%"></i></div><p class="small muted" style="margin:4px 0 8px">${s.done} of ${s.total} done${s.total ? ` (${pct}%)` : ''} · ${s.overdue} overdue</p>` +
     (s.phases.length
       ? `<h3>Phases</h3>${s.phases.map((p) => `<button class="hub-phase${f.phases.includes(p.name === 'No phase' ? '' : p.name) ? ' on' : ''}" data-hub-filter="phases:${esc(p.name === 'No phase' ? '' : p.name)}"><span>${esc(p.name)}</span><b>${p.done}/${p.total}</b><span class="prog"><i style="width:${p.total ? Math.round((p.done / p.total) * 100) : 0}%"></i></span></button>`).join('')}`
@@ -473,7 +450,6 @@ function statusColumn(all: HubTask[], issues: FieldIssue[]): string {
       ? `<h3>Next up</h3><ol class="small hub-next">${s.next.map((t) => `<li><button class="link" data-open="${esc(t.item.path)}" data-line="${t.item.line}">${esc(t.item.title)}</button>${t.due ? ` <span class="muted">${esc(fmtDate(t.due))}</span>` : ''}</li>`).join('')}</ol>`
       : '') +
     `<h3>Done per week <span class="muted" title="From the day a task was finished where it says so, otherwise from when its note was last changed">(estimate)</span></h3><div class="spark" aria-label="Tasks finished in each of the last six weeks">${s.weekly.map((n) => `<i style="height:${Math.max(6, Math.round((n / spark) * 100))}%" title="${n} done"></i>`).join('')}</div>` +
-    `<h3 style="margin-top:12px">Tidy <span class="n">${issues.length}</span></h3><button class="btn small" data-hub-tidy aria-expanded="${hubState.tidy}">${hubState.tidy ? 'Hide' : issues.length ? 'Review' : 'All uniform'}</button>${hubState.tidy ? `<div class="hub-tidy">${tidyHtml(issues)}</div>` : ''}` +
     '</details></aside>'
   );
 }
@@ -507,7 +483,6 @@ export function html(path: string): string {
   resetFor(path);
   const all = tasksOf(idx, path);
   const covered = projectNotes(idx, path);
-  const issues = everything ? [] : fieldIssues(idx, covered); // a tidy list over every note is for a project, not for All
   const visible = applyFilters(all, hubState.filters, justDone, today());
   const dir = !d.note ? '' : d.note.name.toLowerCase() === 'index' ? dirname(d.note.path) : '';
   const name = !d.note ? '' : dir ? (dir.split('/').pop() as string) : d.note.name;
@@ -558,7 +533,7 @@ export function html(path: string): string {
     (d.summary && !everything ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
     statsHtml(openCount, d.overdue, all.length - openCount, d.notes.length, d.followups.length) +
     `<div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button role="tab" class="tab${hubState.tab === id ? ' on' : ''}" data-hub-tab="${id}" aria-selected="${hubState.tab === id}">${esc(l)}</button>`).join('')}</div>` +
-    `<div class="hub-content">${hubState.tab === 'tasks' || hubState.tab === 'board' ? `<div id="hub-bulk">${bulkHtml()}</div>` : ''}${body}</div>${log ? `<div class="plog" aria-live="polite">${log}</div>` : ''}</div>${statusColumn(all, issues)}</div>`
+    `<div class="hub-content">${hubState.tab === 'tasks' || hubState.tab === 'board' ? `<div id="hub-bulk">${bulkHtml()}</div>` : ''}${body}</div>${log ? `<div class="plog" aria-live="polite">${log}</div>` : ''}</div>${statusColumn(all)}</div>`
   );
 }
 
@@ -897,7 +872,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
     render();
     return true;
   }
-  const due = q<'overdue' | 'week' | 'none'>('data-hub-due');
+  const due = q<NonNullable<Filters['due']>>('data-hub-due');
   if (due) {
     hubState.filters.due = hubState.filters.due === due ? undefined : due;
     render();
@@ -925,31 +900,6 @@ export async function click(target: HTMLElement): Promise<boolean> {
   if (mv) {
     const [id, status] = mv.split('|');
     if (id && status) await move(id, status);
-    return true;
-  }
-  if (target.closest('[data-hub-tidy]')) {
-    hubState.tidy = !hubState.tidy;
-    render();
-    return true;
-  }
-  const fix = q('data-hub-fix');
-  const fixAll = target.closest('[data-hub-fixall]');
-  if (fix || fixAll) {
-    const { storage, index } = state;
-    if (!storage || !index) return true;
-    const issues = fieldIssues(index, projectNotes(index, hubState.project));
-    const todo = fixAll ? issues.filter((i) => i.fix) : issues.filter((i) => i.id === fix);
-    // Several fixes can touch one note, so each is worked out again from what is on disk when it is applied.
-    for (const issue of todo) {
-      try {
-        const now = fieldIssues(index, projectNotes(index, hubState.project)).find((i) => i.id === issue.id);
-        if (now) state.log = await applyFieldFix(storage, index, now);
-      } catch (e) {
-        state.log = { message: `Could not tidy ${issue.path}. ${errorMessage(e)}` };
-        break;
-      }
-    }
-    render();
     return true;
   }
   return false;
