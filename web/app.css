@@ -34,7 +34,7 @@ button { font: inherit; color: inherit; }
 input[type='checkbox'], input[type='radio'], select, input[type='date'] { accent-color: var(--fg); }
 button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 
-.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.wrap { max-width: min(2400px, 100%); margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 
 /* Header */
 .bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
@@ -714,8 +714,7 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .title-input:focus { border-color: var(--fg); outline: none; background: var(--bg); }
 .ed-head > div:first-child { flex: 1 1 14rem; min-width: 0; }
 
-/* Wide screens: the Notes screen uses the whole window, and its side panels can be hidden. */
-.wrap.notes-wide { max-width: min(2400px, 100%); }
+/* Wide screens: every screen uses the same width, so the header never jumps when you switch screens. The Notes side panels can be hidden. */
 .only-wide { display: inline-block; }
 @media (max-width: 960px) { .only-wide { display: none; } }
 @media (min-width: 961px) {
@@ -802,8 +801,6 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 /* An HTML comment in a note (<!-- ... -->): a quiet note to yourself, left out of copies and exports. */
 .cm-comment { color: var(--mute); font-style: italic; font-size: 0.92em; }
 
-/* The project page uses the width of the window, so a board of a few cards is not squeezed into the middle. */
-.wrap.hub-wide { max-width: min(2400px, 100%); }
 
 /* The note's path with a small Copy path button beside it. */
 .pathrow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }

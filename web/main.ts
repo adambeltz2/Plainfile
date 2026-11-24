@@ -228,7 +228,7 @@ function shell(): string {
   /** Open tasks, for the small number on the Tasks tab. */
   const openTasks = state.index ? state.index.tasks().filter((t) => !t.done).length : 0;
   const focusing = state.screen === 'notes' && notes.notes.focus && !!notes.notes.path;
-  let h = `<div class="wrap${focusing ? ' focus' : ''}${state.screen === 'notes' ? ' notes-wide' : ''}${state.screen === 'projects' ? ' hub-wide' : ''}"><header class="bar"><h1>Plainfile</h1>`;
+  let h = `<div class="wrap${focusing ? ' focus' : ''}"><header class="bar"><h1>Plainfile</h1>`;
   h += `<span class="tag-pill${state.demo ? '' : ' inv'}" title="${esc(state.name)}">${esc(state.name)}</span>`;
   h += '<nav class="nav" aria-label="Screens">';
   for (const n of NAV) {

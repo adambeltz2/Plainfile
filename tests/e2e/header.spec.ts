@@ -1,8 +1,20 @@
 import { expect, test } from '@playwright/test';
-import { openVault } from './helpers';
+import { nav, openVault } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
+});
+
+test('the header stays in the same place on every screen of a wide window', async ({ page }) => {
+  await page.setViewportSize({ width: 1800, height: 900 });
+  await openVault(page, { 'a.md': '# A\n- [ ] task due:2026-12-01\n', 'b.md': '# B\n' }, true, 'home');
+  const left = async (): Promise<number[]> =>
+    page.evaluate(() => [...document.querySelectorAll('.bar h1, .wrap')].map((e) => Math.round(e.getBoundingClientRect().left)));
+  const first = await left();
+  for (const name of ['Tasks', 'Projects', 'Notes', 'Search', 'Calendar', 'People', 'Insight', 'Home']) {
+    await nav(page, name).click();
+    expect(await left(), name).toEqual(first);
+  }
 });
 
 test.describe('the header on a wide screen', () => {
