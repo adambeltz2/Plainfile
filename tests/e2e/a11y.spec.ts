@@ -11,7 +11,7 @@ const TODAY = localDate(0);
 const VAULT: Record<string, string> = {
   'projects/site/index.md': `---\ntitle: Website\ntype: project\nactive: true\n---\n# Website\n- [ ] Overdue inline due:2020-01-01 @dana\n- [ ] Today inline due:${TODAY} #launch\n`,
   'projects/site/tasks/Fix footer.md': `---\ntitle: Fix footer\nstatus: doing\nproject: site\npeople: [dana]\ndue: ${TODAY}\n---\n\nFooter body\n`,
-  'meetings/Kickoff.md': `---\ntitle: Kickoff\ndate: ${TODAY}\nattendees: [dana]\n---\nSee [[Fix footer]].\n`,
+  'meetings/Kickoff.md': `---\ntitle: Kickoff\ndate: ${TODAY}\nattendees: [dana]\n---\nSee [[Fix footer]].\n\n| Item | Owner |\n| --- | --: |\n| Logo | Dana |\n`,
   'people/dana.md': '---\ntitle: Dana\ntype: person\n---\nDana\n',
 };
 

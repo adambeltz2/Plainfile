@@ -113,9 +113,9 @@ function parseInline(src: string, o: RenderOptions): Inline[] {
 const HR = /^\s{0,3}([-*_])(?:\s*\1){2,}\s*$/;
 const FENCE = /^\s*(```|~~~)/;
 const LIST = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
-const TABLE_SEP = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/;
+export const TABLE_SEP = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/;
 
-function cells(line: string): string[] {
+export function cells(line: string): string[] {
   return line
     .trim()
     .replace(/^\||\|$/g, '')

@@ -109,6 +109,10 @@ const SHORTCUTS: [string, string][] = [
     '⋯ More, then Copy as formatted text',
     'Copy the note (or the selection) cleanly for Word, Docs or email. Also under Download as Word and Print or save as PDF',
   ],
+  [
+    '/table at the start of a line',
+    'Insert a table. It is drawn as a table when the cursor is elsewhere; click it, or press Enter on it, to edit the markdown',
+  ],
   ['Alt + N', 'Quick note: titled with the date and time, ready to type'],
   ['J and K, then X or E (on Tasks)', 'Move down and up the task list, tick the chosen task (X), or open its note (E)'],
   ['F2', 'Rename the open note'],

@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.3.0] - 2026-11-24
+
+### Added
+- **Tables.** Type `/table` at the start of a line to insert a starter table. A markdown table is now drawn as a table while the cursor is elsewhere; click it (or focus it and press Enter) to edit the markdown. The file is not changed by looking at it, and X-ray shows the raw text. Tables inside code blocks, comments and frontmatter stay as text.
+- **Priority in Properties.** A Priority list (None, A, B, C) and a **+ Priority** button on every note. Only the `priority:` line is written. The editor also suggests A, B and C after `priority:`.
+
 ## [2.2.0] - 2026-11-24
 
 ### Removed

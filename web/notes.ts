@@ -23,6 +23,7 @@ import { parseNote, type Note } from '../src/parse';
 import { isProjectNote, listProjects, noteProjects, projectContents } from '../src/projects';
 import { findProject } from '../src/quickline';
 import { addDays } from '../src/query';
+import { normalizePriority } from '../src/priority';
 import { linkTargets, suggestionsFor, type LinkTarget } from '../src/vocabulary';
 import { ConflictError } from '../src/storage';
 import { readingStats } from '../src/render';
@@ -91,6 +92,8 @@ export const notes = {
 };
 
 const STATUSES = ['todo', 'doing', 'waiting', 'done'];
+/** The priorities offered in Properties. Any A to Z already in a note is kept and shown as well. */
+const PRIORITIES = ['A', 'B', 'C'];
 
 onVaultChange(() => {
   window.clearTimeout(notes.timer);
@@ -673,8 +676,15 @@ function propsHtml(): string {
       `<dt><label for="prop-due">due</label></dt><dd><input id="prop-due" class="inp" type="date" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(d) ? d : '')}"></dd>`,
     );
   }
+  const hasPriority = fm.priority !== undefined;
+  if (hasPriority) {
+    const cur = normalizePriority(fm.priority);
+    const letters = cur && !PRIORITIES.includes(cur) ? [...PRIORITIES, cur].sort() : PRIORITIES;
+    const opts = ['', ...letters].map((l) => `<option value="${l}"${l === (cur ?? '') ? ' selected' : ''}>${l || 'None'}</option>`).join('');
+    rows.push(`<dt><label for="prop-priority">priority</label></dt><dd><select id="prop-priority" class="inp">${opts}</select></dd>`);
+  }
   for (const [k, v] of Object.entries(fm)) {
-    if (k === 'status' || k === 'due' || k === 'project' || k === 'people') continue;
+    if (k === 'status' || k === 'due' || k === 'priority' || k === 'project' || k === 'people') continue;
     const val = Array.isArray(v) ? v.map((x) => `<span class="chip mono">${esc(String(x))}</span>`).join(' ') : esc(String(v));
     rows.push(`<dt>${esc(k)}</dt><dd>${val}</dd>`);
   }
@@ -704,6 +714,7 @@ function propsHtml(): string {
   out += rows.length ? `<dl class="props">${rows.join('')}</dl>` : '<p class="muted small" style="margin:0 0 6px">No properties yet.</p>';
   const add: string[] = [];
   if (!hasStatus) add.push('<button class="btn small" data-act="add-prop" data-key="status" data-val="todo">+ Status</button>');
+  if (!hasPriority) add.push('<button class="btn small" data-act="add-prop" data-key="priority" data-val="A">+ Priority</button>');
   if (!hasDue) add.push(`<button class="btn small" data-act="add-prop" data-key="due" data-val="${esc(addDays(today(), 7))}">+ Due date</button>`);
   return out + (add.length ? `<div class="row-gap">${add.join('')}</div>` : '');
 }
@@ -1195,6 +1206,10 @@ export function change(e: Event): boolean {
   }
   if (t.id === 'prop-status') {
     applyProperty('status', t.value);
+    return true;
+  }
+  if (t.id === 'prop-priority') {
+    applyProperty('priority', t.value || null);
     return true;
   }
   if (t.id === 'prop-due' && t.value) {
