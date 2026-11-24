@@ -898,3 +898,31 @@ test('the Board has the same quick views as the list: Inbox shows only tasks tha
   await expect(page.locator('.hub-facets')).not.toHaveAttribute('open', ''); // no separate Filter & group button, and the drawer stays folded
   await expect(page.getByText('Filter & group')).toHaveCount(0);
 });
+
+test('on a phone the Tasks screen puts the list first: no title block, one row of views, filter and Group by on one line, short task rows', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openVault(page, {
+    'tasks/Plain.md': '---\ntitle: Plain task\nstatus: todo\ncreated: 2026-11-20\n---\n',
+    'tasks/Waiting.md': '---\ntitle: Waiting task\nstatus: waiting\ncreated: 2026-11-20\n---\n',
+  });
+  await nav(page, 'Tasks').click();
+  await page.locator('.hub-views').getByRole('button', { name: /^All/ }).click();
+  await expect(page.locator('.hubwrap .ed-head')).toBeHidden();
+  await expect(page.locator('.hub-pick')).toBeHidden();
+  await expect(page.locator('.hub-quick').getByRole('button', { name: 'Quick note' })).toBeHidden();
+  const ys = await page.locator('.hub-views .chip').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+  expect(new Set(ys).size).toBe(1); // one row, scrolled sideways, not wrapped onto two
+  const q = await page.locator('#hub-q').boundingBox();
+  const g = await page.locator('#hub-group').boundingBox();
+  expect(Math.abs(q!.y - g!.y)).toBeLessThan(40); // the filter box and Group by share a line
+  const first = await page.locator('.hub-content .task').first().boundingBox();
+  expect(first!.y).toBeLessThan(520);
+  const plain = page.locator('.task', { hasText: 'Plain task' });
+  await expect(plain.locator('.chip.st-todo')).toBeHidden();
+  await expect(plain.locator('.chip.src')).toBeHidden();
+  await expect(page.locator('.task', { hasText: 'Waiting task' }).locator('.chip.st-waiting')).toBeVisible(); // a status that says something stays
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+});

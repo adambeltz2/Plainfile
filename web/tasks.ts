@@ -22,7 +22,7 @@ function chips(t: TaskItem): string {
     out.push(`<span class="chip${late ? ' late' : ''}">${late ? 'Overdue · ' : ''}${esc(fmtDate(t.due))}</span>`);
   }
   if (t.recur) out.push(`<span class="chip" title="Finishing it makes the next one">↻ ${esc(describeRecurrence(t.recur))}</span>`);
-  if (t.status) out.push(`<span class="chip">${esc(t.status)}</span>`);
+  if (t.status) out.push(`<span class="chip st st-${esc(t.status)}">${esc(t.status)}</span>`);
   if (t.created) out.push(`<span class="chip quiet" title="Created ${esc(t.created)}">added ${esc(fmtDate(t.created))}</span>`);
   for (const w of t.who) out.push(`<span class="chip mono">${esc(w)}</span>`);
   for (const g of t.tags) out.push(`<span class="chip mono">#${esc(g)}</span>`);
