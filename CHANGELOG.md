@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.5.0] - 2026-11-24
+
+### Changed
+- **One drawer for the extra controls.** The separate **Filter & group** button on Tasks and on each project is gone. Its contents now live in the one folded drawer under the filter box: **More filters, select and export** on the Tasks list (Hide done, Select tasks, Export, then Priority, People, Tags, Phases and Status), and **More filters** on the Board. It still opens by itself while a filter from it is on.
+
+### Added
+- **The Board has the quick views.** All, Late, Today, Upcoming, Waiting, Inbox, No date and Follow-ups sit above the Board as they do above the list, so you can show only your Inbox tasks, or only what is late, as cards.
+
 ## [2.4.1] - 2026-11-24
 
 ### Fixed

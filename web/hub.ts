@@ -49,8 +49,6 @@ export const hubState = {
   limits: new Map<string, number>(),
   /** The "more filters" drawer stays open while you pick several. */
   facetsOpen: false,
-  /** The Filter & group drawer on a phone, and whether row tick boxes are showing there. */
-  toolsOpen: false,
   /** The close-out confirmation is showing. */
   closing: false,
   /** Set while a close out or reopen is writing (the note, then the folder move), so the screen can say so. */
@@ -108,7 +106,6 @@ export function resetFor(path: string): void {
     toggled: new Set<string>(),
     limits: new Map<string, number>(),
     facetsOpen: false,
-    toolsOpen: false,
     closing: false,
     busy: '',
     reopening: false,
@@ -166,12 +163,12 @@ function toolbar(all: HubTask[]): string {
   const priorities = count(all.map((t) => t.item.priority ?? '-'))
     .sort((a, b) => priorityRank(a[0] === '-' ? undefined : a[0]) - priorityRank(b[0] === '-' ? undefined : b[0]))
     .map(([v, n]): [string, string, number] => [v, v === '-' ? 'No priority' : `Priority ${v}`, n]);
-  const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + f.priorities.length + (f.due ? 1 : 0);
+  const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + f.priorities.length; // what the drawer holds; a date is a quick view or a chip
   const everything = hubState.project === ALL_PROJECTS;
   const counts = viewCounts(all, today(), state.index ? listFollowUps(state.index).length : 0);
   const cur = currentView(f);
   const views =
-    hubState.tab === 'tasks'
+    hubState.tab === 'tasks' || hubState.tab === 'board'
       ? `<div class="hub-views" role="group" aria-label="Show">${QUICK_VIEWS.filter(([v]) => everything || !EVERYTHING_VIEWS.includes(v))
           .map(
             ([v, l]) =>
@@ -182,15 +179,12 @@ function toolbar(all: HubTask[]): string {
   return (
     views +
     `<div class="hub-find"><input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="${hubState.project === ALL_PROJECTS ? 'Filter all tasks…' : 'Filter this project…'}" aria-label="Filter tasks in this project" value="${esc(f.text)}">${hubState.tab === 'tasks' ? `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}</div>` +
-    `<details class="hub-tools"${hubState.toolsOpen ? ' open' : ''}><summary class="small">Filter &amp; group${active ? ` · ${active} on` : ''}</summary>` +
-    '<div class="hub-bar">' +
-    (hubState.tab === 'tasks' ? `<label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>` : '') +
+    `<details class="hub-facets"${hubState.facetsOpen || active ? ' open' : ''}><summary class="small">${hubState.tab === 'tasks' ? 'More filters, select and export' : 'More filters: priority, people, tags, phases, status'}${active ? ` · ${active} on` : ''}</summary>` +
     (hubState.tab === 'tasks'
-      ? `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button><button class="btn small" data-hub-export="csv" title="Download the tasks shown as a spreadsheet file">Export CSV</button><button class="btn small" data-hub-export="json" title="Download the tasks shown as JSON">Export JSON</button>`
+      ? `<div class="hub-bar"><label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>` +
+        `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button><button class="btn small" data-hub-export="csv" title="Download the tasks shown as a spreadsheet file">Export CSV</button><button class="btn small" data-hub-export="json" title="Download the tasks shown as JSON">Export JSON</button></div>`
       : '') +
-    '</div>' +
-    `<details class="hub-facets"${hubState.facetsOpen || f.people.length || f.tags.length || f.phases.length || f.statuses.length || f.priorities.length ? ' open' : ''}><summary class="small">More filters: priority, people, tags, phases, status</summary>${facet('Priority', 'priorities', priorities.length > 1 || f.priorities.length ? priorities : [], f.priorities)}${facet('People', 'people', people, f.people)}${facet('Tags', 'tags', tags, f.tags)}${facet('Phases', 'phases', phases, f.phases)}${facet('Status', 'statuses', statuses, f.statuses)}</details>` +
-    '</details>' +
+    `${facet('Priority', 'priorities', priorities.length > 1 || f.priorities.length ? priorities : [], f.priorities)}${facet('People', 'people', people, f.people)}${facet('Tags', 'tags', tags, f.tags)}${facet('Phases', 'phases', phases, f.phases)}${facet('Status', 'statuses', statuses, f.statuses)}</details>` +
     activeChips()
   );
 }
@@ -729,11 +723,6 @@ export async function click(target: HTMLElement): Promise<boolean> {
   if (cardOpen?.dataset.cardOpen && !target.closest('button')) {
     await openNote(cardOpen.dataset.cardOpen, { line: Number(cardOpen.dataset.line) });
     return true;
-  }
-  const toolsSum = target.closest<HTMLElement>('.hub-tools > summary');
-  if (toolsSum) {
-    hubState.toolsOpen = !(toolsSum.parentElement as HTMLDetailsElement).open;
-    return false;
   }
   const statusSum = target.closest<HTMLElement>('.hub-status-d > summary');
   if (statusSum) {

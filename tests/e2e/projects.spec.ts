@@ -388,7 +388,6 @@ test.describe('project hub', () => {
     await expect(page.locator('.hub-content .task')).toHaveCount(1);
     await page.locator('#hub-q').fill('');
     await openHubTools(page);
-    await page.locator('.hub-facets summary').click();
     await page
       .locator('.hub-facets')
       .getByRole('button', { name: /^@dana/ })
@@ -521,7 +520,6 @@ test.describe('project hub', () => {
     await nav(page, 'Projects').click();
     await page.locator('.pcard .pbtn').click();
     await openHubTools(page);
-    await page.locator('.hub-facets > summary').click();
     await page.getByRole('button', { name: /^Priority A/ }).click();
     await expect(page.locator('.hub-content')).toContainText('Alpha');
     await expect(page.locator('.hub-content')).not.toContainText('Beta');
@@ -589,14 +587,13 @@ test.describe('project hub', () => {
     const first = await page.locator('.hub-content .task').first().boundingBox();
     expect(first!.y).toBeLessThan(700); // tasks are visible without scrolling past a wall of controls
     await expect(page.locator('.pstats')).toBeHidden();
-    await expect(page.locator('.hub-tools')).not.toHaveAttribute('open', '');
+    await expect(page.locator('.hub-facets')).not.toHaveAttribute('open', '');
     await expect(page.locator('.hub-status-d')).not.toHaveAttribute('open', '');
     await expect(page.locator('.selbox').first()).toBeHidden();
     await expect(page.getByRole('button', { name: 'Folder actions' })).toBeHidden(); // behind the More tab
-    await page.locator('.hub-tools > summary').click();
     await page.locator('#hub-group').selectOption('person');
-    await expect(page.locator('.hub-tools')).toHaveAttribute('open', ''); // stays open while you work in it
     await openHubTools(page);
+    await expect(page.locator('.hub-facets')).toHaveAttribute('open', ''); // stays open while you work in it
     await page.getByRole('button', { name: 'Select tasks' }).click();
     await expect(page.locator('.selbox').first()).toBeVisible();
     await page.getByRole('button', { name: 'Stop selecting' }).click();
@@ -878,4 +875,26 @@ test('Follow-ups is a view on the Tasks screen and a card on Home, listing the #
     .getByRole('button', { name: /Open a\.md/ })
     .click();
   await expect(page.locator('.cm-content')).toContainText('Ask Dana');
+});
+
+test('the Board has the same quick views as the list: Inbox shows only tasks that are in no project', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, {
+    'projects/a/index.md': '---\ntitle: Alpha\ntype: project\nactive: true\n---\n- [ ] Alpha job\n',
+    'tasks/Loose.md': '---\ntitle: Loose job\nstatus: todo\n---\n',
+  });
+  await nav(page, 'Tasks').click();
+  await page.getByRole('tab', { name: 'Board' }).click();
+  await page.locator('.hub-views').getByRole('button', { name: /^All/ }).click();
+  await expect(page.locator('.hub-col .hub-card')).toHaveCount(2);
+  await page
+    .locator('.hub-views')
+    .getByRole('button', { name: /^Inbox/ })
+    .click();
+  await expect(page.locator('.hub-cols')).toContainText('Loose job');
+  await expect(page.locator('.hub-cols')).not.toContainText('Alpha job');
+  await page.locator('.hub-views').getByRole('button', { name: /^All/ }).click();
+  await expect(page.locator('.hub-cols')).toContainText('Alpha job');
+  await expect(page.locator('.hub-facets')).not.toHaveAttribute('open', ''); // no separate Filter & group button, and the drawer stays folded
+  await expect(page.getByText('Filter & group')).toHaveCount(0);
 });
