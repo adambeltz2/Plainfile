@@ -61,6 +61,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Add or go to… and quick keys:** Ctrl/Cmd+P finds a note by a few letters, adds a task from a typed sentence (`Call Dana @dana due:friday`), creates a note, or runs an action
   ("move kick"). F2 renames, Ctrl/Cmd+Shift+M moves, Ctrl/Cmd+Shift+X toggles X-ray.
 - **Paste images:** paste a screenshot or drop an image into a note; it is saved in `_attachments/`, linked
+- **Contents:** a note with two or more headings gets a Contents list in the side panel, under Properties. Click a heading to jump to it; **Hide** folds it away. It updates as you type and never writes to the file.
 - **Tables:** type `/table` at the start of a line to insert a starter table. A markdown table is drawn as a real table while the cursor is elsewhere; click it, or focus it and press Enter, to edit the markdown. The file is never reformatted, and X-ray shows the raw text.
 - **Priority on any note:** the Properties panel has a Priority list (None, A, B, C; any other letter already in the note is kept) and a **+ Priority** button. Only the `priority:` line changes. In the editor, `priority:` offers A, B and C.
 - **Diagrams (experimental):** a fenced `mermaid` code block is drawn under its code. Mermaid is loaded from a pinned CDN copy only when a note has a diagram; offline you just see the code. It lives in `web/mermaid.ts` and can be removed on its own.

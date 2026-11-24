@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.4.0] - 2026-11-24
+
+### Added
+- **Contents.** A note with two or more headings shows a Contents list in the side panel under Properties. Click a heading to jump to it; Hide folds the list away. It follows the note as you type, and nothing is written to the file. Headings inside code blocks, comments and frontmatter are not listed.
+
 ## [2.3.0] - 2026-11-24
 
 ### Added
