@@ -431,7 +431,7 @@ function homeHtml(): string {
     '<div class="notes-home"><h2 class="title">Notes</h2><p class="meta">Notes are plain markdown files. Press <kbd>' +
     MOD +
     'P</kbd> to jump to any note by name, or right-click a note for its actions.</p>' +
-    '<div class="row-gap" style="margin:0 0 8px"><button class="btn primary" data-quick-note>Quick note</button><button class="btn" data-act="new-note">+ New note</button><button class="btn" data-act="palette-open">Go to a note…</button></div>';
+    '<div class="row-gap" style="margin:0 0 8px"><button class="btn primary" data-quick-note>Quick note</button><button class="btn" data-act="palette-open">Go to a note…</button></div>';
   if (pinned.length) h += `<h3 class="grp">Pinned</h3>${list(pinned)}`;
   h +=
     `<h3 class="grp">Modified today <span>${changed.length}</span></h3>` +
@@ -884,7 +884,7 @@ export function html(): string {
       ? ''
       : '<button class="edge-tab edge-right only-wide" data-act="pane-details" aria-label="Expand right pane" title="Show properties, links and history">«</button>') +
     `<aside class="side">${paneHide('list')}<div class="side-head"><input id="note-filter" class="inp" type="text" placeholder="Filter notes" aria-label="Filter notes" value="${esc(notes.filter)}">` +
-    '<button class="btn primary" data-act="new-note">+ New note</button><button class="btn" data-quick-note title="Titled with the date and time, ready to type (Alt+N)">Quick note</button></div>' +
+    '<button class="btn primary" data-quick-note title="Named with the date and time, ready to type (Alt+N)">Quick note</button></div>' +
     `<div id="note-list" class="note-list">${listHtml()}</div><div id="note-trash">${trashHtml()}</div></aside>` +
     `<section class="main editor-main">${main}</section>` +
     `<aside class="source" id="note-side">${sideHtml()}</aside></div>`

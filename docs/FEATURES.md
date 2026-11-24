@@ -73,7 +73,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
   `created:`, with "Modified today" chips and a recent-notes list.
 - **Explore** (under the Search tab, switch at the top): related notes (shared tags, links, project, similar text) and a graph.
 - **Templates:** markdown files in `.plainfile/templates/`, with questions, date variables and a
-  cursor position. Built in: Note, Task, Project, Meeting (people and project), Journal, Person.
+  cursor position. Built in: Quick note, Task, Project, Meeting (people and project), Journal, Person. A note with a title of your choosing is made from Add or go to…: type its name and choose New note.
 - **Rename and links:** renaming a note rewrites every link to it, with a preview. Renames made
   outside the app are detected and offered as a one-click fix.
 - **Vault health:** broken links, duplicates, orphans and unused attachments, with one-click fixes.

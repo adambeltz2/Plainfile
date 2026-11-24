@@ -54,14 +54,17 @@ test.describe('quick add and New menu', () => {
   });
 
   test('a taken file name is never overwritten', async ({ page }) => {
-    const dir = await openVault(page, { 'inbox/Idea.md': 'mine' });
+    const dir = await openVault(page, { 'people/Idea.md': 'mine' });
     await page.getByRole('button', { name: '+ New' }).click();
-    await page.locator('.modal').getByRole('button', { name: /^Note/ }).click();
+    await page
+      .locator('.modal')
+      .getByRole('button', { name: /^Person/ })
+      .click();
     await page.locator('#tpl-title').fill('Idea');
     await page.getByRole('button', { name: 'Create file' }).click();
     await expect(page.locator('.cm-content')).toBeVisible();
-    expect(await readFile(page, dir, 'inbox/Idea.md')).toBe('mine');
-    expect(await readFile(page, dir, 'inbox/Idea 2.md')).toContain('title: "Idea 2"');
+    expect(await readFile(page, dir, 'people/Idea.md')).toBe('mine');
+    expect(await readFile(page, dir, 'people/Idea 2.md')).toContain('title: "Idea 2"');
   });
 });
 
@@ -328,10 +331,13 @@ test('a second note with the same title says so before creating, and is numbered
   const dir = await openVault(page, { 'a.md': '# A\n' });
   for (const round of [1, 2]) {
     await page.locator('header').getByRole('button', { name: '+ New', exact: true }).click();
-    await page.locator('.modal').getByRole('button', { name: /^Note/ }).click();
+    await page
+      .locator('.modal')
+      .getByRole('button', { name: /^Person/ })
+      .click();
     await page.locator('#tpl-title').fill('Gift Shopping');
     if (round === 2) {
-      await expect(page.locator('#tpl-taken')).toContainText('inbox/Gift Shopping 2.md');
+      await expect(page.locator('#tpl-taken')).toContainText('people/Gift Shopping 2.md');
     } else {
       await expect(page.locator('#tpl-taken')).toHaveCount(0);
     }
@@ -339,8 +345,8 @@ test('a second note with the same title says so before creating, and is numbered
     await expect(page.locator('.cm-content')).toBeVisible();
   }
   await expect(page.locator('.ed-head .title')).toHaveValue('Gift Shopping 2');
-  expect(await readFile(page, dir, 'inbox/Gift Shopping.md')).toContain('title: Gift Shopping\n');
-  expect(await readFile(page, dir, 'inbox/Gift Shopping 2.md')).toContain('title: "Gift Shopping 2"\n');
+  expect(await readFile(page, dir, 'people/Gift Shopping.md')).toContain('title: Gift Shopping\n');
+  expect(await readFile(page, dir, 'people/Gift Shopping 2.md')).toContain('title: "Gift Shopping 2"\n');
 });
 
 test.describe('phone navigation', () => {
