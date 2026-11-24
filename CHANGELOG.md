@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.7.0] - 2026-11-24
+
+### Changed
+- **A simpler Tasks screen on a phone.** The list now comes first: no "All tasks" title block or project picker on All tasks (the bottom bar says where you are), no Quick note button beside the quick add (it is under **+ New**), the quick views are one row you swipe sideways instead of two, the filter box and Group by share one line, and each task shows just its title, date, people and tags, plus a status when it is not a plain "todo". The "added" date and the file path are hidden on a phone; tap the title to open the note. Wide screens are unchanged.
+
 ## [2.6.1] - 2026-11-24
 
 ### Changed

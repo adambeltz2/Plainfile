@@ -189,7 +189,7 @@ function toolbar(all: HubTask[]): string {
       : '';
   return (
     views +
-    `<div class="hub-find"><input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="${hubState.project === ALL_PROJECTS ? 'Filter all tasks…' : 'Filter this project…'}" aria-label="Filter tasks in this project" value="${esc(f.text)}">${hubState.tab === 'tasks' ? `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}</div>` +
+    `<div class="hub-find"><input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="${hubState.project === ALL_PROJECTS ? 'Filter all tasks…' : 'Filter this project…'}" aria-label="Filter tasks in this project" value="${esc(f.text)}">${hubState.tab === 'tasks' ? `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp" aria-label="Group by">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}</div>` +
     `<details class="hub-facets"${hubState.facetsOpen || active ? ' open' : ''}><summary class="small">${hubState.tab === 'tasks' ? 'More filters, select and export' : 'More filters: priority, people, tags, phases, status'}${active ? ` · ${active} on` : ''}</summary>` +
     (hubState.tab === 'tasks'
       ? `<div class="hub-bar"><label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>` +
@@ -558,12 +558,12 @@ export function html(path: string): string {
   const log = logHtml();
   return (
     `<div class="hubwrap${hubState.selectMode || hubState.selected.size ? ' sel-on' : ''}">${rail(path)}<div class="hub-main">` +
-    `<label class="hub-pick small"><span class="muted">Project</span><select id="hub-pick" class="inp"><option value="${ALL_PROJECTS}"${everything ? ' selected' : ''}>All tasks</option>${listProjects(
+    `<label class="hub-pick small${everything ? ' all' : ''}"><span class="muted">Project</span><select id="hub-pick" class="inp"><option value="${ALL_PROJECTS}"${everything ? ' selected' : ''}>All tasks</option>${listProjects(
       idx,
     )
       .map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${p.parent ? '– ' : ''}${esc(p.title)}</option>`)
       .join('')}</select><button class="btn small" data-act="proj-back">All projects</button></label>` +
-    `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${me?.parent ? `Part of <button class="link" data-open-project="${esc(me.parent)}">${esc(idx.notes.get(me.parent)?.title ?? 'its project')}</button> · ` : ''}${everything ? 'Every project' : d.active ? 'Active' : `Archived${d.completed ? ` · closed ${esc(fmtDate(d.completed))}` : ''}`}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
+    `<div class="ed-head${everything ? ' all' : ''}"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${me?.parent ? `Part of <button class="link" data-open-project="${esc(me.parent)}">${esc(idx.notes.get(me.parent)?.title ?? 'its project')}</button> · ` : ''}${everything ? 'Every project' : d.active ? 'Active' : `Archived${d.completed ? ` · closed ${esc(fmtDate(d.completed))}` : ''}`}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
     (everything
       ? '</div>'
       : `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
