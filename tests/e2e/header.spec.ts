@@ -17,6 +17,19 @@ test('the header stays in the same place on every screen of a wide window', asyn
   }
 });
 
+test('clicking the Plainfile name goes Home, on a wide screen and on a phone', async ({ page }) => {
+  await openVault(page, { 'a.md': '# A\n' }, true, 'home');
+  await nav(page, 'Notes').click();
+  await expect(page.locator('.notes-home, .frame.notes').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Plainfile, go to Home' }).click();
+  await expect(page.locator('.home')).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 800 });
+  await nav(page, 'Notes').click();
+  await expect(page.locator('.home')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Plainfile, go to Home' }).click();
+  await expect(page.locator('.home')).toBeVisible();
+});
+
 test.describe('the header on a wide screen', () => {
   test('shows the everyday tabs, with the rest under More', async ({ page }) => {
     await openVault(page, { 'a.md': '# A\n' }, true, 'home');
