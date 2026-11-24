@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.4.1] - 2026-11-24
+
+### Fixed
+- **The header no longer jumps between screens.** Home, Search, Calendar, Insight and the other screens were centred in a narrower column than Tasks, Projects and Notes, so the title and tabs moved sideways every time you switched on a wide window. Every screen now uses the same width.
+
 ## [2.4.0] - 2026-11-24
 
 ### Added
