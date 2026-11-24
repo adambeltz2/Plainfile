@@ -68,7 +68,7 @@ function portfolioTable(idx: NonNullable<typeof state.index>): string {
     rows
       .map(
         (r) =>
-          `<tr class="${r.project.active ? '' : 'off'}"><td>${r.project.number ?? '–'}</td><td><button class="link" data-open-project="${esc(r.project.path)}"><b>${esc(r.project.title)}</b></button>${r.project.active ? '' : ' <span class="chip quiet">inactive</span>'}</td>` +
+          `<tr class="${r.project.active ? '' : 'off'}"><td>${r.project.parent ? '↳' : (r.project.number ?? '–')}</td><td><button class="link" data-open-project="${esc(r.project.path)}"><b>${esc(r.project.title)}</b></button>${r.project.active ? '' : ' <span class="chip quiet">inactive</span>'}</td>` +
           `<td><div class="prog" style="width:90px"><i style="width:${r.total ? Math.round((r.done / r.total) * 100) : 0}%"></i></div><span class="small muted">${r.done}/${r.total}</span></td><td>${r.open}</td><td>${r.overdue ? `<span class="chip late">${r.overdue}</span>` : '0'}</td><td>${r.nextDue ? esc(fmtDate(r.nextDue)) : '<span class="muted">–</span>'}</td><td>${r.lastChange ? esc(localDateOf(r.lastChange) === today() ? 'today' : fmtDate(localDateOf(r.lastChange))) : '–'}</td></tr>`,
       )
       .join('') +
@@ -92,7 +92,7 @@ function overview(): string {
   h += toggle;
   const card = (p: (typeof all)[number]): string =>
     `<li class="pcard${p.active ? '' : ' off'}"><button class="pbtn" data-open-project="${esc(p.path)}">` +
-    `<span class="pnum" aria-hidden="true">${p.number ?? '–'}</span><span class="ptitle">${esc(p.title)}</span><span class="pprev">${esc(p.preview) || '&nbsp;'}</span>` +
+    `<span class="pnum" aria-hidden="true">${p.parent ? '↳' : (p.number ?? '–')}</span><span class="ptitle">${esc(p.title)}</span><span class="pprev">${esc(p.preview) || '&nbsp;'}</span>` +
     `<span class="chips"><span class="chip">${p.openTasks} open task${p.openTasks === 1 ? '' : 's'}</span>${p.followups ? `<span class="chip">${p.followups} follow-up${p.followups === 1 ? '' : 's'}</span>` : ''}${p.active ? '' : '<span class="chip quiet">inactive</span>'}</span></button>` +
     `<div class="pacts"><button class="btn small" data-open-project="${esc(p.path)}">Dashboard</button><button class="btn small" data-act="proj-task" data-path="${esc(p.path)}">+ Task</button><button class="btn small" data-act="proj-note" data-path="${esc(p.path)}">+ Note</button></div></li>`;
   const live = all.filter((p) => p.active);

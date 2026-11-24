@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.6.0] - 2026-11-24
+
+### Added
+- **Sub-projects.** A project folder inside another project's folder is a sub-project, one level deep. **+ Sub-project** on a project's page files a new one inside it. The parent's page lists its sub-projects and counts their tasks and notes; a sub-project's page links back to its parent. They show indented under the parent in the project list, the Projects rail and the project picker, and are not numbered. A project cannot be closed out while one of its sub-projects is still open (the button is disabled and says why), and closing a sub-project does not move its folder.
+
+### Changed
+- **Home is laid out in two columns.** Today is a column on the right and the smaller cards (Pinned, Projects, Needs filing, Waiting on, Follow-ups) sit together on the left, so the cards below a long Today list are no longer pushed off the first screen. On a phone Today comes first. Home shows only top-level projects.
+
 ## [2.5.0] - 2026-11-24
 
 ### Changed

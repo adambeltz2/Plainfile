@@ -491,6 +491,12 @@ app.addEventListener('click', (e) => {
         if (act === 'proj-task') return newmenu.openProjectTask(projectName);
         return newmenu.openTemplate('Project note', { projectDir: dir, projectName });
       }
+      case 'proj-sub': {
+        const path = target.closest<HTMLElement>('[data-act]')?.dataset.path ?? '';
+        const n = state.index?.notes.get(path);
+        if (!n || n.name.toLowerCase() !== 'index' || !path.includes('/')) return;
+        return newmenu.openTemplate('Sub-project', { projectDir: path.slice(0, path.lastIndexOf('/')) });
+      }
       case 'explore-note':
         return void (notes.notes.path && explore.focus(notes.notes.path));
       case 'rename-note':

@@ -29,7 +29,7 @@ export function html(): string {
   const week = weekAhead(idx, t);
   const peak = Math.max(1, ...week.map((d) => d.open));
   const rows = portfolio(idx, t)
-    .filter((r) => r.project.active)
+    .filter((r) => r.project.active && !r.project.parent)
     .slice(0, 5);
 
   const card = (title: string, body: string, extra = ''): string => `<section class="card home-card"><h3>${esc(title)}${extra}</h3>${body}</section>`;
@@ -40,7 +40,19 @@ export function html(): string {
   if (logHtml()) h += `<div class="home-log">${logHtml()}</div>`;
   if (notice.text) h += `<div class="notice ok" role="status">${esc(notice.text)} <button class="btn small" data-home-dismiss>Dismiss</button></div>`;
   h += `<div class="home-stats"><div class="home-bars" role="img" aria-label="Open tasks due each day for the next seven days">${week.map((d) => `<div class="wday${d.date === t ? ' today' : ''}"><i style="height:${Math.round((d.open / peak) * 100)}%"></i><b>${d.open}</b><span>${esc(fmtDate(d.date).slice(0, 3))}</span></div>`).join('')}</div><div class="home-links"><button class="btn small" data-nav="notes" data-count title="${idx.files.size} files in the folder, ${idx.notes.size} of them notes. Open the list.">${idx.notes.size.toLocaleString()} note${idx.notes.size === 1 ? '' : 's'}</button><button class="btn small" data-nav="tasks" data-view="all">All tasks</button><button class="btn small" data-nav="search">Search</button><button class="btn small" data-nav="explore">Explore</button><button class="btn small" data-nav="review">Weekly review</button><button class="btn small" data-nav="tasks" data-view="upcoming">Upcoming</button></div></div>`;
-  h += '<div class="home-grid">';
+  const todayCard = card(
+    'Today',
+    due.length
+      ? `<ul class="tasks">${due
+          .slice(0, 8)
+          .map((x) => row(x))
+          .join(
+            '',
+          )}</ul>${due.length > 8 ? `<p class="small muted">and ${due.length - 8} more</p>` : ''}<button class="btn small" data-nav="today">All of Today</button>`
+      : '<p class="muted small" style="margin:0 0 6px">Nothing is due or late. Enjoy it, or look at the week below.</p><button class="btn small" data-nav="today">Open Today</button>',
+    ` <span class="n">${due.length}</span>`,
+  );
+  h += '<div class="home-grid"><div class="home-side">';
   const pins = pinnedNotes(idx);
   h += card(
     'Pinned',
@@ -60,18 +72,6 @@ export function html(): string {
           )
           .join('')
       : '<p class="muted small" style="margin:0">No projects yet. Make one from + New.</p>',
-  );
-  h += card(
-    'Today',
-    due.length
-      ? `<ul class="tasks">${due
-          .slice(0, 8)
-          .map((x) => row(x))
-          .join(
-            '',
-          )}</ul>${due.length > 8 ? `<p class="small muted">and ${due.length - 8} more</p>` : ''}<button class="btn small" data-nav="today">All of Today</button>`
-      : '<p class="muted small" style="margin:0 0 6px">Nothing is due or late. Enjoy it, or look at the week below.</p><button class="btn small" data-nav="today">Open Today</button>',
-    ` <span class="n">${due.length}</span>`,
   );
   h += card(
     'Needs filing',
@@ -115,7 +115,7 @@ export function html(): string {
       : '<p class="muted small" style="margin:0">None. Tag a line <code>#followup</code> in any note and it shows here.</p>',
     followups.length ? ` <span class="n">${followups.length}</span>` : '',
   );
-  return `${h}</div></div>`;
+  return `${h}</div><div class="home-today">${todayCard}</div></div></div>`;
 }
 
 export async function click(target: HTMLElement): Promise<boolean> {

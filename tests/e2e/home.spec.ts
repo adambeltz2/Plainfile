@@ -16,6 +16,19 @@ const VAULT: Record<string, string> = {
   'tasks/Due today.md': `---\ntitle: Due today\nstatus: todo\ndue: ${TODAY}\n---\n`,
 };
 
+test('Home puts Today beside the other cards, so nothing waits below a tall list', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 800 });
+  const files: Record<string, string> = { 'projects/site/index.md': '---\ntitle: Website\ntype: project\nactive: true\n---\n' };
+  for (let i = 0; i < 12; i++) files[`tasks/T${i}.md`] = `---\ntitle: Task ${i}\nstatus: todo\ndue: ${TODAY}\n---\n`;
+  await openVault(page, files, true, 'home');
+  const today = await card(page, 'Today').boundingBox();
+  const filing = await card(page, 'Needs filing').boundingBox();
+  const projects = await card(page, 'Projects').boundingBox();
+  expect(today!.x).toBeGreaterThan(projects!.x + projects!.width - 1); // Today is a column to the right
+  expect(filing!.y).toBeLessThan(800); // the smaller cards are on the first screen
+  expect(filing!.y).toBeLessThan(today!.y + today!.height - 200);
+});
+
 test.describe('Home', () => {
   test('clicking an inline task on Home opens its note at that line, and the checkbox only ticks it', async ({ page }) => {
     const dir = await openVault(page, { 'plan.md': `# Plan\n\nIntro\n- [ ] Ship it due:${TODAY}\n` }, true, 'home');

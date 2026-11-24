@@ -23,7 +23,18 @@ import {
 import { dirname } from '../src/index';
 import { applyFolderMove, planFolderMove } from '../src/folder-move';
 import { priorityRank } from '../src/priority';
-import { ALL_PROJECTS, listFollowUps, listProjects, projectDashboard, projectNotes, setProjectActive, type ProjectDashboard } from '../src/projects';
+import {
+  ALL_PROJECTS,
+  listFollowUps,
+  listProjects,
+  openSubProjects,
+  projectDashboard,
+  projectNotes,
+  setProjectActive,
+  subProjects,
+  type Project,
+  type ProjectDashboard,
+} from '../src/projects';
 import { addDays } from '../src/query';
 import { setTaskStatus } from '../src/writeback';
 import { errorMessage, justDone, render, rescan, state, today, writeFailure } from './store';
@@ -190,8 +201,40 @@ function toolbar(all: HubTask[]): string {
 }
 
 /** Close out, or Reopen, for the project's header. */
-function statusButton(d: ProjectDashboard): string {
-  return d.active ? '<button class="btn" data-hub-close>Close out</button>' : '<button class="btn" data-hub-reopen>Reopen</button>';
+function statusButton(d: ProjectDashboard, blocked: Project[] = []): string {
+  if (!d.active) return '<button class="btn" data-hub-reopen>Reopen</button>';
+  return blocked.length
+    ? `<button class="btn" disabled title="Close out its sub-project${blocked.length === 1 ? '' : 's'} first: ${esc(blocked.map((p) => p.title).join(', '))}">Close out</button>`
+    : '<button class="btn" data-hub-close>Close out</button>';
+}
+
+/** The project's entry in the project list, which says whether it is a sub-project. */
+function projectInfo(path: string): Project | undefined {
+  return state.index ? listProjects(state.index).find((p) => p.path === path) : undefined;
+}
+
+/** The sub-projects of a project: each opens its own page. A project with open sub-projects cannot be closed out. */
+function subsHtml(path: string, folder: string, active: boolean): string {
+  const idx = state.index;
+  if (!idx) return '';
+  const subs = subProjects(idx, path);
+  if (!subs.length) return '';
+  const blocked = openSubProjects(idx, path);
+  return (
+    `<div class="hub-subs"><h3 class="grp">Sub-projects <span>${subs.length}</span></h3><ul class="plain">` +
+    subs
+      .map(
+        (p) =>
+          `<li><button class="link" data-open-project="${esc(p.path)}"><b>${esc(p.title)}</b></button> <span class="muted small">${p.openTasks} open task${p.openTasks === 1 ? '' : 's'}${p.active ? '' : ' · closed out'}</span></li>`,
+      )
+      .join('') +
+    '</ul>' +
+    (folder && active ? `<button class="btn small" data-act="proj-sub" data-path="${esc(path)}">+ Sub-project</button>` : '') +
+    (active && blocked.length
+      ? `<p class="small muted" role="status" style="margin:6px 0 0">Close out ${blocked.length === 1 ? 'the open sub-project' : 'every open sub-project'} before closing this project.</p>`
+      : '') +
+    '</div>'
+  );
 }
 
 /** A project that is a folder with an index.md can move as a folder. Returns that folder, or '' for a single-file project. */
@@ -233,7 +276,8 @@ function moveOption(kind: 'close' | 'reopen', dir: string): string {
 
 /** The close-out confirmation, a nudge when every task is done, or a note that the project is archived. */
 function projectBanner(d: ProjectDashboard, open: number, total: number): string {
-  const dir = d.note ? projectFolder(d.note.path) : '';
+  const dir = d.note && !projectInfo(d.note.path)?.parent ? projectFolder(d.note.path) : ''; // a sub-project stays inside its parent's folder
+  const blocked = state.index && d.note ? openSubProjects(state.index, d.note.path) : [];
   if (hubState.busy)
     return `<div class="notice loading" role="status" aria-live="polite"><b>${esc(hubState.busy)}</b><span class="small muted">Files are being changed one at a time. This can take a little while on Dropbox or a phone. Keep this page open.</span></div>`;
   if (!d.active) {
@@ -254,7 +298,7 @@ function projectBanner(d: ProjectDashboard, open: number, total: number): string
       ' <button class="btn primary small" data-hub-close-go>Close out</button> <button class="btn small" data-hub-close-cancel>Cancel</button></div>'
     );
   }
-  if (total > 0 && open === 0) {
+  if (total > 0 && open === 0 && !blocked.length) {
     return '<div class="notice small" role="status">Every task here is done. <button class="btn small primary" data-hub-close>Close out this project</button></div>';
   }
   return '';
@@ -453,7 +497,7 @@ function rail(path: string): string {
   if (!idx) return '';
   const all = listProjects(idx);
   const item = (p: (typeof all)[number]): string =>
-    `<button class="hub-rail-item${p.path === path ? ' on' : ''}" data-open-project="${esc(p.path)}" aria-current="${p.path === path}"><span>${p.number ?? '–'} ${esc(p.title)}</span><span class="n">${p.openTasks}</span></button>`;
+    `<button class="hub-rail-item${p.path === path ? ' on' : ''}" data-open-project="${esc(p.path)}" aria-current="${p.path === path}"><span>${p.parent ? '↳' : (p.number ?? '–')} ${esc(p.title)}</span><span class="n">${p.openTasks}</span></button>`;
   const allOpen = tasksOf(idx, ALL_PROJECTS).filter((t) => t.status !== 'done').length;
   const allBtn = `<button class="hub-rail-item${path === ALL_PROJECTS ? ' on' : ''}" data-open-project="${ALL_PROJECTS}" aria-current="${path === ALL_PROJECTS}"><span>All tasks</span><span class="n">${allOpen}</span></button>`;
   return `<nav class="hub-rail" aria-label="Projects"><h3>Projects</h3>${allBtn}${all
@@ -479,6 +523,9 @@ export function html(path: string): string {
   const covered = projectNotes(idx, path);
   const visible = applyFilters(all, hubState.filters, justDone, today());
   const dir = !d.note ? '' : d.note.name.toLowerCase() === 'index' ? dirname(d.note.path) : '';
+  const me = everything ? undefined : projectInfo(path);
+  const blocked = d.note ? openSubProjects(idx, d.note.path) : [];
+  const subBtn = dir && d.active && !me?.parent ? `<button class="btn" data-act="proj-sub" data-path="${esc(path)}">+ Sub-project</button>` : '';
   const name = !d.note ? '' : dir ? (dir.split('/').pop() as string) : d.note.name;
   const openCount = all.filter((t) => t.status !== 'done').length;
   const tabs: [Tab, string][] = [
@@ -514,15 +561,15 @@ export function html(path: string): string {
     `<label class="hub-pick small"><span class="muted">Project</span><select id="hub-pick" class="inp"><option value="${ALL_PROJECTS}"${everything ? ' selected' : ''}>All tasks</option>${listProjects(
       idx,
     )
-      .map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${esc(p.title)}</option>`)
+      .map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${p.parent ? '– ' : ''}${esc(p.title)}</option>`)
       .join('')}</select><button class="btn small" data-act="proj-back">All projects</button></label>` +
-    `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${everything ? 'Every project' : d.active ? 'Active' : `Archived${d.completed ? ` · closed ${esc(fmtDate(d.completed))}` : ''}`}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
+    `<div class="ed-head"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${me?.parent ? `Part of <button class="link" data-open-project="${esc(me.parent)}">${esc(idx.notes.get(me.parent)?.title ?? 'its project')}</button> · ` : ''}${everything ? 'Every project' : d.active ? 'Active' : `Archived${d.completed ? ` · closed ${esc(fmtDate(d.completed))}` : ''}`}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
     (everything
       ? '</div>'
       : `<div class="ed-actions"><button class="btn primary" data-act="proj-task" data-path="${esc(path)}">+ Task</button>` +
-        `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-report-open="${esc(path)}" data-report-kind="book" title="Every note in this project as one document">Export notes</button>${statusButton(d)}<button class="btn" data-open="${esc(path)}">Open note</button></span>` +
-        `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button><button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-report-open="${esc(path)}" data-report-kind="book" title="Every note in this project as one document">Export notes</button>${statusButton(d)}<button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>`) +
-    (everything ? '' : projectBanner(d, openCount, all.length)) +
+        `<span class="hub-wide-actions"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button>${subBtn}<button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-report-open="${esc(path)}" data-report-kind="book" title="Every note in this project as one document">Export notes</button>${statusButton(d, blocked)}<button class="btn" data-open="${esc(path)}">Open note</button></span>` +
+        `<details class="hub-more"><summary class="btn" aria-label="More: new note, new meeting, open the project note">⋯</summary><div class="hub-more-box"><button class="btn" data-act="proj-note" data-path="${esc(path)}">+ Note</button><button class="btn" data-act="proj-meeting" data-name="${esc(name)}">+ Meeting</button>${subBtn}<button class="btn" data-report-open="${esc(path)}">Report</button><button class="btn" data-report-open="${esc(path)}" data-report-kind="book" title="Every note in this project as one document">Export notes</button>${statusButton(d, blocked)}<button class="btn" data-open="${esc(path)}">Open note</button></div></details></div></div>`) +
+    (everything ? '' : projectBanner(d, openCount, all.length) + subsHtml(path, dir, d.active)) +
     (everything ? `${quickBar('hub-quick').form}${quickBar('', true).below}` : '') +
     (d.summary && !everything ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
     statsHtml(openCount, d.overdue, all.length - openCount, d.notes.length, d.followups.length) +
@@ -665,7 +712,7 @@ async function setActive(active: boolean): Promise<void> {
   if (!storage || !index || !hubState.project || hubState.busy) return;
   hubState.closing = false;
   hubState.reopening = false;
-  const dir = projectFolder(hubState.project);
+  const dir = projectInfo(hubState.project)?.parent ? '' : projectFolder(hubState.project); // a sub-project stays in its parent's folder
   const wantMove = dir && (active ? hubState.reopenMove : hubState.closeMove);
   const to = (active ? hubState.reopenTo || restoreDir(dir) : hubState.closeTo || archiveDir(dir)).trim();
   hubState.busy = active ? 'Reopening the project…' : 'Closing out the project…';
