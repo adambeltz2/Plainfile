@@ -42,7 +42,6 @@ test('the All view and a tag filter', async ({ page }) => {
   await showView(page, 'All');
   await expect(page.locator('.grp', { hasText: 'No date' })).toHaveCount(0);
   await openHubTools(page);
-  await page.locator('.hub-facets > summary').click();
   await page.getByRole('button', { name: /^#admin/ }).click();
   await expect(page.locator('.task')).toHaveCount(1);
   await page.getByRole('button', { name: 'Clear all' }).click();

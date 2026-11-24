@@ -151,9 +151,9 @@ export async function noteItem(page: Page, hasText: string | RegExp): Promise<im
   return page.locator('.note-item', { hasText });
 }
 
-/** The project hub keeps its filter, view and export controls folded away. Open them (once). */
+/** The project hub keeps its more-filters, select and export controls in one folded drawer. Open it (once). */
 export async function openHubTools(page: Page): Promise<void> {
-  if (!(await page.locator('.hub-tools[open]').count())) await page.locator('.hub-tools > summary').click();
+  if (!(await page.locator('.hub-facets[open]').count())) await page.locator('.hub-facets > summary').click();
 }
 
 /** Read the folder again, from the header's ⋯ menu. */
