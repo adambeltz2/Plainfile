@@ -97,6 +97,7 @@ describe('template files', () => {
       'Note',
       'Task',
       'Project',
+      'Sub-project',
       'Project task',
       'Project note',
       'Quick note',

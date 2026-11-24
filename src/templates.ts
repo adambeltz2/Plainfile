@@ -105,6 +105,20 @@ export const BUILT_IN: Template[] = [
     source: 'built-in',
   },
   {
+    name: 'Sub-project',
+    description: 'A project folder inside another project. Its tasks and notes also count toward the project it sits in.',
+    hidden: true,
+    folder: '{{projectDir}}/{{title|slug}}',
+    filename: 'index',
+    prompts: [
+      { id: 'title', label: 'Sub-project name', default: '' },
+      { id: 'goal', label: 'Goal (optional)', default: '' },
+    ],
+    fm: 'title: {{title}}\ntype: project\nactive: true\ncreated: {{date}}\ntags: []',
+    body: ['', '## Goal', '{{goal}}', '', '## Notes', '{{cursor}}', '', '## Tasks', '- [ ] ', ''].join('\n'),
+    source: 'built-in',
+  },
+  {
     name: 'Project task',
     description: 'A task file inside a project.',
     hidden: true,

@@ -1,5 +1,5 @@
 import { fieldOf, listOf, normalizeDate, normalizeStatus, type Status } from './fields';
-import type { TaskItem, VaultIndex } from './index';
+import { dirname, type TaskItem, type VaultIndex } from './index';
 import type { Note } from './parse';
 import { byPriority } from './priority';
 import { ALL_PROJECTS, listProjects, projectNotes, type Project } from './projects';
@@ -109,20 +109,33 @@ export function toHubTask(item: TaskItem, note: Note): HubTask {
 export function hubTasks(index: VaultIndex, projectPath: string): HubTask[] {
   if (projectPath === ALL_PROJECTS) {
     // Which projects each note belongs to, by folder or `project:`, so the tasks can be grouped by project.
-    const of = new Map<string, string[]>();
+    const folder = (path: string): string => (index.notes.get(path)?.name.toLowerCase() === 'index' ? dirname(path) : '');
+    const of = new Map<string, Project[]>();
     const live = new Set<string>();
     for (const p of listProjects(index)) {
-      for (const n of projectNotes(index, p.path)) {
-        of.set(n.path, [...(of.get(n.path) ?? []), p.title]);
+      for (const n of projectNotes(index, p.path, true)) {
+        of.set(n.path, [...(of.get(n.path) ?? []), p]);
         if (p.active) live.add(n.path);
       }
     }
+    // A note in a sub-project's folder is grouped under the sub-project, not under its parent as well.
+    const titles = (path: string): string[] => {
+      const all = of.get(path) ?? [];
+      return all
+        .filter(
+          (a) =>
+            !all.some(
+              (b) => b !== a && folder(b.path) && folder(a.path) && folder(b.path).startsWith(`${folder(a.path)}/`) && path.startsWith(`${folder(b.path)}/`),
+            ),
+        )
+        .map((p) => p.title);
+    };
     // A finished task whose only projects are archived is left out, so closed work does not crowd the list. An open
     // task always shows, wherever it lives: if it is still to do, it is still to do.
     return index.tasks().flatMap((t) => {
       const n = index.notes.get(t.path);
       if (!n) return [];
-      const ps = of.get(n.path) ?? [];
+      const ps = titles(n.path);
       const h = { ...toHubTask(t, n), projects: ps };
       return ps.length && !live.has(n.path) && h.status === 'done' ? [] : [h];
     });

@@ -16,6 +16,8 @@ export interface Project {
   sortOrder?: number;
   /** 1 to N across active projects, in sort order. */
   number?: number;
+  /** For a sub-project, the path of the project whose folder holds it. Sub-projects are one level deep: a project deeper down belongs to the outermost one. */
+  parent?: string;
   preview: string;
   openTasks: number;
   followups: number;
@@ -47,7 +49,40 @@ function projectNames(n: Note): Set<string> {
  * The notes a project covers: itself, or for a folder's index.md, everything in that folder. Notes
  * elsewhere (a meeting in `meetings/`, say) belong too when their `project:` names the project.
  */
-function scope(index: VaultIndex, n: Note): Note[] {
+function scope(index: VaultIndex, n: Note, withSub = true): Note[] {
+  const out = scopeOwn(index, n);
+  if (withSub) {
+    for (const [child, parent] of parentMap(index)) {
+      if (parent !== n.path) continue;
+      const c = index.notes.get(child);
+      if (c) for (const x of scopeOwn(index, c).values()) out.set(x.path, x);
+    }
+  }
+  return [...out.values()];
+}
+
+/** The outermost project that holds each sub-project's folder: sub-project path to parent path. Only folder projects (an `index` note) nest. */
+function parentMap(index: VaultIndex): Map<string, string> {
+  const dirs = new Map<string, Note>();
+  for (const n of index.notes.values()) {
+    const dir = dirname(n.path);
+    if (dir && n.name.toLowerCase() === 'index' && isProject(n)) dirs.set(dir, n);
+  }
+  const out = new Map<string, string>();
+  for (const [dir, n] of dirs) {
+    let up = dirname(dir);
+    let top: Note | undefined;
+    while (up) {
+      top = dirs.get(up) ?? top;
+      up = dirname(up);
+    }
+    if (top) out.set(n.path, top.path);
+  }
+  return out;
+}
+
+/** What a project covers by itself: its folder and the notes elsewhere that name it. */
+function scopeOwn(index: VaultIndex, n: Note): Map<string, Note> {
   const dir = n.name.toLowerCase() === 'index' ? dirname(n.path) : '';
   const names = projectNames(n);
   const out = new Map<string, Note>([[n.path, n]]);
@@ -58,21 +93,22 @@ function scope(index: VaultIndex, n: Note): Note[] {
       if (ps.some((v) => names.has(slug(v)))) out.set(x.path, x);
     }
   }
-  return [...out.values()];
+  return out;
 }
 
 /** Not a real project: the hub opened on this path shows every task from every note, in or out of a project. */
 export const ALL_PROJECTS = '*';
 
 /** The notes a project covers: its folder, and notes elsewhere whose `project:` names it. */
-export function projectNotes(index: VaultIndex, path: string): Note[] {
+export function projectNotes(index: VaultIndex, path: string, own = false): Note[] {
   if (path === ALL_PROJECTS) return [...index.notes.values()];
   const me = index.notes.get(path);
-  return me ? scope(index, me) : [];
+  return me ? scope(index, me, !own) : [];
 }
 
 export function listProjects(index: VaultIndex): Project[] {
   const out: Project[] = [];
+  const parents = parentMap(index);
   for (const n of index.notes.values()) {
     if (!isProject(n)) continue;
     const covered = scope(index, n);
@@ -82,15 +118,29 @@ export function listProjects(index: VaultIndex): Project[] {
       title: n.title,
       active: isActive(n),
       sortOrder: n.frontmatter.sortOrder !== undefined && Number.isFinite(order) ? order : undefined,
+      parent: parents.get(n.path),
       preview: n.preview,
       openTasks: covered.reduce((c, x) => c + x.tasks.filter((t) => t.state === ' ').length + (x.fileTask && !x.fileTask.done ? 1 : 0), 0),
       followups: covered.reduce((c, x) => c + x.followups.length, 0),
     });
   }
-  out.sort((a, b) => Number(b.active) - Number(a.active) || (a.sortOrder ?? Infinity) - (b.sortOrder ?? Infinity) || a.title.localeCompare(b.title));
+  const byOrder = (a: Project, b: Project): number =>
+    Number(b.active) - Number(a.active) || (a.sortOrder ?? Infinity) - (b.sortOrder ?? Infinity) || a.title.localeCompare(b.title);
+  const tops = out.filter((p) => !p.parent).sort(byOrder);
   let k = 0;
-  for (const p of out) if (p.active) p.number = ++k;
-  return out;
+  for (const p of tops) if (p.active) p.number = ++k; // only top-level projects are numbered
+  const subs = out.filter((p) => p.parent).sort(byOrder);
+  return tops.flatMap((t) => [t, ...subs.filter((x) => x.parent === t.path)]);
+}
+
+/** The sub-projects of a project, in the order they are listed. */
+export function subProjects(index: VaultIndex, path: string): Project[] {
+  return listProjects(index).filter((p) => p.parent === path);
+}
+
+/** The sub-projects of a project that are not closed out yet. A project with any of these cannot be closed out. */
+export function openSubProjects(index: VaultIndex, path: string): Project[] {
+  return subProjects(index, path).filter((p) => p.active);
 }
 
 /** The notes and open tasks that belong to a project. */
@@ -215,6 +265,10 @@ export const isArchived = (n: Note): boolean => !isActive(n);
 export async function setProjectActive(storage: VaultStorage, index: VaultIndex, path: string, active: boolean, today: string): Promise<ChangeResult> {
   const note = index.notes.get(path);
   if (!note) throw new Error(`No such project: ${path}`);
+  if (!active) {
+    const open = openSubProjects(index, path);
+    if (open.length) throw new Error(`Close out its sub-project${open.length === 1 ? '' : 's'} first: ${open.map((p) => p.title).join(', ')}.`);
+  }
   const stat = await storage.stat(path);
   const text = await storage.read(path);
   let next = setFrontmatterField(text, 'active', active ? 'true' : 'false');
