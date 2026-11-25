@@ -101,11 +101,11 @@ const NAV: { id: ScreenId; label: string }[] = [
   { id: 'tasks', label: 'Tasks' },
   { id: 'projects', label: 'Projects' },
   { id: 'notes', label: 'Notes' },
-  { id: 'journal', label: 'Journal' },
+  { id: 'calendar', label: 'Calendar' },
   { id: 'search', label: 'Search' },
 ];
 const NAV_MORE: { id: ScreenId; label: string }[] = [
-  { id: 'calendar', label: 'Calendar' },
+  { id: 'journal', label: 'Journal' },
   { id: 'people', label: 'People' },
   { id: 'insight', label: 'Insight' },
   { id: 'health', label: 'Vault health' },
@@ -643,9 +643,6 @@ app.addEventListener('change', (e) => {
   notes.change(e);
 });
 
-app.addEventListener('dblclick', (e) => {
-  if (state.screen === 'journal') void journalScreen.dblclick(e.target as HTMLElement);
-});
 app.addEventListener('dragstart', (e) => calendarScreen.dragStart(e));
 app.addEventListener('dragover', (e) => calendarScreen.dragOver(e));
 app.addEventListener('drop', (e) => calendarScreen.drop(e));
