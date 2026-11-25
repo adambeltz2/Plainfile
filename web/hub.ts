@@ -1031,6 +1031,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
   }
   const tab = q<Tab>('data-hub-tab');
   if (tab) {
+    state.log = undefined;
     hubState.tab = tab;
     hubState.viewOpen = false;
     render();
@@ -1038,6 +1039,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
   }
   const filter = q('data-hub-filter');
   if (filter) {
+    state.log = undefined; // the readout of the last change goes when you look at something else
     const i = filter.indexOf(':');
     toggleFilter(filter.slice(0, i), filter.slice(i + 1));
     render();
@@ -1045,6 +1047,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
   }
   const view = q<QuickView>('data-hub-view');
   if (view) {
+    state.log = undefined;
     hubState.filters = filtersForView(hubState.filters, currentView(hubState.filters) === view && view !== 'all' ? 'all' : view);
     hubState.limits.clear();
     render();
@@ -1052,11 +1055,13 @@ export async function click(target: HTMLElement): Promise<boolean> {
   }
   const due = q<NonNullable<Filters['due']>>('data-hub-due');
   if (due) {
+    state.log = undefined;
     hubState.filters.due = hubState.filters.due === due ? undefined : due;
     render();
     return true;
   }
   if (target.closest('[data-hub-clear]')) {
+    state.log = undefined;
     hubState.filters = newFilters(hubState.filters.hideDone);
     render();
     return true;
@@ -1125,6 +1130,7 @@ export function change(e: Event): boolean {
     return true;
   }
   if (t.id === 'hub-group') {
+    state.log = undefined;
     hubState.viewOpen = false;
     document.querySelector('.hub-viewmenu')?.removeAttribute('open');
     hubState.groupBy = t.value as GroupBy;
@@ -1134,6 +1140,7 @@ export function change(e: Event): boolean {
     return true;
   }
   if (t.id === 'hub-showdone') {
+    state.log = undefined;
     hubState.filters.hideDone = !(t as HTMLInputElement).checked;
     render();
     return true;
