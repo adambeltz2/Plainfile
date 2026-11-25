@@ -141,3 +141,12 @@ test.describe('the selected task', () => {
     await expect(page.locator('.cm-content')).toBeVisible();
   });
 });
+
+test('search lists a task that is its own note once, as the task', async ({ page }) => {
+  await openVault(page, { 'tasks/RFID Validation.md': `---\ntitle: RFID Validation\nstatus: todo\ndue: ${localDate(1)}\n---\n` });
+  await nav(page, 'Search').click();
+  await page.locator('#search-q').fill('RFID');
+  await expect(page.locator('li.res')).toHaveCount(1);
+  await expect(page.locator('li.res .mini-cb')).toBeVisible(); // the task, with its tick box
+  await expect(page.getByText(/^1 result in /)).toBeVisible();
+});

@@ -51,3 +51,36 @@ describe('modified: and created:', () => {
     expect(recentNotes(fakeIndex(), 2).map((h) => h.path)).toEqual(['b-today-late.md', 'a-today.md']);
   });
 });
+
+describe('a task that is its own note is listed once', () => {
+  async function idx(files: Record<string, string>): Promise<VaultIndex> {
+    const { VaultIndex: V } = await import('../src/index');
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const i = new V(new MemoryStorage(files));
+    await i.scan();
+    return i;
+  }
+  it('shows the task, not the note as well', async () => {
+    const i = await idx({
+      'tasks/RFID Validation.md': '---\ntitle: RFID Validation\nstatus: todo\ndue: 2026-11-24\n---\nBody\n',
+      'notes/other.md': '# Other\nMentions RFID in passing.\n',
+    });
+    const hits = search(i, 'RFID', '2026-11-24');
+    expect(hits.map((h) => [h.kind, h.path])).toEqual([
+      ['note', 'notes/other.md'],
+      ['task', 'tasks/RFID Validation.md'],
+    ]);
+  });
+  it('keeps the note when only its body matched, and keeps inline tasks beside their note', async () => {
+    const i = await idx({
+      'tasks/Pay rent.md': '---\ntitle: Pay rent\nstatus: todo\n---\nThe landlord is called Zed.\n',
+      'plan.md': '# Plan\n- [ ] Call Zed\n',
+    });
+    const hits = search(i, 'zed', '2026-11-24');
+    expect(hits.map((h) => [h.kind, h.path])).toEqual([
+      ['note', 'tasks/Pay rent.md'],
+      ['note', 'plan.md'],
+      ['task', 'plan.md'],
+    ]);
+  });
+});
