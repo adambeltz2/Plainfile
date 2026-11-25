@@ -111,7 +111,7 @@ const SHORTCUTS: [string, string][] = [
   ],
   [
     '/table at the start of a line',
-    'Insert a table. It is drawn as a table when the cursor is elsewhere; click it, or press Enter on it, to edit the markdown',
+    'Insert a table: it asks how many columns and rows. Click a cell to type in it; Tab and Enter move between cells, Ctrl/Cmd+B bolds, and Show markdown swaps one table to its lines',
   ],
   ['Alt + N', 'Quick note: titled with the date and time, ready to type'],
   ['J and K, then X or E (on Tasks)', 'Move down and up the task list, tick the chosen task (X), or open its note (E)'],
