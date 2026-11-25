@@ -1,5 +1,7 @@
 import { fmtDate, fmtDateLong } from '../src/dates';
 import { portfolio } from '../src/hub';
+import { homeJournal, journalFor, listJournals } from '../src/journal';
+import { addDays } from '../src/query';
 import { triage, waitingOn, weekAhead } from '../src/home';
 import { listFollowUps } from '../src/projects';
 import { todayView } from '../src/query';
@@ -52,7 +54,18 @@ export function html(): string {
       : '<p class="muted small" style="margin:0 0 6px">Nothing is due or late. Enjoy it, or look at the week below.</p><button class="btn small" data-nav="today">Open Today</button>',
     ` <span class="n">${due.length}</span>`,
   );
-  h += '<div class="home-grid"><div class="home-side">';
+  const jl = listJournals(idx);
+  const hj = homeJournal(jl, t);
+  const yj = journalFor(jl, addDays(t, -1));
+  h +=
+    '<div class="home-grid"><div class="home-side">' +
+    '<section class="card home-card jr-card" aria-label="Journal"><h3>Journal</h3><div class="row-gap" style="margin:0">' +
+    (hj.open
+      ? `<button class="btn primary" data-journal-open="${esc(hj.open.path)}">${hj.latest ? `Open latest journal · ${esc(fmtDate(hj.open.date))}` : "Open today's journal"}</button>`
+      : '') +
+    (hj.start ? `<button class="btn${hj.open ? '' : ' primary'}" data-journal-start="${t}">Start today's journal</button>` : '') +
+    (yj && yj !== hj.open ? `<button class="btn" data-journal-open="${esc(yj.path)}">Yesterday</button>` : '') +
+    '<button class="btn" data-nav="journal">All journals</button></div></section>';
   const pins = pinnedNotes(idx);
   h += card(
     'Pinned',

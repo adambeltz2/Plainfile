@@ -1,3 +1,4 @@
+import { noteKind } from '../src/note-kind';
 import { newNoteForLink, type LinkAt } from '../src/linknote';
 import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type DeletePlan, type TrashItem } from '../src/delete';
 import { lineDiff, type LineChange } from '../src/diff';
@@ -896,7 +897,7 @@ export function html(): string {
     const n = idx.notes.get(notes.path);
     main =
       `<div class="ed-head"><div style="min-width:0"><input id="note-title" class="title title-input" type="text" value="${esc(n?.title ?? notes.path)}" aria-label="Note title (click to change)" title="Click to change the title" spellcheck="false" autocomplete="off"><div class="pathrow"><div class="mono muted small path">${esc(notes.path)}</div><button class="plain-btn small" data-act="copy-path" title="Copy where this file is, to paste somewhere else">Copy path</button></div><div id="note-stats" class="muted small">${statsText()}</div></div>` +
-      `<div class="ed-actions"><button class="btn only-narrow hide-in-focus" data-act="note-close">All notes</button>` +
+      `<div class="ed-actions">${n && noteKind(n) === 'journal' ? '<button class="btn hide-in-focus" data-nav="journal" title="Back to the journal calendar">‹ Journals</button>' : ''}<button class="btn only-narrow hide-in-focus" data-act="note-close">All notes</button>` +
       `<button class="btn" id="note-undo" data-act="note-undo" disabled>Undo</button><button class="btn" id="note-redo" data-act="note-redo" disabled>Redo</button>` +
       `<button class="btn only-wide" data-act="pane-list" aria-pressed="${notes.focus ? notes.peek === 'list' : notes.panes.list}" title="Show or hide the list of notes">Notes list</button><button class="btn only-wide" data-act="pane-details" aria-pressed="${notes.focus ? notes.peek === 'details' : notes.panes.details}" title="Show or hide properties, links and history">Details</button>` +
       `<button class="btn" data-act="focus-toggle" aria-pressed="${notes.focus}">${notes.focus ? 'Exit focus' : 'Focus'}</button>` +

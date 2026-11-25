@@ -23,6 +23,7 @@ export type ScreenId =
   | 'people'
   | 'projects'
   | 'notes'
+  | 'journal'
   | 'explore'
   | 'search'
   | 'health'

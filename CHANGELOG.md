@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.11.0] - 2026-11-25
+
+### Added
+- **A Journal tab** between Notes and Search (under More on a phone). It opens a month calendar with a dot on every day that has a journal, and a list of the dates on the left. Pick a day and open its journal. A day with no journal asks before making one from the Daily journal template; today's can be started at once. A journal's header has **‹ Journals** to come back.
+- **A Journal card on Home** with one button: **Open today's journal** (or the latest one, with **Start today's journal** beside it), plus Yesterday and All journals.
+
 ## [2.10.1] - 2026-11-25
 
 ### Added

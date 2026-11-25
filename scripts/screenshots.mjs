@@ -32,6 +32,8 @@ await page.screenshot({ path: `${OUT}/quick-add.png`, clip: { x: 0, y: 60, width
 await page.locator('#quick-text').fill(''); // the later Tasks shots show an empty box
 await nav(page, 'Calendar');
 await shot(page, 'calendar');
+await nav(page, 'Journal');
+await shot(page, 'journal');
 await nav(page, 'Projects');
 await page.locator('.pcard .pbtn').first().click();
 await page.locator('.hubwrap').waitFor();
