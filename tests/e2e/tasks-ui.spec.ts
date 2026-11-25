@@ -1,0 +1,123 @@
+import { expect, test } from '@playwright/test';
+import { listFiles, localDate, nav, openVault, openViewMenu, readFile, showView } from './helpers';
+
+test.beforeEach(async ({ page }) => {
+  await page.goto('/');
+});
+
+const FILES: Record<string, string> = {
+  'tasks/Late one.md': `---\ntitle: Late one\nstatus: todo\ndue: ${localDate(-3)}\n---\n`,
+  'tasks/Done one.md': '---\ntitle: Done one\nstatus: done\n---\n',
+  'a.md': `- [ ] Inline job due:${localDate(5)}\n`,
+};
+
+test.describe('the Tasks screen: filters panel, View menu, short rows', () => {
+  test('the filters panel is docked on a wide screen, folds away with « Hide, and comes back with Filters', async ({ page }) => {
+    await openVault(page, FILES);
+    await nav(page, 'Tasks').click();
+    await expect(page.locator('.fpane')).toBeVisible();
+    await expect(page.locator('.hub-filterbtn')).toBeHidden(); // the panel is showing, so no extra button
+    await page.getByRole('button', { name: 'Hide the filters panel' }).click();
+    await expect(page.locator('.fpane')).toHaveCount(0);
+    await page.locator('.hub-filterbtn').click();
+    await expect(page.locator('.fpane')).toBeVisible();
+  });
+
+  test('done tasks are hidden until Show done is on, and Show done lists how many there are', async ({ page }) => {
+    await openVault(page, FILES);
+    await nav(page, 'Tasks').click();
+    await showView(page, 'All');
+    await expect(page.locator('.hub-content')).not.toContainText('Done one');
+    await expect(page.locator('.fpane .sw')).toContainText('1 done');
+    await page.locator('#hub-showdone').check();
+    await page.locator('.hub-group .grp', { hasText: 'Done' }).click();
+    await expect(page.locator('.hub-content')).toContainText('Done one');
+    await page.locator('#hub-showdone').uncheck();
+    await expect(page.locator('.hub-content')).not.toContainText('Done one');
+  });
+
+  test('a short row has the title and one line, a late task says how late, and Detailed rows adds the file and dates', async ({ page }) => {
+    await openVault(page, FILES);
+    await nav(page, 'Tasks').click();
+    await showView(page, 'All');
+    const row = page.locator('li.task', { hasText: 'Late one' });
+    await expect(row.locator('.age')).toHaveText('3d late');
+    await expect(row.locator('.chip')).toHaveCount(0);
+    await openViewMenu(page);
+    await page.locator('#hub-detailed').check();
+    await expect(row.locator('.chip.src')).toBeVisible();
+    await expect(page.locator('.hub-viewmenu > summary')).toContainText('Detailed rows');
+  });
+
+  test('a click outside the View menu closes it, so it never covers the list', async ({ page }) => {
+    await openVault(page, FILES);
+    await nav(page, 'Tasks').click();
+    await showView(page, 'All');
+    await openViewMenu(page);
+    await page.locator('#hub-detailed').check();
+    await page.locator('#hub-detailed').uncheck(); // the menu stays open while you change things in it
+    await expect(page.locator('.hub-viewbox')).toBeVisible();
+    await page
+      .locator('li.task', { hasText: 'Late one' })
+      .locator('.tmeta')
+      .click({ position: { x: 20, y: 5 } }); // the left of the row, clear of the menu
+    await expect(page.locator('.hub-viewbox')).toBeHidden();
+    await expect(page.locator('.hub-taskpanel')).toBeVisible(); // and the click still did its job
+  });
+
+  test('choosing Group by closes the View menu', async ({ page }) => {
+    await openVault(page, FILES);
+    await nav(page, 'Tasks').click();
+    await openViewMenu(page);
+    await page.locator('#hub-group').selectOption('status');
+    await expect(page.locator('.hub-viewbox')).toBeHidden();
+  });
+
+  test('the View menu switches between List, Board and Timeline', async ({ page }) => {
+    await openVault(page, FILES);
+    await nav(page, 'Tasks').click();
+    await openViewMenu(page);
+    await page.locator('.hub-viewbox').getByRole('button', { name: 'Board' }).click();
+    await expect(page.locator('.hub-cols')).toBeVisible();
+    await openViewMenu(page);
+    await page.locator('.hub-viewbox').getByRole('button', { name: 'List' }).click();
+    await expect(page.locator('.hub-cols')).toHaveCount(0);
+  });
+});
+
+test.describe('the selected task', () => {
+  test('a task that is its own note can go to the trash, with Undo; a task line in a note cannot', async ({ page }) => {
+    const dir = await openVault(page, FILES);
+    await nav(page, 'Tasks').click();
+    await showView(page, 'All');
+    await page.locator('li.task', { hasText: 'Inline job' }).locator('.tmeta').click();
+    await expect(page.locator('.hub-taskpanel')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Move to Trash' })).toHaveCount(0);
+    await page.locator('li.task', { hasText: 'Late one' }).locator('.tmeta').click();
+    const before = await readFile(page, dir, 'tasks/Late one.md');
+    await page.getByRole('button', { name: 'Move to Trash' }).click();
+    await expect(page.locator('.notice.ok', { hasText: 'to the trash' })).toBeVisible();
+    expect(await listFiles(page, dir)).not.toContain('tasks/Late one.md');
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect.poll(() => listFiles(page, dir)).toContain('tasks/Late one.md');
+    expect(await readFile(page, dir, 'tasks/Late one.md')).toBe(before);
+  });
+
+  test('on a phone a tap selects the task and a sheet slides up; Open note is in the sheet and ✕ closes it', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await openVault(page, FILES);
+    await nav(page, 'Tasks').click();
+    await showView(page, 'All');
+    await page.locator('li.task', { hasText: 'Late one' }).locator('.t').click();
+    const sheet = page.locator('.hub-status.has-task');
+    await expect(sheet).toBeVisible();
+    const box = await sheet.boundingBox();
+    expect(box!.y + box!.height).toBeGreaterThan(790); // pinned to the bottom edge
+    await expect(sheet.getByRole('button', { name: 'Move to Trash' })).toBeVisible();
+    await sheet.getByRole('button', { name: 'Close task details' }).click();
+    await expect(page.locator('.hub-status.has-task')).toHaveCount(0);
+    await page.locator('li.task', { hasText: 'Late one' }).locator('.t').click();
+    await page.locator('.hub-status.has-task').getByRole('button', { name: 'Open note' }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+  });
+});

@@ -89,12 +89,15 @@ async function movePriority(letter: string | null): Promise<void> {
 
 /** The panel for the selected task: its lines in the file, Open note, and Reschedule. Used on the Tasks screen. */
 export function taskPanelHtml(): string {
-  return source(false);
+  return source(false, true);
 }
 
-function source(withLog = true): string {
+function source(withLog = true, withTrash = false): string {
   const c = state.context;
-  let h = '<h2>In your file</h2>';
+  const task = withTrash && state.selected ? state.index?.getTask(state.selected) : undefined;
+  let h = task
+    ? `<h3 class="tp-title">${esc(task.title)}</h3><p class="tp-kind">${task.kind === 'file' ? 'Task note' : `Task line ${task.line}`} · ${esc(task.path)}</p><h2>In your file</h2>`
+    : '<h2>In your file</h2>';
   if (!c)
     h +=
       '<p class="muted small" style="margin:0">Select a task to see the exact lines in its file. Tick the box and the change shows here. Click the selected task again, or press E, to open its note.</p>';
@@ -104,7 +107,9 @@ function source(withLog = true): string {
       const n = c.start + i;
       h += `<div class="ln${n === c.hi ? ' hi' : ''}"><span class="n">${n}</span><span>${esc(l) || ' '}</span></div>`;
     });
-    h += `</div><div class="row-gap"><button class="btn small" data-open="${esc(c.path)}" data-line="${c.hi}">Open note</button></div>`;
+    // A task that is its own note can go to the trash; a task line inside another note has no file of its own to remove.
+    const own = withTrash && state.selected && state.index?.getTask(state.selected)?.kind === 'file';
+    h += `</div><div class="row-gap"><button class="btn small primary" data-open="${esc(c.path)}" data-line="${c.hi}">Open note</button>${own ? `<button class="btn small" data-task-trash="${esc(c.path)}">Move to Trash</button>` : ''}</div>`;
     h += rescheduleHtml();
   }
   if (withLog) h += logHtml();

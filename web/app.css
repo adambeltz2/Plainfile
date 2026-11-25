@@ -419,15 +419,6 @@ progress:indeterminate { background: repeating-linear-gradient(90deg, var(--fg) 
 
 /* ---------- project dashboard ---------- */
 .psummary { margin: 4px 0 12px; font-size: 15px; max-width: 70ch; }
-.pstats { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
-.pstat { border: 1px solid var(--line); border-radius: 8px; padding: 6px 14px; min-width: 76px; display: flex; flex-direction: column; align-items: center; background: none; color: inherit; font: inherit; cursor: pointer; }
-.pstat:hover { border-color: var(--fg); }
-.pstat[aria-pressed='true'] { background: var(--fg); color: var(--bg); }
-.pstat[aria-pressed='true'] span { color: var(--bg); }
-.pstat b { font-size: 22px; line-height: 1.2; }
-.pstat span { font-size: 12px; color: var(--mute); }
-.pstat.late { border: 2px solid var(--fg); }
-.pstat.late b { text-decoration: underline; }
 .pprog { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; }
 .pprog progress { max-width: 280px; }
 .pcols { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: start; }
@@ -484,29 +475,28 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .cm-img { display: block; margin: 6px 0; color: var(--mute); font-size: 13px; }
 .cm-img-el { display: block; max-width: 100%; max-height: 70vh; height: auto; border: 1px solid var(--line); border-radius: 6px; }
 
+.pstats { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+.pstat { border: 1px solid var(--line); border-radius: 8px; padding: 6px 14px; min-width: 76px; display: flex; flex-direction: column; align-items: center; background: none; color: inherit; font: inherit; cursor: pointer; }
+.pstat:hover { border-color: var(--fg); }
+.pstat[aria-pressed='true'] { background: var(--fg); color: var(--bg); }
+.pstat[aria-pressed='true'] span { color: var(--bg); }
+.pstat b { font-size: 22px; line-height: 1.2; }
+.pstat span { font-size: 12px; color: var(--mute); }
+.pstat.late { border: 2px solid var(--fg); }
+.pstat.late b { text-decoration: underline; }
+
 /* ---------- project hub ---------- */
-.hubwrap { display: grid; grid-template-columns: minmax(130px, 170px) minmax(0, 1fr) minmax(210px, 260px); gap: 18px; align-items: start; }
+.hubwrap { display: grid; grid-template-columns: 210px minmax(0, 1fr) minmax(230px, 270px); gap: 18px; align-items: start; }
 .hub-main { min-width: 0; }
-.hub-rail, .hub-status { position: sticky; top: 8px; max-height: calc(100vh - 16px); overflow: auto; }
-.hub-rail h3, .hub-status h3 { margin: 10px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-.hub-rail h3:first-child, .hub-status h3:first-child { margin-top: 0; }
-.hub-rail-item { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 5px 8px; color: inherit; font: inherit; cursor: pointer; }
-.hub-rail-item:hover { background: var(--soft); }
-.hub-rail-item.on { background: var(--fg); color: var(--bg); }
-.hub-pick { display: none; align-items: center; gap: 8px; margin: 0 0 8px; }
 .tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin: 6px 0 10px; }
 .tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 6px 12px; color: inherit; font: inherit; cursor: pointer; }
 .tab.on { border-bottom-color: var(--fg); font-weight: 700; }
 .hub-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 8px; }
-.hub-sel { display: flex; align-items: center; gap: 6px; }
 .hub-q { flex: 1 1 14rem; min-width: 0; }
 .hub-quick, .hub-active { margin: 0 0 8px; }
 .chip.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .chip.on .muted { color: var(--bg); }
 .fchip { display: inline-flex; align-items: center; gap: 2px; padding-right: 2px; }
-.hub-facets { margin: 0 0 8px; }
-.hub-facets summary { cursor: pointer; }
-.hub-facet h4 { margin: 8px 0 4px; font-size: 12px; color: var(--mute); }
 .hub-group { margin: 0 0 6px; }
 .hub-group > .grp { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit; }
 .gprog { width: 70px; height: 6px; border: 1px solid currentColor; border-radius: 4px; overflow: hidden; flex: none; }
@@ -536,9 +526,9 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .hub-status .spark i { flex: 1; background: var(--fg); min-height: 3px; }
 .tidy li { margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
 @media (max-width: 1060px) {
-  .hubwrap { grid-template-columns: minmax(0, 1fr) minmax(200px, 240px); }
-  .hub-rail { display: none; }
-  .hub-pick { display: flex; }
+  .hubwrap { grid-template-columns: 200px minmax(0, 1fr); }
+  .hubwrap.nopane { grid-template-columns: minmax(0, 1fr); }
+  .hub-status { grid-column: 1 / -1; position: static; max-height: none; border-top: 1px solid var(--line); padding-top: 10px; }
 }
 @media (max-width: 760px) {
   .hubwrap { grid-template-columns: minmax(0, 1fr); }
@@ -561,26 +551,23 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 /* ---------- phones: fewer things to tap ---------- */
 .hdr-wide { display: contents; }
 .hdr-more, .hub-more { display: none; position: relative; }
-.hdr-more > summary, .hub-more > summary, .hub-facets > summary, .hub-status-d > summary { list-style: none; cursor: pointer; }
-.hdr-more > summary::-webkit-details-marker, .hub-more > summary::-webkit-details-marker, .hub-facets > summary::-webkit-details-marker, .hub-status-d > summary::-webkit-details-marker { display: none; }
+.hdr-more > summary, .hub-more > summary, .hub-status-d > summary { list-style: none; cursor: pointer; }
+.hdr-more > summary::-webkit-details-marker, .hub-more > summary::-webkit-details-marker, .hub-status-d > summary::-webkit-details-marker { display: none; }
 .hub-status-d > summary { display: none; }
-.hub-facets > summary { display: inline-block; border: 1px solid var(--line); border-radius: 8px; padding: 5px 12px; margin: 0 0 8px; font-weight: 600; }
-.hub-facets > summary:hover { border-color: var(--fg); }
-.hub-facets[open] > summary { background: var(--fg); color: var(--bg); }
 .hub-wide-actions { display: contents; }
 .hdr-more-box, .hub-more-box { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; display: flex; flex-direction: column; gap: 6px; align-items: stretch; background: var(--bg); border: 2px solid var(--fg); border-radius: 10px; padding: 8px; min-width: 12rem; }
 @media (max-width: 760px) {
   .hdr-wide { display: none; }
   .hdr-more, .hub-more { display: block; }
+  .pstats { display: none; }
   .hub-wide-actions { display: none; }
   .bar h1 { font-size: 20px; }
   .bar .nav { order: 5; flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; margin-left: 0; scrollbar-width: none; }
   .bar .nav::-webkit-scrollbar { display: none; }
   .navbtn { white-space: nowrap; }
   .bar .grow { display: none; }
-  .hub-facets > summary, .hub-status-d > summary { display: block; border: 1px solid var(--fg); border-radius: 8px; padding: 8px 12px; margin: 0 0 8px; font-weight: 600; }
-  .hub-facets[open] > summary, .hub-status-d[open] > summary { background: var(--fg); color: var(--bg); }
-  .pstats { display: none; }
+  .hub-status-d > summary { display: block; border: 1px solid var(--fg); border-radius: 8px; padding: 8px 12px; margin: 0 0 8px; font-weight: 600; }
+  .hub-status-d[open] > summary { background: var(--fg); color: var(--bg); }
   .psummary { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0 0 8px; }
   .pprog progress { max-width: 100%; flex: 1; }
   .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
@@ -761,8 +748,6 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 
 /* The task list's tick boxes are only shown for choosing when Select tasks is on. */
 .hubwrap:not(.sel-on) .selbox { display: none; }
-.hub-find { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 6px; }
-.hub-find .hub-sel { display: flex; gap: 6px; align-items: center; }
 
 /* The bar shown when something unexpected throws (web/diagnostics.ts). */
 #fatal-bar { position: sticky; top: 0; z-index: 100; margin: -12px -16px 12px; padding: 10px 16px; background: var(--fg); color: var(--bg); border-bottom: 2px solid var(--fg); }
@@ -818,26 +803,83 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 .hdr-menu-wrap .nav-menu { left: auto; right: 0; min-width: 15rem; }
 
 /* Quick views above the task list: All, Late, Today, This week, Waiting, No date. */
-.hub-views { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
-.hub-views .chip { cursor: pointer; background: none; font: inherit; font-size: 13px; padding: 2px 10px; border-radius: 12px; }
-.hub-views .chip.on { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
-.hub-views .chip.on .muted { color: inherit; opacity: 0.8; }
 
 /* The selected task's panel (its lines in the file, Open note, Reschedule) at the top of the Tasks screen's right column. */
 .hub-taskpanel { border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 0 0 12px; }
-.hub-taskpanel h2 { font-size: 13px; margin: 0 0 6px; }
+.hub-taskpanel h2 { font-size: 11px; margin: 10px 0 4px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); }
+.hub-taskpanel .path { display: none; }
+.tp-title { margin: 0 0 2px; font-size: 15px; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.tp-kind { margin: 0; color: var(--mute); font-size: 12px; font-family: var(--mono); overflow-wrap: anywhere; }
 
-/* ---------- phone: the Tasks screen shows the list first ---------- */
+/* ---------- Tasks screen: one filters panel, a View menu, short rows ---------- */
+.fpane { position: sticky; top: 8px; max-height: calc(100vh - 16px); display: flex; flex-direction: column; border-right: 1px solid var(--line); padding-right: 14px; min-width: 0; }
+.fh { display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px; }
+.fh h3 { margin: 0; font-size: 14px; }
+.fscroll { overflow: auto; min-height: 0; flex: 1; padding-bottom: 8px; }
+.fpane h4 { margin: 12px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); }
+.fsec { margin-top: 6px; }
+.fsec > summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; padding: 6px 0 3px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); }
+.fsec > summary::-webkit-details-marker { display: none; }
+.fsec > summary::after { content: '+'; }
+.fsec[open] > summary::after { content: '−'; }
+.opts { display: flex; flex-direction: column; gap: 1px; }
+.opt { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 5px 8px; color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.opt:hover { background: var(--soft); }
+.opt.on { background: var(--fg); color: var(--bg); font-weight: 600; }
+.opt.dim { color: var(--mute); }
+.opt.ind { padding-left: 20px; }
+.opt .n { font-variant-numeric: tabular-nums; opacity: 0.75; }
+.fsub { margin: 6px 0 2px; font-size: 11px; color: var(--mute); }
+.fpane .btn.wide { width: 100%; text-align: center; }
+.fpane .opts + .btn { margin-top: 6px; }
+.fpane .tools { display: flex; flex-wrap: wrap; gap: 6px; }
+.sw.top { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 13px; }
+.sw.top > span:first-of-type { flex: 1; }
+.sw.top .n { color: var(--mute); font-size: 12px; }
+.sw input { appearance: none; -webkit-appearance: none; width: 30px; height: 17px; border: 1.5px solid var(--fg); border-radius: 999px; position: relative; margin: 0; flex: none; cursor: pointer; order: 3; }
+.sw input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--fg); }
+.sw input:checked { background: var(--fg); }
+.sw input:checked::after { left: 15px; background: var(--bg); }
+.sw input:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.f-narrow, .fly-back, .hub-sheet-x { display: none; }
+.hub-find { display: flex; gap: 8px; align-items: center; margin: 0 0 8px; }
+.hub-find .hub-q { flex: 1 1 auto; min-width: 0; }
+.hubwrap:not(.nopane) .hub-filterbtn { display: none; }
+.hub-viewmenu { position: relative; flex: none; }
+.hub-viewmenu > summary { list-style: none; cursor: pointer; white-space: nowrap; }
+.hub-viewmenu > summary::-webkit-details-marker { display: none; }
+.hub-viewmenu > summary.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.hub-viewbox { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; width: 15rem; max-width: calc(100vw - 32px); background: var(--bg); border: 2px solid var(--fg); border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+.vm-item { text-align: left; background: none; border: 0; border-radius: 6px; padding: 7px 9px; font: inherit; color: inherit; cursor: pointer; width: 100%; }
+.vm-item:hover { background: var(--soft); }
+.vm-item.on { background: var(--fg); color: var(--bg); font-weight: 600; }
+.vm-row > span { white-space: nowrap; }
+.vm-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 9px; font-size: 13px; }
+.vm-row.check { justify-content: flex-start; }
+.hub-dash { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 8px; max-width: 560px; }
+.hub-dash .cell { border: 1px solid var(--line); border-radius: 9px; padding: 6px 4px; text-align: center; display: flex; flex-direction: column; line-height: 1.2; background: none; color: inherit; font: inherit; cursor: pointer; }
+.hub-dash .cell b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.hub-dash .cell i { font-style: normal; font-size: 11px; color: var(--mute); }
+.hub-dash .cell:hover { border-color: var(--fg); }
+.hub-dash .cell.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.hub-dash .cell.on i { color: var(--bg); opacity: 0.8; }
+.task.simple .tmeta { color: var(--mute); font-size: 12.5px; margin-top: 1px; overflow-wrap: anywhere; }
+.task .age { flex: none; align-self: flex-start; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 1px 8px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.task .age.late { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
+.ed-head.all { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 760px) {
-  .hub-pick.all, .ed-head.all { display: none; } /* the bottom bar already says where you are; All tasks needs no title or project picker */
+  .hubwrap, .hubwrap.nopane { grid-template-columns: minmax(0, 1fr); }
+  .fpane { display: none; }
+  .fpane.fly { display: flex; position: fixed; left: 0; top: 0; bottom: 0; width: min(84vw, 340px); max-height: none; z-index: 46; background: var(--bg); border-right: 2px solid var(--fg); padding: calc(10px + env(safe-area-inset-top, 0px)) 12px calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .fly-back { display: block; position: fixed; inset: 0; z-index: 45; background: rgba(0, 0, 0, 0.5); }
+  .fpane .f-narrow { display: block; }
+  .fpane .ff { padding-top: 8px; border-top: 1px solid var(--line); }
+  .hide-wide { display: none; }
+  .hubwrap .hub-filterbtn, .hubwrap:not(.nopane) .hub-filterbtn { display: inline-block; }
   .hub-quick [data-quick-note] { display: none; } /* Quick note is under + New */
-  .hub-views { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-bottom: 6px; }
-  .hub-views::-webkit-scrollbar { display: none; }
-  .hub-views .chip { flex: none; white-space: nowrap; }
-  .hub-find { flex-wrap: nowrap; gap: 8px; }
-  .hub-find .hub-q { flex: 1 1 auto; width: auto; min-width: 0; margin: 0; }
-  .hub-find .hub-sel { flex: none; }
-  .hub-find .hub-sel > span { display: none; } /* the list is named for screen readers */
-  .hub-find .hub-sel .inp { max-width: 9.5rem; }
-  .task .chip.quiet, .task .chip.src, .task .chip.st-todo { display: none; } /* "added <date>", the file path and a plain "todo" say little on a small screen; the title opens the note */
+  .hubwrap .tabs { display: none; } /* the View menu has the views */
+  .hub-dash { max-width: none; }
+  .hub-status.has-task { position: fixed; left: 0; right: 0; bottom: 0; z-index: 48; max-height: 72vh; overflow: auto; background: var(--bg); border-top: 2px solid var(--fg); border-radius: 16px 16px 0 0; padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px)); order: 0; }
+  .hub-status.has-task .hub-taskpanel { border: 0; padding: 0; margin: 0; }
+  .hub-status.has-task .hub-sheet-x { display: block; float: right; margin: 0 0 4px 8px; }
 }

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { listFiles, localDate, nav, openHubTools, openVault, readFile, readFileOrEmpty, showView } from './helpers';
+import { listFiles, localDate, nav, openFilterSection, openHubTools, openViewMenu, openVault, readFile, readFileOrEmpty, showView } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -34,7 +34,7 @@ test.describe('one-line quick add', () => {
       .toBe(`---\ntitle: Here is a task\nstatus: todo\ndue: ${localDate(1)}\ncreated: ${TODAY()}\ntags: [launch]\npeople: [Adam]\n---\n\n`);
     const row = page.locator('.task', { hasText: 'Here is a task' });
     await expect(row).toContainText(/@adam/i);
-    await expect(row).toContainText('added');
+    await expect(row).toContainText('#launch');
     await expect(page.locator('#quick-text')).toHaveValue('');
   });
 
@@ -226,8 +226,8 @@ test.describe('project dashboard', () => {
     await page.locator('.pcard .pbtn').click();
     await expect(page.locator('.title')).toHaveText('Website relaunch');
     await expect(page.locator('.psummary')).toHaveText('Launch by Dec 8');
-    await expect(page.locator('.pstat').nth(0)).toContainText('2'); // open
-    await expect(page.locator('.pstat').nth(1)).toContainText('1'); // overdue
+    await expect(page.getByRole('tab', { name: /^Tasks 2/ })).toBeVisible(); // open
+    await expect(page.locator('.hub-dash .cell').first()).toContainText('1'); // overdue
     await expect(page.locator('.hub-status')).toContainText('1 of 3 done');
     await expect(page.locator('.grp.late')).toContainText('Overdue');
     await expect(page.locator('.hub-content')).toContainText('Pick a host');
@@ -372,12 +372,15 @@ test.describe('project hub', () => {
     await expect(noDate.locator('.task')).toHaveCount(25);
     await noDate.getByRole('button', { name: /Show \d+ more/ }).click();
     await expect(noDate.locator('.task')).toHaveCount(40);
+    await openViewMenu(page);
     await page.locator('#hub-group').selectOption('person');
     await expect(page.locator('.hub-group .grp', { hasText: '@dana' })).toBeVisible();
     await expect(page.locator('.hub-group .grp', { hasText: '@sam' })).toBeVisible();
+    await openViewMenu(page);
     await page.locator('#hub-group').selectOption('phase');
     await expect(page.locator('.hub-group .grp', { hasText: 'Phase 1' })).toBeVisible();
     await expect(page.locator('.hub-group .grp', { hasText: 'No phase' })).toHaveCount(0);
+    await openViewMenu(page);
     await page.locator('#hub-group').selectOption('status');
     await expect(page.locator('.hub-group .grp', { hasText: 'Doing' })).toBeVisible();
   });
@@ -387,13 +390,14 @@ test.describe('project hub', () => {
     await page.locator('#hub-q').fill('Task 007');
     await expect(page.locator('.hub-content .task')).toHaveCount(1);
     await page.locator('#hub-q').fill('');
-    await openHubTools(page);
+    await openFilterSection(page, 'People');
     await page
-      .locator('.hub-facets')
+      .locator('.fpane')
       .getByRole('button', { name: /^@dana/ })
       .click();
+    await openFilterSection(page, 'Tags');
     await page
-      .locator('.hub-facets')
+      .locator('.fpane')
       .getByRole('button', { name: /^#launch/ })
       .click();
     await expect(page.locator('.hub-active')).toContainText('@dana');
@@ -431,12 +435,12 @@ test.describe('project hub', () => {
     await nav(page, 'Projects').click();
     await page.locator('.pcard', { hasText: 'Big project' }).locator('.pbtn').click();
     await page
-      .locator('.hub-rail')
+      .locator('.fpane')
       .getByRole('button', { name: /Other thing/ })
       .click();
     await expect(page.locator('.title')).toHaveText('Other thing');
     await page
-      .locator('.hub-rail')
+      .locator('.fpane')
       .getByRole('button', { name: /Big project/ })
       .click();
     await page.getByRole('tab', { name: 'Board' }).click();
@@ -469,11 +473,16 @@ test.describe('project hub', () => {
     await expect(page.locator('.hub-tl .h', { hasText: 'No date' })).toBeVisible();
   });
 
-  test('fits a phone: no sideways scroll, the project picker replaces the rail', async ({ page }) => {
+  test('fits a phone: no sideways scroll, and the filters are a flyout that holds the projects', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await openBig(page);
-    await expect(page.locator('.hub-rail')).toBeHidden();
-    await expect(page.locator('#hub-pick')).toBeVisible();
+    await expect(page.locator('.fpane')).toBeHidden();
+    await expect(page.locator('.hub-filterbtn')).toBeVisible();
+    await page.locator('.hub-filterbtn').click();
+    await expect(page.locator('.fpane.fly')).toBeVisible();
+    await expect(page.locator('.fpane')).toContainText('Big project');
+    await page.locator('.fpane .ff').getByRole('button').click();
+    await expect(page.locator('.fpane')).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
 
@@ -519,7 +528,7 @@ test.describe('project hub', () => {
     const dir = await openVault(page, { 'projects/p/index.md': INDEX });
     await nav(page, 'Projects').click();
     await page.locator('.pcard .pbtn').click();
-    await openHubTools(page);
+    await openFilterSection(page, 'Priority');
     await page.getByRole('button', { name: /^Priority A/ }).click();
     await expect(page.locator('.hub-content')).toContainText('Alpha');
     await expect(page.locator('.hub-content')).not.toContainText('Beta');
@@ -586,18 +595,19 @@ test.describe('project hub', () => {
     await expect(page.locator('.hub-content .task').first()).toBeVisible();
     const first = await page.locator('.hub-content .task').first().boundingBox();
     expect(first!.y).toBeLessThan(700); // tasks are visible without scrolling past a wall of controls
-    await expect(page.locator('.pstats')).toBeHidden();
-    await expect(page.locator('.hub-facets')).not.toHaveAttribute('open', '');
+    await expect(page.locator('.fpane')).toBeHidden();
     await expect(page.locator('.hub-status-d')).not.toHaveAttribute('open', '');
     await expect(page.locator('.selbox').first()).toBeHidden();
     await expect(page.getByRole('button', { name: 'Folder actions' })).toBeHidden(); // behind the More tab
+    await openViewMenu(page);
     await page.locator('#hub-group').selectOption('person');
     await openHubTools(page);
-    await expect(page.locator('.hub-facets')).toHaveAttribute('open', ''); // stays open while you work in it
+    await expect(page.locator('.fpane.fly')).toBeVisible(); // stays open while you work in it
     await page.getByRole('button', { name: 'Select tasks' }).click();
     await expect(page.locator('.selbox').first()).toBeVisible();
     await page.getByRole('button', { name: 'Stop selecting' }).click();
     await expect(page.locator('.selbox').first()).toBeHidden();
+    await page.locator('.fpane .ff').getByRole('button').click();
     await page.locator('.tabbar').getByRole('button', { name: /^More/ }).click();
     await expect(page.locator('.more-sheet').getByRole('button', { name: 'Check for changes' })).toBeVisible();
     await expect(page.locator('.more-sheet').getByRole('button', { name: 'Dark' })).toBeVisible();
@@ -620,6 +630,7 @@ test('All tasks shows every task from every project and the notes outside any, g
   await expect(page.locator('.title')).toHaveText('All tasks');
   await expect(page.locator('.nav [aria-current="true"]')).toContainText('Tasks');
   for (const t of ['Alpha job', 'Beta job', 'Shared job', 'Loose job']) await expect(page.locator('.hub-content')).toContainText(t);
+  await openViewMenu(page);
   await page.locator('#hub-group').selectOption('project');
   await expect(page.locator('.hub-group .grp', { hasText: 'Alpha' })).toBeVisible();
   await expect(page.locator('.hub-group .grp', { hasText: 'No project' })).toBeVisible();
@@ -664,24 +675,26 @@ async function readStream(d: import('@playwright/test').Download): Promise<strin
   return Buffer.concat(chunks).toString('utf8');
 }
 
-test('the Tasks tab shows the open count, and each number on a hub opens what it counts', async ({ page }) => {
+test('the Tasks tab shows the open count, the date counts open what they count, and Show done brings finished tasks back', async ({ page }) => {
   await page.goto('/');
   await openVault(page, {
     'projects/a/index.md': '---\ntitle: Alpha\ntype: project\nactive: true\n---\n- [ ] Late one due:2020-01-01\n- [ ] Fine one\n- [x] Finished one\n',
   });
   await expect(page.locator('.nav [data-nav="tasks"] .badge')).toHaveText('2');
   await nav(page, 'Tasks').click();
-  await page.getByRole('button', { name: /Show the 1 overdue/ }).click();
+  await page.getByRole('button', { name: /^Overdue 1/ }).click();
   await expect(page.locator('.hub-content li.task')).toHaveCount(1);
   await expect(page.locator('.hub-content')).toContainText('Late one');
-  await page.getByRole('button', { name: /Show the 1 done/ }).click();
-  await expect(page.locator('.hub-content li.task')).toHaveCount(1);
-  await expect(page.locator('.hub-content')).toContainText('Finished one');
-  await page.getByRole('button', { name: /Show the 2 open/ }).click();
+  await page.getByRole('button', { name: /^Overdue 1/ }).click(); // pressing it again takes the date filter off
+  await showView(page, 'All');
   await expect(page.locator('.hub-content li.task')).toHaveCount(2);
+  await expect(page.locator('.hub-content')).not.toContainText('Finished one'); // done is hidden until Show done is on
+  await page.locator('#hub-showdone').check();
+  await page.locator('.hub-group .grp', { hasText: 'Done' }).click();
+  await expect(page.locator('.hub-content')).toContainText('Finished one');
   // One box per task, until Select tasks is on.
   await expect(page.locator('.hub-content li.task .selbox').first()).toBeHidden();
-  await page.getByRole('button', { name: /Show the \d+ notes/ }).click();
+  await page.getByRole('tab', { name: /^Notes/ }).click();
   await expect(page.locator('.tab.on')).toContainText('Notes');
 });
 
@@ -826,7 +839,7 @@ test('on a wide screen the project page uses the width, and an empty Board colum
   expect(todo).toBeGreaterThan(doing * 1.5);
 });
 
-test('the Tasks screen has quick views (All, Late, Today, Upcoming, Waiting, Inbox, No date) with counts, one click each', async ({ page }) => {
+test('the Tasks screen has quick views (All, Late, Today, Upcoming, Inbox, No date) with counts, one click each, and Status has Waiting', async ({ page }) => {
   const T = localDate(0);
   await openVault(
     page,
@@ -848,7 +861,12 @@ test('the Tasks screen has quick views (All, Late, Today, Upcoming, Waiting, Inb
   await expect(page.locator('.hub-content')).toContainText('Soon one');
   await expect(page.locator('.hub-content')).toContainText('Far one');
   await expect(page.locator('.hub-content')).not.toContainText('Today one');
-  await views.getByRole('button', { name: /^Waiting/ }).click();
+  await views.getByRole('button', { name: /^All/ }).click();
+  await openFilterSection(page, 'Status');
+  await page
+    .locator('.fpane')
+    .getByRole('button', { name: /^waiting/ })
+    .click();
   await expect(page.locator('.hub-content .task')).toHaveCount(1);
   await expect(page.locator('.hub-content')).toContainText('Waiting one');
   await views.getByRole('button', { name: /^Inbox/ }).click();
@@ -877,7 +895,7 @@ test('Follow-ups is a view on the Tasks screen and a card on Home, listing the #
   await expect(page.locator('.cm-content')).toContainText('Ask Dana');
 });
 
-test('the Board has the same quick views as the list: Inbox shows only tasks that are in no project', async ({ page }) => {
+test('the Board has the same filters as the list: Inbox shows only tasks that are in no project', async ({ page }) => {
   await page.goto('/');
   await openVault(page, {
     'projects/a/index.md': '---\ntitle: Alpha\ntype: project\nactive: true\n---\n- [ ] Alpha job\n',
@@ -885,23 +903,18 @@ test('the Board has the same quick views as the list: Inbox shows only tasks tha
   });
   await nav(page, 'Tasks').click();
   await page.getByRole('tab', { name: 'Board' }).click();
-  await page.locator('.hub-views').getByRole('button', { name: /^All/ }).click();
+  await expect(page.locator('.hub-dash')).toBeVisible();
+  await showView(page, 'All');
   await expect(page.locator('.hub-col .hub-card')).toHaveCount(2);
-  await page
-    .locator('.hub-views')
-    .getByRole('button', { name: /^Inbox/ })
-    .click();
+  await showView(page, 'Inbox');
   await expect(page.locator('.hub-cols')).toContainText('Loose job');
   await expect(page.locator('.hub-cols')).not.toContainText('Alpha job');
-  await page.locator('.hub-views').getByRole('button', { name: /^All/ }).click();
+  await showView(page, 'All');
   await expect(page.locator('.hub-cols')).toContainText('Alpha job');
-  await expect(page.locator('.hub-facets')).not.toHaveAttribute('open', ''); // no separate Filter & group button, and the drawer stays folded
   await expect(page.getByText('Filter & group')).toHaveCount(0);
 });
 
-test('on a phone the Tasks screen puts the list first: no title block, one row of views, filter and Group by on one line, short task rows', async ({
-  page,
-}) => {
+test('on a phone the Tasks screen puts the list first: one row of search and View, four date counts, short task rows, detail on request', async ({ page }) => {
   await page.goto('/');
   await page.setViewportSize({ width: 390, height: 800 });
   await openVault(page, {
@@ -909,20 +922,23 @@ test('on a phone the Tasks screen puts the list first: no title block, one row o
     'tasks/Waiting.md': '---\ntitle: Waiting task\nstatus: waiting\ncreated: 2026-11-20\n---\n',
   });
   await nav(page, 'Tasks').click();
-  await page.locator('.hub-views').getByRole('button', { name: /^All/ }).click();
-  await expect(page.locator('.hubwrap .ed-head')).toBeHidden();
-  await expect(page.locator('.hub-pick')).toBeHidden();
+  await showView(page, 'All');
   await expect(page.locator('.hub-quick').getByRole('button', { name: 'Quick note' })).toBeHidden();
-  const ys = await page.locator('.hub-views .chip').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
-  expect(new Set(ys).size).toBe(1); // one row, scrolled sideways, not wrapped onto two
+  await expect(page.locator('.tabs')).toBeHidden(); // the View menu has the views
+  const ys = await page.locator('.hub-dash .cell').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+  expect(ys).toHaveLength(4);
+  expect(new Set(ys).size).toBe(1); // one row of counts
   const q = await page.locator('#hub-q').boundingBox();
-  const g = await page.locator('#hub-group').boundingBox();
-  expect(Math.abs(q!.y - g!.y)).toBeLessThan(40); // the filter box and Group by share a line
+  const v = await page.locator('.hub-viewmenu > summary').boundingBox();
+  expect(Math.abs(q!.y - v!.y)).toBeLessThan(40); // search and View share a line
   const first = await page.locator('.hub-content .task').first().boundingBox();
   expect(first!.y).toBeLessThan(520);
   const plain = page.locator('.task', { hasText: 'Plain task' });
-  await expect(plain.locator('.chip.st-todo')).toBeHidden();
-  await expect(plain.locator('.chip.src')).toBeHidden();
-  await expect(page.locator('.task', { hasText: 'Waiting task' }).locator('.chip.st-waiting')).toBeVisible(); // a status that says something stays
+  await expect(plain.locator('.chip')).toHaveCount(0); // short rows by default
+  await expect(page.locator('.task', { hasText: 'Waiting task' }).locator('.tmeta')).toContainText('waiting'); // a status that says something stays
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  await openViewMenu(page);
+  await page.locator('#hub-detailed').check();
+  await expect(plain.locator('.chip.src')).toBeVisible(); // Detailed rows brings the file and dates back
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });

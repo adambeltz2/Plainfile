@@ -358,14 +358,17 @@ test.describe('phone navigation', () => {
     for (const n of ['Home', 'Tasks', 'Projects', 'Notes', 'More']) await expect(bar.getByRole('button', { name: new RegExp(`^${n}`) })).toBeVisible();
     const box = await bar.boundingBox();
     expect(box!.y + box!.height).toBeGreaterThan(795); // pinned to the bottom edge
-    // Tasks opens on its Today view, with the quick views in a row and the work near the top.
+    // Tasks opens on its Today view, with the four date counts in a row and the work near the top; the other views are in the filters flyout.
     await bar.getByRole('button', { name: /^Tasks/ }).click();
-    const views = page.getByRole('group', { name: 'Show' });
-    await expect(views.getByRole('button', { name: /^Today/ })).toHaveAttribute('aria-pressed', 'true');
-    const h = await views.boundingBox();
+    const dates = page.getByRole('group', { name: 'Dates' });
+    await expect(dates.getByRole('button', { name: /^Today/ })).toHaveAttribute('aria-pressed', 'true');
+    const h = await dates.boundingBox();
     expect(h!.y).toBeLessThan(500);
+    await page.locator('.hub-filterbtn').click();
+    const views = page.getByRole('group', { name: 'Show' });
     await views.getByRole('button', { name: /^Inbox/ }).click();
     await expect(views.getByRole('button', { name: /^Inbox/ })).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('.fpane .ff').getByRole('button').click();
     // More holds Calendar, Vault health, the cheat sheet, Check for changes and the theme.
     await bar.getByRole('button', { name: /^More/ }).click();
     const sheet = page.locator('.more-sheet');
@@ -389,7 +392,7 @@ test.describe('phone navigation', () => {
     await nav(page, 'Tasks').click();
     await expect(page.locator('.tabbar')).toBeHidden();
     await expect(page.locator('.side-toggle')).toBeHidden();
-    await expect(page.locator('.hub-rail')).toBeVisible(); // the project list stays open beside the tasks
+    await expect(page.locator('.fpane')).toBeVisible(); // the filters and the project list stay open beside the tasks
   });
 });
 
