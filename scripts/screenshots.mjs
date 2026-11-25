@@ -29,6 +29,7 @@ await shot(page, 'today');
 await page.locator('#quick-text').fill('Send logos +website-relaunch @dana #launch due:friday');
 await page.locator('#quick-text').blur();
 await page.screenshot({ path: `${OUT}/quick-add.png`, clip: { x: 0, y: 60, width: 1280, height: 200 } });
+await page.locator('#quick-text').fill(''); // the later Tasks shots show an empty box
 await nav(page, 'Calendar');
 await shot(page, 'calendar');
 await nav(page, 'Projects');
@@ -62,7 +63,13 @@ await nav(page, 'Search');
 await page.getByRole('button', { name: 'Modified today' }).click();
 await shot(page, 'search');
 await nav(page, 'Tasks');
+await page
+  .locator('.fsec', { has: page.locator('summary', { hasText: /^Tags$/i }) })
+  .locator('summary')
+  .click();
+await page.getByRole('button', { name: /^#launch/ }).click();
 await shot(page, 'tasks');
+await page.getByRole('button', { name: 'Clear filters' }).click();
 await page.locator('.hub-viewmenu > summary').click();
 await page.locator('#hub-group').selectOption('project');
 await shot(page, 'tasks-by-project');
@@ -85,4 +92,14 @@ await page.context().close();
 
 page = await session({ width: 390, height: 800 }, 'light', 2);
 await shot(page, 'phone-today');
+await page
+  .locator('.tabbar')
+  .getByRole('button', { name: /^Tasks/ })
+  .click();
+await shot(page, 'phone-tasks');
+await page.locator('.hub-filterbtn').click();
+await shot(page, 'phone-filters');
+await page.locator('.fpane .ff').getByRole('button').click();
+await page.locator('li.task .t').first().click();
+await shot(page, 'phone-sheet');
 await browser.close();

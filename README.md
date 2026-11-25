@@ -12,6 +12,8 @@ links live in ordinary `.md` files with frontmatter. The app reads them and
 gives you one place to see everything. Nothing is stored anywhere else, so the
 folder is the whole repository and works with any editor or sync tool.
 
+**The idea in one line:** your markdown files are the source of truth, and the app is a small, install-free lens on them.
+
 ## Get started
 
 1. Open the **[live app](https://adambeltz2.github.io/Plainfile/)**. Choose **Open folder** (Chrome, Edge or Brave), **Connect Dropbox** (any browser, including iPhone), or **Try the sample vault**.
@@ -20,13 +22,22 @@ folder is the whole repository and works with any editor or sync tool.
 
 Your folder stays plain markdown the whole time; delete the app and every file still opens anywhere.
 
-## How it relates to SilverBullet and Obsidian
+## How I want to work
 
-Plainfile is plainly inspired by tools like <a href="https://silverbullet.md/" target="_blank" rel="noopener noreferrer">SilverBullet</a> and <a href="https://obsidian.md/" target="_blank" rel="noopener noreferrer">Obsidian</a>: your notes are a folder of markdown files you own, linked with `[[wikilinks]]`, edited live. The approach differs in a few ways:
+Plainfile is built around one rule: **the source of truth is plain markdown files.** Every note, task, project, tag and link is text in a `.md` file, in a folder you own. That is what makes it portable: the folder opens in any editor, syncs with anything (Dropbox, iCloud, Syncthing, git) and outlives the app. The software around it is kept as small as it can be, and there is **nothing to install**: open a web page, point it at the folder, and work.
 
-- **Tasks and projects are first-class, and still plain files.** A task can be an inline `- [ ]` line or its own note with a `status:`; projects are folders. Home, Tasks (with its Today view), the project hub and the weekly review are views over those files, not a second database.
+Three tools shaped how I want to work:
+
+- **<a href="https://github.com/todotxt/todo.txt" target="_blank" rel="noopener noreferrer">todo.txt</a>: a task is a line of text.** A priority in front, `+project` and `@context` words in the line, `due:` as a plain key and value, all readable in any text editor with no database behind it. Plainfile reads and writes that style (`- [ ] (A) Call Dana +Website @dana due:friday`) and also understands Obsidian Tasks and Dataview syntax. Lists stay as short as a todo.txt list: a title and one line, with detail one tap away.
+- **<a href="https://silverbullet.md/" target="_blank" rel="noopener noreferrer">SilverBullet</a>: notes are files you own, and everything else is worked out from them.** Pages are a folder of markdown, linked with `[[wikilinks]]`, edited live in the browser. Back-links, project views, counts and the index are computed from the text and never stored; the index is a cache you can delete.
+- **<a href="https://nullboard.io/" target="_blank" rel="noopener noreferrer">Nullboard</a>: a board that is just a web page.** A minimal kanban you open without installing anything, with no account and no server. Plainfile keeps that stance (a static page, a Board of status columns for any project) but keeps your data in your own folder, as markdown, rather than in the browser.
+
+It also borrows from <a href="https://obsidian.md/" target="_blank" rel="noopener noreferrer">Obsidian</a> (wikilinks, a folder as the vault, reading other people's conventions). The approach differs in a few ways:
+
+- **Tasks are their own thing, and notes can hold tasks too.** A task can be an inline `- [ ]` line or its own note with a `status:`; projects are folders, and a project can have sub-projects. Home, Tasks (opening on its Today view), the project hub and the weekly review are views over those files, not a second database.
+- **Simple by default, detail on demand.** The Tasks list shows a title and one line. Filters live in one panel (docked on a wide screen, a flyout on a phone), and a task's full detail, its exact lines in the file and Reschedule are one tap away.
+- **A deliberately small software stack.** TypeScript compiled into plain static files, served from a web page. There is no server, database, account or plugin system, and nothing to install or run. You can also install it as an app, and it works offline.
 - **It reads other people's conventions without rewriting them.** `due:`, `📅`, Dataview `[due:: …]`, `#tags` and `[[links]]` all work, and writes touch the smallest piece of text possible.
-- **Nothing to install or run.** It is a static web page that opens a folder (or a Dropbox folder) directly in the browser. There is no server, database, account or plugin system, and the index is a cache you can delete.
 - **It shows its work.** After every write you see the exact before and after lines; deleting goes to a trash; every save keeps history.
 - **Black and white, on purpose.** State is shown with weight, borders and inversion, not color.
 
@@ -36,14 +47,14 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 
 | | |
 |---|---|
-| **Home**: a one-line capture bar, week bars and projects at the top, today, filing, waiting, the week | ![Home](docs/screenshots/home.png) |
-| **Tasks**: every task from every project, one place to start the day (grouped by due date; or by project) | ![Tasks](docs/screenshots/tasks.png) |
-| **Calendar**: tasks and dated notes by day, drag to reschedule | ![Calendar](docs/screenshots/calendar.png) |
-| **Insight**: activity, this month, topics, people, health | ![Insight](docs/screenshots/insight.png) |
-| **Today view** (the Tasks tab opens on it): everything late, due today or due this week, one-line quick add, a readout of the exact change on disk | ![Today](docs/screenshots/today.png) |
+| **Home**: a one-line capture bar, week bars and projects at the top, then today, filing, waiting and follow-ups | ![Home](docs/screenshots/home.png) |
+| **Tasks**: opens on Today. Search and a View menu, four date counts that filter when tapped, short rows with "3d late" badges, and one filters panel on the left | ![Today](docs/screenshots/today.png) |
+| **Filters**: pick a tag, person, status or project from the panel; counts say what each choice leaves, and Show done brings finished tasks back | ![Tasks](docs/screenshots/tasks.png) |
+| **Group by project**: the same list, side by side by project, from the View menu | ![Tasks by project](docs/screenshots/tasks-by-project.png) |
 | **Quick add**: `Send logos +website-relaunch @dana #launch due:friday`, with a live preview | ![Quick add](docs/screenshots/quick-add.png) |
-| **Project hub**: tasks grouped and filtered, status column, tabs, bulk changes | ![Project hub](docs/screenshots/project.png) |
-| **Project board**: the same tasks by status | ![Project board](docs/screenshots/project-board.png) |
+| **Project hub**: tasks grouped and filtered, sub-projects, progress, tabs and bulk changes | ![Project hub](docs/screenshots/project.png) |
+| **Project board**: the same tasks by status columns | ![Project board](docs/screenshots/project-board.png) |
+| **Calendar**: tasks and dated notes by day, drag to reschedule | ![Calendar](docs/screenshots/calendar.png) |
 | **Notes**: a live editor with X-ray, a properties panel, history and focus mode | ![Notes](docs/screenshots/notes.png) |
 | **Notes home**: pinned, modified today, recent and folders | ![Notes home](docs/screenshots/notes-home.png) |
 | **⋯ More menu**: move, rename, duplicate, pin, delete | ![More menu](docs/screenshots/notes-menu.png) |
@@ -51,12 +62,16 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 | **Go to…**: the command palette | ![Palette](docs/screenshots/palette.png) |
 | **Search**: operators, plus `modified:today` and other date chips | ![Search](docs/screenshots/search.png) |
 | **Explore** (a switch inside Search): related notes and a neighbourhood graph | ![Explore](docs/screenshots/explore.png) |
+| **Insight**: activity, this month, topics, people, health | ![Insight](docs/screenshots/insight.png) |
 | **Dark mode**: Light, Dark or Auto on every screen | ![Dark mode](docs/screenshots/today-dark.png) |
-| **On a phone**: installable, works offline | <img src="docs/screenshots/phone-today.png" alt="Phone" width="240"> |
+
+**On a phone** (installable, works offline): Home, then Tasks with its filters flyout, then a task's sheet.
+
+<img src="docs/screenshots/phone-today.png" alt="Home on a phone" width="200"> <img src="docs/screenshots/phone-tasks.png" alt="Tasks on a phone" width="200"> <img src="docs/screenshots/phone-filters.png" alt="The filters flyout on a phone" width="200"> <img src="docs/screenshots/phone-sheet.png" alt="A task's sheet on a phone" width="200">
 
 ## Highlights
 
-- **One list of tasks** from inline `- [ ]` lines and one-file-per-task notes, with Tasks (opens on Today; one filters panel for All, Late, Upcoming, Inbox, Follow-ups, status, project, people and tags), a project hub (with a Board of status columns), Calendar and a weekly review.
+- **One list of tasks** from inline `- [ ]` lines and one-file-per-task notes, with Tasks (opens on Today; one filters panel for date views, status, project, people and tags; short rows, detail on demand), a project hub with sub-projects (and a Board of status columns), Calendar and a weekly review.
 - **A live editor** with `[[links]]`, `#tags`, `@people` and type-ahead; click a link to go there, or to create it.
 - **Safe by design:** every write is the smallest edit, guarded by the file's modified time, with history, a trash, and a readout of the exact lines changed.
 - **Yours:** plain files, no account or server; sync with whatever you already use. Export to Word, PDF, markdown, HTML, CSV and JSON.
