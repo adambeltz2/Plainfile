@@ -66,7 +66,7 @@ test('the manifest offers New task, Today and Search shortcuts that open the app
 for (const [go, check] of [
   ['search', '#search-q'],
   ['quick', '#quick-text'],
-  ['today', '.hub-views .chip.on'],
+  ['today', '.hub-dash .cell.on'],
 ] as const) {
   test(`opening ?go=${go} lands on the right screen once a folder is open`, async ({ page }) => {
     await page.goto(`/?go=${go}`);

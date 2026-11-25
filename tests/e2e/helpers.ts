@@ -151,9 +151,23 @@ export async function noteItem(page: Page, hasText: string | RegExp): Promise<im
   return page.locator('.note-item', { hasText });
 }
 
-/** The project hub keeps its more-filters, select and export controls in one folded drawer. Open it (once). */
+/** The filters panel (docked on a wide screen, a flyout on a phone) holds the facets, Select and Export. Make sure it is showing. */
 export async function openHubTools(page: Page): Promise<void> {
-  if (!(await page.locator('.hub-facets[open]').count())) await page.locator('.hub-facets > summary').click();
+  const narrow = (page.viewportSize()?.width ?? 1280) <= 760;
+  if (narrow && !(await page.locator('.fpane.fly').count())) await page.locator('.hub-filterbtn').click();
+  if (!narrow && !(await page.locator('.fpane').count())) await page.locator('.hub-filterbtn').click();
+}
+
+/** Open a filter section (People, Tags, Priority, Phase, Status) in the filters panel. */
+export async function openFilterSection(page: Page, name: string): Promise<void> {
+  await openHubTools(page);
+  const d = page.locator('.fsec', { has: page.locator('summary', { hasText: new RegExp(`^${name}$`, 'i') }) });
+  if (!(await d.evaluate((e) => (e as HTMLDetailsElement).open))) await d.locator('summary').click();
+}
+
+/** Open the View menu (views, Group by, Detailed rows). */
+export async function openViewMenu(page: Page): Promise<void> {
+  if (!(await page.locator('.hub-viewmenu[open]').count())) await page.locator('.hub-viewmenu > summary').click();
 }
 
 /** Read the folder again, from the header's ⋯ menu. */
@@ -164,8 +178,12 @@ export async function rescanApp(page: Page): Promise<void> {
 
 /** On the Tasks screen, switch to a quick view (All, Late, Today, This week, Waiting, Inbox, No date, Follow-ups). */
 export async function showView(page: Page, view: string): Promise<void> {
+  // The Show list is in the filters panel: docked on a wide screen, a flyout on a phone.
+  const narrow = (page.viewportSize()?.width ?? 1280) <= 760;
+  if (narrow) await page.locator('.hub-filterbtn').click();
   await page
     .getByRole('group', { name: 'Show' })
     .getByRole('button', { name: new RegExp(`^${view}\\b`) })
     .click();
+  if (narrow) await page.locator('.fpane .ff').getByRole('button').click();
 }

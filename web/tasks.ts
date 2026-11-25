@@ -41,6 +41,21 @@ export function row(t: TaskItem, pick?: { on: boolean }): string {
   );
 }
 
+/**
+ * A task as a short row: tick box, title, and one line (date, people, tags, project, a status that says something). A late
+ * task carries its age on the right. The detail is in the task panel, or in the full row when Detailed rows is on.
+ */
+export function simpleRow(t: TaskItem, meta: string, badge: { text: string; late: boolean } | undefined, pick?: { on: boolean }): string {
+  return (
+    `<li class="task simple${t.done ? ' done' : ''}${t.id === state.selected ? ' sel' : ''}${pick?.on ? ' picked' : ''}" data-id="${esc(t.id)}" tabindex="0">` +
+    (pick ? `<input type="checkbox" class="selbox" data-hub-select="${esc(t.id)}"${pick.on ? ' checked' : ''} aria-label="Select: ${esc(t.title)}">` : '') +
+    `<button class="cb" data-toggle="${esc(t.id)}" aria-pressed="${t.done}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${t.done ? '✓' : ''}</button>` +
+    `<div class="body"><div class="t">${priorityBadge(t.priority)}${esc(t.title)}</div>${meta ? `<div class="tmeta">${meta}</div>` : ''}</div>` +
+    (badge ? `<span class="age${badge.late ? ' late' : ''}">${esc(badge.text)}</span>` : '') +
+    '</li>'
+  );
+}
+
 /** Tick or untick a task. The write is guarded, and what changed on disk is kept for the readout. */
 export async function toggleTask(id: string): Promise<void> {
   const { index, storage } = state;

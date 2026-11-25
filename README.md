@@ -56,7 +56,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 
 ## Highlights
 
-- **One list of tasks** from inline `- [ ]` lines and one-file-per-task notes, with Tasks (opens on Today; also All, Late, Upcoming, Waiting, Inbox and Follow-ups), a project hub (with a Board of status columns), Calendar and a weekly review.
+- **One list of tasks** from inline `- [ ]` lines and one-file-per-task notes, with Tasks (opens on Today; one filters panel for All, Late, Upcoming, Inbox, Follow-ups, status, project, people and tags), a project hub (with a Board of status columns), Calendar and a weekly review.
 - **A live editor** with `[[links]]`, `#tags`, `@people` and type-ahead; click a link to go there, or to create it.
 - **Safe by design:** every write is the smallest edit, guarded by the file's modified time, with history, a trash, and a readout of the exact lines changed.
 - **Yours:** plain files, no account or server; sync with whatever you already use. Export to Word, PDF, markdown, HTML, CSV and JSON.

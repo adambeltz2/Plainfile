@@ -35,7 +35,7 @@ test.describe('sub-projects', () => {
     await expect(page.locator('.hub-subs')).toContainText('Close out the open sub-project before closing this project');
     await page.locator('.hub-subs').getByRole('button', { name: 'Media' }).click();
     await expect(page.locator('.hubwrap .meta')).toContainText('Part of Site');
-    await expect(page.locator('.hub-pick option', { hasText: '– Media' })).toHaveCount(1);
+    await expect(page.locator('.fpane .opt.ind', { hasText: 'Media' })).toHaveCount(1); // indented under its parent in the Project list
     // Close the sub-project: no folder move is offered, and then the parent can be closed.
     await page.getByRole('button', { name: 'Close out', exact: true }).first().click();
     await expect(page.locator('.notice', { hasText: 'Close out “Media”?' })).toBeVisible();

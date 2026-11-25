@@ -2,6 +2,7 @@ import { fmtDate, localDateOf } from '../src/dates';
 import { save } from './export';
 import { quickHooks, taskPanelHtml } from './today';
 import { tasksToCsv, tasksToJson } from '../src/export';
+import { describeRecurrence } from '../src/recur';
 import { applyBulk, planBulk, type BulkAction, type BulkPlan } from '../src/bulk';
 import { STATUSES, type Status } from '../src/fields';
 import {
@@ -22,6 +23,7 @@ import {
 } from '../src/hub';
 import { dirname } from '../src/index';
 import { applyFolderMove, planFolderMove } from '../src/folder-move';
+import { deleteNote, planDelete, restoreNote } from '../src/delete';
 import { priorityRank } from '../src/priority';
 import {
   ALL_PROJECTS,
@@ -39,7 +41,7 @@ import { addDays } from '../src/query';
 import { setTaskStatus } from '../src/writeback';
 import { errorMessage, justDone, render, rescan, state, today, writeFailure } from './store';
 import { openNote } from './notes';
-import { logHtml, row } from './tasks';
+import { logHtml, row, simpleRow } from './tasks';
 import { quickBar } from './today';
 import { esc } from './util';
 
@@ -58,8 +60,6 @@ export const hubState = {
   /** Groups the user opened or closed, against their default (finished work starts closed). */
   toggled: new Set<string>(),
   limits: new Map<string, number>(),
-  /** The "more filters" drawer stays open while you pick several. */
-  facetsOpen: false,
   /** The close-out confirmation is showing. */
   closing: false,
   /** Set while a close out or reopen is writing (the note, then the folder move), so the screen can say so. */
@@ -71,6 +71,18 @@ export const hubState = {
   reopenMove: true,
   reopenTo: '',
   statusOpen: false,
+  /** Rows with every chip (status, added date, file) instead of the short row. Kept per device. */
+  detailed: readDetailed(),
+  /** The filters panel is folded away on a wide screen. */
+  paneHidden: false,
+  /** The filters flyout is open on a phone. */
+  flyout: false,
+  /** The View menu is open. */
+  viewOpen: false,
+  /** Filter sections the user opened. Status and Project start open. */
+  secs: new Set<string>(['status', 'project']),
+  /** The task note just moved to the trash, so it can be put back. */
+  trashed: undefined as undefined | { title: string; trashPath: string; originalPath: string },
   selectMode: false,
   /** Task ids ticked for a bulk change. */
   selected: new Set<string>(),
@@ -82,6 +94,14 @@ export const hubState = {
   last: undefined as undefined | { label: string; edits: BulkPlan['edits'] },
   error: '',
 };
+
+function readDetailed(): boolean {
+  try {
+    return localStorage.getItem('plainfile-detailed-rows') === '1';
+  } catch {
+    return false;
+  }
+}
 
 const PAGE = 25;
 const isNarrow = (): boolean => window.matchMedia('(max-width: 760px)').matches;
@@ -116,7 +136,8 @@ export function resetFor(path: string): void {
     filters: newFilters(),
     toggled: new Set<string>(),
     limits: new Map<string, number>(),
-    facetsOpen: false,
+    flyout: false,
+    viewOpen: false,
     closing: false,
     busy: '',
     reopening: false,
@@ -152,50 +173,136 @@ function activeChips(): string {
   for (const s of f.statuses) out.push(chip('statuses', s, s));
   for (const p of f.phases) out.push(chip('phases', p, p || 'No phase'));
   for (const p of f.priorities) out.push(chip('priorities', p, p === '-' ? 'No priority' : `Priority ${p}`));
-  if (f.due)
-    out.push(
-      `<span class="chip fchip">${f.due === 'overdue' ? 'Overdue' : f.due === 'soon' ? 'Late or due within a week' : f.due === 'later' ? 'Due later' : 'No date'}<button class="plain-btn x" data-hub-due="${f.due}" aria-label="Remove date filter">×</button></span>`,
-    );
+  // A date view (Overdue, Today, Upcoming, No date) is shown by the counts and the Show list, so it is not repeated here.
   return out.length ? `<div class="chips hub-active">${out.join('')}<button class="btn small" data-hub-clear>Clear all</button></div>` : '';
 }
 
-function toolbar(all: HubTask[]): string {
+/** What the filters panel is holding: the facets, not the date views (those are the four counts and the Show list). */
+function filterCount(f: Filters): number {
+  return f.people.length + f.tags.length + f.statuses.length + f.phases.length + f.priorities.length;
+}
+
+const countBy = (xs: string[]): [string, number][] =>
+  [...xs.reduce((m, x) => m.set(x, (m.get(x) ?? 0) + 1), new Map<string, number>())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+/** One choice in the filters panel: its name and how many tasks it would leave. */
+function opt(label: string, n: number, on: boolean, attrs: string, indent = false): string {
+  return `<button class="opt${on ? ' on' : ''}${n === 0 && !on ? ' dim' : ''}${indent ? ' ind' : ''}" ${attrs} aria-pressed="${on}"><span>${label}</span><span class="n">${n}</span></button>`;
+}
+
+/** The filters, in one panel: docked on the left of a wide screen, a flyout on a phone. */
+function filtersPane(all: HubTask[], path: string, shown: number): string {
+  const idx = state.index;
+  if (!idx) return '';
   const f = hubState.filters;
-  const facet = (title: string, kind: string, items: [string, string, number][], on: string[]): string =>
-    items.length
-      ? `<div class="hub-facet"><h4>${title}</h4><div class="chips">${items.map(([v, l, n]) => `<button class="chip${on.includes(v) ? ' on' : ''}" data-hub-filter="${kind}:${esc(v)}" aria-pressed="${on.includes(v)}">${esc(l)} <span class="muted">${n}</span></button>`).join('')}</div></div>`
-      : '';
-  const count = (xs: string[]): [string, number][] =>
-    [...xs.reduce((m, x) => m.set(x, (m.get(x) ?? 0) + 1), new Map<string, number>())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  const people = count(all.flatMap((t) => t.people)).map(([v, n]): [string, string, number] => [v, `@${v}`, n]);
-  const tags = count(all.flatMap((t) => t.tags)).map(([v, n]): [string, string, number] => [v, `#${v}`, n]);
-  const phases = count(all.map((t) => t.phase ?? '')).map(([v, n]): [string, string, number] => [v, v || 'No phase', n]);
-  const statuses = count(all.map((t) => t.status)).map(([v, n]): [string, string, number] => [v, v, n]);
-  const priorities = count(all.map((t) => t.item.priority ?? '-'))
+  const everything = path === ALL_PROJECTS;
+  const counts = viewCounts(all, today(), listFollowUps(idx).length);
+  const cur = currentView(f);
+  const tasksTab = hubState.tab === 'tasks';
+  const sec = (name: string, title: string, body: string, force = false): string =>
+    body ? `<details class="fsec" data-sec="${name}"${hubState.secs.has(name) || force ? ' open' : ''}><summary>${title}</summary>${body}</details>` : '';
+  const show = QUICK_VIEWS.filter(([v]) => v !== 'waiting' && (everything || !EVERYTHING_VIEWS.includes(v)))
+    .map(([v, l]) => opt(l, counts[v], cur === v, `data-hub-view="${v}"`))
+    .join('');
+  const facet = (kind: 'statuses' | 'people' | 'tags' | 'phases' | 'priorities', items: [string, string, number][]): string =>
+    items.map(([v, l, n]) => opt(esc(l), n, (f[kind] as string[]).includes(v), `data-hub-filter="${kind}:${esc(v)}"`)).join('');
+  const statuses = countBy(all.filter((t) => !f.hideDone || t.status !== 'done').map((t) => t.status)).map(([v, n]): [string, string, number] => [v, v, n]);
+  const people = countBy(all.flatMap((t) => t.people)).map(([v, n]): [string, string, number] => [v, `@${v}`, n]);
+  const tags = countBy(all.flatMap((t) => t.tags)).map(([v, n]): [string, string, number] => [v, `#${v}`, n]);
+  const phases = countBy(all.map((t) => t.phase ?? '')).map(([v, n]): [string, string, number] => [v, v || 'No phase', n]);
+  const priorities = countBy(all.map((t) => t.item.priority ?? '-'))
     .sort((a, b) => priorityRank(a[0] === '-' ? undefined : a[0]) - priorityRank(b[0] === '-' ? undefined : b[0]))
     .map(([v, n]): [string, string, number] => [v, v === '-' ? 'No priority' : `Priority ${v}`, n]);
-  const active = f.people.length + f.tags.length + f.statuses.length + f.phases.length + f.priorities.length; // what the drawer holds; a date is a quick view or a chip
-  const everything = hubState.project === ALL_PROJECTS;
+  const projects = listProjects(idx);
+  const proj = (p: Project): string =>
+    opt(`${p.parent ? '↳ ' : ''}${esc(p.title)}`, p.openTasks, p.path === path, `data-open-project="${esc(p.path)}"`, !!p.parent);
+  const allOpen = tasksOf(idx, ALL_PROJECTS).filter((t) => t.status !== 'done').length;
+  const projectBody =
+    opt('All tasks', allOpen, everything, `data-open-project="${ALL_PROJECTS}"`) +
+    projects
+      .filter((p) => p.active)
+      .map(proj)
+      .join('') +
+    (projects.some((p) => !p.active)
+      ? `<div class="fsub">Archived</div>${projects
+          .filter((p) => !p.active)
+          .map(proj)
+          .join('')}`
+      : '') +
+    '<button class="btn small" data-act="proj-back">All projects</button>';
+  const tools = tasksTab
+    ? `<div class="tools"><button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button><button class="btn small" data-hub-export="csv" title="Download the tasks shown as a spreadsheet file">Export CSV</button><button class="btn small" data-hub-export="json" title="Download the tasks shown as JSON">Export JSON</button></div>`
+    : '';
+  const done = all.filter((t) => t.status === 'done').length;
+  return (
+    `<aside class="fpane${hubState.flyout ? ' fly' : ''}" id="hub-fpane" aria-label="Filters"><div class="fh"><h3>Filters</h3>` +
+    '<button class="plain-btn hide-wide" data-hub-pane aria-label="Hide the filters panel">« Hide</button><button class="plain-btn x f-narrow" data-hub-pane aria-label="Close the filters">✕</button></div>' +
+    '<button class="btn wide" data-hub-clear>Clear filters</button>' +
+    `<label class="sw top"><input type="checkbox" id="hub-showdone"${f.hideDone ? '' : ' checked'}><span>Show done</span><span class="n">${done} done</span></label>` +
+    '<div class="fscroll">' +
+    `<h4>Show</h4><div class="opts" role="group" aria-label="Show">${show}</div>` +
+    sec('status', 'Status', `<div class="opts">${facet('statuses', statuses)}</div>`, f.statuses.length > 0) +
+    sec('project', 'Project', `<div class="opts">${projectBody}</div>`) +
+    sec('people', 'People', `<div class="opts">${facet('people', people)}</div>`, f.people.length > 0) +
+    sec('tags', 'Tags', `<div class="opts">${facet('tags', tags)}</div>`, f.tags.length > 0) +
+    sec(
+      'priority',
+      'Priority',
+      priorities.length > 1 || f.priorities.length ? `<div class="opts">${facet('priorities', priorities)}</div>` : '',
+      f.priorities.length > 0,
+    ) +
+    sec('phase', 'Phase', phases.length > 1 || f.phases.length ? `<div class="opts">${facet('phases', phases)}</div>` : '', f.phases.length > 0) +
+    (tools ? `<h4>Tools</h4>${tools}` : '') +
+    '</div>' +
+    `<div class="ff f-narrow"><button class="btn primary wide" data-hub-pane>Show ${shown} task${shown === 1 ? '' : 's'}</button></div></aside>`
+  );
+}
+
+/** The View menu: which view, how to group, and whether rows are short or detailed. */
+function viewMenu(tabs: [Tab, string][]): string {
+  const tasksTab = hubState.tab === 'tasks';
+  const names: Record<Tab, string> = { tasks: 'List', board: 'Board', timeline: 'Timeline', notes: 'Notes', activity: 'Activity' };
+  return (
+    `<details class="hub-viewmenu"${hubState.viewOpen ? ' open' : ''}><summary class="btn pill${tasksTab && hubState.detailed ? ' on' : ''}" aria-label="View options">View ▾${tasksTab && hubState.detailed ? ' · Detailed rows' : ''}</summary>` +
+    '<div class="hub-viewbox"><div role="group" aria-label="View">' +
+    tabs
+      .map(
+        ([id]) => `<button class="vm-item${hubState.tab === id ? ' on' : ''}" data-hub-tab="${id}" aria-pressed="${hubState.tab === id}">${names[id]}</button>`,
+      )
+      .join('') +
+    '</div>' +
+    (tasksTab
+      ? `<label class="vm-row"><span>Group by</span><select id="hub-group" class="inp" aria-label="Group by">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` +
+        `<label class="vm-row check"><input type="checkbox" id="hub-detailed"${hubState.detailed ? ' checked' : ''}> Detailed rows</label>`
+      : '') +
+    '</div></details>'
+  );
+}
+
+/** Search and View on one line, the four date counts under them, and the filters in use as removable chips. */
+function toolbar(all: HubTask[], tabs: [Tab, string][]): string {
+  const f = hubState.filters;
   const counts = viewCounts(all, today(), state.index ? listFollowUps(state.index).length : 0);
   const cur = currentView(f);
-  const views =
-    hubState.tab === 'tasks' || hubState.tab === 'board'
-      ? `<div class="hub-views" role="group" aria-label="Show">${QUICK_VIEWS.filter(([v]) => everything || !EVERYTHING_VIEWS.includes(v))
+  const n = filterCount(f);
+  const dash: [QuickView, string][] = [
+    ['late', 'Overdue'],
+    ['today', 'Today'],
+    ['upcoming', 'Upcoming'],
+    ['none', 'No date'],
+  ];
+  return (
+    `<div class="hub-find"><button class="btn pill hub-filterbtn" data-hub-pane aria-label="Filters${n ? `, ${n} on` : ''}">Filters${n ? ` · ${n} on` : ''}</button>` +
+    `<input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="${hubState.project === ALL_PROJECTS ? 'Search all tasks…' : 'Search this project…'}" aria-label="Filter tasks in this project" value="${esc(f.text)}">` +
+    `${viewMenu(tabs)}</div>` +
+    (hubState.tab === 'tasks' || hubState.tab === 'board'
+      ? `<div class="hub-dash" role="group" aria-label="Dates">${dash
           .map(
             ([v, l]) =>
-              `<button class="chip${cur === v ? ' on' : ''}" data-hub-view="${v}" aria-pressed="${cur === v}">${l} <span class="muted">${counts[v]}</span></button>`,
+              `<button class="cell${cur === v ? ' on' : ''}" data-hub-view="${v}" aria-pressed="${cur === v}" aria-label="${l} ${counts[v]}"><b>${counts[v]}</b><i>${l}</i></button>`,
           )
           .join('')}</div>`
-      : '';
-  return (
-    views +
-    `<div class="hub-find"><input id="hub-q" class="inp hub-q" type="search" autocomplete="off" spellcheck="false" placeholder="${hubState.project === ALL_PROJECTS ? 'Filter all tasks…' : 'Filter this project…'}" aria-label="Filter tasks in this project" value="${esc(f.text)}">${hubState.tab === 'tasks' ? `<label class="hub-sel"><span class="small muted">Group by</span><select id="hub-group" class="inp" aria-label="Group by">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}</div>` +
-    `<details class="hub-facets"${hubState.facetsOpen || active ? ' open' : ''}><summary class="small">${hubState.tab === 'tasks' ? 'More filters, select and export' : 'More filters: priority, people, tags, phases, status'}${active ? ` · ${active} on` : ''}</summary>` +
-    (hubState.tab === 'tasks'
-      ? `<div class="hub-bar"><label class="check small"><input type="checkbox" id="hub-hidedone"${f.hideDone ? ' checked' : ''}> Hide done</label>` +
-        `<button class="btn small" data-hub-selectmode aria-pressed="${hubState.selectMode}">${hubState.selectMode ? 'Stop selecting' : 'Select tasks'}</button><button class="btn small" data-hub-selectall title="Select every task that matches the filters">Select all shown</button><button class="btn small" data-hub-export="csv" title="Download the tasks shown as a spreadsheet file">Export CSV</button><button class="btn small" data-hub-export="json" title="Download the tasks shown as JSON">Export JSON</button></div>`
       : '') +
-    `${facet('Priority', 'priorities', priorities.length > 1 || f.priorities.length ? priorities : [], f.priorities)}${facet('People', 'people', people, f.people)}${facet('Tags', 'tags', tags, f.tags)}${facet('Phases', 'phases', phases, f.phases)}${facet('Status', 'statuses', statuses, f.statuses)}</details>` +
     activeChips()
   );
 }
@@ -304,17 +411,6 @@ function projectBanner(d: ProjectDashboard, open: number, total: number): string
   return '';
 }
 
-/** The five numbers under the title. Each one is a button that shows what it counts. */
-function statsHtml(open: number, overdue: number, done: number, notes: number, followups: number): string {
-  const f = hubState.filters;
-  const onOpen = hubState.tab === 'tasks' && !f.due && !f.statuses.length && f.hideDone;
-  const onOverdue = hubState.tab === 'tasks' && f.due === 'overdue';
-  const onDone = hubState.tab === 'tasks' && !f.hideDone && f.statuses.includes('done');
-  const stat = (key: string, n: number, label: string, on: boolean, late = false): string =>
-    `<button class="pstat${late && n ? ' late' : ''}" data-hub-stat="${key}" aria-pressed="${on}" aria-label="Show the ${n} ${label}"><b>${n}</b><span>${label}</span></button>`;
-  return `<div class="pstats">${stat('open', open, 'open', onOpen)}${stat('overdue', overdue, 'overdue', onOverdue, true)}${stat('done', done, 'done', onDone)}${stat('notes', notes, 'notes', hubState.tab === 'notes')}${stat('followups', followups, 'follow-ups', false)}</div>`;
-}
-
 /** The lines tagged #followup in any note: they are not tasks, so they are listed on their own. */
 function followupsHtml(): string {
   const list = state.index ? listFollowUps(state.index) : [];
@@ -326,6 +422,26 @@ function followupsHtml(): string {
         `<li class="task" tabindex="-1"><div class="body"><div class="t">${esc(f.title)}</div><div class="chips"><button class="chip src mono" data-open="${esc(f.path)}" data-line="${f.line}" aria-label="Open ${esc(f.path)}">${esc(f.from)} · line ${f.line}</button></div></div></li>`,
     )
     .join('')}</ul>`;
+}
+
+/** The one line under a short row: date, people, tags, the project on All tasks, and a status that says something. */
+function metaOf(t: HubTask): string {
+  const bits: string[] = [];
+  if (t.due) bits.push(fmtDate(t.due));
+  for (const w of t.people) bits.push(`@${w}`);
+  for (const g of t.tags) bits.push(`#${g}`);
+  if (hubState.project === ALL_PROJECTS && t.projects?.length) bits.push(t.projects[0] as string);
+  if (t.status !== 'todo' && t.status !== 'done') bits.push(t.status);
+  if (t.item.sub?.total) bits.push(`${t.item.sub.done} of ${t.item.sub.total}`);
+  if (t.item.recur) bits.push(`↻ ${describeRecurrence(t.item.recur)}`);
+  return bits.map(esc).join(' · ');
+}
+
+/** "2d late" for an open task whose date has passed. */
+function ageOf(t: HubTask): { text: string; late: boolean } | undefined {
+  if (!t.due || t.status === 'done' || t.due >= today()) return undefined;
+  const days = Math.round((Date.parse(`${today()}T00:00:00Z`) - Date.parse(`${t.due}T00:00:00Z`)) / 86400000);
+  return { text: `${days}d late`, late: true };
 }
 
 function groupsHtml(visible: HubTask[]): string {
@@ -342,7 +458,11 @@ function groupsHtml(visible: HubTask[]): string {
       if (!collapsed) {
         h += `<ul class="tasks">${g.items
           .slice(0, limit)
-          .map((t) => row(t.item, { on: hubState.selected.has(t.item.id) }))
+          .map((t) =>
+            hubState.detailed
+              ? row(t.item, { on: hubState.selected.has(t.item.id) })
+              : simpleRow(t.item, metaOf(t), ageOf(t), { on: hubState.selected.has(t.item.id) }),
+          )
           .join('')}</ul>`;
         if (g.items.length > limit)
           h += `<button class="btn small" data-hub-more="${esc(key)}">Show ${Math.min(PAGE, g.items.length - limit)} more of ${g.items.length - limit}</button>`;
@@ -358,6 +478,8 @@ function bulkHtml(): string {
   let h = '';
   if (hubState.last && !p)
     h += `<div class="notice ok small" role="status">${esc(hubState.last.label)} <button class="btn small" data-hub-undo>Undo</button></div>`;
+  if (hubState.trashed)
+    h += `<div class="notice ok small" role="status">Moved “${esc(hubState.trashed.title)}” to the trash. <button class="btn small" data-hub-untrash>Undo</button></div>`;
   if (hubState.error) h += `<div class="notice err small">${esc(hubState.error)}</div>`;
   if (p) {
     const e = p.plan.edits;
@@ -465,11 +587,12 @@ function statusColumn(all: HubTask[]): string {
   const spark = Math.max(1, ...s.weekly);
   const panel =
     hubState.tab === 'tasks' && state.selected && state.index?.getTask(state.selected)
-      ? `<div class="hub-taskpanel" aria-live="polite">${taskPanelHtml()}</div>`
+      ? `<div class="hub-taskpanel" aria-live="polite"><button class="btn small hub-sheet-x" data-hub-sheet-close aria-label="Close task details">✕</button>${taskPanelHtml()}</div>`
       : '';
+  // A selected task fills the column with its detail; with none selected it shows the project's progress.
+  if (panel) return `<aside class="hub-status has-task" aria-label="Task details">${panel}</aside>`;
   return (
     '<aside class="hub-status" aria-label="Project status">' +
-    panel +
     `<details class="hub-status-d"${isNarrow() && !hubState.statusOpen ? '' : ' open'}><summary class="small">Status: ${s.done} of ${s.total} done${s.overdue ? `, ${s.overdue} overdue` : ''}</summary>` +
     `<h3>Progress</h3><div class="prog"><i style="width:${pct}%"></i></div><p class="small muted" style="margin:4px 0 8px">${s.done} of ${s.total} done${s.total ? ` (${pct}%)` : ''} · ${s.overdue} overdue</p>` +
     (s.phases.length
@@ -490,27 +613,6 @@ function statusColumn(all: HubTask[]): string {
     `<h3>Done per week <span class="muted" title="From the day a task was finished where it says so, otherwise from when its note was last changed">(estimate)</span></h3><div class="spark" aria-label="Tasks finished in each of the last six weeks">${s.weekly.map((n) => `<i style="height:${Math.max(6, Math.round((n / spark) * 100))}%" title="${n} done"></i>`).join('')}</div>` +
     '</details></aside>'
   );
-}
-
-function rail(path: string): string {
-  const idx = state.index;
-  if (!idx) return '';
-  const all = listProjects(idx);
-  const item = (p: (typeof all)[number]): string =>
-    `<button class="hub-rail-item${p.path === path ? ' on' : ''}" data-open-project="${esc(p.path)}" aria-current="${p.path === path}"><span>${p.parent ? '↳' : (p.number ?? '–')} ${esc(p.title)}</span><span class="n">${p.openTasks}</span></button>`;
-  const allOpen = tasksOf(idx, ALL_PROJECTS).filter((t) => t.status !== 'done').length;
-  const allBtn = `<button class="hub-rail-item${path === ALL_PROJECTS ? ' on' : ''}" data-open-project="${ALL_PROJECTS}" aria-current="${path === ALL_PROJECTS}"><span>All tasks</span><span class="n">${allOpen}</span></button>`;
-  return `<nav class="hub-rail" aria-label="Projects"><h3>Projects</h3>${allBtn}${all
-    .filter((p) => p.active)
-    .map(item)
-    .join('')}${
-    all.some((p) => !p.active)
-      ? `<h3 class="muted">Archived</h3>${all
-          .filter((p) => !p.active)
-          .map(item)
-          .join('')}`
-      : ''
-  }<button class="btn small" data-act="proj-back" style="margin-top:8px">All projects</button></nav>`;
 }
 
 export function html(path: string): string {
@@ -535,10 +637,11 @@ export function html(path: string): string {
     ['notes', `Notes ${d.notes.length}`],
     ['activity', 'Activity'],
   ];
+  const showPane = (hubState.tab === 'tasks' || hubState.tab === 'board' || hubState.tab === 'timeline') && !(hubState.paneHidden && !isNarrow());
   let body = '';
-  if (hubState.tab === 'tasks') body = `${toolbar(all)}<div id="hub-body">${groupsHtml(visible)}</div>`;
-  else if (hubState.tab === 'board') body = `${toolbar(all)}<div id="hub-body">${boardHtml(all)}</div>`;
-  else if (hubState.tab === 'timeline') body = `${toolbar(all)}<div id="hub-body" class="hub-scroll">${timelineHtml(all)}</div>`;
+  if (hubState.tab === 'tasks') body = `${toolbar(all, tabs)}<div id="hub-body">${groupsHtml(visible)}</div>`;
+  else if (hubState.tab === 'board') body = `${toolbar(all, tabs)}<div id="hub-body">${boardHtml(all)}</div>`;
+  else if (hubState.tab === 'timeline') body = `${toolbar(all, tabs)}<div id="hub-body" class="hub-scroll">${timelineHtml(all)}</div>`;
   else if (hubState.tab === 'notes')
     body = d.notes.length
       ? `<ul class="plain pnotes">${d.notes
@@ -557,12 +660,7 @@ export function html(path: string): string {
   }
   const log = logHtml();
   return (
-    `<div class="hubwrap${hubState.selectMode || hubState.selected.size ? ' sel-on' : ''}">${rail(path)}<div class="hub-main">` +
-    `<label class="hub-pick small${everything ? ' all' : ''}"><span class="muted">Project</span><select id="hub-pick" class="inp"><option value="${ALL_PROJECTS}"${everything ? ' selected' : ''}>All tasks</option>${listProjects(
-      idx,
-    )
-      .map((p) => `<option value="${esc(p.path)}"${p.path === path ? ' selected' : ''}>${p.parent ? '– ' : ''}${esc(p.title)}</option>`)
-      .join('')}</select><button class="btn small" data-act="proj-back">All projects</button></label>` +
+    `<div class="hubwrap${hubState.selectMode || hubState.selected.size ? ' sel-on' : ''}${showPane ? '' : ' nopane'}">${showPane ? filtersPane(all, path, visible.length) : ''}${hubState.flyout && showPane ? '<div class="fly-back" data-hub-pane></div>' : ''}<div class="hub-main">` +
     `<div class="ed-head${everything ? ' all' : ''}"><div style="min-width:0"><h2 class="title">${esc(d.title)}</h2><div class="meta">${me?.parent ? `Part of <button class="link" data-open-project="${esc(me.parent)}">${esc(idx.notes.get(me.parent)?.title ?? 'its project')}</button> · ` : ''}${everything ? 'Every project' : d.active ? 'Active' : `Archived${d.completed ? ` · closed ${esc(fmtDate(d.completed))}` : ''}`}${d.created ? ` · started ${esc(fmtDate(d.created))}` : ''}${d.lastChange ? ` · last change ${esc(localDateOf(d.lastChange) === today() ? 'today' : fmtDate(localDateOf(d.lastChange)))}` : ''}</div></div>` +
     (everything
       ? '</div>'
@@ -572,7 +670,6 @@ export function html(path: string): string {
     (everything ? '' : projectBanner(d, openCount, all.length) + subsHtml(path, dir, d.active)) +
     (everything ? `${quickBar('hub-quick').form}${quickBar('', true).below}` : '') +
     (d.summary && !everything ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
-    statsHtml(openCount, d.overdue, all.length - openCount, d.notes.length, d.followups.length) +
     `<div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button role="tab" class="tab${hubState.tab === id ? ' on' : ''}" data-hub-tab="${id}" aria-selected="${hubState.tab === id}">${esc(l)}</button>`).join('')}</div>` +
     `<div class="hub-content">${hubState.tab === 'tasks' || hubState.tab === 'board' ? `<div id="hub-bulk">${bulkHtml()}</div>` : ''}${body}</div>${log ? `<div class="plog" aria-live="polite">${log}</div>` : ''}</div>${statusColumn(all)}</div>`
   );
@@ -764,8 +861,44 @@ async function move(id: string, status: string): Promise<void> {
   render();
 }
 
+/** Move a task that is its own note to the trash, with Undo. A task line inside a note has no file of its own, so it has no such button. */
+async function trashTask(path: string): Promise<void> {
+  const { storage, index } = state;
+  if (!storage || !index) return;
+  try {
+    const plan = planDelete(index, path, new Date().toISOString().slice(0, 19).replace(/:/g, '-'));
+    const r = await deleteNote(storage, index, plan, { trash: true });
+    hubState.trashed = r.trashedTo ? { title: plan.title, trashPath: r.trashedTo, originalPath: path } : undefined;
+    state.selected = undefined;
+    state.context = undefined;
+  } catch (e) {
+    const friendly = writeFailure(e);
+    if (friendly) await rescan();
+    hubState.error = friendly ?? `Could not move it to the trash. ${errorMessage(e)}`;
+  }
+  render();
+}
+
+async function untrash(): Promise<void> {
+  const { storage, index } = state;
+  const t = hubState.trashed;
+  if (!storage || !index || !t) return;
+  try {
+    await restoreNote(storage, index, { trashPath: t.trashPath, originalPath: t.originalPath, stamp: '', size: 0 });
+    hubState.trashed = undefined;
+  } catch (e) {
+    hubState.error = `Could not put it back. ${errorMessage(e)}`;
+  }
+  render();
+}
+
 export async function click(target: HTMLElement): Promise<boolean> {
   const q = <T extends string>(attr: string): T | undefined => (target.closest(`[${attr}]`) as HTMLElement | null)?.getAttribute(attr) as T | undefined;
+  // A click anywhere but the View menu closes it.
+  if (hubState.viewOpen && !target.closest('.hub-viewmenu')) {
+    hubState.viewOpen = false;
+    document.querySelector('.hub-viewmenu')?.removeAttribute('open');
+  }
   const cardOpen = target.closest<HTMLElement>('[data-card-open]');
   if (cardOpen?.dataset.cardOpen && !target.closest('button')) {
     await openNote(cardOpen.dataset.cardOpen, { line: Number(cardOpen.dataset.line) });
@@ -785,10 +918,38 @@ export async function click(target: HTMLElement): Promise<boolean> {
     render();
     return true;
   }
-  const sum = target.closest<HTMLElement>('.hub-facets > summary');
-  if (sum) {
-    hubState.facetsOpen = !(sum.parentElement as HTMLDetailsElement).open; // the click is about to toggle it
+  const secSum = target.closest<HTMLElement>('.fsec > summary');
+  if (secSum) {
+    const d = secSum.parentElement as HTMLDetailsElement;
+    if (d.open) hubState.secs.delete(d.dataset.sec ?? '');
+    else hubState.secs.add(d.dataset.sec ?? ''); // the click is about to toggle it
     return false;
+  }
+  const viewSum = target.closest<HTMLElement>('.hub-viewmenu > summary');
+  if (viewSum) {
+    hubState.viewOpen = !(viewSum.parentElement as HTMLDetailsElement).open;
+    return false;
+  }
+  if (target.closest('[data-hub-pane]')) {
+    if (isNarrow()) hubState.flyout = !hubState.flyout;
+    else hubState.paneHidden = !hubState.paneHidden;
+    render();
+    return true;
+  }
+  if (target.closest('[data-hub-sheet-close]')) {
+    state.selected = undefined;
+    state.context = undefined;
+    render();
+    return true;
+  }
+  const trash = q('data-task-trash');
+  if (trash) {
+    await trashTask(trash);
+    return true;
+  }
+  if (target.closest('[data-hub-untrash]')) {
+    await untrash();
+    return true;
   }
   const sel = target.closest<HTMLInputElement>('[data-hub-select]');
   if (sel) {
@@ -822,26 +983,6 @@ export async function click(target: HTMLElement): Promise<boolean> {
   }
   if (q('data-hub-close-go') !== undefined || q('data-hub-reopen-go') !== undefined) {
     await setActive(q('data-hub-reopen-go') !== undefined);
-    return true;
-  }
-  const stat = q('data-hub-stat');
-  if (stat) {
-    // Each number shows the tasks or notes it counts, from the Tasks tab or the Notes tab.
-    hubState.filters = newFilters();
-    hubState.limits.clear();
-    hubState.selectMode = false;
-    hubState.selected.clear();
-    if (stat === 'notes' || stat === 'followups') hubState.tab = 'notes';
-    else {
-      hubState.tab = 'tasks';
-      if (stat === 'overdue') hubState.filters.due = 'overdue';
-      if (stat === 'done') {
-        hubState.filters.hideDone = false;
-        hubState.filters.statuses = ['done'];
-        hubState.toggled.add(`${hubState.groupBy}:done`); // the Done group starts folded; open it
-      }
-    }
-    render();
     return true;
   }
   const exp = q('data-hub-export');
@@ -891,6 +1032,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
   const tab = q<Tab>('data-hub-tab');
   if (tab) {
     hubState.tab = tab;
+    hubState.viewOpen = false;
     render();
     return true;
   }
@@ -903,7 +1045,7 @@ export async function click(target: HTMLElement): Promise<boolean> {
   }
   const view = q<QuickView>('data-hub-view');
   if (view) {
-    hubState.filters = filtersForView(hubState.filters, view);
+    hubState.filters = filtersForView(hubState.filters, currentView(hubState.filters) === view && view !== 'all' ? 'all' : view);
     hubState.limits.clear();
     render();
     return true;
@@ -983,15 +1125,27 @@ export function change(e: Event): boolean {
     return true;
   }
   if (t.id === 'hub-group') {
+    hubState.viewOpen = false;
+    document.querySelector('.hub-viewmenu')?.removeAttribute('open');
     hubState.groupBy = t.value as GroupBy;
     hubState.limits.clear();
     hubState.toggled.clear();
     refreshBody();
     return true;
   }
-  if (t.id === 'hub-hidedone') {
-    hubState.filters.hideDone = (t as HTMLInputElement).checked;
-    refreshBody();
+  if (t.id === 'hub-showdone') {
+    hubState.filters.hideDone = !(t as HTMLInputElement).checked;
+    render();
+    return true;
+  }
+  if (t.id === 'hub-detailed') {
+    hubState.detailed = (t as HTMLInputElement).checked;
+    try {
+      localStorage.setItem('plainfile-detailed-rows', hubState.detailed ? '1' : '0');
+    } catch {
+      /* a remembered choice is a convenience */
+    }
+    render();
     return true;
   }
   return false;

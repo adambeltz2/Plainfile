@@ -4,6 +4,24 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.8.0] - 2026-11-25
+
+### Changed
+- **A simpler Tasks screen, on a phone and on a wide screen.** The list comes first, and everything else is one tap away.
+  - **One filters panel** replaces the project rail, the eight view chips, the five tiles and the "More filters" drawer. On a wide screen it is docked on the left (**« Hide** folds it away); on a phone it is a flyout from the left with **Show N tasks** at the bottom. It holds Show done, Show (All, Late, Today, Upcoming, Inbox, No date, Follow-ups), Status, Project (with sub-projects), People, Tags, Priority, Phase, and Select and Export. Every choice shows a count.
+  - **Four date counts** (Overdue, Today, Upcoming, No date) sit above the list and filter it when tapped. Tap again to clear.
+  - **Search and View on one line.** The **View** menu has List, Board, Timeline, Notes and Activity, Group by, and **Detailed rows**.
+  - **Short rows.** A row is the title and one line (date, people, tags, project, a status that says something, "1 of 3", repeat), with "3d late" on the right when late. Detailed rows brings back the status, added date and file chips, and is remembered on this device.
+  - **Done is hidden by default**, with a **Show done** switch at the top of the filters panel. The Board still has its Done column.
+  - **The selected task** fills the right column on a wide screen (Reschedule, its lines in the file, Open note) and slides up as a sheet on a phone, where a tap now selects a task and Open note is in the sheet. The project's progress shows when no task is selected.
+  - The "All tasks" title block and project picker are gone (the filters panel has the project list), and the tab row is hidden on a phone (the View menu has the views).
+
+### Added
+- **Move to Trash for a task that is its own note**, in the selected task's panel, with Undo. A task line inside another note has no file of its own, so it has no such button.
+
+### Removed
+- The five tiles (open, overdue, done, notes, follow-ups) on the project hub: the date counts, the tab labels and Show done cover them. The Waiting quick view is now **waiting** under Status.
+
 ## [2.7.1] - 2026-11-24
 
 ### Changed

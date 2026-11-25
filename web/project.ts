@@ -136,7 +136,8 @@ export async function click(target: HTMLElement): Promise<boolean> {
   if (projectState.path && !hub.hubState.selectMode) {
     const row = target.closest<HTMLElement>('li.task[data-id]');
     if (row?.dataset.id && !target.closest('button, input, select, a, label')) {
-      if (target.closest('.t')) return openTaskRow(target);
+      // On a phone a tap selects the task and its sheet slides up (Open note is in the sheet); on a wide screen the title opens the note.
+      if (target.closest('.t') && !window.matchMedia('(max-width: 760px)').matches) return openTaskRow(target);
       await todayScreen.select(row.dataset.id);
       return true;
     }
@@ -167,11 +168,4 @@ export async function click(target: HTMLElement): Promise<boolean> {
 
 export const input = (e: Event): boolean => hub.input(e);
 
-export function change(e: Event): boolean {
-  const t = e.target as HTMLSelectElement;
-  if (t.id === 'hub-pick') {
-    openProject(t.value);
-    return true;
-  }
-  return hub.change(e);
-}
+export const change = (e: Event): boolean => hub.change(e);

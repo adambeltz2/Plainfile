@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { listFiles, localDate, openHubTools, openVault, readFile, readFileOrEmpty, writeFileExternally, nav, rescanApp, showView } from './helpers';
+import { listFiles, localDate, openFilterSection, openVault, readFile, readFileOrEmpty, writeFileExternally, nav, rescanApp, showView } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -41,7 +41,7 @@ test('the All view and a tag filter', async ({ page }) => {
   await nav(page, 'Tasks').click();
   await showView(page, 'All');
   await expect(page.locator('.grp', { hasText: 'No date' })).toHaveCount(0);
-  await openHubTools(page);
+  await openFilterSection(page, 'Tags');
   await page.getByRole('button', { name: /^#admin/ }).click();
   await expect(page.locator('.task')).toHaveCount(1);
   await page.getByRole('button', { name: 'Clear all' }).click();
@@ -212,7 +212,7 @@ test.describe('reschedule from Today', () => {
     await page.goto('/');
     const text = `- [ ] Pay rent due:${TODAY}\n- [ ] Other due:${TODAY}\n`;
     const dir = await openVault(page, { 'a.md': text });
-    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.chip').first().click(); // the date selects it, and shows Reschedule
+    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.tmeta').click(); // the date line selects it, and shows Reschedule
     const panel = page.getByRole('group', { name: 'Reschedule this task' });
     await panel.getByRole('button', { name: 'Tomorrow' }).click();
     await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent due:${localDate(1)}\n- [ ] Other due:${TODAY}\n`);
@@ -224,7 +224,7 @@ test.describe('reschedule from Today', () => {
   test('the date box sets any date', async ({ page }) => {
     await page.goto('/');
     const dir = await openVault(page, { 'a.md': `- [ ] Pay rent due:${TODAY}\n` });
-    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.chip').first().click();
+    await page.locator('li.task', { hasText: 'Pay rent' }).locator('.tmeta').click();
     await page.locator('[data-resched-pick]').fill(localDate(3));
     await expect.poll(() => readFileOrEmpty(page, dir, 'a.md')).toBe(`- [ ] Pay rent due:${localDate(3)}\n`);
   });
@@ -234,7 +234,7 @@ test('a task with checkboxes nested under it shows how many are done', async ({ 
   await page.goto('/');
   const T = localDate(0);
   await openVault(page, { 'a.md': `- [ ] Plan the trip due:${T}\n  - [x] Book flights\n  - [ ] Book hotel\n  - [ ] Pack\n` });
-  await expect(page.locator('li.task', { hasText: 'Plan the trip' }).locator('.chip', { hasText: '1 of 3' })).toBeVisible();
+  await expect(page.locator('li.task', { hasText: 'Plan the trip' }).locator('.tmeta')).toContainText('1 of 3');
 });
 
 test.describe('priority', () => {
@@ -252,7 +252,7 @@ test.describe('priority', () => {
   test('1, 2, 3 and 0 set and clear the priority of the selected task, changing one piece of the line', async ({ page }) => {
     const dir = await openVault(page, { 'work.md': NOTE });
     await nav(page, 'Today').click();
-    await page.locator('li.task', { hasText: 'Plain thing' }).locator('.chip').first().click(); // select it by its date
+    await page.locator('li.task', { hasText: 'Plain thing' }).locator('.tmeta').click(); // select it by its date
     await page.keyboard.press('2');
     await expect.poll(() => readFile(page, dir, 'work.md')).toBe(NOTE.replace('- [ ] Plain thing', '- [ ] (B) Plain thing'));
     await expect(page.locator('.diff .add')).toContainText('(B) Plain thing');
@@ -312,7 +312,7 @@ test('status:doing on a checkbox line shows as a status, stays out of the title,
   await nav(page, 'Today').click();
   const row = page.locator('li.task', { hasText: 'Draft the memo' });
   await expect(row.locator('.t')).toHaveText('Draft the memo');
-  await expect(row.locator('.chip', { hasText: /^doing$/ })).toBeVisible();
+  await expect(row.locator('.tmeta')).toContainText('doing');
   await page.getByRole('button', { name: 'Mark done: Draft the memo' }).click();
   await expect
     .poll(() => readFile(page, dir, 'work.md'))
@@ -330,7 +330,7 @@ test('on Tasks, the title opens the task note at its line, and the date selects 
     'other.md': '# Other\n',
   });
   await nav(page, 'Tasks').click();
-  await page.locator('li.task', { hasText: 'Draft the memo' }).locator('.chip').first().click();
+  await page.locator('li.task', { hasText: 'Draft the memo' }).locator('.tmeta').click();
   await expect(page.locator('.hub-taskpanel')).toContainText('work.md');
   await expect(page.locator('.hub-taskpanel')).toContainText('Reschedule');
   await expect(page.locator('.cm-content')).toHaveCount(0); // selecting does not leave the list
@@ -359,7 +359,7 @@ test.describe('repeating tasks', () => {
     const NOTE = `- [ ] Team sync due:${T} rec:1w\n- [ ] Other due:${T}\n`;
     const dir = await openVault(page, { 'a.md': NOTE });
     await nav(page, 'Today').click();
-    await expect(page.locator('li.task', { hasText: 'Team sync' }).locator('.chip', { hasText: 'every week' })).toBeVisible();
+    await expect(page.locator('li.task', { hasText: 'Team sync' }).locator('.tmeta')).toContainText('every week');
     await page.getByRole('button', { name: 'Mark done: Team sync' }).click();
     await expect
       .poll(() => readFile(page, dir, 'a.md'))
