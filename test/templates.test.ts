@@ -338,7 +338,7 @@ describe('the same title twice', () => {
   });
 });
 
-import { dateParts } from '../src/templates';
+import { dateParts, peopleList } from '../src/templates';
 describe('date variables', () => {
   it('gives the weekday, month, year, day, ISO week and a long date', () => {
     expect(dateParts('2026-11-23')).toEqual({ weekday: 'Monday', month: 'November', year: '2026', day: '23', week: '48', datelong: 'Monday 23 November 2026' });
@@ -372,5 +372,20 @@ describe('reuse', () => {
       '---\nplainfile:\n  name: Daily\n  folder: days\n  filename: "{{date}}"\n  reuse: true\n---\nbody\n',
     );
     expect(t?.reuse).toBe(true);
+  });
+});
+
+describe('names of people written by templates', () => {
+  it('files a person as a lower-case, hyphenated name and keeps the name as the title', () => {
+    const r = renderTemplate(byName('Person'), { title: 'Eric Zinn', company: '' }, '2026-11-25');
+    expect(r.path).toBe('people/eric-zinn.md');
+    expect(r.content).toContain('title: Eric Zinn\ntype: person');
+  });
+  it('writes the people of a meeting as lower-case hyphenated names, however they were typed', () => {
+    const r = renderTemplate(byName('Meeting'), { title: 'Sync', attendees: 'Eric Zinn, @Ken Moore,  dana ', project: '' }, '2026-11-25');
+    expect(r.content).toContain('people: [eric-zinn, ken-moore, dana]');
+  });
+  it('peopleList drops empty names and strips marks', () => {
+    expect(peopleList(' ,@Jo-Lee  Dawson,, Ünï Name ')).toBe('jo-lee-dawson, ünï-name');
   });
 });
