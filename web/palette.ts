@@ -31,6 +31,7 @@ const SCREENS: [string, string][] = [
   ['insight', 'Insight'],
   ['projects', 'Projects'],
   ['notes', 'Notes'],
+  ['journal', 'Journal'],
   ['explore', 'Explore'],
   ['search', 'Search'],
   ['health', 'Vault health'],

@@ -1,5 +1,6 @@
 import { fsaSupported, FsaStorage } from '../src/fsa-storage';
 import * as calendarScreen from './calendar';
+import * as journalScreen from './journal';
 import * as cloudUi from './cloud';
 import * as explore from './explore';
 import * as guide from './guide';
@@ -100,6 +101,7 @@ const NAV: { id: ScreenId; label: string }[] = [
   { id: 'tasks', label: 'Tasks' },
   { id: 'projects', label: 'Projects' },
   { id: 'notes', label: 'Notes' },
+  { id: 'journal', label: 'Journal' },
   { id: 'search', label: 'Search' },
 ];
 const NAV_MORE: { id: ScreenId; label: string }[] = [
@@ -210,7 +212,16 @@ function tabbar(hc: number): string {
     `<button class="tab-b" data-nav="${id}" aria-current="${isCurrent(id)}">${label}${id === 'tasks' && open ? ` <span class="badge" aria-label="${open} open task${open === 1 ? '' : 's'}">${open}</span>` : ''}</button>`;
   const sheet = moreOpen
     ? '<div class="more-back" data-act="more-close"><div class="more-sheet" role="dialog" aria-label="More">' +
-      ['search:Search', 'calendar:Calendar', 'people:People', 'review:Weekly review', 'insight:Insight', 'health:Vault health', 'guide:Cheat sheet']
+      [
+        'journal:Journal',
+        'search:Search',
+        'calendar:Calendar',
+        'people:People',
+        'review:Weekly review',
+        'insight:Insight',
+        'health:Vault health',
+        'guide:Cheat sheet',
+      ]
         .map((x) => {
           const [id, label] = x.split(':') as [ScreenId, string];
           const n = id === 'health' ? hc : id === 'tasks' ? open : 0;
@@ -287,6 +298,9 @@ function shell(): string {
       break;
     case 'calendar':
       h += calendarScreen.html();
+      break;
+    case 'journal':
+      h += journalScreen.html();
       break;
     case 'home':
       h += homeScreen.html();
@@ -419,6 +433,7 @@ app.addEventListener('click', (e) => {
     if (!state.index && (await cloudUi.click(target))) return;
     if (target.closest('[data-quick-note]') && state.index && !state.modal) return newmenu.quickNote();
     if (await palette.click(target)) return;
+    if (await journalScreen.click(target)) return;
     if (await reportUi.click(target)) return;
     const rp = target.closest<HTMLElement>('[data-report-open]');
     if (rp?.dataset.reportOpen) return reportUi.openReport(rp.dataset.reportOpen, rp.dataset.reportKind === 'book' ? 'book' : 'report');
@@ -610,6 +625,7 @@ app.addEventListener('input', (e) => {
   if (state.screen === 'people' && peopleScreen.input(e)) return;
   if (state.screen === 'review' && reviewScreen.input(e)) return;
   if (state.screen === 'calendar' && calendarScreen.input(e)) return;
+  if (state.screen === 'journal' && journalScreen.input(e)) return;
   if (todayScreen.input(e)) return;
   if (explore.input(e)) return;
   if (rename.input(e)) return;
@@ -627,6 +643,9 @@ app.addEventListener('change', (e) => {
   notes.change(e);
 });
 
+app.addEventListener('dblclick', (e) => {
+  if (state.screen === 'journal') void journalScreen.dblclick(e.target as HTMLElement);
+});
 app.addEventListener('dragstart', (e) => calendarScreen.dragStart(e));
 app.addEventListener('dragover', (e) => calendarScreen.dragOver(e));
 app.addEventListener('drop', (e) => calendarScreen.drop(e));

@@ -887,3 +887,37 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
   .hub-status.has-task .hub-taskpanel { border: 0; padding: 0; margin: 0; }
   .hub-status.has-task .hub-sheet-x { display: block; float: right; margin: 0 0 4px 8px; }
 }
+
+/* ---------- Journal screen ---------- */
+.jwrap { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; align-items: start; }
+.jpane { position: sticky; top: 8px; max-height: calc(100vh - 16px); }
+.jpane .inp { margin-bottom: 4px; }
+.jpane h4 { margin: 12px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); display: flex; justify-content: space-between; }
+.jmain { min-width: 0; }
+.calbar { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; }
+.calbar .title { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
+.calbar .grow { flex: 1; }
+.j-entries { display: none; }
+.jgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.jh { padding: 4px 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.jday { position: relative; min-height: 64px; padding: 6px 8px; text-align: left; vertical-align: top; background: none; color: inherit; font: inherit; border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); cursor: pointer; }
+.jday:hover { background: var(--soft); }
+.jday.out { color: var(--mute); background: var(--soft); }
+.jday.today b { border: 1.5px solid var(--fg); border-radius: 999px; padding: 0 6px; }
+.jday.sel { background: var(--fg); color: var(--bg); }
+.jday .jdot { position: absolute; right: 8px; top: 9px; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.jday:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
+.jday.sel:focus-visible { outline-color: var(--bg); }
+.jbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 0; }
+.jbar h3 { margin: 0; font-size: 15px; }
+.chipq { border: 1px solid currentColor; border-radius: 999px; padding: 0 7px; font-size: 11px; font-weight: 400; }
+.home-card.jr-card { grid-column: 1 / -1; border: 2px solid var(--fg); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.home-card.jr-card h3 { margin: 0; }
+@media (max-width: 760px) {
+  .jwrap { grid-template-columns: minmax(0, 1fr); }
+  .jpane { position: static; }
+  .jpane:not(.fly) { display: none; }
+  .j-entries { display: inline-block; }
+  .jday { min-height: 48px; padding: 4px 5px; }
+  .jh { padding: 4px 3px; font-size: 10px; }
+}

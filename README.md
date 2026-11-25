@@ -55,6 +55,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 | **Project hub**: tasks grouped and filtered, sub-projects, progress, tabs and bulk changes | ![Project hub](docs/screenshots/project.png) |
 | **Project board**: the same tasks by status columns | ![Project board](docs/screenshots/project-board.png) |
 | **Calendar**: tasks and dated notes by day, drag to reschedule | ![Calendar](docs/screenshots/calendar.png) |
+| **Journal**: a month calendar with a dot on every day that has a journal, a list of dates, and one click to open (or start) a day | ![Journal](docs/screenshots/journal.png) |
 | **Notes**: a live editor with X-ray, a properties panel, history and focus mode | ![Notes](docs/screenshots/notes.png) |
 | **Notes home**: pinned, modified today, recent and folders | ![Notes home](docs/screenshots/notes-home.png) |
 | **⋯ More menu**: move, rename, duplicate, pin, delete | ![More menu](docs/screenshots/notes-menu.png) |
