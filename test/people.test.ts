@@ -70,3 +70,19 @@ describe('person notes without a type', () => {
     expect(ken.notes).toBe(1); // the 1x1 that names them, not their own note
   });
 });
+
+describe('one person however the name was written', () => {
+  it('joins a person note, a people: value with spaces and capitals, and an @mention with hyphens', async () => {
+    const index = new VaultIndex(
+      new MemoryStorage({
+        'people/eric-zinn.md': '---\ntitle: Eric Zinn\ntype: person\n---\n',
+        'notes/a.md': '---\ntitle: A\npeople: [Eric Zinn]\n---\n',
+        'b.md': '- [ ] Call @eric-zinn due:2026-11-25\n- [ ] Send notes @Eric-Zinn\n',
+      }),
+    );
+    await index.scan();
+    const p = buildPeople(index, TODAY);
+    expect(p.people.map((x) => [x.key, x.name, x.open])).toEqual([['eric-zinn', 'Eric Zinn', 2]]);
+    expect(p.resolve('Eric Zinn')).toBe('eric-zinn');
+  });
+});

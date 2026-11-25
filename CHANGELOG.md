@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.8.3] - 2026-11-25
+
+### Changed
+- **People are written as lower-case, hyphenated names again.** A new person note from the Person template is filed as `people/eric-zinn.md` and keeps `title: Eric Zinn`, so the file name is the same form an `@mention` takes. The people of a new meeting (`Eric Zinn, @Ken Moore`) are written as `people: [eric-zinn, ken-moore]`. Matching never depended on this (a person is found by their name with case, spaces and hyphens ignored), so existing files with spaces keep working; this only keeps what the app writes tidy and easy to use in other tools.
+
 ## [2.8.2] - 2026-11-25
 
 ### Fixed

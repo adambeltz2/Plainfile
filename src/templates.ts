@@ -1,6 +1,7 @@
 import { parse as parseYaml } from 'yaml';
 import type { VaultIndex } from './index';
 import { listProjects } from './projects';
+import { kindForPrompt } from './vocabulary';
 import { ExistsError, type VaultStorage } from './storage';
 
 /**
@@ -182,7 +183,7 @@ export const BUILT_IN: Template[] = [
     name: 'Person',
     description: 'Contact notes. Link to it from other notes with [[name]].',
     folder: 'people',
-    filename: '{{title}}',
+    filename: '{{title|slug}}',
     prompts: [
       { id: 'title', label: 'Name', default: '' },
       { id: 'company', label: 'Company', default: '' },
@@ -361,7 +362,29 @@ function clean(name: string): string {
 }
 
 /** What a template would create, without writing anything. Used for the live preview. */
-export function renderTemplate(t: Template, values: Record<string, string>, today: string): Rendered {
+/**
+ * A list of names as a note can carry them in `people:`: `Eric Zinn, @Ken Moore` becomes `eric-zinn, ken-moore`. The same
+ * lower-case, hyphenated form is what an `@mention` can be (it cannot hold a space), so a name written one way in one
+ * file and another way in a second file still means one person.
+ */
+export function peopleList(v: string): string {
+  return v
+    .split(',')
+    .map((x) =>
+      x
+        .trim()
+        .replace(/^@/, '')
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, '-')
+        .replace(/^-+|-+$/g, ''),
+    )
+    .filter(Boolean)
+    .join(', ');
+}
+
+export function renderTemplate(t: Template, raw0: Record<string, string>, today: string): Rendered {
+  const values = { ...raw0 };
+  for (const p of t.prompts) if (kindForPrompt(p.id) === 'people' && values[p.id]) values[p.id] = peopleList(values[p.id] as string);
   const folder = expand(t.folder, values, today).replace(/^\/+|\/+$/g, '');
   const name = clean(expand(t.filename, values, today)) || 'untitled';
   const fm = expand(t.fm, values, today);
