@@ -270,7 +270,7 @@ function viewMenu(tabs: [Tab, string][]): string {
         ([id]) => `<button class="vm-item${hubState.tab === id ? ' on' : ''}" data-hub-tab="${id}" aria-pressed="${hubState.tab === id}">${names[id]}</button>`,
       )
       .join('') +
-    '</div>' +
+    '<button class="vm-item" data-nav="calendar">Calendar →</button></div>' +
     (tasksTab
       ? `<label class="vm-row"><span>Group by</span><select id="hub-group" class="inp" aria-label="Group by">${GROUPS.map(([v, l]) => `<option value="${v}"${v === hubState.groupBy ? ' selected' : ''}>${l}</option>`).join('')}</select></label>` +
         `<label class="vm-row check"><input type="checkbox" id="hub-detailed"${hubState.detailed ? ' checked' : ''}> Detailed rows</label>`
@@ -670,7 +670,9 @@ export function html(path: string): string {
     (everything ? '' : projectBanner(d, openCount, all.length) + subsHtml(path, dir, d.active)) +
     (everything ? `${quickBar('hub-quick').form}${quickBar('', true).below}` : '') +
     (d.summary && !everything ? `<p class="psummary">${esc(d.summary)}</p>` : '') +
+    '<div class="tabsrow">' +
     `<div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button role="tab" class="tab${hubState.tab === id ? ' on' : ''}" data-hub-tab="${id}" aria-selected="${hubState.tab === id}">${esc(l)}</button>`).join('')}</div>` +
+    '<button class="tab-link" data-nav="calendar" title="Tasks and dated notes by day">Calendar →</button></div>' +
     `<div class="hub-content">${hubState.tab === 'tasks' || hubState.tab === 'board' ? `<div id="hub-bulk">${bulkHtml()}</div>` : ''}${body}</div>${log ? `<div class="plog" aria-live="polite">${log}</div>` : ''}</div>${statusColumn(all)}</div>`
   );
 }

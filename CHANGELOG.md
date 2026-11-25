@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.10.1] - 2026-11-25
+
+### Added
+- **A Calendar link on the Tasks screen**, at the right of the tab row (Tasks, Board, Timeline, Notes, Activity) and in the View menu, so the calendar is one click from your task list. On a phone it is in the View menu.
+
 ## [2.10.0] - 2026-11-25
 
 ### Added
