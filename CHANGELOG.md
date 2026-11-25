@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.8.1] - 2026-11-25
+
+### Fixed
+- **The "What changed on disk" readout no longer follows you around.** After ticking a task or changing a date, the readout stayed on screen when you tapped a date count, picked a filter, switched view or changed Group by or Show done, and when you moved to another screen. It now clears as soon as you look at something else, and still shows right after the change itself.
+
 ## [2.8.0] - 2026-11-25
 
 ### Changed

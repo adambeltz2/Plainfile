@@ -85,6 +85,26 @@ test.describe('the Tasks screen: filters panel, View menu, short rows', () => {
   });
 });
 
+test('the readout of the last change goes when you change view, filter or screen', async ({ page }) => {
+  await openVault(page, { 'tasks/Thing.md': `---\ntitle: Thing\nstatus: todo\ndue: ${localDate(1)}\n---\n` });
+  await nav(page, 'Tasks').click();
+  await showView(page, 'All');
+  await page.getByRole('button', { name: 'Mark done: Thing' }).click();
+  await expect(page.locator('.plog .diff')).toBeVisible(); // what changed on disk
+  await page
+    .getByRole('group', { name: 'Dates' })
+    .getByRole('button', { name: /^Upcoming/ })
+    .click();
+  await expect(page.locator('.plog')).toHaveCount(0);
+  await showView(page, 'All');
+  await page.locator('#hub-showdone').check();
+  await page.getByRole('button', { name: 'Mark not done: Thing' }).click();
+  await expect(page.locator('.plog .diff')).toBeVisible();
+  await nav(page, 'Home').click();
+  await nav(page, 'Tasks').click();
+  await expect(page.locator('.plog')).toHaveCount(0);
+});
+
 test.describe('the selected task', () => {
   test('a task that is its own note can go to the trash, with Undo; a task line in a note cannot', async ({ page }) => {
     const dir = await openVault(page, FILES);

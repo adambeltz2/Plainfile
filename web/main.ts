@@ -115,6 +115,7 @@ let hdrMenuOpen = false;
 
 async function go(screen: ScreenId, view?: QuickView): Promise<void> {
   await notes.flush();
+  state.log = undefined; // the readout of the last change belongs to the screen it was made on
   // Tasks is the project hub over everything, and the place to start the day: it opens on Today. The old Today screen is that view.
   if (screen === 'today') return projectScreen.openTasks('today');
   if (screen === 'tasks') return projectScreen.openTasks(view ?? 'today');
