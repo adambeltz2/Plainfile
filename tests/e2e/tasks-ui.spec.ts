@@ -169,3 +169,14 @@ test('the browser tab names the note, project or screen you are on', async ({ pa
   await page.locator('.pcard .pbtn').first().click();
   await expect(page).toHaveTitle('Website relaunch · Plainfile');
 });
+
+test('Tasks has a link to the Calendar, in the tab row and in the View menu', async ({ page }) => {
+  await openVault(page, FILES);
+  await nav(page, 'Tasks').click();
+  await page.getByRole('button', { name: 'Calendar →' }).first().click();
+  await expect(page.locator('.cal-bar')).toBeVisible();
+  await nav(page, 'Tasks').click();
+  await openViewMenu(page);
+  await page.locator('.hub-viewbox').getByRole('button', { name: 'Calendar →' }).click();
+  await expect(page.locator('.cal-bar')).toBeVisible();
+});
