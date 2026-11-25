@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.8.2] - 2026-11-25
+
+### Fixed
+- **Search no longer lists the same result twice.** A task that is its own note showed up once as the note and once as the task. It now shows once, as the task (with its tick box and date). A note that matches only by its body text still shows as a note.
+
 ## [2.8.1] - 2026-11-25
 
 ### Fixed

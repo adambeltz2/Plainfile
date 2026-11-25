@@ -159,10 +159,19 @@ export function search(index: VaultIndex, q: string, today: string = localToday(
   for (const n of index.notes.values()) {
     if (noteMatches(n, p)) hits.push({ kind: 'note', path: n.path, title: n.title, snippet: snippet(n.text, p.words), tags: n.tags, mtime: n.mtime });
   }
+  // A task that is its own note would be listed twice: as the note and as the task. Keep the task, which has the tick box and the
+  // date. A note that matched only by its body has no task hit, so it stays.
+  const taskNotes = new Set<string>();
   for (const t of index.tasks()) {
     if (taskMatches(t, index.notes.get(t.path), p)) {
       hits.push({ kind: 'task', path: t.path, title: t.title, line: t.line, tags: t.tags, due: t.due, done: t.done, id: t.id });
+      if (t.kind === 'file') taskNotes.add(t.path);
     }
+  }
+  if (taskNotes.size) {
+    const keep = hits.filter((h) => h.kind !== 'note' || !taskNotes.has(h.path));
+    hits.length = 0;
+    hits.push(...keep);
   }
   // Asking about when puts the newest first.
   if (p.modified.length) hits.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0));
