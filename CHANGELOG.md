@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.10.0] - 2026-11-25
+
+### Added
+- **The browser tab names where you are.** With a note open the tab reads the note's title (and follows a rename), in a project it reads the project, and elsewhere it reads the screen, for example "Tasks · Plainfile".
+
+### Fixed
+- **A journal entry is no longer listed as a meeting.** On a person's page, a journal note that names them now appears under its own **Journal** heading, newest first. **Meetings** is for meetings (dated notes that are not journals), and the meetings count at the top no longer includes journal entries.
+
 ## [2.9.0] - 2026-11-25
 
 ### Added

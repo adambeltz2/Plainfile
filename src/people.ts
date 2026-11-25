@@ -3,7 +3,7 @@ import { allTasks, daysSince } from './home';
 import type { HubTask } from './hub';
 import type { VaultIndex } from './index';
 import type { Note } from './parse';
-import { isPersonNote } from './note-kind';
+import { isPersonNote, noteKind } from './note-kind';
 
 /**
  * People, worked out from your own notes: `@dana` on a task, `people:` or `attendees:` in frontmatter, and notes
@@ -120,8 +120,10 @@ export interface PersonPage {
   open: HubTask[];
   waiting: HubTask[];
   done: number;
-  /** Notes with a date (meetings) that name them, newest first. */
+  /** Notes with a date (meetings) that name them, newest first. Journal entries are listed on their own. */
   meetings: Note[];
+  /** Journal entries that name them, newest first. */
+  journals: Note[];
   /** Other notes that name them, newest first. */
   notes: Note[];
   /** Whole days since they last appeared in a note, if ever. */
@@ -134,7 +136,12 @@ export function personPage(p: PeopleIndex, key: string, today: string): PersonPa
   const ts = p.tasks.get(key) ?? [];
   const ms = (p.mentions.get(key) ?? []).filter((n) => !n.fileTask).sort((a, b) => b.mtime - a.mtime);
   const dated = (n: Note): boolean => !!normalizeDate(n.frontmatter.date);
-  const meetings = ms.filter(dated).sort((a, b) => (normalizeDate(b.frontmatter.date) ?? '').localeCompare(normalizeDate(a.frontmatter.date) ?? ''));
+  const isJournal = (n: Note): boolean => noteKind(n) === 'journal';
+  const when = (n: Note): string => normalizeDate(n.frontmatter.date) ?? n.name;
+  const journals = ms.filter(isJournal).sort((a, b) => when(b).localeCompare(when(a)));
+  const meetings = ms
+    .filter((n) => dated(n) && !isJournal(n))
+    .sort((a, b) => (normalizeDate(b.frontmatter.date) ?? '').localeCompare(normalizeDate(a.frontmatter.date) ?? ''));
   const last = person.lastSeen ? new Date(person.lastSeen).toISOString().slice(0, 10) : undefined;
   return {
     person,
@@ -144,7 +151,8 @@ export function personPage(p: PeopleIndex, key: string, today: string): PersonPa
     waiting: ts.filter((t) => t.status === 'waiting'),
     done: ts.filter((t) => t.status === 'done').length,
     meetings,
-    notes: ms.filter((n) => !dated(n)),
+    journals,
+    notes: ms.filter((n) => !dated(n) && !isJournal(n)),
     quietDays: daysSince(last, today),
   };
 }

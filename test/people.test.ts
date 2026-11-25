@@ -86,3 +86,22 @@ describe('one person however the name was written', () => {
     expect(p.resolve('Eric Zinn')).toBe('eric-zinn');
   });
 });
+
+describe('journal entries are not meetings', () => {
+  it('lists a journal that names someone under Journal, and keeps meetings to meetings', async () => {
+    const index = new VaultIndex(
+      new MemoryStorage({
+        'people/dana.md': '---\ntitle: Dana Ortiz\ntype: person\n---\n',
+        'journal/2026-11-25.md': '---\ntitle: 2026-11-25\ntype: journal\ndate: 2026-11-25\n---\nTalked to @dana.\n',
+        'journal/2026-11-24.md': 'Notes: @dana was away.\n',
+        'meetings/Kickoff.md': '---\ntitle: Kickoff\ntype: meeting\ndate: 2026-11-17\nattendees: [dana]\n---\n',
+      }),
+    );
+    await index.scan();
+    const p = buildPeople(index, TODAY);
+    const page = personPage(p, 'dana', TODAY)!;
+    expect(page.meetings.map((n) => n.title)).toEqual(['Kickoff']);
+    expect(page.journals.map((n) => n.path)).toEqual(['journal/2026-11-25.md', 'journal/2026-11-24.md']);
+    expect(page.notes).toEqual([]);
+  });
+});

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { listFiles, localDate, nav, openVault, openViewMenu, readFile, showView } from './helpers';
+import { listFiles, localDate, nav, noteItem, openVault, openViewMenu, readFile, showView } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -149,4 +149,23 @@ test('search lists a task that is its own note once, as the task', async ({ page
   await expect(page.locator('li.res')).toHaveCount(1);
   await expect(page.locator('li.res .mini-cb')).toBeVisible(); // the task, with its tick box
   await expect(page.getByText(/^1 result in /)).toBeVisible();
+});
+
+test('the browser tab names the note, project or screen you are on', async ({ page }) => {
+  await openVault(page, {
+    'notes/pricing-research.md': '---\ntitle: Pricing research\n---\nBody\n',
+    'projects/site/index.md': '---\ntitle: Website relaunch\ntype: project\nactive: true\n---\n- [ ] A task\n',
+  });
+  await expect(page).toHaveTitle('Tasks · Plainfile'); // openVault lands on Tasks
+  await nav(page, 'Home').click();
+  await expect(page).toHaveTitle('Home · Plainfile');
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Pricing research')).click();
+  await expect(page).toHaveTitle('Pricing research · Plainfile');
+  await page.locator('#note-title').fill('Pricing analysis');
+  await page.locator('#note-title').press('Enter');
+  await expect(page).toHaveTitle('Pricing analysis · Plainfile');
+  await nav(page, 'Projects').click();
+  await page.locator('.pcard .pbtn').first().click();
+  await expect(page).toHaveTitle('Website relaunch · Plainfile');
 });

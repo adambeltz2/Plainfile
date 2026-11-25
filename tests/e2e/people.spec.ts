@@ -34,6 +34,19 @@ test.describe('People', () => {
     await expect(rows.first()).toContainText('sam'); // Z to A
   });
 
+  test('a journal entry that names someone is listed under Journal, not Meetings', async ({ page }) => {
+    await openVault(page, {
+      'people/dana.md': '---\ntitle: Dana Ortiz\ntype: person\n---\n',
+      'journal/2026-11-25.md': '---\ntitle: 2026-11-25\ntype: journal\ndate: 2026-11-25\n---\nTalked to @dana.\n',
+      'meetings/Kickoff.md': `---\ntitle: Kickoff\ntype: meeting\ndate: ${localDate(-4)}\nattendees: [dana]\n---\n`,
+    });
+    await nav(page, 'People').click();
+    await page.locator('.portfolio').getByRole('button', { name: 'Dana Ortiz' }).click();
+    await expect(page.locator('.psec', { hasText: 'Meetings' })).toContainText('Kickoff');
+    await expect(page.locator('.psec', { hasText: 'Meetings' })).not.toContainText('2026-11-25');
+    await expect(page.locator('.psec', { hasText: 'Journal' })).toContainText('2026-11-25');
+  });
+
   test('a person page has their open tasks (tick one), who you wait on, meetings and notes', async ({ page }) => {
     const dir = await openVault(page, FILES);
     await nav(page, 'People').click();
