@@ -94,7 +94,8 @@ function barHtml(list: Journal[]): string {
     );
   }
   if (j) {
-    return `${err}<div class="jbar card">${`<div>${title}<p class="mono small muted" style="margin:2px 0 0">${esc(j.path)}</p></div>`}<div class="row-gap"><button class="btn primary" data-journal-open="${esc(j.path)}">Open journal</button></div></div>`;
+    // A day with a journal opens it when picked; this bar is only here if it was reached another way (Today, the month arrows).
+    return `${err}<div class="jbar card"><div>${title}<p class="mono small muted" style="margin:2px 0 0">${esc(j.path)}</p></div><div class="row-gap"><button class="btn primary" data-journal-open="${esc(j.path)}">Open journal</button></div></div>`;
   }
   return (
     `${err}<div class="jbar card"><div>${title}<p class="muted small" style="margin:2px 0 0">No journal for this date.</p></div>` +
@@ -138,7 +139,11 @@ export async function click(target: HTMLElement): Promise<boolean> {
   const pick = q('data-j-pick') ?? q('data-j-day');
   if (pick) {
     Object.assign(journalState, { selected: pick, month: pick, confirm: '', error: '', flyout: false });
-    render();
+    // A day with a journal opens it. A day without one is selected, and the bar offers to make it.
+    const idx = state.index;
+    const j = idx ? journalFor(listJournals(idx), pick) : undefined;
+    if (j) await openNote(j.path);
+    else render();
     return true;
   }
   const month = q('data-j-month');
@@ -177,15 +182,6 @@ export async function click(target: HTMLElement): Promise<boolean> {
     return true;
   }
   return false;
-}
-
-/** Double-clicking a date in the list opens its journal. */
-export async function dblclick(target: HTMLElement): Promise<void> {
-  const d = target.closest<HTMLElement>('[data-j-pick], [data-j-day]');
-  const date = d?.dataset.jPick ?? d?.dataset.jDay;
-  const idx = state.index;
-  const j = date && idx ? journalFor(listJournals(idx), date) : undefined;
-  if (j) await openNote(j.path);
 }
 
 export function input(e: Event): boolean {

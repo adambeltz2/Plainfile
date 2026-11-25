@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.12.1] - 2026-11-25
+
+### Changed
+- **Calendar is in the header and Journal is under More.** The tab between Notes and Search is now Calendar; Journal moved to the More menu (the Journal button on Home is unchanged).
+- **One click opens a journal.** Clicking a date in the Journal list, or a day with a dot in the calendar, opens that journal straight away. A day with no journal is still selected first, with the option to make it.
+
 ## [2.12.0] - 2026-11-25
 
 ### Added

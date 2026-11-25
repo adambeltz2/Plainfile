@@ -34,9 +34,9 @@ test.describe('the header on a wide screen', () => {
   test('shows the everyday tabs, with the rest under More', async ({ page }) => {
     await openVault(page, { 'a.md': '# A\n' }, true, 'home');
     const nav = page.locator('.nav');
-    for (const t of ['Home', 'Tasks', 'Projects', 'Notes', 'Search']) await expect(nav.getByRole('button', { name: t, exact: true })).toBeVisible();
+    for (const t of ['Home', 'Tasks', 'Projects', 'Notes', 'Calendar', 'Search']) await expect(nav.getByRole('button', { name: t, exact: true })).toBeVisible();
     await expect(nav.getByRole('button', { name: 'Today', exact: true })).toHaveCount(0); // it is the Tasks tab's first view now
-    for (const t of ['Calendar', 'People', 'Insight']) await expect(nav.getByRole('button', { name: t, exact: true })).toHaveCount(0);
+    for (const t of ['Journal', 'People', 'Insight']) await expect(nav.getByRole('button', { name: t, exact: true })).toHaveCount(0);
   });
 
   test('More opens a menu, goes to a screen, marks it current, and closes on Escape or an outside click', async ({ page }) => {
@@ -50,10 +50,10 @@ test.describe('the header on a wide screen', () => {
     await page.locator('h1').click(); // away from the menu
     await expect(page.locator('.nav-menu')).toHaveCount(0);
     await more.click();
-    await page.locator('.nav-menu').getByRole('menuitem', { name: 'Calendar' }).click();
+    await page.locator('.nav-menu').getByRole('menuitem', { name: 'Journal' }).click();
     await expect(page.locator('.nav-menu')).toHaveCount(0);
     await expect(more).toHaveAttribute('aria-current', 'true');
-    await expect(page.locator('.cal-bar')).toBeVisible();
+    await expect(page.locator('.jgrid')).toBeVisible();
   });
 });
 
