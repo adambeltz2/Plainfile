@@ -471,7 +471,7 @@ function applyLink(insert: string) {
   };
 }
 
-const SCALAR_KEYS: Record<string, SuggestKind> = { project: 'projects', type: 'types', status: 'statuses' };
+const SCALAR_KEYS: Record<string, SuggestKind> = { project: 'projects', type: 'types', status: 'statuses', company: 'companies' };
 const PRIORITY_OPTIONS = ['A', 'B', 'C'].map((l) => ({ label: l, detail: l === 'A' ? 'first' : undefined, type: 'keyword' }));
 const LIST_KEYS: Record<string, SuggestKind> = { tags: 'tags', people: 'people', attendees: 'people' };
 
@@ -552,7 +552,8 @@ function suggestSource(s: Suggester, today: () => string): CompletionSource {
     if (key === 'due' && !rest.includes('[')) return { from: ctx.pos - rest.length, options: dueOptions(today()), validFor: /^[A-Za-z0-9+-]*$/ };
     if (key === 'priority' && !rest.includes('[')) return { from: ctx.pos - rest.length, options: PRIORITY_OPTIONS, validFor: /^[A-Za-z]*$/ };
     const scalar = SCALAR_KEYS[key];
-    if (scalar && !rest.includes('[')) return { from: ctx.pos - rest.length, options: options(scalar), validFor: /^[^\s,\]]*$/ };
+    if (scalar && !rest.includes('['))
+      return { from: ctx.pos - rest.length, options: options(scalar), validFor: scalar === 'companies' ? /^[^\]\n]*$/ : /^[^\s,\]]*$/ }; // a company can have spaces
     const list = LIST_KEYS[key];
     if (list) {
       const token = /(?:\[|,)\s*([^,\]]*)$/.exec(rest);

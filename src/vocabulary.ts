@@ -111,7 +111,7 @@ export function valueNames(index: VaultIndex, key: string): Suggestion[] {
 }
 
 /** What the type-ahead offers for a field kind. */
-export type SuggestKind = 'people' | 'tags' | 'projects' | 'types' | 'statuses';
+export type SuggestKind = 'people' | 'tags' | 'projects' | 'types' | 'statuses' | 'companies';
 export function suggestionsFor(index: VaultIndex, kind: SuggestKind): Suggestion[] {
   switch (kind) {
     case 'people':
@@ -124,6 +124,8 @@ export function suggestionsFor(index: VaultIndex, kind: SuggestKind): Suggestion
       return valueNames(index, 'type');
     case 'statuses':
       return valueNames(index, 'status');
+    case 'companies':
+      return valueNames(index, 'company'); // as written, with its capitals and spaces
   }
 }
 
@@ -142,6 +144,7 @@ export function kindForPrompt(id: string): SuggestKind | undefined {
   const k = id.toLowerCase();
   if (/^(project|projects)$/.test(k)) return 'projects';
   if (/^(people|person|attendees|owner|assignee|who|with)$/.test(k)) return 'people';
+  if (/^(company|companies|organi[sz]ation|org)$/.test(k)) return 'companies';
   if (/^(tags?|labels?)$/.test(k)) return 'tags';
   if (k === 'type') return 'types';
   if (k === 'status') return 'statuses';

@@ -108,3 +108,22 @@ describe('suggestions', () => {
     expect(kindForPrompt('goal')).toBeUndefined();
   });
 });
+
+describe('companies', () => {
+  it('offers the companies already written in notes, as written, most used first', async () => {
+    const { VaultIndex: V } = await import('../src/index');
+    const { MemoryStorage } = await import('../src/memory-storage');
+    const i = new V(
+      new MemoryStorage({
+        'people/a.md': '---\ntitle: A\ntype: person\ncompany: Acme Corp\n---\n',
+        'people/b.md': '---\ntitle: B\ntype: person\ncompany: Acme Corp\n---\n',
+        'people/c.md': '---\ntitle: C\ntype: person\ncompany: BMK\n---\n',
+        'x.md': 'no company',
+      }),
+    );
+    await i.scan();
+    expect(suggestionsFor(i, 'companies').map((x) => x.name)).toEqual(['Acme Corp', 'BMK']);
+    expect(kindForPrompt('company')).toBe('companies');
+    expect(kindForPrompt('Organization')).toBe('companies');
+  });
+});
