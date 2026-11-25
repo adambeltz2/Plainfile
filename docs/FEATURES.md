@@ -71,7 +71,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Take your notes out:** ⋯ More has Copy as formatted text, Download as Word (with the note's pictures), markdown or a web page, and Print or save as PDF. On the Tasks tab and in a project, Export CSV or JSON downloads the tasks shown. Moving or renaming a note keeps its version history.
 - **Insert image…** (⋯ More) picks an image file, for phones where pasting one is awkward.
   relative to the note and shown inline.
-- **Type-ahead:** `[[` links, `#` tags, `@` people, `due:` days and frontmatter values while you type.
+- **Type-ahead:** `[[` links, `#` tags, `@` people, `due:` days and frontmatter values while you type. A company you have used before is offered in the New person form and after `company:` in a note, written as it was before (capitals and spaces kept).
 - **People on any note:** the Properties panel has a People row beside Projects: type a name (spaces are fine), pick from the people you already have, add or remove with one click. Only the `people:` line changes.
 - **Projects on any note:** add a note to one or more projects from its properties, and it shows on
   each project's dashboard with its tasks.

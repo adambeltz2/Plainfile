@@ -4,7 +4,7 @@ import { esc } from './util';
 
 /**
  * A small dropdown for text fields: tags, people, projects and so on that already exist. A field opts
- * in with data-suggest="people|tags|projects|types|statuses". It offers matches for the word being
+ * in with data-suggest="people|tags|projects|types|statuses|companies". It offers matches for the word being
  * typed, leaves out ones already in the field, and never takes over Enter unless you have moved onto
  * a suggestion, so Enter still submits a form.
  */
@@ -26,8 +26,8 @@ let quiet = false;
 
 function tokenAt(input: HTMLInputElement): { start: number; end: number; token: string } {
   const v = input.value;
-  // A box that takes one name (a person, with a space in it) is matched as a whole, not word by word.
-  if (input.dataset.suggestOne !== undefined) return { start: 0, end: v.length, token: v };
+  // A box that takes one name (a person, or a company, with a space in it) is matched as a whole, not word by word.
+  if (input.dataset.suggestOne !== undefined || input.dataset.suggest === 'companies') return { start: 0, end: v.length, token: v };
   const pos = input.selectionStart ?? v.length;
   let s = pos;
   while (s > 0 && !/[\s,]/.test(v[s - 1] ?? '')) s--;
@@ -71,7 +71,7 @@ export function show(input: HTMLInputElement): void {
   if (!kind || !idx) return close();
   const { start, end, token } = tokenAt(input);
   let prefix = /^[#@]/.exec(token)?.[0] ?? '';
-  let word = input.dataset.suggestOne !== undefined ? token.trim().replace(/\s+/g, '-') : token;
+  let word = kind === 'companies' ? token.trim() : input.dataset.suggestOne !== undefined ? token.trim().replace(/\s+/g, '-') : token;
   if (kind === 'line' && /^due:/i.test(token)) {
     // Day words for the one-line quick add. The line parser reads them, so the word itself is written.
     const typed = token.slice(4).toLowerCase();
@@ -88,9 +88,10 @@ export function show(input: HTMLInputElement): void {
     prefix = lead as string;
     word = token.slice(1);
   }
-  const others = (input.value.slice(0, start) + ' ' + input.value.slice(end)).split(/[\s,]+/).filter(Boolean);
+  const others = kind === 'companies' ? [] : (input.value.slice(0, start) + ' ' + input.value.slice(end)).split(/[\s,]+/).filter(Boolean);
   const items = matchSuggestions(suggestionsFor(idx, kind), word, others);
   if (!items.length) return close();
+  if (kind === 'companies' && items.length === 1 && items[0]?.toLowerCase() === word.toLowerCase()) return close(); // already exactly that
   cur = { input, items, active: -1, start, end, prefix, sep: input.dataset.suggestSep ?? ' ' };
   draw();
 }

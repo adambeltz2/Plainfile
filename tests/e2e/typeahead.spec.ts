@@ -222,6 +222,41 @@ test.describe('in fields', () => {
     expect(await readFile(page, dir, `meetings/${localDate(0)} Weekly sync.md`)).toContain('people: [dana, sam]');
   });
 
+  test('a company already used is offered in the New person form and when typing company: in a note', async ({ page }) => {
+    const dir = await openVault(page, {
+      'people/a.md': '---\ntitle: A Person\ntype: person\ncompany: Acme Corp\n---\n',
+      'people/b.md': '---\ntitle: B Person\ntype: person\ncompany: BMK\n---\n',
+      'fm.md': '---\ntitle: X\n---\nbody',
+    });
+    await page.getByRole('button', { name: '+ New' }).click();
+    await page
+      .locator('.modal')
+      .getByRole('button', { name: /^Person/ })
+      .click();
+    await page.locator('#tpl-title').fill('Xavier Zambrano');
+    await page.locator('#tpl-company').click();
+    await expect(page.locator('.suggest button')).toHaveText(['Acme Corp', 'BMK']);
+    await page.locator('#tpl-company').pressSequentially('ac');
+    await page.locator('.suggest button', { hasText: 'Acme Corp' }).click();
+    await expect(page.locator('#tpl-company')).toHaveValue('Acme Corp'); // as written, with its capitals and space
+    await expect(page.locator('#tpl-preview')).toContainText('company: Acme Corp');
+    await expect(page.locator('#tpl-path')).toHaveText('people/xavier-zambrano.md');
+    await page.getByRole('button', { name: 'Create file' }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    expect(await readFile(page, dir, 'people/xavier-zambrano.md')).toContain('company: Acme Corp');
+    // The same list when typing in a note's frontmatter.
+    await open(page, 'X');
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+Home');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('End');
+    await page.keyboard.type('\ncompany: BM');
+    await expect(options(page).filter({ hasText: 'BMK' })).toBeVisible();
+    await settle(page);
+    await page.keyboard.press('Enter');
+    await expect.poll(() => readFileOrEmpty(page, dir, 'fm.md'), { timeout: 5000 }).toBe('---\ntitle: X\ncompany: BMK\n---\nbody');
+  });
+
   test('the dropdown stays on screen on a phone', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await openVault(page, VAULT);

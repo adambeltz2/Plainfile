@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.9.0] - 2026-11-25
+
+### Added
+- **Companies you have used before are offered as you type.** In the New person form, the Company box lists the companies already written in your notes (most used first) and fills in the one you pick exactly as written, with its capitals and spaces. The same list appears after `company:` in a note's frontmatter.
+
 ## [2.8.3] - 2026-11-25
 
 ### Changed
