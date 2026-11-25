@@ -32,6 +32,8 @@ export interface RenderOptions {
   keepMarkers?: boolean;
   /** Data addresses for images, by their path in the note, found by `imagePaths` and read by the caller. */
   images?: ReadonlyMap<string, string>;
+  /** Draw `[[links]]` as links to the note (for the editor) instead of as plain words (for a copy or an export). */
+  wikilinks?: boolean;
 }
 
 const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -63,11 +65,15 @@ function parseInline(src: string, o: RenderOptions): Inline[] {
   };
   const rules: { re: RegExp; make: (m: RegExpExecArray) => Inline | Inline[] }[] = [
     { re: /`([^`]+)`/, make: (m) => ({ t: 'code', s: m[1] as string }) },
+    { re: /<br\s*\/?>/i, make: () => ({ t: 'text', s: '\n' }) },
     { re: /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/, make: (m) => ({ t: 'img', alt: m[1] as string, src: m[2] as string }) },
     { re: /!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/, make: (m) => ({ t: 'img', alt: '', src: m[1] as string }) },
     {
       re: /\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/,
-      make: (m) => ({ t: 'text', s: (m[2] ?? (m[1] as string).split('/').pop()?.replace(/\.md$/i, '') ?? '').trim() }),
+      make: (m) => {
+        const label = (m[2] ?? (m[1] as string).split('/').pop()?.replace(/\.md$/i, '') ?? '').trim();
+        return o.wikilinks ? { t: 'link', href: `wiki:${(m[1] as string).trim()}`, c: [{ t: 'text', s: label }] } : { t: 'text', s: label };
+      },
     },
     {
       re: /\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/,
@@ -113,7 +119,7 @@ function parseInline(src: string, o: RenderOptions): Inline[] {
 const HR = /^\s{0,3}([-*_])(?:\s*\1){2,}\s*$/;
 const FENCE = /^\s*(```|~~~)/;
 const LIST = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
-export const TABLE_SEP = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/;
+export const TABLE_SEP = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/; // one hyphen is enough, as in GitHub markdown: `:-:` centres
 
 export function cells(line: string): string[] {
   return line
@@ -323,7 +329,9 @@ function inlineHtml(inl: Inline[], o: RenderOptions): string {
         case 'code':
           return `<code style="font-family:Consolas,monospace">${esc(x.s)}</code>`;
         case 'link':
-          return `<a href="${esc(x.href)}" target="_blank" rel="noopener noreferrer">${inlineHtml(x.c, o)}</a>`;
+          return x.href.startsWith('wiki:')
+            ? `<a class="wl" href="#" data-wiki="${esc(x.href.slice(5))}">${inlineHtml(x.c, o)}</a>`
+            : `<a href="${esc(x.href)}" target="_blank" rel="noopener noreferrer">${inlineHtml(x.c, o)}</a>`;
         case 'img': {
           const src = /^(https?:|data:)/i.test(x.src) ? x.src : o.images?.get(x.src);
           return src ? `<img src="${esc(src)}" alt="${esc(x.alt)}" style="max-width:100%">` : x.alt ? `[image: ${esc(x.alt)}]` : '';
@@ -427,4 +435,10 @@ export function readingStats(md: string): { words: number; minutes: number } {
     .replace(/\[\[([^\]|]*\|)?([^\]]*)\]\]/g, '$2');
   const words = (body.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu) ?? []).length;
   return { words, minutes: words ? Math.max(1, Math.round(words / 220)) : 0 };
+}
+
+/** The inline markdown of one table cell as HTML: bold, italic, code, links and `[[links]]` (as links to the note), tags and people kept. */
+export function cellHtml(src: string): string {
+  const o: RenderOptions = { keepMarkers: true, wikilinks: true };
+  return inlineHtml(parseInline(src, o), o);
 }

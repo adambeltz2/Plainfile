@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.12.0] - 2026-11-25
+
+### Added
+- **Edit a table as a table.** Click a cell and type. Tab and Shift+Tab move between cells (Tab in the last cell adds a row), Enter moves down (in the last row it adds a row), Shift+Enter is a line break, and Escape leaves. A toolbar above the table you are in adds and deletes rows and columns, aligns a column left, centre or right, and has Bold, Italic, Code and Link; **Show markdown** swaps that one table to its lines. A cell can hold any inline markdown: you see and edit its plain text, and it is drawn formatted (bold, italic, code, links, `[[links]]`) when you leave it.
+- **`/table` asks how big.** A hover grid or Columns and Rows boxes (a header row is always included); Insert makes the table and puts the caret in the first heading, Cancel takes the typed command away.
+- Only the lines of the table you edit are rewritten, a row you did not change keeps its own text and padding, a typed `|` is written as `\|`, and a table with a row that has more cells than its header is left as text, so nothing is ever dropped.
+
 ## [2.11.0] - 2026-11-25
 
 ### Added

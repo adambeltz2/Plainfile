@@ -158,3 +158,20 @@ describe('web addresses', () => {
     );
   });
 });
+
+import { cellHtml } from '../src/render';
+
+describe('markdown in a table cell', () => {
+  it('draws bold, italic, code, links and a line break, and escapes the rest', () => {
+    expect(cellHtml('**Sam** and *Ken*')).toBe('<b>Sam</b> and <i>Ken</i>');
+    expect(cellHtml('`x` <br> y')).toContain('<code');
+    expect(cellHtml('a<br>b')).toBe('a<br>b');
+    expect(cellHtml('[site](https://x.test)')).toBe('<a href="https://x.test" target="_blank" rel="noopener noreferrer">site</a>');
+    expect(cellHtml('<script>alert(1)</script>')).not.toContain('<script>');
+    expect(cellHtml('[bad](javascript:alert(1))')).not.toContain('href="javascript');
+  });
+  it('keeps tags and people as text, and draws a [[link]] as a link to the note', () => {
+    expect(cellHtml('@ken #launch')).toBe('@ken #launch');
+    expect(cellHtml('see [[Pricing research|the research]]')).toBe('see <a class="wl" href="#" data-wiki="Pricing research">the research</a>');
+  });
+});
