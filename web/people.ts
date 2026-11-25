@@ -162,6 +162,7 @@ function page(p: PeopleIndex, key: string): string {
     ) +
     '</div><div>' +
     list('Meetings', pg.meetings.length, pg.meetings.length ? noteList(pg.meetings) : '<p class="muted small">No dated notes name them.</p>') +
+    (pg.journals.length ? list('Journal', pg.journals.length, noteList(pg.journals)) : '') +
     list('Notes', pg.notes.length, pg.notes.length ? noteList(pg.notes) : '<p class="muted small">No other notes name them.</p>') +
     '</div></div>' +
     (logHtml() ? `<div class="plog" aria-live="polite">${logHtml()}</div>` : '')

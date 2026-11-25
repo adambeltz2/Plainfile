@@ -347,6 +347,24 @@ function foldSidePanels(): void {
   if (src && key === 'today') src.classList.toggle('empty-source', !src.querySelector('.diff'));
 }
 
+/** The browser tab says where you are: the open note, the project or person, or the screen. */
+function updateTabTitle(): void {
+  const idx = state.index;
+  let name = '';
+  if (idx && !state.busy) {
+    const known = [...NAV, ...NAV_MORE].find((n) => n.id === state.screen)?.label ?? '';
+    if (state.screen === 'notes' && notes.notes.path) {
+      const typed = (document.getElementById('note-title') as HTMLInputElement | null)?.value.trim();
+      name = typed || idx.notes.get(notes.notes.path)?.title || known;
+    } else if (state.screen === 'projects' && projectScreen.projectState.path) {
+      name = projectScreen.projectState.path === '*' ? 'Tasks' : (idx.notes.get(projectScreen.projectState.path)?.title ?? known);
+    } else if (state.screen === 'people' && peopleScreen.peopleState.key) {
+      name = idx.notes.get(`people/${peopleScreen.peopleState.key}.md`)?.title ?? known;
+    } else name = state.screen === 'today' ? 'Tasks' : known;
+  }
+  document.title = name ? `${name} · Plainfile` : 'Plainfile';
+}
+
 function render(): void {
   suggest.close();
   const active = document.activeElement as HTMLInputElement | HTMLElement | null;
@@ -370,6 +388,7 @@ function render(): void {
 
   paintProgress();
   foldSidePanels();
+  updateTabTitle();
   if (state.index && state.screen === 'notes') notes.afterRender(editorFocus);
   if (focusId && !editorFocus) {
     const el = document.getElementById(focusId) as HTMLInputElement | null;
@@ -387,6 +406,10 @@ function render(): void {
 }
 
 setRenderer(render);
+// Renaming a note in its title box changes the tab as soon as you leave the box.
+app.addEventListener('focusout', (e) => {
+  if ((e.target as HTMLElement).id === 'note-title') updateTabTitle();
+});
 
 /* ---------- events ---------- */
 
