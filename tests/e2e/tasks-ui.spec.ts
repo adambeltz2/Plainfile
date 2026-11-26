@@ -180,3 +180,20 @@ test('Tasks has a link to the Calendar, in the tab row and in the View menu', as
   await page.locator('.hub-viewbox').getByRole('button', { name: 'Calendar →' }).click();
   await expect(page.locator('.cal-bar')).toBeVisible();
 });
+
+test('the Board lists finished tasks in Done whatever date view is on, and stacks its columns on a phone', async ({ page }) => {
+  await openVault(page, {
+    'tasks/Open one.md': `---\ntitle: Open one\nstatus: todo\ndue: ${localDate(1)}\n---\n`,
+    'tasks/Done undated.md': '---\ntitle: Done undated\nstatus: done\n---\n',
+  });
+  await nav(page, 'Tasks').click(); // opens on the Today view, which has no place for an undated task
+  await page.getByRole('tab', { name: 'Board' }).click();
+  await expect(page.locator('.hub-col[data-col="todo"] .hub-card', { hasText: 'Open one' })).toBeVisible();
+  await expect(page.locator('.hub-col[data-col="done"] .hub-card', { hasText: 'Done undated' })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 800 });
+  const xs = await page.locator('.hub-col').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().left)));
+  expect(xs).toHaveLength(4);
+  expect(new Set(xs).size).toBe(1); // one column, not a 2 by 2 grid
+  const w = await page.locator('.hub-col[data-col="todo"]').evaluate((e) => e.getBoundingClientRect().width);
+  expect(w).toBeGreaterThan(300);
+});

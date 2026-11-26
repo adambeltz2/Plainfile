@@ -537,7 +537,9 @@ kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font: 12p
 @media (max-width: 760px) {
   .hubwrap { grid-template-columns: minmax(0, 1fr); }
   .hub-status { position: static; max-height: none; order: 2; border-top: 1px solid var(--line); padding-top: 10px; }
-  .hub-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hub-cols { grid-template-columns: minmax(0, 1fr) !important; } /* one column of full-width cards: two squeezed them */
+  .hub-col:not(:has(.hub-card)) { padding: 4px 8px; }
+  .hub-col:not(:has(.hub-card)) h3 { margin: 0; }
 }
 
 /* ---------- bulk changes ---------- */

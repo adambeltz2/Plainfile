@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.12.2] - 2026-11-26
+
+### Fixed
+- **The Board's Done column was empty while Show done said there were finished tasks.** A date view (Overdue, Today, Upcoming, No date) leaves out a finished task with no date, so Done showed nothing. The Done column now ignores the date view and lists the finished tasks that match your other filters (people, tags, project, search).
+
+### Changed
+- **The Board on a phone is one column of full-width cards**, not a squeezed 2 by 2 grid. An empty column shrinks to a single short line.
+
 ## [2.12.1] - 2026-11-25
 
 ### Changed
