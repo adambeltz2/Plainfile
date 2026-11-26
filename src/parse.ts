@@ -94,7 +94,7 @@ const DUE_PATTERNS = [
   new RegExp(String.raw`\[due::\s*(${DATE})\]`, 'i'), // Dataview
 ];
 
-/** When a task was finished: `done:2026-11-23` (what Plainfile writes), Obsidian Tasks' ✅ date, or Dataview's [completion:: date]. */
+/** When a task was finished: `done:2026-11-23` (what tendfile writes), Obsidian Tasks' ✅ date, or Dataview's [completion:: date]. */
 const COMPLETED_PATTERNS = [
   new RegExp(String.raw`\bdone:\s?(${DATE})`, 'i'),
   new RegExp(String.raw`✅\s*(${DATE})`),

@@ -18,7 +18,7 @@ test.describe('the Journal tab', () => {
     await nav(page, 'Journal').click();
     await expect(page.locator('.jgrid')).toBeVisible();
     await expect(page.locator('.jday.sel')).toHaveAttribute('data-j-day', T);
-    await expect(page).toHaveTitle('Journal · Plainfile');
+    await expect(page).toHaveTitle('Journal · tendfile');
   });
 
   test('the list is dates only, a dot marks a day with a journal, and clicking a day that has one opens it', async ({ page }) => {

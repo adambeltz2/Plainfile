@@ -15,6 +15,6 @@ labels: bug
 
 - Browser and device (for example Chrome on Android):
 - Folder type (a folder on disk, Dropbox, the sample vault):
-- Plainfile version (shown in the footer):
+- tendfile version (shown in the footer):
 
 **A screenshot, if it helps**

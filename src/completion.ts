@@ -2,7 +2,7 @@ import { extractCompleted } from './parse';
 
 /**
  * The day a task was finished, written the way a due date is: `- [x] Call Dana done:2026-11-23` on a checkbox line,
- * `completed: 2026-11-23` in a task note. Ticking a task in Plainfile adds it and unticking removes it. A task that
+ * `completed: 2026-11-23` in a task note. Ticking a task in tendfile adds it and unticking removes it. A task that
  * already says when it was finished (Obsidian's ✅ or Dataview's field) keeps that, and a tick made in another editor
  * has no date, which is fine: the date is a record, not a requirement.
  */

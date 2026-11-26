@@ -40,6 +40,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--fg); o
 .bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .bar h1 { font-size: 18px; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
 .bar h1 .logo { font: inherit; letter-spacing: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.bar h1 .logo { display: inline-flex; align-items: center; gap: 7px; }
+.logo-mark { width: 22px; height: 22px; flex: none; }
 .bar h1 .logo:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 4px; }
 .bar .grow { flex: 1; }
 .tag-pill { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; color: var(--mute); max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

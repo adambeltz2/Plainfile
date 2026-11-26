@@ -10,9 +10,9 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('footer', () => {
   test('shows the app version on the first screen and in the app, with links that open in a new tab', async ({ page }) => {
-    await expect(page.locator('.foot')).toContainText(`Plainfile v${version}`);
+    await expect(page.locator('.foot')).toContainText(`tendfile v${version}`);
     await page.getByRole('button', { name: 'Try the sample vault' }).click();
-    await expect(page.locator('.foot')).toContainText(`Plainfile v${version}`);
+    await expect(page.locator('.foot')).toContainText(`tendfile v${version}`);
     for (const a of await page.locator('.foot a').all()) {
       await expect(a).toHaveAttribute('target', '_blank');
       await expect(a).toHaveAttribute('rel', /noopener/);

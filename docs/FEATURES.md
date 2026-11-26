@@ -1,6 +1,6 @@
 # Features
 
-Everything Plainfile does, by area. Back to the [README](../README.md).
+Everything tendfile does, by area. Back to the [README](../README.md).
 
 - **Insight:** an activity heatmap, this month at a glance, topics, people, folders and vault health, with a
   vault-wide tidy list for non-standard fields.
@@ -22,7 +22,7 @@ Everything Plainfile does, by area. Back to the [README](../README.md).
 - **Subtask progress:** a task with nested checkboxes shows "1 of 3" wherever tasks are listed.
 - **Export a project as one document:** Export notes in a project builds a contents list and a chapter per note, to copy, download as Word, print or save.
 - **If something breaks:** an error bar offers Copy details for a bug report, and Reload. Nothing is sent or collected.
-- **Install:** an Install button in the footer, where the browser offers it, makes Plainfile an app with its own window and offline copy, with New task, Today and Search shortcuts on its icon.
+- **Install:** an Install button in the footer, where the browser offers it, makes tendfile an app with its own window and offline copy, with New task, Today and Search shortcuts on its icon.
 - **Editor keys:** Tab and Shift+Tab nest list items; paste a web address over selected text to make a link.
 - **Insight export:** the activity grid, month numbers, topics, people and folders download as CSV or JSON.
 - **Home and the weekly review:** a landing screen (capture, today, what needs filing, what

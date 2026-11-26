@@ -7,7 +7,7 @@ let shown = false;
 
 function details(message: string, stack: string): string {
   return [
-    `Plainfile v${__APP_VERSION__}`,
+    `tendfile v${__APP_VERSION__}`,
     `Page: ${location.origin}${location.pathname}`,
     `Browser: ${navigator.userAgent}`,
     `Screen: ${window.innerWidth}x${window.innerHeight}`,

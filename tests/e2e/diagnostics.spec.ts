@@ -17,7 +17,7 @@ test.describe('the error bar', () => {
     await expect(bar).toContainText('Something went wrong');
     await bar.locator('summary').click();
     const text = await bar.locator('textarea').inputValue();
-    expect(text).toContain('Plainfile v');
+    expect(text).toContain('tendfile v');
     expect(text).toContain('test boom');
     expect(text).toContain('Browser:');
     await bar.getByRole('button', { name: 'Dismiss' }).click();

@@ -1,6 +1,6 @@
-# Contributing to Plainfile
+# Contributing to tendfile
 
-Thanks for helping. Plainfile is a static web app over a plain folder of markdown files. Read `CLAUDE.md` for the rules the project follows (files are the source of truth, minimal writes, black and white, tests with every change).
+Thanks for helping. tendfile is a static web app over a plain folder of markdown files. Read `CLAUDE.md` for the rules the project follows (files are the source of truth, minimal writes, black and white, tests with every change).
 
 ## Set up
 

@@ -63,7 +63,7 @@ Cabinet quote came in at $14,200.`,
   dates: `created:2026-11-21      when it was added (filled in for you)
 done:2026-11-23         when it was finished (filled in when you tick it)
 rec:1w                  repeats a week after its due date (rec:+3d: 3 days after you finish it)
-due:2026-11-23          what Plainfile writes
+due:2026-11-23          what tendfile writes
 #due:2026-11-23         from the first Notebook app
 📅 2026-11-23           Obsidian Tasks
 [due:: 2026-11-23]      Dataview`,
@@ -87,7 +87,7 @@ const KEYS: [string, string, string][] = [
   ['tags', 'tags: [launch, meeting]', 'Same as #launch in the text. Find them with tag:launch in Search.'],
   ['status', 'status: doing', 'Makes a task file (in a tasks/ folder, or with type: task). Board columns on the Tasks screen: todo, doing, waiting, done.'],
   ['due', 'due: 2026-11-24', 'The date for a task file. It appears in Tasks, on the Today view.'],
-  ['created', 'created: 2026-11-21', 'When a note or task was made. Plainfile fills it in for tasks, notes in a project, and new projects.'],
+  ['created', 'created: 2026-11-21', 'When a note or task was made. tendfile fills it in for tasks, notes in a project, and new projects.'],
   ['people', 'people: [dana, sam]', 'Who a task file involves, the same as @dana in an inline task. Search with @dana.'],
   ['project', 'project: website-relaunch', 'Files a note under that project, and links related notes in Explorer.'],
   ['aliases', 'aliases: [Dana, D. Ortiz]', 'Other names a [[link]] can use. Renaming a note adds its old name here.'],
@@ -165,7 +165,7 @@ function vault(): string {
   }
   h += '<h4>Frontmatter keys your notes use</h4>';
   if (!keys.length) return `${h}<p class="muted">None of your notes have frontmatter yet. That is fine: plain notes work too.</p>`;
-  h += '<div class="table-wrap"><table><thead><tr><th>Key</th><th>Notes</th><th>Example values</th><th>Plainfile uses it</th></tr></thead><tbody>';
+  h += '<div class="table-wrap"><table><thead><tr><th>Key</th><th>Notes</th><th>Example values</th><th>tendfile uses it</th></tr></thead><tbody>';
   for (const k of keys) {
     h += `<tr><td class="mono">${esc(k.key)}</td><td>${k.count}</td><td class="mono small">${k.samples.map(esc).join(' &nbsp; ')}</td><td>${KNOWN.has(k.key) ? 'yes' : '<span class="muted">kept as written</span>'}</td></tr>`;
   }
@@ -188,7 +188,7 @@ export function html(): string {
   ];
   let h = '<div class="frame" style="grid-template-columns:minmax(0,1fr)"><section class="main guide">';
   h +=
-    '<h2 class="title">Cheat sheet</h2><p class="meta">How to write notes so Plainfile can use them. Everything here is plain text in your files. Nothing is required.</p>';
+    '<h2 class="title">Cheat sheet</h2><p class="meta">How to write notes so tendfile can use them. Everything here is plain text in your files. Nothing is required.</p>';
   h += `<nav class="toc" aria-label="Sections">${toc.map(([id, l]) => `<button class="chip" data-scroll="sec-${id}">${esc(l)}</button>`).join('')}</nav>`;
 
   h += section(
@@ -200,7 +200,7 @@ export function html(): string {
 
   h += section(
     'keys',
-    'Keys Plainfile understands',
+    'Keys tendfile understands',
     '<p>Any key is allowed and is kept exactly as you wrote it. These ones also do something:</p><div class="table-wrap"><table><thead><tr><th>Key</th><th>Looks like</th><th>What it does</th></tr></thead><tbody>' +
       KEYS.map(([k, e, d]) => `<tr><td class="mono">${esc(k)}</td><td class="mono small">${esc(e)}</td><td>${esc(d)}</td></tr>`).join('') +
       '</tbody></table></div>',
@@ -227,7 +227,7 @@ export function html(): string {
   h += section(
     'links',
     'Links',
-    '<p>Links are worked out from your files, so back-links are never stored. Rename a note in Plainfile and every link to it is rewritten.</p>' +
+    '<p>Links are worked out from your files, so back-links are never stored. Rename a note in tendfile and every link to it is rewritten.</p>' +
       block('links', 'Linking', EX.links),
   );
 
@@ -250,7 +250,7 @@ export function html(): string {
   h += section(
     'fields',
     'Standard fields (keeping notes uniform)',
-    '<p>Plainfile reads many spellings and never requires any of them: a note that lacks a field just has no value for it. What the app <b>writes</b> always uses the standard names below. In a project, the <b>Tidy</b> panel lists notes that differ and fixes them one line at a time, only when you press Fix.</p><div class="table-wrap"><table><thead><tr><th>Field</th><th>Standard value</th><th>Also understood</th></tr></thead><tbody>' +
+    '<p>tendfile reads many spellings and never requires any of them: a note that lacks a field just has no value for it. What the app <b>writes</b> always uses the standard names below. In a project, the <b>Tidy</b> panel lists notes that differ and fixes them one line at a time, only when you press Fix.</p><div class="table-wrap"><table><thead><tr><th>Field</th><th>Standard value</th><th>Also understood</th></tr></thead><tbody>' +
       `<tr><td class="mono">status</td><td class="mono small">${STATUSES.join(' · ')}</td><td class="small">${esc('"In Progress", wip, blocked, on hold, complete, closed …')}; or the key <span class="mono">${ALIASES.status?.join(', ')}</span></td></tr>` +
       `<tr><td class="mono">due</td><td class="mono small">2026-11-23</td><td class="small">${esc('"Nov 23 2026"')}; or the key <span class="mono">${ALIASES.due?.join(', ')}</span></td></tr>` +
       `<tr><td class="mono">phase</td><td class="mono small">Phase 1</td><td class="small">the heading above an inline task; or the key <span class="mono">${ALIASES.phase?.join(', ')}</span></td></tr>` +

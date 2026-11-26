@@ -95,7 +95,7 @@ function outsideHtml(): string {
   if (!idx) return '';
   if (rn.result) return previewHtml();
   if (!state.renames.length) {
-    return '<div class="empty">No outside renames found. If you rename a file in another app, Plainfile spots it on the next rescan, when a file disappears and an identical one appears.</div>';
+    return '<div class="empty">No outside renames found. If you rename a file in another app, tendfile spots it on the next rescan, when a file disappears and an identical one appears.</div>';
   }
   let h = '';
   for (const pair of state.renames) {
@@ -127,11 +127,11 @@ export function html(): string {
   // "Renamed outside" is only for fixing links after a file was renamed in another app. It shows up when one is found.
   if (state.renames.length || rn.mode === 'out') {
     h +=
-      `<div class="ed-bar"><div class="seg" role="group" aria-label="Rename scenario"><button data-rn-mode="in" aria-pressed="${rn.mode === 'in'}">Rename in Plainfile</button>` +
+      `<div class="ed-bar"><div class="seg" role="group" aria-label="Rename scenario"><button data-rn-mode="in" aria-pressed="${rn.mode === 'in'}">Rename in tendfile</button>` +
       `<button data-rn-mode="out" aria-pressed="${rn.mode === 'out'}">Renamed outside${state.renames.length ? ` <span class="badge">${state.renames.length}</span>` : ''}</button></div></div>`;
     if (rn.mode === 'out')
       h +=
-        '<p class="muted small" style="margin:6px 0 0">A file was renamed in another app (Finder, Dropbox, an editor). Plainfile noticed, and can fix the links that now point nowhere.</p>';
+        '<p class="muted small" style="margin:6px 0 0">A file was renamed in another app (Finder, Dropbox, an editor). tendfile noticed, and can fix the links that now point nowhere.</p>';
   }
   if (rn.mode === 'in') {
     if (rn.result) {
@@ -147,7 +147,7 @@ export function html(): string {
     }
   } else h += `<div id="rn-out">${outsideHtml()}</div>`;
   h +=
-    '<p class="note">Back-links are not stored anywhere. Plainfile works them out from the links in your files, so they stay correct as long as the links resolve.</p></section></div>';
+    '<p class="note">Back-links are not stored anywhere. tendfile works them out from the links in your files, so they stay correct as long as the links resolve.</p></section></div>';
   return h;
 }
 
