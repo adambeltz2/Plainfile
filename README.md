@@ -20,6 +20,8 @@ folder is the whole repository and works with any editor or sync tool.
 2. On **Home**, type a task in the box at the top: `Call Dana +Website @dana due:friday`. It becomes its own note.
 3. Open **Tasks** to see everything across every project, **Notes** to write, and press **?** for the cheat sheet and quick keys.
 
+New here? **[Getting started](docs/GETTING-STARTED.md)** explains what a task, a note, a journal, a meeting, a project and a person are, and walks through your first five minutes.
+
 Your folder stays plain markdown the whole time; delete the app and every file still opens anywhere.
 
 ## How I want to work
@@ -79,6 +81,7 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 
 ## Documentation
 
+- [Getting started](docs/GETTING-STARTED.md): what's what, and your first five minutes.
 - [Features](docs/FEATURES.md): everything it does, by area.
 - [Task formats](docs/TASK-FORMATS.md): the task syntaxes it reads and writes.
 - [Principles and interface design](docs/DESIGN.md): what the app will not do and why.
