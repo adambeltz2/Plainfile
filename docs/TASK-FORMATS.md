@@ -32,7 +32,7 @@ tags: [launch]
 
 ## Dates, other syntaxes it understands
 
-Plainfile reads these when it opens your files, and writes the standard form:
+tendfile reads these when it opens your files, and writes the standard form:
 
 | Meaning | Written as | Also read as |
 |---|---|---|

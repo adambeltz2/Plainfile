@@ -1,6 +1,6 @@
-# Plainfile
+# tendfile
 
-**Working name.** Successor to Notebook.
+**tend your notes.** Formerly Plainfile; successor to Notebook. (The `.plainfile/` folder inside a vault, and the live address, keep their old names for now so nothing you have breaks.)
 
 <a href="https://www.buymeacoffee.com/adambeltz" target="_blank" rel="noopener noreferrer"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy me a coffee" height="36" /></a>
 
@@ -26,13 +26,13 @@ Your folder stays plain markdown the whole time; delete the app and every file s
 
 ## How I want to work
 
-Plainfile is built around one rule: **the source of truth is plain markdown files.** Every note, task, project, tag and link is text in a `.md` file, in a folder you own. That is what makes it portable: the folder opens in any editor, syncs with anything (Dropbox, iCloud, Syncthing, git) and outlives the app. The software around it is kept as small as it can be, and there is **nothing to install**: open a web page, point it at the folder, and work.
+tendfile is built around one rule: **the source of truth is plain markdown files.** Every note, task, project, tag and link is text in a `.md` file, in a folder you own. That is what makes it portable: the folder opens in any editor, syncs with anything (Dropbox, iCloud, Syncthing, git) and outlives the app. The software around it is kept as small as it can be, and there is **nothing to install**: open a web page, point it at the folder, and work.
 
 Three tools shaped how I want to work:
 
-- **<a href="https://github.com/todotxt/todo.txt" target="_blank" rel="noopener noreferrer">todo.txt</a>: a task is a line of text.** A priority in front, `+project` and `@context` words in the line, `due:` as a plain key and value, all readable in any text editor with no database behind it. Plainfile reads and writes that style (`- [ ] (A) Call Dana +Website @dana due:friday`) and also understands Obsidian Tasks and Dataview syntax. Lists stay as short as a todo.txt list: a title and one line, with detail one tap away.
+- **<a href="https://github.com/todotxt/todo.txt" target="_blank" rel="noopener noreferrer">todo.txt</a>: a task is a line of text.** A priority in front, `+project` and `@context` words in the line, `due:` as a plain key and value, all readable in any text editor with no database behind it. tendfile reads and writes that style (`- [ ] (A) Call Dana +Website @dana due:friday`) and also understands Obsidian Tasks and Dataview syntax. Lists stay as short as a todo.txt list: a title and one line, with detail one tap away.
 - **<a href="https://silverbullet.md/" target="_blank" rel="noopener noreferrer">SilverBullet</a>: notes are files you own, and everything else is worked out from them.** Pages are a folder of markdown, linked with `[[wikilinks]]`, edited live in the browser. Back-links, project views, counts and the index are computed from the text and never stored; the index is a cache you can delete.
-- **<a href="https://nullboard.io/" target="_blank" rel="noopener noreferrer">Nullboard</a>: a board that is just a web page.** A minimal kanban you open without installing anything, with no account and no server. Plainfile keeps that stance (a static page, a Board of status columns for any project) but keeps your data in your own folder, as markdown, rather than in the browser.
+- **<a href="https://nullboard.io/" target="_blank" rel="noopener noreferrer">Nullboard</a>: a board that is just a web page.** A minimal kanban you open without installing anything, with no account and no server. tendfile keeps that stance (a static page, a Board of status columns for any project) but keeps your data in your own folder, as markdown, rather than in the browser.
 
 It also borrows from <a href="https://obsidian.md/" target="_blank" rel="noopener noreferrer">Obsidian</a> (wikilinks, a folder as the vault, reading other people's conventions). The approach differs in a few ways:
 

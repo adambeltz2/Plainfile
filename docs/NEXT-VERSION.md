@@ -90,7 +90,7 @@ readout; it is the trust feature.
 ## Beyond the interface
 
 - **Make the first run great.** An empty folder should offer to create `inbox/` and a short README note, and an
-  existing vault should get a read-only tour of what Plainfile found (tasks, projects, people) before anything is
+  existing vault should get a read-only tour of what tendfile found (tasks, projects, people) before anything is
   written. Today the first run is a landing page with three buttons.
 - **A weekly rhythm, not just a review screen.** The review exists but is hidden. Surface "review due" on the plan
   view, and save a dated review note when it ends (opt-in).

@@ -39,7 +39,7 @@ export function cleanFolder(raw: string): string {
     .map((p) => p.trim().replace(/[:?*"<>|]/g, '-'))
     .filter((p) => p && p !== '.');
   if (parts.some((p) => p === '..')) throw new Error('A folder name cannot contain "..".');
-  if (parts.some((p) => p.startsWith('.'))) throw new Error('Folders that start with a dot are hidden from Plainfile.');
+  if (parts.some((p) => p.startsWith('.'))) throw new Error('Folders that start with a dot are hidden from tendfile.');
   return parts.join('/');
 }
 

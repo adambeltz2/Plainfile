@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.13.0] - 2026-11-26
+
+### Changed
+- **Plainfile is now tendfile** (always lowercase), with the tagline "tend your notes". The name changes everywhere you see it: the header, the browser tab ("Tasks · tendfile"), the install name, the footer, the cheat sheet, the README and the docs. The header now shows a small copy of the app icon before the name; the app icon itself is unchanged.
+- **Nothing you have breaks.** The `.plainfile/` folder inside a vault (history, trash, templates), a template's `plainfile:` settings, saved settings in the browser, the live address and the GitHub repository all keep their old names for now, so existing folders, installs and sign-ins keep working.
+
+### Added
+- **Getting started** (docs/GETTING-STARTED.md): what a task, note, journal, meeting, project and person are, and your first five minutes. Linked from the README.
+
 ## [2.12.2] - 2026-11-26
 
 ### Fixed

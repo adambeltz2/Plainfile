@@ -27,7 +27,7 @@ export function listenForInstall(): void {
 
 /** The footer button, or nothing. */
 export function installButton(): string {
-  return deferred && !installed() ? '<button class="link" data-act="install" title="Install Plainfile as an app on this device">Install</button>' : '';
+  return deferred && !installed() ? '<button class="link" data-act="install" title="Install tendfile as an app on this device">Install</button>' : '';
 }
 
 export async function install(): Promise<void> {

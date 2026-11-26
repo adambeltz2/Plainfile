@@ -43,7 +43,7 @@ export function stripFrontmatter(md: string): string {
   return m ? md.slice(m[0].length) : md;
 }
 
-/** Remove the markers that mean something to Plainfile but nothing to a reader. */
+/** Remove the markers that mean something to tendfile but nothing to a reader. */
 export function hideMarkers(s: string): string {
   return s
     .replace(/(^|\s)#?due:\S+/gi, '$1')

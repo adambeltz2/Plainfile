@@ -47,6 +47,7 @@ import {
 import * as todayScreen from './today';
 import type { QuickView } from '../src/hub';
 import { esc } from './util';
+import { LOGO_MARK } from './logo';
 
 const app = document.getElementById('app') as HTMLElement;
 
@@ -142,7 +143,7 @@ const REPO = 'https://github.com/adambeltz2/Plainfile';
 function footer(): string {
   return (
     '<footer class="foot">' +
-    `<span class="mono">Plainfile v${esc(__APP_VERSION__)}</span>` +
+    `<span class="mono">tendfile v${esc(__APP_VERSION__)}</span>` +
     (state.index
       ? `<span class="foot-stat mono muted" title="How many notes were read, and how long it took">${state.index.notes.size} notes · scanned in ${state.scanMs} ms${state.index.fromCache ? ` (${state.index.fromCache} from the saved copy)` : ''}${state.demo ? ' · sample date 21 Nov 2026' : ''}</span>`
       : '') +
@@ -162,12 +163,12 @@ const standalone = ((): '' | 'changelog' | 'guide' => {
 
 function standalonePage(): string {
   const body = standalone === 'guide' ? guide.html() : changelogScreen.html();
-  return `<div class="theme-corner">${themeControl()}</div><div class="wrap"><header class="bar"><h1>Plainfile</h1><a class="btn" href="./">Open Plainfile</a></header><div class="frame two" style="grid-template-columns:minmax(0,1fr)"><section class="main">${body}</section></div>${footer()}</div>`;
+  return `<div class="theme-corner">${themeControl()}</div><div class="wrap"><header class="bar"><h1>tendfile</h1><a class="btn" href="./">Open tendfile</a></header><div class="frame two" style="grid-template-columns:minmax(0,1fr)"><section class="main">${body}</section></div>${footer()}</div>`;
 }
 
 function landing(): string {
   const supported = fsaSupported();
-  let h = `<div class="theme-corner">${themeControl()}</div><main class="landing"><h1>Plainfile</h1>`;
+  let h = `<div class="theme-corner">${themeControl()}</div><main class="landing"><h1>tendfile</h1>`;
   h += '<p>One place for the tasks and notes in a folder of plain markdown files. Your files stay yours. Nothing is uploaded.</p>';
   if (state.busy) {
     h +=
@@ -240,7 +241,7 @@ function shell(): string {
   /** Open tasks, for the small number on the Tasks tab. */
   const openTasks = state.index ? state.index.tasks().filter((t) => !t.done).length : 0;
   const focusing = state.screen === 'notes' && notes.notes.focus && !!notes.notes.path;
-  let h = `<div class="wrap${focusing ? ' focus' : ''}"><header class="bar"><h1><button class="logo" data-nav="home" aria-label="Plainfile, go to Home" title="Home">Plainfile</button></h1>`;
+  let h = `<div class="wrap${focusing ? ' focus' : ''}"><header class="bar"><h1><button class="logo" data-nav="home" aria-label="tendfile, go to Home" title="Home">${LOGO_MARK}tendfile</button></h1>`;
   h += `<span class="tag-pill${state.demo ? '' : ' inv'}" title="${esc(state.name)}">${esc(state.name)}</span>`;
   h += '<nav class="nav" aria-label="Screens">';
   for (const n of NAV) {
@@ -271,7 +272,7 @@ function shell(): string {
   if (state.index && state.index.notes.size === 0) {
     const s = state.index.summary();
     h +=
-      `<div class="notice small" role="status"><b>No markdown notes were found in this folder.</b> Plainfile looked through ${s.files.toLocaleString()} file${s.files === 1 ? '' : 's'} in ${s.folders.toLocaleString()} folder${s.folders === 1 ? '' : 's'}, down to ${s.depth} level${s.depth === 1 ? '' : 's'} deep` +
+      `<div class="notice small" role="status"><b>No markdown notes were found in this folder.</b> tendfile looked through ${s.files.toLocaleString()} file${s.files === 1 ? '' : 's'} in ${s.folders.toLocaleString()} folder${s.folders === 1 ? '' : 's'}, down to ${s.depth} level${s.depth === 1 ? '' : 's'} deep` +
       (s.types.length ? ` (types: ${s.types.map(([t, c]) => `.${esc(t)} ${c}`).join(', ')})` : '') +
       `. There is no limit on how deep notes can be. Only files ending in <code>.md</code> count${s.hidden ? `, and ${s.hidden} item${s.hidden === 1 ? '' : 's'} whose names start with a dot (such as <code>.git</code>) are hidden` : ''}. Try <b>Open folder</b> and pick the folder that directly holds your notes.</div>`;
   }
@@ -287,7 +288,7 @@ function shell(): string {
   }
   if (state.renames.length && state.screen !== 'rename') {
     const r = state.renames[0]!;
-    h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside Plainfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
+    h += `<div class="notice">Found during rescan: <span class="mono">${esc(r.from)}</span> was renamed to <span class="mono">${esc(r.to)}</span> outside tendfile, so links to it are broken. <button class="btn small" data-act="review-renames">Review${state.renames.length > 1 ? ` (${state.renames.length})` : ''}</button></div>`;
   }
   switch (state.screen) {
     case 'insight':
@@ -376,7 +377,7 @@ function updateTabTitle(): void {
       name = idx.notes.get(`people/${peopleScreen.peopleState.key}.md`)?.title ?? known;
     } else name = state.screen === 'today' ? 'Tasks' : known;
   }
-  document.title = name ? `${name} · Plainfile` : 'Plainfile';
+  document.title = name ? `${name} · tendfile` : 'tendfile';
 }
 
 function render(): void {

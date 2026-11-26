@@ -1,6 +1,6 @@
 # Getting started
 
-A ten-minute tour. Back to the [README](../README.md). Nothing here is required: Plainfile reads any folder of `.md` files, and every file stays plain markdown the whole time.
+A ten-minute tour. Back to the [README](../README.md). Nothing here is required: tendfile reads any folder of `.md` files, and every file stays plain markdown the whole time.
 
 ## 1. Open something
 
@@ -12,7 +12,7 @@ Open the **[live app](https://adambeltz2.github.io/Plainfile/)** and pick one:
 
 ## 2. What's what
 
-Plainfile has a few kinds of thing. Each one is an ordinary markdown file, and each one has a place in the folder.
+tendfile has a few kinds of thing. Each one is an ordinary markdown file, and each one has a place in the folder.
 
 | It is | Use it for | Lives in | How to make one |
 | --- | --- | --- | --- |
@@ -31,7 +31,7 @@ A task can be a line inside a note or a note of its own; both show up in the sam
    `Call Dana +Website @dana #launch due:friday`
    `+Website` files it in a project, `@dana` adds a person, `#launch` a tag, `due:friday` a date. All of it is optional.
 2. **See it.** **Tasks** opens on **Today**. Tap the counts (Overdue, Today, Upcoming, No date) to change the view. **Filters** narrows by project, status, person or tag. **View** switches between List, Board, Timeline and Calendar.
-3. **Tick it.** The checkbox changes one character in the file. After every change Plainfile shows the exact before and after lines.
+3. **Tick it.** The checkbox changes one character in the file. After every change tendfile shows the exact before and after lines.
 4. **Write a note.** **+ New → Quick note**, type, and it saves on its own. Type `[[` to link to another note, `#` for a tag, `@` for a person, `/table` for a table.
 5. **Start today's journal.** **Home → Start today's journal**. Come back to old days from **Journal** under **More**.
 
@@ -45,8 +45,8 @@ A task can be a line inside a note or a note of its own; both show up in the sam
 
 ## 5. Things worth knowing
 
-- **The folder is the whole thing.** Open it in any editor, sync it with anything, delete Plainfile and every file still opens. The index Plainfile builds is only a cache and is safe to delete.
-- **It never rewrites your files.** Plainfile changes the smallest piece of text it can. If a file changed outside the app since you opened it, you are told instead of it being overwritten.
+- **The folder is the whole thing.** Open it in any editor, sync it with anything, delete tendfile and every file still opens. The index tendfile builds is only a cache and is safe to delete.
+- **It never rewrites your files.** tendfile changes the smallest piece of text it can. If a file changed outside the app since you opened it, you are told instead of it being overwritten.
 - **Deleting is a move to Trash.** The note goes to `.plainfile/trash/` and Undo brings it back. Every save also keeps recent history under `.plainfile/history/`.
 - **Other people's syntax works.** `due:2026-11-23`, `📅 2026-11-23` (Obsidian Tasks), `[due:: 2026-11-23]` (Dataview) and `[[wikilinks]]` are all read as they are. See [Task formats](TASK-FORMATS.md).
 - **Install it** from the footer to get its own window and an offline copy.

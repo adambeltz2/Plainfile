@@ -272,7 +272,7 @@ export function toDocx(md: string, o: RenderOptions = {}, title = ''): Uint8Arra
     {
       name: 'docProps/core.xml',
       data: enc.encode(
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${x(title)}</dc:title><dc:creator>Plainfile</dc:creator></cp:coreProperties>`,
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${x(title)}</dc:title><dc:creator>tendfile</dc:creator></cp:coreProperties>`,
       ),
     },
     {

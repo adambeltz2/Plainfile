@@ -40,7 +40,7 @@ function store(s: Saved | undefined): void {
 /**
  * The app key everyone signs in with by default. A Dropbox app key is public by design (it is sent to the
  * browser and shown in every sign-in address), and sign-in uses PKCE, so there is no secret to protect.
- * A copy of Plainfile can use its own app by setting DROPBOX_APP_KEY at build time, or by pasting a key
+ * A copy of tendfile can use its own app by setting DROPBOX_APP_KEY at build time, or by pasting a key
  * under "Use my own Dropbox app".
  */
 const DEFAULT_APP_KEY = 'vfcwmj0eu2kdiud';
@@ -62,7 +62,7 @@ export function html(): string {
     h +=
       `<div class="fld"><label for="db-root">Folder (optional)</label><input id="db-root" class="inp" autocomplete="off" spellcheck="false" placeholder="/Notes, or leave empty" value="${esc(cloud.root)}"></div>` +
       `<div class="row"><button class="btn primary" data-act="dropbox-connect"${cloud.busy ? ' disabled' : ''}>${cloud.busy ? 'Going to Dropbox…' : 'Connect'}</button><button class="btn" data-act="dropbox-cancel">Cancel</button></div>` +
-      `<details style="margin-top:8px"${cloud.appKey ? ' open' : ''}><summary class="small">Use my own Dropbox app</summary><p class="small muted" style="margin:6px 0">Optional. Plainfile signs in with its own Dropbox app unless you give a key here.</p>` +
+      `<details style="margin-top:8px"${cloud.appKey ? ' open' : ''}><summary class="small">Use my own Dropbox app</summary><p class="small muted" style="margin:6px 0">Optional. tendfile signs in with its own Dropbox app unless you give a key here.</p>` +
       `<div class="fld"><label for="db-key">Dropbox app key</label><input id="db-key" class="inp" autocomplete="off" spellcheck="false" placeholder="from your app at dropbox.com/developers/apps" value="${esc(cloud.appKey)}"></div>` +
       `<ol class="small"><li>Open <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">dropbox.com/developers/apps</a> and choose <b>Create app</b>, <b>Scoped access</b>, then <b>App folder</b> or <b>Full Dropbox</b>.</li>` +
       '<li>On <b>Permissions</b> tick <code>files.metadata.read</code>, <code>files.metadata.write</code>, <code>files.content.read</code> and <code>files.content.write</code>, then Submit.</li>' +

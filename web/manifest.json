@@ -1,6 +1,6 @@
 {
-  "name": "Plainfile",
-  "short_name": "Plainfile",
+  "name": "tendfile",
+  "short_name": "tendfile",
   "description": "Tasks, notes and links in a plain folder of markdown files.",
   "start_url": "./",
   "scope": "./",

@@ -12,7 +12,7 @@ test('the footer opens What is new, by version without dates, and links to GitHu
   const [popup] = await Promise.all([page.waitForEvent('popup'), foot.getByRole('link', { name: 'What is new' }).click()]);
   await popup.waitForLoadState();
   await expect(popup.locator('.title')).toHaveText('What is new');
-  await expect(popup.getByRole('link', { name: 'Open Plainfile' })).toBeVisible();
+  await expect(popup.getByRole('link', { name: 'Open tendfile' })).toBeVisible();
   await popup.close();
   await page.goto('/?go=changelog');
   await expect(page.locator('.title')).toHaveText('What is new'); // the same page, opened directly

@@ -17,16 +17,17 @@ test('the header stays in the same place on every screen of a wide window', asyn
   }
 });
 
-test('clicking the Plainfile name goes Home, on a wide screen and on a phone', async ({ page }) => {
+test('clicking the tendfile name goes Home, on a wide screen and on a phone', async ({ page }) => {
   await openVault(page, { 'a.md': '# A\n' }, true, 'home');
   await nav(page, 'Notes').click();
   await expect(page.locator('.notes-home, .frame.notes').first()).toBeVisible();
-  await page.getByRole('button', { name: 'Plainfile, go to Home' }).click();
+  await page.getByRole('button', { name: 'tendfile, go to Home' }).click();
   await expect(page.locator('.home')).toBeVisible();
+  await expect(page.locator('.bar h1 .logo .logo-mark')).toBeVisible(); // the small mark before the name
   await page.setViewportSize({ width: 390, height: 800 });
   await nav(page, 'Notes').click();
   await expect(page.locator('.home')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Plainfile, go to Home' }).click();
+  await page.getByRole('button', { name: 'tendfile, go to Home' }).click();
   await expect(page.locator('.home')).toBeVisible();
 });
 

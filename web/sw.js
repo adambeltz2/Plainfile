@@ -1,4 +1,4 @@
-// Plainfile service worker. Lets the app open offline and be installed.
+// tendfile service worker. Lets the app open offline and be installed.
 // This file replaces the service worker of the earlier Notebook app, which lived at the same
 // address: when the browser sees this version it installs it, and the activate step below
 // deletes every older cache, including Notebook's.

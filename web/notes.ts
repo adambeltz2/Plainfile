@@ -609,7 +609,7 @@ function statsText(): string {
 function bannerHtml(): string {
   if (notes.pathPrompt) {
     return (
-      '<div class="notice" role="group" aria-label="Where is this folder">Browsers do not tell Plainfile where this folder is on your computer, so tell it once and it will be remembered here. ' +
+      '<div class="notice" role="group" aria-label="Where is this folder">Browsers do not tell tendfile where this folder is on your computer, so tell it once and it will be remembered here. ' +
       '<div class="row-gap" style="margin:8px 0"><label class="small" for="vault-base">Folder location</label><input id="vault-base" class="inp" type="text" autocomplete="off" spellcheck="false" placeholder="C:\\Users\\you\\Notes  or  /Users/you/Notes" value="' +
       esc(savedBase()) +
       '"></div>' +

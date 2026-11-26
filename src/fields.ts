@@ -121,7 +121,7 @@ export function fieldIssues(index: VaultIndex, notes: Note[]): FieldIssue[] {
       else {
         const canon = normalizeStatus(st.value);
         if (!canon)
-          add(n, 'unknown-status', `“${String(st.value)}” is not a status Plainfile knows (todo, doing, waiting, done).`, {
+          add(n, 'unknown-status', `“${String(st.value)}” is not a status tendfile knows (todo, doing, waiting, done).`, {
             key: 'status',
             value: 'todo',
             remove: st.key === 'status' ? undefined : st.key,

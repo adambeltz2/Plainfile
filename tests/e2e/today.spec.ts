@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('landing offers a folder and the sample vault', async ({ page }) => {
-  await expect(page.getByRole('heading', { name: 'Plainfile' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'tendfile' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open a folder' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Try the sample vault' })).toBeVisible();
 });

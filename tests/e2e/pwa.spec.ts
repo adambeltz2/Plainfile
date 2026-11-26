@@ -7,7 +7,7 @@ test('the page links a valid manifest whose icons exist', async ({ page, request
   const res = await request.get(`/${href}`);
   expect(res.ok()).toBe(true);
   const m = await res.json();
-  expect(m).toMatchObject({ name: 'Plainfile', display: 'standalone', start_url: './' });
+  expect(m).toMatchObject({ name: 'tendfile', display: 'standalone', start_url: './' });
   for (const icon of m.icons as { src: string; sizes: string }[]) {
     const r = await request.get(`/${icon.src}`);
     expect(r.ok(), icon.src).toBe(true);
@@ -23,7 +23,7 @@ test('a service worker takes over and the app opens with no connection', async (
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Plainfile' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'tendfile' })).toBeVisible();
   await page.getByRole('button', { name: 'Try the sample vault' }).click();
   await nav(page, 'Tasks').click();
   await expect(page.locator('.title')).toHaveText('All tasks');
