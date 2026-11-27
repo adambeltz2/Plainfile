@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.16.0] - 2026-11-27
+
+### Added
+- **A note says when its file name and title disagree.** If the title written in a note (`title:`) says something different from the file name, a small notice offers **Rename the file to “…”** (it opens Rename with that name ready, with the usual link preview and Undo) or **Keep it** for this visit. Names that match in spirit (case, spaces, hyphens: "Pricing research" and `pricing-research.md`) and project `index` notes are not flagged. Nothing is renamed on its own.
+
+### Fixed
+- **A title made only of digits was ignored.** `title: 1234567` is a number to YAML, so the note was still called by its file name (`1`) in lists and search. It is now read as the title.
+
 ## [2.15.1] - 2026-11-27
 
 ### Fixed

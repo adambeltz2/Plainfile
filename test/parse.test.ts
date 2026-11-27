@@ -120,4 +120,7 @@ describe('subtask progress', () => {
       ['not a child', null, null],
     ]);
   });
+  it('reads a title made only of digits (YAML calls it a number) as the title', () => {
+    expect(parse('1.md', '---\ntitle: 1234567\n---\nbody').title).toBe('1234567');
+  });
 });

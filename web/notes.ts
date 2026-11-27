@@ -28,6 +28,7 @@ import { normalizePriority } from '../src/priority';
 import { outline } from '../src/outline';
 import { linkTargets, suggestionsFor, type LinkTarget } from '../src/vocabulary';
 import { ConflictError } from '../src/storage';
+import { nameForTitle } from '../src/rename';
 import { readingStats } from '../src/render';
 import { MOD } from './keys';
 import { errorMessage, onVaultChange, projectRef, render, state, today } from './store';
@@ -498,8 +499,15 @@ function bannerHtml(): string {
       '<button class="btn" data-act="note-overwrite">Overwrite the file</button></div>'
     );
   }
+  const n = notes.path ? state.index?.notes.get(notes.path) : undefined;
+  const suggested = n && notes.path && !keepNames.has(notes.path) ? nameForTitle(n) : undefined;
+  if (suggested)
+    return `<div class="notice small" role="status">The file name <span class="mono">${esc(n!.name)}.md</span> differs from the title. <button class="btn small" data-act="rename-to-title">Rename the file to “${esc(suggested)}”</button> <button class="btn small" data-act="keep-name">Keep it</button></div>`;
   return '';
 }
+
+/** Notes whose file name differs from their title on purpose, for this visit. */
+const keepNames = new Set<string>();
 
 function refreshBanner(): void {
   const el = document.getElementById('note-banner');
@@ -670,6 +678,7 @@ function backlinkItem(idx: NonNullable<typeof state.index>, b: { from: string; l
 }
 
 export function refreshSide(): void {
+  refreshBanner(); // the title may have changed
   const el = document.getElementById('note-side');
   if (el) el.innerHTML = sideHtml();
   const stats = document.getElementById('note-stats');
@@ -978,6 +987,10 @@ export async function click(target: HTMLElement): Promise<boolean> {
       return true;
     case 'link-cancel':
       notes.missingLink = undefined;
+      refreshBanner();
+      return true;
+    case 'keep-name':
+      if (notes.path) keepNames.add(notes.path);
       refreshBanner();
       return true;
     case 'note-reload': {

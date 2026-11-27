@@ -16,11 +16,11 @@ export const rn = {
 
 const baseName = (p: string): string => (p.split('/').pop() ?? p).replace(/\.md$/i, '');
 
-export async function openRename(path: string | undefined, mode: 'in' | 'out' = 'in'): Promise<void> {
+export async function openRename(path: string | undefined, mode: 'in' | 'out' = 'in', name?: string): Promise<void> {
   await flush();
   rn.mode = mode;
   rn.path = path;
-  rn.name = path ? baseName(path) : '';
+  rn.name = name ?? (path ? baseName(path) : '');
   rn.excluded = new Set();
   rn.result = undefined;
   rn.error = '';
