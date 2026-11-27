@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { hubTasks } from '../src/hub';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
-import { listProjects, openSubProjects, projectDashboard, setProjectActive, subProjects } from '../src/projects';
+import { listProjects, openSubProjects, projectNotes, projectDashboard, setProjectActive, subProjects } from '../src/projects';
 import { renderTemplate, BUILT_IN } from '../src/templates';
 
 const proj = (title: string, extra = '', body = ''): string => `---\ntitle: ${title}\ntype: project\nactive: true\n${extra}---\n${body}`;
@@ -44,6 +44,29 @@ describe('listProjects is worked out once per change, and stays right after one'
     storage.external('projects/other/deep/index.md', proj('Deep', '', '- [ ] Deep task\n'));
     await index.scan();
     expect(listProjects(index).find((p) => p.title === 'Deep')?.parent).toBe('projects/other/index.md');
+  });
+});
+
+describe('the project list agrees with what each project page covers', () => {
+  it('counts the same open tasks and follow-ups as the notes a project covers', async () => {
+    const files: Record<string, string> = {
+      ...FILES,
+      'projects/site/notes/a.md': '# A\n- [ ] A task\n- [x] done one\n#followup call back\n',
+      'meetings/Two.md': '---\ntitle: Two\nproject: [site, other]\n---\n- [ ] Two task\n',
+      'inbox/Loose.md': '---\nproject: Launch\n---\n- [ ] Loose task\n',
+      'projects/old.md': '---\ntitle: Old\nactive: false\n---\n- [ ] Old task\n',
+      'meetings/Old Sync.md': '---\nproject: old\n---\n- [ ] Old sync task\n',
+    };
+    const { index } = await setup(files);
+    for (const p of listProjects(index)) {
+      const notes = projectNotes(index, p.path);
+      const open = notes.reduce((c, x) => c + x.tasks.filter((t) => t.state === ' ').length + (x.fileTask && !x.fileTask.done ? 1 : 0), 0);
+      const follow = notes.reduce((c, x) => c + x.followups.length, 0);
+      expect({ title: p.title, open: p.openTasks, follow: p.followups }).toEqual({ title: p.title, open, follow });
+    }
+    const open = (t: string): number => listProjects(index).find((p) => p.title === t)!.openTasks;
+    expect(open('Old')).toBe(2); // its own line and the meeting that names it, though it has no folder
+    expect(open('Site')).toBeGreaterThanOrEqual(8); // the folder, its sub-projects, and the meetings that name it
   });
 });
 

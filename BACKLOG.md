@@ -396,9 +396,9 @@ Where an item says "done", it was handled in 2.13.1.
 ### Speed (5,000 notes, CPU slowed 4x like a phone; `node scripts/perf.mjs 5000 4 --screens`)
 - [x] done: `listProjects` and `parentMap` were recomputed on every call (about 1.6 s of a 2 s New-project form at this size). Now worked out once per index change. Open the New form: 2.4 s to 0.7 s. Tasks: 1.2 s to 0.4 s. Notes: 0.8 s to 0.15 s.
 - [x] done: formatting a date built a new formatter on each call (about 0.9 s of a broad search at this size). One formatter is now reused.
-- [ ] [FEATURE] A broad search ("launch", matching most notes) still takes about 1.1 s to 1.5 s because every result becomes a row. Show the first 100 with "Show more", and keep the count. Affected: web/search.ts (`results`).
-- [ ] [DEBT] `scope` and `scopeOwn` in src/projects.ts still scan every note once per project (125 projects x 5,000 notes). Build all project scopes in one pass over the notes (by folder and by `project:` name). About 0.3 s at 4x, once per change. Affected: src/projects.ts.
-- [ ] [DEBT] Insight (about 0.9 s), People (about 0.8 s) and Home (about 0.6 s) are the slowest screens left at this size; most of it is drawing, not code. Profile each with `scripts/perf.mjs` after the search cap. Affected: web/insight.ts, web/people.ts, web/home.ts.
+- [x] done in 2.13.2: a broad search shows the first 100 results with "Show 100 more" (1.1 s to 1.5 s down to about 0.15 s).
+- [x] done in 2.13.2: what each project covers is worked out in one pass per index change, and `projectNotes` reads it from there (the hub asked once per project).
+- [ ] [DEBT] Insight (about 0.7 s to 1.0 s at 5,000 notes, 4x) is the slowest screen left. People is about 0.8 s, but only because the test folder has 833 person notes (a row each, 7,600 elements); a real folder has far fewer, though a long people list could be paged. Profile Insight with `scripts/perf.mjs`. Affected: web/insight.ts, web/people.ts.
 - [ ] [DEBT] Opening and scanning 5,000 notes takes about 3.3 s the first time (no CPU slowdown). Check what the saved copy saves on a second open.
 
 ### Decisions (need you)

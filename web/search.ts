@@ -6,6 +6,10 @@ import { esc, highlight } from './util';
 
 export const searchState = { q: '' };
 
+/** How many results are drawn at once. A broad query can match thousands of notes, and drawing every row is what makes it slow. */
+const PAGE = 100;
+const paging = { q: '', shown: PAGE };
+
 /** Quick ways in: what changed lately comes first. */
 const QUICK: [string, string][] = [
   ['Modified today', 'modified:today'],
@@ -49,11 +53,17 @@ function results(): { list: string; count: string; facets: string } {
   const q = searchState.q.trim();
   const hits = q ? search(idx, q, today()) : recentNotes(idx);
   const words = parseQuery(q, today()).words;
-  const count = q ? `${hits.length} result${hits.length === 1 ? '' : 's'} in ${idx.notes.size} notes` : '';
+  if (paging.q !== q) Object.assign(paging, { q, shown: PAGE }); // a new query starts from the first page
+  const shown = Math.min(paging.shown, hits.length);
+  const more = hits.length - shown;
+  const count = q ? `${hits.length} result${hits.length === 1 ? '' : 's'} in ${idx.notes.size} notes${more > 0 ? `, showing the first ${shown}` : ''}` : '';
   const list = !q
     ? `<p class="muted">Type to search titles, text, paths and tags. Narrow with operators like <code>tag:launch</code>, <code>folder:projects</code>, <code>type:meeting</code>, <code>is:open</code>, <code>due:&lt;2026-11-30</code>, <code>modified:today</code> or <code>@dana</code>.</p><h2 class="grp">Recently modified</h2><ul class="plain">${hits.map((h) => hitHtml(h, words)).join('')}</ul>`
     : hits.length
-      ? `<ul class="plain">${hits.map((h) => hitHtml(h, words)).join('')}</ul>`
+      ? `<ul class="plain">${hits
+          .slice(0, shown)
+          .map((h) => hitHtml(h, words))
+          .join('')}</ul>${more > 0 ? `<p><button class="btn" data-search-more>Show ${Math.min(PAGE, more)} more</button></p>` : ''}`
       : '<p class="muted">No matches. Remove an operator or check the spelling.</p>';
 
   const tc = new Map<string, number>();
@@ -149,6 +159,11 @@ export function input(e: Event): boolean {
 
 export async function click(target: HTMLElement): Promise<boolean> {
   const ex = target.closest<HTMLElement>('[data-q]')?.dataset.q;
+  if (target.closest('[data-search-more]')) {
+    paging.shown += PAGE;
+    update();
+    return true;
+  }
   const add = target.closest<HTMLElement>('[data-add]')?.dataset.add;
   if (ex !== undefined || add !== undefined) {
     const el = document.getElementById('search-q') as HTMLInputElement | null;
