@@ -423,3 +423,11 @@ Where an item says "done", it was handled in 2.13.1.
 - [x] done in 2.14.0: draw.io diagrams as `.drawio.svg` / `.drawio.png` pictures with an Edit diagram button that copies where the file is (decided: no in-app draw.io editor, so no iframe, no third-party page and no network). Not done: a `![[flow.drawio.svg]]` wiki embed is not drawn in the live editor (any `![[image]]` is not; only `![](path)` is). Affected: web/editor.ts (`IMAGE_LINE`), src/render.ts already handles it for export.
 - [FEATURE] Draw `![[image.png]]` / `![[flow.drawio.svg]]` wiki embeds as pictures in the live editor, as `![](path)` already is, resolving the name like links do (`index.resolveEmbed`). Affected: web/editor.ts (`IMAGE_LINE`, `ImageWidget`), web/notes.ts (`imageFile`).
 - [FEATURE] Vault health: outside renames and moves of attachments (such as a diagram) are not detected, so the embeds that pointed to them show as broken links. Offer the same one-click fix as for notes. Affected: src/rename.ts, src/health.ts.
+
+## Cloud storage (2026-11-27)
+- [x] done in 2.15.0: OneDrive adapter, sign-in, first-screen card and docs, behind a build-time app ID (`ONEDRIVE_CLIENT_ID`); needs the one-time Microsoft app registration in docs/ONEDRIVE.md.
+- [ ] Needs you: register the Microsoft app (docs/ONEDRIVE.md) and send the Application (client) ID, then try the live sign-in and the checks listed at the end of that page. The adapter has only met a fake OneDrive.
+- [ ] Needs you: decide on Google Drive (docs/GOOGLE-DRIVE.md): skip it, or a personal-use version on Google's sign-in script (needs an exception in CLAUDE.md for the unpinned script).
+- [ ] [FEATURE] OneDrive: ask Graph for changes since the last scan (`delta`) instead of walking every folder on each rescan, as Dropbox does with its cursor. A 5,000-note vault in 100 folders is 100 or more requests per rescan today. Affected: src/onedrive-storage.ts (`list`).
+- [ ] [FEATURE] OneDrive: sign in again quietly before the day is up (a hidden redirect), so the daily sign-in is rarely seen. Affected: web/cloud-onedrive.ts.
+- [ ] [DEBT] Resume the last cloud vault on reload as the folder vault does (today the card offers Open OneDrive / Open Dropbox). Affected: web/main.ts (`resumeSaved`), web/cloud.ts, web/cloud-onedrive.ts.

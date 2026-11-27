@@ -2,6 +2,7 @@ import { fsaSupported, FsaStorage } from '../src/fsa-storage';
 import * as calendarScreen from './calendar';
 import * as journalScreen from './journal';
 import * as cloudUi from './cloud';
+import * as onedriveUi from './cloud-onedrive';
 import * as explore from './explore';
 import * as guide from './guide';
 import * as changelogScreen from './changelog';
@@ -189,6 +190,7 @@ function landing(): string {
   }
   h += `<button class="btn" data-act="demo">Try the sample vault</button></div>`;
   h += cloudUi.html();
+  h += onedriveUi.html();
   if (!supported) {
     h +=
       '<div class="notice">Opening a local folder needs Chrome, Edge, Brave or Opera on a desktop computer or an Android phone. ' +
@@ -431,7 +433,7 @@ app.addEventListener('focusout', (e) => {
 app.addEventListener('click', (e) => {
   void (async () => {
     const target = e.target as HTMLElement;
-    if (!state.index && (await cloudUi.click(target))) return;
+    if (!state.index && ((await cloudUi.click(target)) || (await onedriveUi.click(target)))) return;
     if (target.closest('[data-quick-note]') && state.index && !state.modal) return newmenu.quickNote();
     if (await palette.click(target)) return;
     if (await journalScreen.click(target)) return;
@@ -618,7 +620,7 @@ app.addEventListener('submit', (e) => {
 
 app.addEventListener('input', (e) => {
   suggest.onInput(e);
-  if (!state.index && cloudUi.input(e)) return;
+  if (!state.index && (cloudUi.input(e) || onedriveUi.input(e))) return;
   if (palette.input(e)) return;
   if (move.input(e)) return;
   if (state.modal && newmenu.input(e)) return;
@@ -818,6 +820,7 @@ if (goParam && ['quick', 'today', 'search', 'changelog', 'guide'].includes(goPar
 }
 requestRender();
 void (async () => {
+  if (await onedriveUi.finishConnect()) return;
   if (await cloudUi.finishConnect()) return;
   await resumeSaved();
 })();

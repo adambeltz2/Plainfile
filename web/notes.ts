@@ -229,6 +229,7 @@ async function copyText(text: string, what: string): Promise<void> {
 export async function copyFilePath(path = notes.path, forceAsk = false): Promise<void> {
   if (!path) return;
   if (state.name.startsWith('Dropbox')) return copyText(dropboxPath(state.name.replace(/^Dropbox:?\s*/, ''), path), 'the Dropbox path');
+  if (state.name.startsWith('OneDrive')) return copyText([state.name.replace(/^OneDrive:?\s*/, ''), path].filter(Boolean).join('/'), 'the OneDrive path');
   if (state.demo) return copyText(path, 'the path');
   const base = savedBase();
   if (!base || forceAsk) {

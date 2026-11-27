@@ -67,6 +67,7 @@ jobs:
         run: npm run build
         env:
           DROPBOX_APP_KEY: ${{ vars.DROPBOX_APP_KEY }}
+          ONEDRIVE_CLIENT_ID: ${{ vars.ONEDRIVE_CLIENT_ID }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

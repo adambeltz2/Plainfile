@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.15.0] - 2026-11-27
+
+### Added
+- **OneDrive, ready to switch on.** Open a vault stored in OneDrive (a personal account, or a work or school one) from any browser, including iPhone and Safari. A save is sent with OneDrive's own revision, so an edit made on another device is refused, never overwritten; large images go up in pieces; the first screen has a **OneDrive** card with an optional folder. The card appears once the site has a registered Microsoft app: the steps, and the one public ID to send, are in `docs/ONEDRIVE.md`. A copy of tendfile can build its own in with `ONEDRIVE_CLIENT_ID`, or paste one under "Use my own OneDrive app". Microsoft ends a browser sign-in after a day, so tendfile says so and offers to sign in again.
+- **Google Drive: the choices written down** (`docs/GOOGLE-DRIVE.md`). It is not built: Google's rules for a page with no server leave one route with hourly sign-ins, no "only if unchanged" write, and a script that cannot be version-pinned. It needs your decision.
+
+### Changed
+- Sign-in code shared by Dropbox and OneDrive: the token request takes the provider's address and scope. Dropbox behaves as before.
+
 ## [2.14.0] - 2026-11-27
 
 ### Added

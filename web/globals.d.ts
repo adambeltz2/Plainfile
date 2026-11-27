@@ -6,6 +6,8 @@ declare const __APP_VERSION__: string;
 declare const __CHANGELOG__: string;
 /** The Dropbox app key (public by design with PKCE), from the DROPBOX_APP_KEY environment variable at build time. May be empty. */
 declare const __DROPBOX_APP_KEY__: string;
+/** The OneDrive Application (client) ID (public by design with PKCE), from the ONEDRIVE_CLIENT_ID environment variable at build time. May be empty. */
+declare const __ONEDRIVE_CLIENT_ID__: string;
 
 interface Window {
   showDirectoryPicker(options?: { mode?: 'read' | 'readwrite' }): Promise<FileSystemDirectoryHandle>;

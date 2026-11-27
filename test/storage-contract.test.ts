@@ -16,6 +16,8 @@ import { applyRename, planRename } from '../src/rename';
 import { ConflictError, ExistsError, type VaultStorage } from '../src/storage';
 import { setTaskDone, setTaskStatus } from '../src/writeback';
 import { FakeDropbox } from './helpers/fake-dropbox';
+import { FakeOneDrive } from './helpers/fake-onedrive';
+import { OneDriveStorage } from '../src/onedrive-storage';
 
 /**
  * The storage contract. Every adapter (in memory, a folder on disk, the browser's folder access, and
@@ -59,6 +61,25 @@ const ADAPTERS: Adapter[] = [
       const fake = new FakeDropbox();
       fake.seed({ 'Other/keep.md': 'not in the vault', 'Vault2/x.md': 'neither' });
       const s = new DropboxStorage({ getToken: async () => 'good', root: '/Notes/Vault', fetch: fake.fetch });
+      for (const [p, t] of Object.entries(files)) await s.create(p, t);
+      return s;
+    },
+  },
+  {
+    name: 'OneDriveStorage (the whole OneDrive)',
+    make: async (files) => {
+      const fake = new FakeOneDrive();
+      const s = new OneDriveStorage({ getToken: async () => 'good', fetch: fake.fetch });
+      for (const [p, t] of Object.entries(files)) await s.create(p, t);
+      return s;
+    },
+  },
+  {
+    name: 'OneDriveStorage (a folder inside OneDrive)',
+    make: async (files) => {
+      const fake = new FakeOneDrive();
+      fake.seed({ 'Other/keep.md': 'not in the vault', 'Vault2/x.md': 'neither' });
+      const s = new OneDriveStorage({ getToken: async () => 'good', root: 'Notes/Vault', fetch: fake.fetch });
       for (const [p, t] of Object.entries(files)) await s.create(p, t);
       return s;
     },
