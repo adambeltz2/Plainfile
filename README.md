@@ -86,6 +86,8 @@ Screenshots are of the built-in sample vault, regenerated with `npm run screensh
 - [Task formats](docs/TASK-FORMATS.md): the task syntaxes it reads and writes.
 - [Principles and interface design](docs/DESIGN.md): what the app will not do and why.
 - [Connecting Dropbox](docs/DROPBOX.md): setup for your own app key.
+- [Connecting OneDrive](docs/ONEDRIVE.md): registering the app (about ten minutes) and what to expect.
+- [Google Drive](docs/GOOGLE-DRIVE.md): why it is not built yet, and the choices.
 - [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md), [BACKLOG.md](BACKLOG.md), and `CLAUDE.md` for the engineering conventions.
 
 ## Develop and run it locally

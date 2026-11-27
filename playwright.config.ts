@@ -11,6 +11,8 @@ export default defineConfig({
   },
   webServer: {
     command: 'npm run build && npm run serve',
+    // The OneDrive card only shows when the build has an app ID; the browser tests use a made-up one against a fake Microsoft.
+    env: { ONEDRIVE_CLIENT_ID: 'ci-test-client' },
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: true,
     timeout: 60_000,

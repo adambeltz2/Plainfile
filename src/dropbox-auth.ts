@@ -37,7 +37,7 @@ export function authorizeUrl(p: { appKey: string; redirectUri: string; challenge
   return `https://www.dropbox.com/oauth2/authorize?${q}`;
 }
 
-interface TokenReply {
+export interface TokenReply {
   access_token?: string;
   refresh_token?: string;
   expires_in?: number;
@@ -45,14 +45,27 @@ interface TokenReply {
   error_description?: string;
 }
 
-async function tokenRequest(body: Record<string, string>, f: typeof fetch): Promise<TokenReply> {
-  const res = await f('https://api.dropboxapi.com/oauth2/token', {
+/** Where a provider's tokens come from. Dropbox by default; OneDrive passes its own. */
+export interface TokenEndpoint {
+  url: string;
+  /** Sent with every token request besides the standard fields (OneDrive wants the scope). */
+  extra?: Record<string, string>;
+  /** Shown in error messages. */
+  label?: string;
+  /** How long an access token lasts when the reply does not say, in seconds. */
+  ttl?: number;
+}
+
+const DROPBOX: TokenEndpoint = { url: 'https://api.dropboxapi.com/oauth2/token', label: 'Dropbox', ttl: 14400 };
+
+export async function tokenRequest(body: Record<string, string>, f: typeof fetch, ep: TokenEndpoint = DROPBOX): Promise<TokenReply> {
+  const res = await f(ep.url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(body).toString(),
+    body: new URLSearchParams({ ...ep.extra, ...body }).toString(),
   });
   const json = (await res.json().catch(() => ({}))) as TokenReply;
-  if (!res.ok || !json.access_token) throw new Error(json.error_description ?? json.error ?? `Dropbox sign-in failed (${res.status})`);
+  if (!res.ok || !json.access_token) throw new Error(json.error_description ?? json.error ?? `${ep.label ?? 'Sign-in'} sign-in failed (${res.status})`);
   return json;
 }
 
@@ -79,6 +92,7 @@ export class TokenSource {
     private onChange: (t: Tokens) => void = () => undefined,
     private f: typeof fetch = (...a) => fetch(...a),
     private clock: () => number = Date.now,
+    private endpoint: TokenEndpoint = DROPBOX,
   ) {}
 
   getToken = (forceRefresh = false): Promise<string> => {
@@ -86,11 +100,11 @@ export class TokenSource {
     // Several requests at once share one refresh.
     this.pending ??= (async () => {
       try {
-        const j = await tokenRequest({ grant_type: 'refresh_token', refresh_token: this.tokens.refresh, client_id: this.appKey }, this.f);
+        const j = await tokenRequest({ grant_type: 'refresh_token', refresh_token: this.tokens.refresh, client_id: this.appKey }, this.f, this.endpoint);
         this.tokens = {
           access: j.access_token as string,
           refresh: j.refresh_token ?? this.tokens.refresh,
-          expiresAt: this.clock() + (j.expires_in ?? 14400) * 1000,
+          expiresAt: this.clock() + (j.expires_in ?? this.endpoint.ttl ?? 14400) * 1000,
         };
         this.onChange(this.tokens);
         return this.tokens.access;

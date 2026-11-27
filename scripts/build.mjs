@@ -38,6 +38,7 @@ await build({
     __APP_VERSION__: JSON.stringify(version),
     __CHANGELOG__: JSON.stringify(readFileSync(join(root, 'CHANGELOG.md'), 'utf8')),
     __DROPBOX_APP_KEY__: JSON.stringify(process.env.DROPBOX_APP_KEY ?? ''),
+    __ONEDRIVE_CLIENT_ID__: JSON.stringify(process.env.ONEDRIVE_CLIENT_ID ?? ''),
   },
   logLevel: 'info',
 });

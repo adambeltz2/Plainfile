@@ -90,6 +90,7 @@ Everything tendfile does, by area. Back to the [README](../README.md).
   only what changed. Dropbox rescans ask just for the changes.
 - **Big folders:** a progress bar with counts and a Cancel button while a large folder is read.
   Files that cannot be read are skipped and listed, so one bad file never blocks the folder.
+- **OneDrive:** open a vault stored in OneDrive (personal, or work or school) from any browser. Files go only between your browser and Microsoft, sign-in uses PKCE with no server, writes are sent with OneDrive's own revision (`If-Match`) so another device's edit is never overwritten, and large images are uploaded in pieces. A browser sign-in lasts a day, then it asks you to sign in again. The card shows once the site has a registered app (see [ONEDRIVE.md](ONEDRIVE.md)). Google Drive is not built (see [GOOGLE-DRIVE.md](GOOGLE-DRIVE.md)).
 - **Dropbox:** open a vault stored in Dropbox from any browser. Files go only between your browser and
   Dropbox, sign-in uses PKCE with no server, and writes are checked against Dropbox revisions.
 - **Install it:** works as an app on desktop and phone, and opens offline after the first visit.
@@ -118,6 +119,7 @@ Design mockups are in [`mockups.html`](mockups.html).
 | Live editor | `web/editor.ts` |
 | Rename screen | `web/rename.ts`, `src/rename.ts` |
 | Dropbox storage and sign-in | `src/dropbox-storage.ts`, `src/dropbox-auth.ts`, `web/cloud.ts` |
+| OneDrive storage and sign-in | `src/onedrive-storage.ts`, `src/onedrive-auth.ts`, `web/cloud-onedrive.ts` |
 | Move and duplicate notes | `src/move.ts`, `web/move.ts`, `web/menu.ts`, `web/palette.ts` |
 | Templates, quick add and its one-line parser, link fixes, frontmatter edits | `src/templates.ts`, `src/capture.ts`, `src/quickline.ts`, `src/fixes.ts`, `src/frontmatter.ts` |
 | Projects and the project dashboard | `src/projects.ts` |
