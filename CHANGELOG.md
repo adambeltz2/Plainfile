@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.13.1] - 2026-11-27
+
+### Fixed
+- **Big folders felt slow.** Tested with 5,000 notes and the CPU slowed to phone speed, the list of projects was worked out again every time it was asked for (and it is asked for on most screens). It is now worked out once per change. Opening the New form went from 2.4 s to 0.7 s, Tasks from 1.2 s to 0.4 s and Notes from 0.8 s to 0.15 s.
+- **A broad search spent most of its time formatting dates.** One date formatter is now reused, which takes about 0.9 s off a search that matches thousands of notes.
+
+### Changed
+- `scripts/perf.mjs` has a `--screens` option that times opening every screen and a search in a large folder.
+
 ## [2.13.0] - 2026-11-26
 
 ### Changed

@@ -374,10 +374,49 @@ Each is a new `VaultStorage` adapter that must pass `test/storage-contract.test.
 ## Principle from use (2026-11-23)
 - Folders, `status` and `active` are all things the user can change at any time, in any editor. The app reads them as they are and never assumes a location or an archive means a task is finished. An open task shows wherever it lives (shipped 1.16.2). Apply the same thinking to every new view and filter: decide by the task's own state, not by where its file sits.
 - [FEATURE] Optional: a one-line note when a task is added to a project that is closed out ("Weekend Work is archived") with a Reopen button. Not needed now that open tasks always show; build only if wanted. Affected: web/today.ts, web/store.ts.
-- [BUG] A meeting title containing a slash ("Ken / Adam 1x1") fails with "Name is not allowed" when the file is created, because the slash is kept in the file name. Replace `/` (and other characters a folder cannot hold) in generated file names, the way task titles already are. Affected: src/templates.ts (filename), src/capture.ts taskFileName for reference.
+- [BUG] (could not reproduce on 2.13.1) A meeting title containing a slash ("Ken / Adam 1x1") failed with "Name is not allowed" when the file was created. The template path now renders as `meetings/2026-11-25 Ken - Adam 1x1.md` and a test in `test/templates.test.ts` keeps it that way. If it still happens, note which screen made the file: the New menu, the quick add or a rename. Affected: src/templates.ts (`clean`).
 - [FEATURE] Rename a person everywhere. Today a person is just the name written in `@mentions` and `people:` lists (plus an optional person note), so Rename on a person note only rewrites `[[links]]` to that note. Add "Rename person" on the People page: preview every `@old` in task lines and notes and every `people:` value, rewrite them (and the person note's title/file via the existing Rename), guarded writes with Undo. Affected: src/rename.ts (or new src/people-rename.ts), web/people.ts.
 - [DEBT] Project notes are named `index.md` inside the project folder, so in another tool (Obsidian, VS Code, a file list) every project shows up as "index", `[[index]]` is ambiguous and sub-projects multiply it. The title is in frontmatter, so Plainfile itself is fine. Options: also read the folder-note convention `projects/site/site.md` (file named like its folder) as a project note and offer it as the default for new projects, and add `aliases: [<title>]` to new project notes so links by name resolve elsewhere. Needs a decision before changing the default, since existing vaults use `index.md`. Affected: src/projects.ts (isProject/scope/projectNames), src/templates.ts (Project, Sub-project), src/delete.ts, web/hub.ts, web/main.ts, web/store.ts, src/vocabulary.ts.
 - [FEATURE] A quick add inside a project's page ("Add a task to <project>…"), as the desktop mock showed. Today the project page has + Task (a form); only All tasks has the one-line quick add. Affected: web/hub.ts (html), web/today.ts (quickBar, planQuickLine with a fixed project).
 - [FEATURE] The phone **Notes** tab reopens the last note you had open, full screen, and the list is behind "All notes". Expected a list. Decide: on a phone show the notes list first (with the last note on top as "Continue"), keep resume-last on desktop. Needs a decision. Affected: web/main.ts (`go`), web/notes.ts (`lastOpened`).
 - [DEBT] Finish the tendfile rename (2.13.0 renamed only what people read). Still `plainfile`: the GitHub repository and Pages address (the Dropbox sign-in address and the registered Dropbox app name, "Plainfile", are tied to the Pages address, so change them together), `package.json` name and the `plainfile` CLI command, the `.plainfile/` folder in every vault (migrate or read both so no history, trash or templates are lost), a template's `plainfile:` frontmatter block, browser storage keys (`plainfile-theme`, `plainfile.panes`, `plainfile:dropbox`, ...) and database names, the service worker cache prefix, `window.__plainfile` (used by tests), and `docs/mockups*.html`. Needs a decision per item before changing. Affected: package.json, src/cli.ts, src/history.ts, src/delete.ts, src/templates.ts, web/cloud.ts, web/handle-store.ts, web/index-cache.ts, web/sw.js, web/main.ts.
 - [DEBT] Check the tendfile domains (tendfile.app, .io, .com) and search the USPTO for TENDFILE (classes 9 and 42) before registering anything.
+
+## Checklist from the 2.13 review (2026-11-27)
+Where an item says "done", it was handled in 2.13.1.
+
+### Trust (needs you, on real data)
+- [ ] Run the app on a copy of your real folder: tick, edit, rename, move, trash and undo, then diff the files. Anything beyond the intended edit is a bug.
+- [ ] Edit a note in another editor while it is open in the app, then save from the app: expect a conflict, not an overwrite.
+- [ ] Test the newer write paths on real data: table editing (wide tables, blank cells, inline formatting), starting a journal for a past date, closing a sub-project.
+- [ ] Dropbox end to end on a phone: connect, edit, edit the same note elsewhere, resolve the conflict.
+- [ ] First load of the live site after the tendfile rename, in a tab and as an installed app (the service worker must update cleanly).
+- [ ] Confirm the newer write features (tables, journal start, sub-project close, rename of a person) each have a step in `test/storage-contract.test.ts`.
+
+### Speed (5,000 notes, CPU slowed 4x like a phone; `node scripts/perf.mjs 5000 4 --screens`)
+- [x] done: `listProjects` and `parentMap` were recomputed on every call (about 1.6 s of a 2 s New-project form at this size). Now worked out once per index change. Open the New form: 2.4 s to 0.7 s. Tasks: 1.2 s to 0.4 s. Notes: 0.8 s to 0.15 s.
+- [x] done: formatting a date built a new formatter on each call (about 0.9 s of a broad search at this size). One formatter is now reused.
+- [ ] [FEATURE] A broad search ("launch", matching most notes) still takes about 1.1 s to 1.5 s because every result becomes a row. Show the first 100 with "Show more", and keep the count. Affected: web/search.ts (`results`).
+- [ ] [DEBT] `scope` and `scopeOwn` in src/projects.ts still scan every note once per project (125 projects x 5,000 notes). Build all project scopes in one pass over the notes (by folder and by `project:` name). About 0.3 s at 4x, once per change. Affected: src/projects.ts.
+- [ ] [DEBT] Insight (about 0.9 s), People (about 0.8 s) and Home (about 0.6 s) are the slowest screens left at this size; most of it is drawing, not code. Profile each with `scripts/perf.mjs` after the search cap. Affected: web/insight.ts, web/people.ts, web/home.ts.
+- [ ] [DEBT] Opening and scanning 5,000 notes takes about 3.3 s the first time (no CPU slowdown). Check what the saved copy saves on a second open.
+
+### Decisions (need you)
+- [ ] Overlaps: Explore graph vs Related, Weekly review, Report vs Export notes, the Tasks quick add, Calendar vs Timeline; also Insight, People, Vault health.
+- [ ] `index.md` project naming (see the [DEBT] above); the phone Notes tab (list first or resume the last note); desktop filters panel (docked or flyout); simple rows by default on desktop; what the Today count means.
+- [ ] Name: tendfile domains and the USPTO search, then the custom address, then the rest of the rename.
+- [ ] Settle the navigation (the bar, the More menu, the phone bar) and then leave it alone: it changed several times.
+
+### Engineering
+- [x] done: the Screens list in CLAUDE.md named Today, Board and Recent, which no longer exist.
+- [ ] [REFACTOR] Split the largest files before they harden: web/notes.ts (1,282 lines), web/hub.ts (1,164), web/main.ts (828), web/editor.ts (757). Do one file per pull request, along existing seams (for example notes.ts: versions panel, properties panel, title and rename; hub.ts: filters panel, rows, board and timeline), with the browser tests green before and after.
+- [ ] [DEBT] No Content Security Policy. Dropbox tokens sit in localStorage, so a script injected into the page could read them. Add a CSP meta tag (default-src 'self'; script-src 'self' plus the pinned Mermaid CDN and a hash for the inline theme script; connect-src for the Dropbox API hosts; img-src 'self' data: blob:) and run the browser tests against it. Affected: web/index.html, web/cloud.ts. Already good: Mermaid is version-pinned with an integrity hash and `securityLevel: strict`, external links use `noopener`, and text goes through `esc()`.
+- [ ] [DEBT] Audit every `innerHTML` use (about 25 in web/) to confirm each value passes through `esc()`. Affected: web/notes.ts, web/hub.ts, web/table-widget.ts.
+- [ ] Keyboard-only and screen-reader pass over the table editor by hand (the axe scan passes).
+
+### Product gaps
+- [ ] [FEATURE] Waiting on, as a task note or line: it works today as a waiting status (or `#waiting`) plus `@person`, listed on Home and on the person's page. Add: (1) a "Waiting on..." action in the task detail that sets the status and asks who (type-ahead, guarded write); (2) stamp `waiting:YYYY-MM-DD` when a task becomes waiting, so days waited are real (today they count from `created`); (3) use `due:` as the chase-by date and label it "Follow up"; (4) group Home's waiting list by person; (5) say in the cheat sheet that `@dana` on a waiting task means waiting on Dana. Affected: src/home.ts, src/hub.ts, src/inline-status.ts, web/hub.ts, web/home.ts, web/guide.ts.
+- [ ] Recurring tasks (needs a decision), a quick add inside a project page, a table tool strip above the phone keyboard, paste from a spreadsheet and drag rows in tables, Move to Trash for task lines.
+
+### Launch
+- [ ] A short screen recording for the README and the Projects page; a first-time-user test with one person; update the Dropbox app name and redirect address with the domain change.
