@@ -26,6 +26,9 @@ const MIME: Record<string, string> = {
   bmp: 'image/bmp',
 };
 
+/** A draw.io diagram saved as an image: `flow.drawio.svg` (or `.drawio.png`) shows anywhere and keeps its editable data inside the file. */
+export const isDiagram = (path: string): boolean => /\.drawio\.(svg|png)$/i.test(path.replace(/[?#].*$/, ''));
+
 export const isImageType = (mime: string): boolean => mime.startsWith('image/');
 
 /** The MIME type for a file name, so an image can be shown from its bytes. */

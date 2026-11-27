@@ -106,6 +106,10 @@ const SHORTCUTS: [string, string][] = [
   ['Ctrl/Cmd + B / I', 'Bold or italic the selection (press again to take it off); with nothing selected, type between the marks'],
   ['Ctrl/Cmd + V on an image', 'Paste a screenshot into the open note: it is saved in _attachments and shown inline'],
   [
+    'Drop a .drawio.svg',
+    'A draw.io diagram is saved in _attachments and shown inline, with an Edit diagram button that copies where the file is, to open it in draw.io',
+  ],
+  [
     '⋯ More, then Copy as formatted text',
     'Copy the note (or the selection) cleanly for Word, Docs or email. Also under Download as Word and Print or save as PDF',
   ],

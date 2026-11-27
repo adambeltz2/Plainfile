@@ -1,11 +1,12 @@
 import { BARE_URL, linkAt, trimUrl, type LinkAt } from '../src/linknote';
 import { isMermaidOpen } from '../src/diagrams'; // MERMAID
+import { isDiagram } from '../src/attachments';
 import { MermaidWidget } from './mermaid-widget'; // MERMAID
 import { defaultKeymap, history, historyKeymap, indentLess, indentMore, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { parseDueWord } from '../src/quickline';
 import { acceptCompletion, autocompletion, type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
 import { markdown } from '@codemirror/lang-markdown';
-import { Compartment, EditorSelection, EditorState, Transaction, type Range } from '@codemirror/state';
+import { Compartment, EditorSelection, EditorState, Facet, StateEffect, Transaction, type Range } from '@codemirror/state';
 import { openTablePicker } from './table-picker';
 import { tableOptions, tableView } from './table-widget';
 import { Decoration, EditorView, ViewPlugin, WidgetType, keymap, tooltips, type DecorationSet, type ViewUpdate } from '@codemirror/view';
@@ -61,8 +62,17 @@ class Bullet extends WidgetType {
   }
 }
 
-/** Where an editor gets an image's bytes from, as a URL it can show. Set per editor by createEditor. */
-const imageLoaders = new WeakMap<EditorView, (rel: string) => Promise<string | undefined>>();
+/**
+ * Where an editor gets an image's bytes from (as a URL it can show), and what "Edit diagram" does on a draw.io picture.
+ * Set per editor by createEditor. A facet, so it is there when the first pictures are drawn (as the editor is made).
+ */
+const imageOptions = Facet.define<
+  { load?: (rel: string) => Promise<string | undefined>; edit?: (rel: string) => void },
+  { load?: (rel: string) => Promise<string | undefined>; edit?: (rel: string) => void }
+>({ combine: (v) => v[0] ?? {} });
+/** Pictures are drawn again when this goes up (after a diagram was edited in another program and the window is back). */
+const imageEpochs = new WeakMap<EditorView, number>();
+const refreshImages = StateEffect.define<null>();
 const IMAGE_LINE = /^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/;
 
 /** An image on a line of its own, shown in place of its markdown until the cursor is on that line. */
@@ -70,33 +80,52 @@ class ImageWidget extends WidgetType {
   constructor(
     readonly rel: string,
     readonly alt: string,
+    readonly epoch = 0,
   ) {
     super();
   }
   eq(o: ImageWidget): boolean {
-    return o.rel === this.rel && o.alt === this.alt;
+    return o.rel === this.rel && o.alt === this.alt && o.epoch === this.epoch;
   }
   toDOM(view: EditorView): HTMLElement {
     const wrap = document.createElement('span');
     wrap.className = 'cm-img';
     wrap.textContent = this.alt || 'Loading image…';
-    const load = imageLoaders.get(view);
+    const { load, edit: editDiagram } = view.state.facet(imageOptions);
     if (/^(https?:|data:)/i.test(this.rel)) this.show(wrap, this.rel);
     else if (load) {
+      const edit = isDiagram(this.rel) ? editDiagram : undefined;
       void load(this.rel).then((url) => {
-        if (url) this.show(wrap, url);
+        if (url) this.show(wrap, url, edit);
         else wrap.textContent = `Image not found: ${this.rel}`;
       });
     }
     return wrap;
   }
-  private show(wrap: HTMLElement, url: string): void {
+  private show(wrap: HTMLElement, url: string, edit?: (rel: string) => void): void {
     const img = document.createElement('img');
     img.src = url;
     img.alt = this.alt;
     img.className = 'cm-img-el';
     img.addEventListener('error', () => (wrap.textContent = `Could not show ${this.rel}`));
-    img.addEventListener('load', () => wrap.replaceChildren(img));
+    img.addEventListener('load', () => {
+      wrap.replaceChildren(img);
+      if (!edit) return;
+      // A draw.io picture: a button to find the file, which is opened in draw.io itself.
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn small cm-img-edit';
+      b.textContent = 'Edit diagram';
+      b.title = 'Copies where the file is, so you can open it in draw.io. The picture updates when you come back.';
+      b.setAttribute('aria-label', `Edit diagram ${this.alt || this.rel}`);
+      b.addEventListener('mousedown', (e) => e.preventDefault());
+      b.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        edit(this.rel);
+      });
+      wrap.append(b);
+    });
   }
   ignoreEvent(): boolean {
     return false;
@@ -223,7 +252,7 @@ function build(view: EditorView): { all: DecorationSet; atomic: DecorationSet } 
     const isActive = active.has(n);
     const image = !isActive ? IMAGE_LINE.exec(text) : null;
     if (image && line.to > line.from) {
-      const r = Decoration.replace({ widget: new ImageWidget(image[2] ?? '', image[1] ?? '') }).range(line.from, line.to);
+      const r = Decoration.replace({ widget: new ImageWidget(image[2] ?? '', image[1] ?? '', imageEpochs.get(view) ?? 0) }).range(line.from, line.to);
       items.push(r);
       atomic.push(r);
       continue;
@@ -277,7 +306,9 @@ const livePreview = ViewPlugin.fromClass(
       this.atomic = b.atomic;
     }
     update(u: ViewUpdate): void {
-      if (u.docChanged || u.selectionSet || u.viewportChanged || u.focusChanged) {
+      const again = u.transactions.some((t) => t.effects.some((e) => e.is(refreshImages)));
+      if (again) imageEpochs.set(u.view, (imageEpochs.get(u.view) ?? 0) + 1);
+      if (again || u.docChanged || u.selectionSet || u.viewportChanged || u.focusChanged) {
         const b = build(u.view);
         this.deco = b.all;
         this.atomic = b.atomic;
@@ -482,6 +513,8 @@ export interface EditorHandle {
   host: HTMLElement;
   view: EditorView;
   getText(): string;
+  /** Draw the pictures again, so one changed in another program shows its new version. */
+  refreshImages(): void;
   /** The selected text, or an empty string. */
   getSelection(): string;
   setText(text: string): void;
@@ -586,6 +619,8 @@ export function createEditor(o: {
   suggest?: Suggester;
   pasteImage?: (f: File) => Promise<string | null>;
   loadImage?: (rel: string) => Promise<string | undefined>;
+  /** Pressed on a draw.io picture (`.drawio.svg`): the screen shows where the file is. */
+  editDiagram?: (rel: string) => void;
 }): EditorHandle {
   const mode = new Compartment();
   const host = document.createElement('div');
@@ -594,6 +629,7 @@ export function createEditor(o: {
   const state = EditorState.create({
     doc: o.text,
     extensions: [
+      imageOptions.of({ load: o.loadImage, edit: o.editDiagram }),
       EditorState.lineSeparator.of(o.crlf ? '\r\n' : '\n'),
       history(),
       keymap.of([
@@ -682,13 +718,13 @@ export function createEditor(o: {
     ],
   });
   const view = new EditorView({ state, parent: host });
-  if (o.loadImage) imageLoaders.set(view, o.loadImage);
   const text = (): string => view.state.doc.sliceString(0, view.state.doc.length, view.state.lineBreak);
 
   return {
     host,
     view,
     getText: text,
+    refreshImages: () => view.dispatch({ effects: refreshImages.of(null) }),
     getSelection: () => view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to),
     setText(t) {
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: t } });
