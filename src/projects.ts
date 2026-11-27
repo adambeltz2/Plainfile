@@ -50,15 +50,31 @@ function projectNames(n: Note): Set<string> {
  * elsewhere (a meeting in `meetings/`, say) belong too when their `project:` names the project.
  */
 function scope(index: VaultIndex, n: Note, withSub = true): Note[] {
-  const out = scopeOwn(index, n);
-  if (withSub) {
-    for (const [child, parent] of parentMap(index)) {
-      if (parent !== n.path) continue;
-      const c = index.notes.get(child);
-      if (c) for (const x of scopeOwn(index, c).values()) out.set(x.path, x);
-    }
+  const hit = scopes(index);
+  const list = (withSub ? hit.full : hit.own).get(n.path);
+  // A note that is not a project has no entry: it covers itself and the notes that name it.
+  return list ? [...list] : [...scopeOwn(index, n).values()]; // a copy, so a caller cannot change the shared list
+}
+
+/** What every project covers, by itself and with its sub-projects. Worked out once per change to the index: the hub asks for it once per project. */
+const scopeCache = new WeakMap<VaultIndex, { version: number; own: Map<string, Note[]>; full: Map<string, Note[]> }>();
+function scopes(index: VaultIndex): { own: Map<string, Note[]>; full: Map<string, Note[]> } {
+  const hit = scopeCache.get(index);
+  if (hit?.version === index.version) return hit;
+  const own = new Map<string, Note[]>();
+  const full = new Map<string, Note[]>();
+  const maps = ownScopes(index);
+  const children = new Map<string, string[]>();
+  for (const [child, parent] of parentMap(index)) children.set(parent, [...(children.get(parent) ?? []), child]);
+  for (const [path, m] of maps) {
+    own.set(path, [...m.values()]);
+    const merged = new Map(m);
+    for (const c of children.get(path) ?? []) for (const [cp, x] of maps.get(c) ?? []) merged.set(cp, x);
+    full.set(path, [...merged.values()]);
   }
-  return [...out.values()];
+  const made = { version: index.version, own, full };
+  scopeCache.set(index, made);
+  return made;
 }
 
 /** The outermost project that holds each sub-project's folder: sub-project path to parent path. Only folder projects (an `index` note) nest. */
@@ -114,6 +130,31 @@ function scopeOwn(index: VaultIndex, n: Note): Map<string, Note> {
   return out;
 }
 
+/**
+ * What every project covers by itself, worked out in one pass over the notes (asking `scopeOwn` once per project
+ * reads every note once per project, which is slow in a big folder). The same rule: a folder project covers the
+ * notes inside its folder, and any project covers the notes elsewhere whose `project:` names it.
+ */
+function ownScopes(index: VaultIndex): Map<string, Map<string, Note>> {
+  const out = new Map<string, Map<string, Note>>();
+  const byDir = new Map<string, string[]>();
+  const byName = new Map<string, string[]>();
+  for (const n of index.notes.values()) {
+    if (!isProject(n)) continue;
+    out.set(n.path, new Map([[n.path, n]]));
+    if (n.name.toLowerCase() === 'index') {
+      const dir = dirname(n.path);
+      byDir.set(dir, [...(byDir.get(dir) ?? []), n.path]);
+    }
+    for (const nm of projectNames(n)) byName.set(nm, [...(byName.get(nm) ?? []), n.path]);
+  }
+  for (const x of index.notes.values()) {
+    for (let d = dirname(x.path); d; d = dirname(d)) for (const pp of byDir.get(d) ?? []) out.get(pp)?.set(x.path, x);
+    for (const nm of namedProjects(x)) for (const pp of byName.get(nm) ?? []) out.get(pp)?.set(x.path, x);
+  }
+  return out;
+}
+
 /** Not a real project: the hub opened on this path shows every task from every note, in or out of a project. */
 export const ALL_PROJECTS = '*';
 
@@ -138,9 +179,10 @@ export function listProjects(index: VaultIndex): Project[] {
 function buildProjects(index: VaultIndex): Project[] {
   const out: Project[] = [];
   const parents = parentMap(index);
+  const { full } = scopes(index);
   for (const n of index.notes.values()) {
     if (!isProject(n)) continue;
-    const covered = scope(index, n);
+    const covered = full.get(n.path) ?? [n];
     const order = Number(n.frontmatter.sortOrder);
     out.push({
       path: n.path,

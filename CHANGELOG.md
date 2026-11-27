@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.13.2] - 2026-11-27
+
+### Changed
+- **A broad search shows the first 100 results, with "Show 100 more".** A word that matches thousands of notes used to draw a row for every one, which took over a second on a phone with 5,000 notes. The count still says how many matched ("230 results in 231 notes, showing the first 100"), and a new search starts from the first page again.
+
+### Fixed
+- **Home, Tasks and Projects were slow in a folder with many projects.** Each project read every note to work out what it covers, so the work grew with projects times notes. What every project covers is now worked out in one pass per change. With 5,000 notes and 125 projects, on a CPU slowed to phone speed: Home 0.85 s to 0.25 s, Tasks 1.2 s to 0.23 s, Projects 0.47 s to 0.23 s, and a broad search 1.6 s to 0.15 s (with the 2.13.1 changes).
+
 ## [2.13.1] - 2026-11-27
 
 ### Fixed

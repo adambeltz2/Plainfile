@@ -450,3 +450,25 @@ test('opening a search result selects the word that matched, and scrolls to it',
   expect(picked.toLowerCase()).toBe('launch');
   await expect(page.locator('.cm-line', { hasText: 'The launch date is fixed.' })).toBeInViewport();
 });
+
+test('a broad search shows the first 100 results, then more on request, and a new query starts over', async ({ page }) => {
+  const files: Record<string, string> = {};
+  for (let i = 0; i < 230; i++) files[`notes/launch-${i}.md`] = `# Launch ${i}\nwords about the launch\n`;
+  files['notes/other.md'] = '# Other\nnothing here\n';
+  await openVault(page, files);
+  await nav(page, 'Search').click();
+  await page.locator('#search-q').fill('launch');
+  await expect(page.locator('#search-count')).toContainText('230 results');
+  await expect(page.locator('#search-count')).toContainText('showing the first 100');
+  await expect(page.locator('#search-results .res')).toHaveCount(100);
+  await page.getByRole('button', { name: 'Show 100 more' }).click();
+  await expect(page.locator('#search-results .res')).toHaveCount(200);
+  await page.getByRole('button', { name: 'Show 30 more' }).click();
+  await expect(page.locator('#search-results .res')).toHaveCount(230);
+  await expect(page.locator('[data-search-more]')).toHaveCount(0);
+  await expect(page.locator('#search-count')).not.toContainText('showing the first');
+  await page.locator('#search-q').fill('words');
+  await expect(page.locator('#search-results .res')).toHaveCount(100);
+  await page.locator('#search-q').fill('nothing');
+  await expect(page.locator('#search-results .res')).toHaveCount(1);
+});
