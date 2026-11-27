@@ -15,10 +15,12 @@ const QUICK: [string, string][] = [
 ];
 const EXAMPLES = ['is:open', 'is:task due:<2026-11-24', 'type:meeting', 'folder:projects', '#launch'];
 
+const CLOCK = new Intl.DateTimeFormat([], { hour: '2-digit', minute: '2-digit' });
+
 /** "edited 14:05" for today, otherwise "edited 18 Nov". */
 function editedLabel(mtime: number): string {
   const day = localDateOf(mtime);
-  if (day === today()) return `edited ${new Date(mtime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  if (day === today()) return `edited ${CLOCK.format(new Date(mtime))}`;
   return `edited ${fmtDate(day)}`;
 }
 

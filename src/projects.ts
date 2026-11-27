@@ -62,7 +62,16 @@ function scope(index: VaultIndex, n: Note, withSub = true): Note[] {
 }
 
 /** The outermost project that holds each sub-project's folder: sub-project path to parent path. Only folder projects (an `index` note) nest. */
+const parentCache = new WeakMap<VaultIndex, { version: number; map: Map<string, string> }>();
 function parentMap(index: VaultIndex): Map<string, string> {
+  const hit = parentCache.get(index);
+  if (hit?.version === index.version) return hit.map;
+  const map = buildParentMap(index);
+  parentCache.set(index, { version: index.version, map });
+  return map;
+}
+
+function buildParentMap(index: VaultIndex): Map<string, string> {
   const dirs = new Map<string, Note>();
   for (const n of index.notes.values()) {
     const dir = dirname(n.path);
@@ -81,6 +90,18 @@ function parentMap(index: VaultIndex): Map<string, string> {
   return out;
 }
 
+/** The projects a note names in its `project:` value, as slugs. A parsed note never changes (an edit makes a new one), so this is worked out once per note. */
+const slugCache = new WeakMap<Note, string[]>();
+function namedProjects(x: Note): string[] {
+  let hit = slugCache.get(x);
+  if (!hit) {
+    const v = x.frontmatter.project;
+    hit = v === undefined || isProject(x) ? [] : (Array.isArray(v) ? v : [v]).map(slug);
+    slugCache.set(x, hit);
+  }
+  return hit;
+}
+
 /** What a project covers by itself: its folder and the notes elsewhere that name it. */
 function scopeOwn(index: VaultIndex, n: Note): Map<string, Note> {
   const dir = n.name.toLowerCase() === 'index' ? dirname(n.path) : '';
@@ -88,10 +109,7 @@ function scopeOwn(index: VaultIndex, n: Note): Map<string, Note> {
   const out = new Map<string, Note>([[n.path, n]]);
   for (const x of index.notes.values()) {
     if (dir && x.path.startsWith(`${dir}/`)) out.set(x.path, x);
-    else if (x.frontmatter.project !== undefined && !isProject(x)) {
-      const ps = Array.isArray(x.frontmatter.project) ? x.frontmatter.project : [x.frontmatter.project];
-      if (ps.some((v) => names.has(slug(v)))) out.set(x.path, x);
-    }
+    else if (namedProjects(x).some((v) => names.has(v))) out.set(x.path, x);
   }
   return out;
 }
@@ -106,7 +124,18 @@ export function projectNotes(index: VaultIndex, path: string, own = false): Note
   return me ? scope(index, me, !own) : [];
 }
 
+/** Every project, numbered and ordered. Worked out once per change to the index (it is asked for on most renders), and handed out as copies. */
+const listCache = new WeakMap<VaultIndex, { version: number; list: Project[] }>();
 export function listProjects(index: VaultIndex): Project[] {
+  let hit = listCache.get(index);
+  if (hit?.version !== index.version) {
+    hit = { version: index.version, list: buildProjects(index) };
+    listCache.set(index, hit);
+  }
+  return hit.list.map((p) => ({ ...p }));
+}
+
+function buildProjects(index: VaultIndex): Project[] {
   const out: Project[] = [];
   const parents = parentMap(index);
   for (const n of index.notes.values()) {

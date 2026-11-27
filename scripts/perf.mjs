@@ -1,5 +1,6 @@
 // Measures how long the app takes to create a note in a large vault, with the CPU slowed down like a phone.
-//   NO_MINIFY=1 SOURCEMAP=1 npm run build && node scripts/serve.mjs & node scripts/perf.mjs [notes] [slowdown]
+//   NO_MINIFY=1 SOURCEMAP=1 npm run build && node scripts/serve.mjs & node scripts/perf.mjs [notes] [slowdown] [--screens]
+// With --screens it also times opening every screen (click to painted) and a search, in the same vault.
 import { chromium } from '@playwright/test';
 
 const N = Number(process.argv[2] ?? 2000);
@@ -61,4 +62,29 @@ profile.samples.forEach((id, i) => {
 });
 console.log('top self time (ms):');
 for (const [k, v] of [...self].sort((a, b) => b[1] - a[1]).slice(0, 14)) console.log(`  ${(v / 1000).toFixed(0).padStart(6)}  ${k}`);
+
+if (process.argv.includes('--screens')) {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const painted = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  const timed = async (label, act) => {
+    const t = Date.now();
+    await act();
+    await painted();
+    console.log(`  ${String(Date.now() - t).padStart(6)} ms  ${label}`);
+  };
+  console.log(`opening each screen, ${SLOW}x slower CPU, ${N} notes (click until painted):`);
+  for (const id of ['home', 'tasks', 'projects', 'notes', 'calendar', 'search']) {
+    await timed(id, () => page.evaluate((x) => document.querySelector(`.nav [data-nav="${x}"]`).click(), id));
+  }
+  for (const id of ['journal', 'people', 'insight', 'health']) {
+    await page.evaluate(() => document.querySelector('.nav-more').click());
+    await timed(id, () => page.evaluate((x) => document.querySelector(`.nav-menu [data-nav="${x}"]`).click(), id));
+  }
+  await page.evaluate(() => document.querySelector('.nav [data-nav="search"]').click());
+  await painted();
+  await timed('search "launch"', () => page.locator('#search-q').fill('launch'));
+  await page.evaluate(() => document.querySelector('.nav [data-nav="tasks"]').click());
+  await painted();
+  await timed('tasks: type in the search box', () => page.locator('#hub-q, .hubwrap input[type="search"], .hubwrap input.inp').first().fill('Task 12'));
+}
 await browser.close();

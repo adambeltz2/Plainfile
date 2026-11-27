@@ -388,4 +388,11 @@ describe('names of people written by templates', () => {
   it('peopleList drops empty names and strips marks', () => {
     expect(peopleList(' ,@Jo-Lee  Dawson,, Ünï Name ')).toBe('jo-lee-dawson, ünï-name');
   });
+  it('keeps a slash (or any character a file name cannot hold) out of the file name, so the folder will accept it', () => {
+    expect(renderTemplate(byName('Meeting'), { title: 'Ken / Adam 1x1', attendees: '', project: '' }, '2026-11-25').path).toBe(
+      'meetings/2026-11-25 Ken - Adam 1x1.md',
+    );
+    expect(renderTemplate(byName('Note'), { title: 'A\\B: C?*"<>|' }, '2026-11-25').path).not.toMatch(/[\\:?*"<>|]/);
+    expect(renderTemplate(byName('Project'), { title: 'Ops / Support' }, '2026-11-25').path).toBe('projects/ops-support/index.md');
+  });
 });

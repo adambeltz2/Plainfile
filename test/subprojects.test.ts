@@ -22,6 +22,31 @@ async function setup(files = FILES) {
   return { storage, index };
 }
 
+describe('listProjects is worked out once per change, and stays right after one', () => {
+  it('hands out copies, so a caller cannot change what the next call sees', async () => {
+    const { index } = await setup();
+    const first = listProjects(index);
+    first[0]!.title = 'Changed';
+    first[0]!.openTasks = 99;
+    expect(listProjects(index)[0]!.title).toBe('Site');
+    expect(listProjects(index)[0]!.openTasks).not.toBe(99);
+  });
+  it('sees a new note that names a project, a new sub-project, and a note that stops naming one', async () => {
+    const { storage, index } = await setup();
+    const open = (title: string): number => listProjects(index).find((p) => p.title === title)!.openTasks;
+    const before = open('Other');
+    storage.external('meetings/Sync.md', '---\ntitle: Sync\nproject: other\n---\n- [ ] Sync task\n');
+    await index.scan();
+    expect(open('Other')).toBe(before + 1);
+    storage.external('meetings/Sync.md', '---\ntitle: Sync\nproject: site\n---\n- [ ] Sync task\n');
+    await index.scan();
+    expect(open('Other')).toBe(before);
+    storage.external('projects/other/deep/index.md', proj('Deep', '', '- [ ] Deep task\n'));
+    await index.scan();
+    expect(listProjects(index).find((p) => p.title === 'Deep')?.parent).toBe('projects/other/index.md');
+  });
+});
+
 describe('sub-projects', () => {
   it('lists a project folder inside another as its sub-project, one level deep, right after its parent', async () => {
     const { index } = await setup();
