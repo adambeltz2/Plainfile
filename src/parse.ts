@@ -305,7 +305,8 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
   }
 
   const h1 = headings.find((h) => h.level === 1);
-  const fmTitle = typeof fm.title === 'string' && fm.title.trim() ? fm.title.trim() : undefined;
+  // A title that is only digits (`title: 1234567`) is read as a number by YAML, and is still a title.
+  const fmTitle = (typeof fm.title === 'string' || typeof fm.title === 'number') && String(fm.title).trim() ? String(fm.title).trim() : undefined;
   const title = fmTitle ?? h1?.text ?? name;
 
   let fileTask: FileTask | undefined;

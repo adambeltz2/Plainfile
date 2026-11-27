@@ -227,3 +227,21 @@ export async function applyOutsideRename(storage: VaultStorage, index: VaultInde
   await index.scan();
   return { from: plan.from, to: plan.to, changes };
 }
+
+/** Letters and digits only, lower case: "Pricing research", "pricing-research" and "Pricing_Research" are the same name. */
+const plainName = (v: string): string => v.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+
+/**
+ * When a note's `title:` and its file name say different things, the file name it would take to match, else undefined.
+ * Only a title written in the note counts, and an `index` note (a project) is named for its folder, so neither is flagged.
+ */
+export function nameForTitle(n: Pick<Note, 'title' | 'name' | 'frontmatter'>): string | undefined {
+  const t = typeof n.frontmatter.title === 'string' || typeof n.frontmatter.title === 'number' ? String(n.frontmatter.title).trim() : '';
+  if (!t || n.name.toLowerCase() === 'index' || plainName(t) === plainName(n.name)) return undefined;
+  const name = t
+    .replace(/[\\/:?*"<>|#[\]^]/g, '-')
+    .replace(/\s+/g, ' ')
+    .replace(/^[.\s-]+|[\s.-]+$/g, '')
+    .slice(0, 80);
+  return name && plainName(name) !== plainName(n.name) ? name : undefined;
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
-import { applyOutsideRename, applyRename, planOutsideRename, planRename } from '../src/rename';
+import { applyOutsideRename, applyRename, nameForTitle, planOutsideRename, planRename } from '../src/rename';
 import { ConflictError } from '../src/storage';
 import { StaleError } from '../src/writeback';
 
@@ -145,5 +145,19 @@ describe('renamed outside the app', () => {
     expect(await store.read('notes/new-name.md')).toBe('---\naliases: [old-name]\n---\nSame text');
     expect(await store.read('b.md')).toBe('Unrelated [[other]]');
     expect(index.backlinks('notes/new-name.md')).toHaveLength(2); // the wiki link and the markdown link on that line
+  });
+});
+
+describe('nameForTitle: when the file name and the title disagree', () => {
+  const note = (title: string | undefined, name: string) => ({ title: title ?? name, name, frontmatter: title === undefined ? {} : { title } });
+  it('suggests a file name from the title only when they say different things', () => {
+    expect(nameForTitle(note('1234567', '1'))).toBe('1234567');
+    expect(nameForTitle(note('Pricing: draft / v2', 'notes'))).toBe('Pricing- draft - v2');
+  });
+  it('says nothing when they match in spirit (case, spaces, hyphens), when there is no written title, or for a project index', () => {
+    expect(nameForTitle(note('Pricing research', 'pricing-research'))).toBeUndefined();
+    expect(nameForTitle(note('2026-11-26 09:22', '2026-11-26 0922'))).toBeUndefined();
+    expect(nameForTitle(note(undefined, 'whatever'))).toBeUndefined();
+    expect(nameForTitle(note('Website', 'index'))).toBeUndefined();
   });
 });

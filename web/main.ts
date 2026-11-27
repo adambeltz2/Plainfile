@@ -22,6 +22,7 @@ import { installDiagnostics } from './diagnostics';
 import { install, installButton, listenForInstall } from './install';
 import { ALL_PROJECTS } from '../src/projects';
 import * as rename from './rename';
+import { nameForTitle } from '../src/rename';
 import * as search from './search';
 import * as suggest from './suggest';
 import { searchState } from './search';
@@ -542,6 +543,11 @@ app.addEventListener('click', (e) => {
         return void (notes.notes.path && explore.focus(notes.notes.path));
       case 'rename-note':
         return void rename.openRename(notes.notes.path);
+      case 'rename-to-title': {
+        const path = notes.notes.path;
+        const n = path ? state.index?.notes.get(path) : undefined;
+        return void (path && n && rename.openRename(path, 'in', nameForTitle(n)));
+      }
       case 'review-renames':
         return void rename.openRename(undefined, 'out');
       case 'rescan': {

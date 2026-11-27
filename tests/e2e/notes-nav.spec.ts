@@ -613,3 +613,28 @@ test('the header box is "Go to": a sentence offers Add task first, and Enter mak
   await expect(page.locator('.pal-item').first()).toContainText('Ken Moore');
   await expect(page.locator('.pal-item').last()).toContainText('Add task: ken');
 });
+
+test('a file name that differs from the title is flagged with a one-click Rename, and Keep it hides the notice', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { '1.md': '---\ntitle: 1234567\n---\nnotes\n', 'pricing-research.md': '---\ntitle: Pricing research\n---\nx\n' });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, 'Pricing research')).click();
+  await expect(page.locator('.cm-content')).toBeVisible();
+  await expect(page.locator('#note-banner')).not.toContainText('differs from the title'); // same name in spirit
+  await (await noteItem(page, '1234567')).click();
+  await expect(page.locator('#note-banner')).toContainText('differs from the title');
+  await page.getByRole('button', { name: 'Keep it' }).click();
+  await expect(page.locator('#note-banner')).not.toContainText('differs from the title');
+  await (await noteItem(page, 'Pricing research')).click();
+  await (await noteItem(page, '1234567')).click();
+  await expect(page.locator('#note-banner')).not.toContainText('differs from the title'); // kept for this visit
+});
+
+test('Rename the file to the title opens Rename with that name ready', async ({ page }) => {
+  await page.goto('/');
+  await openVault(page, { '1.md': '---\ntitle: 1234567\n---\nnotes\n' });
+  await nav(page, 'Notes').click();
+  await (await noteItem(page, '1234567')).click();
+  await page.getByRole('button', { name: /Rename the file to/ }).click();
+  await expect(page.locator('#rn-name')).toHaveValue('1234567');
+});
