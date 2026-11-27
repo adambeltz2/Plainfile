@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.14.0] - 2026-11-27
+
+### Added
+- **draw.io diagrams in a note.** A diagram saved from draw.io as `name.drawio.svg` (or `.drawio.png`) shows in the note like any picture, and gets an **Edit diagram** button. Drop or paste the file into a note (it keeps its own name in `_attachments/`) or link it with `![](path/flow.drawio.svg)`. The button copies where the file is, so you can open it in draw.io (desktop, the web app or the VS Code extension); when you come back to tendfile the picture is redrawn with your changes. tendfile never edits the diagram itself, and moving the note rewrites its link and leaves the file where it is.
+
+### Fixed
+- **A note that already had a picture in it showed only the picture's description when opened.** The picture's loader was attached a moment too late for the first draw, so only pictures added after the note was open appeared. They now show on open.
+
 ## [2.13.2] - 2026-11-27
 
 ### Changed

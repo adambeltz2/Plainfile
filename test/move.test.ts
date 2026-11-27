@@ -65,6 +65,16 @@ describe('planMove and applyMove', () => {
     ).toEqual(['a.md', 'a.md', 'a.md', 'b/c.md']);
   });
 
+  it("moving a note leaves a draw.io diagram where it is and rewrites the note's link to it", async () => {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" content="&lt;mxfile/&gt;"/>';
+    const { storage, index } = await setup({ 'inbox/n.md': 'Flow\n\n![Flow](../_attachments/flow.drawio.svg)\n', '_attachments/flow.drawio.svg': svg });
+    const plan = planMove(index, 'inbox/n.md', 'projects/site');
+    expect(plan.outbound.map((e) => e.after)).toEqual(['![Flow](../../_attachments/flow.drawio.svg)']);
+    await applyMove(storage, index, plan, all(plan));
+    expect(await storage.read('projects/site/n.md')).toBe('Flow\n\n![Flow](../../_attachments/flow.drawio.svg)\n');
+    expect(await storage.read('_attachments/flow.drawio.svg')).toBe(svg); // the diagram itself is untouched
+    expect(index.resolveEmbed(index.notes.get('projects/site/n.md')!, '../../_attachments/flow.drawio.svg')).toBe('_attachments/flow.drawio.svg');
+  });
   it('uses full paths for plain name links when the name is shared with another note', async () => {
     const { index } = await setup({ 'x/n.md': 'N', 'y/n.md': 'N2', 'link.md': 'Go [[x/n]] or [[n]]' });
     const plan = planMove(index, 'x/n.md', 'z');

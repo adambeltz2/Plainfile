@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { ATTACHMENTS_DIR, mimeFor, pastedName, safeName, saveImage } from '../src/attachments';
+import { ATTACHMENTS_DIR, isDiagram, mimeFor, pastedName, safeName, saveImage } from '../src/attachments';
 import { VaultIndex } from '../src/index';
 import { MemoryStorage } from '../src/memory-storage';
 
 const NOW = new Date(2026, 10, 21, 14, 35, 12);
+
+describe('isDiagram', () => {
+  it('recognises a draw.io picture by its name', () => {
+    for (const ok of ['flow.drawio.svg', 'a/b/Flow.DRAWIO.PNG', 'x.drawio.svg#page', 'my%20flow.drawio.svg?v=2']) expect(isDiagram(ok), ok).toBe(true);
+    for (const no of ['flow.svg', 'flow.drawio', 'drawio.svg', 'flow.drawio.svg.bak', 'photo.png']) expect(isDiagram(no), no).toBe(false);
+  });
+});
 
 describe('attachments', () => {
   it('names a pasted image from the time, with no spaces or colons', () => {

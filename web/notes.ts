@@ -18,7 +18,7 @@ import { kindIcon } from './kind-icon';
 import { pinnedNotes as pinned } from '../src/pins';
 import { dropboxPath, fullPath } from '../src/filepath';
 import { localDateOf } from '../src/dates';
-import { saveImage, mimeFor } from '../src/attachments';
+import { saveImage, mimeFor, isDiagram } from '../src/attachments';
 import { dirname, joinPath } from '../src/index';
 import { parseNote, type Note } from '../src/parse';
 import { isProjectNote, listProjects, noteProjects, projectContents } from '../src/projects';
@@ -268,7 +268,18 @@ export async function openNote(path: string, at: At = {}): Promise<void> {
     notes.missingLink = undefined;
     // CodeMirror is loaded on first use, so the app opens without it.
     const { createEditor } = await import('./editor');
-    notes.handle = createEditor({ text: raw, crlf, today, onChange, onSave: () => void flush(), suggest, pasteImage, loadImage, openLink });
+    notes.handle = createEditor({
+      text: raw,
+      crlf,
+      today,
+      onChange,
+      onSave: () => void flush(),
+      suggest,
+      pasteImage,
+      loadImage,
+      editDiagram: (rel) => void editDiagram(rel),
+      openLink,
+    });
     rememberLast(path);
   } catch (e) {
     notes.handle?.destroy();
@@ -302,29 +313,53 @@ onVaultChange(() => {
   imageUrls.clear();
 });
 
-/** An image the note refers to, as a URL the editor can show. Kept until the folder changes. */
-async function loadImage(rel: string): Promise<string | undefined> {
-  const { storage, index } = state;
+/** The file in the folder that an image link in the open note points at, if there is one. */
+function imageFile(rel: string): string | undefined {
+  const { index } = state;
   const path = notes.path;
-  if (!storage || !index || !path) return undefined;
+  if (!index || !path) return undefined;
   let target: string;
   try {
     target = joinPath(dirname(path), decodeURI(rel));
   } catch {
     return undefined;
   }
-  const real = index.files.has(target) ? target : index.resolveEmbed(index.notes.get(path)!, decodeURI(rel));
-  if (!real) return undefined;
-  const hit = imageUrls.get(real);
-  if (hit) return hit;
+  return index.files.has(target) ? target : index.resolveEmbed(index.notes.get(path)!, decodeURI(rel));
+}
+
+/** An image the note refers to, as a URL the editor can show. Kept until the folder changes; a draw.io diagram is kept per version of the file, since it is edited in another program. */
+async function loadImage(rel: string): Promise<string | undefined> {
+  const { storage } = state;
+  const real = imageFile(rel);
+  if (!storage || !real) return undefined;
   try {
+    const key = isDiagram(real) ? `${real}@${(await storage.stat(real)).mtime}` : real;
+    const hit = imageUrls.get(key);
+    if (hit) return hit;
     const url = URL.createObjectURL(new Blob([(await storage.readBinary(real)) as unknown as BlobPart], { type: mimeFor(real) }));
-    imageUrls.set(real, url);
+    imageUrls.set(key, url);
     return url;
   } catch {
     return undefined;
   }
 }
+
+/** "Edit diagram" on a draw.io picture: copy where the file is, to open it in draw.io. The picture is redrawn when this window is back. */
+let diagramOpened = false;
+async function editDiagram(rel: string): Promise<void> {
+  const real = imageFile(rel);
+  if (!real) return;
+  diagramOpened = true;
+  await copyFilePath(real);
+  if (/^Copied/.test(notes.status)) setStatus(`${notes.status}. Open it in draw.io; the picture updates when you come back.`);
+}
+const redrawDiagrams = (): void => {
+  if (!diagramOpened || document.visibilityState === 'hidden') return;
+  diagramOpened = false;
+  notes.handle?.refreshImages();
+};
+window.addEventListener('focus', redrawDiagrams);
+document.addEventListener('visibilitychange', redrawDiagrams);
 
 /** The type-ahead for the editor: link targets (kept until the notes change) and the names already in use. */
 let linkCache: { version: number; path: string; list: LinkTarget[] } | undefined;
