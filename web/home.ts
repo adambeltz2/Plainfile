@@ -125,7 +125,7 @@ export function html(): string {
                 `<button class="item note-quick" data-open="${esc(f.path)}" data-line="${f.line}"><span>${esc(f.title)}</span><span class="muted small">${esc(f.from)}</span></button>`,
             ),
         ) + (followups.length > 4 ? `<button class="btn small" data-nav="tasks" data-view="followups">All ${followups.length} follow-ups</button>` : '')
-      : '<p class="muted small" style="margin:0">None. Tag a line <code>#followup</code> in any note and it shows here.</p>',
+      : '<p class="muted small" style="margin:0">None. Tag a line or a task <code>#followup</code> and it shows here.</p>',
     followups.length ? ` <span class="n">${followups.length}</span>` : '',
   );
   return `${h}</div><div class="home-today">${todayCard}</div></div></div>`;

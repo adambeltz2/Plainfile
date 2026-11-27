@@ -287,6 +287,8 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         tags: taskTags,
       });
       const mine = tasks[tasks.length - 1] as InlineTask;
+      // An open task tagged #followup is a follow-up too (the tag is the view), as well as a task.
+      if (mine.state === ' ' && taskTags.includes('followup')) followups.push({ line: lineNo, title: mine.title });
       for (const a of open) {
         a.task.sub = a.task.sub ?? { done: 0, total: 0 };
         a.task.sub.total++;
@@ -322,6 +324,8 @@ export function parseNote(path: string, rawText: string, meta: { mtime: number; 
         statusLine: idx + 2,
         statusRaw: lines[idx + 1] ?? '',
       };
+      // A task note tagged followup that is not finished is a follow-up too, as well as a task.
+      if (!fileTask.done && toStringList(fm.tags).some((t) => t.replace(/^#/, '').toLowerCase() === 'followup')) followups.push({ line: 1, title });
     }
   }
 

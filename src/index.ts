@@ -96,7 +96,7 @@ export interface IndexCache {
 }
 
 /** Bump when parsing changes in a way that makes saved notes wrong, so every cache is dropped. */
-export const PARSER_VERSION = 6; // 6: tasks carry a repeat rule; 5: tasks carry a completion date; 4: inline tasks carry status:doing/waiting; 3: tasks carry a priority; 2: inline tasks carry nested-checkbox counts
+export const PARSER_VERSION = 7; // 7: open tasks tagged #followup are follow-ups too; 6: tasks carry a repeat rule; 5: tasks carry a completion date; 4: inline tasks carry status:doing/waiting; 3: tasks carry a priority; 2: inline tasks carry nested-checkbox counts
 
 export class VaultIndex {
   /** Increases every time the index changes, so derived results can be cached. */

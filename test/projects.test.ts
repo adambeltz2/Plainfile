@@ -4,16 +4,28 @@ import { MemoryStorage } from '../src/memory-storage';
 import { parseNote } from '../src/parse';
 import { listFollowUps, listProjects, projectContents, projectDashboard } from '../src/projects';
 
-const parse = (text: string) => parseNote('a.md', text, { mtime: 1, size: 0 });
+const parse = (text: string, path = 'a.md') => parseNote(path, text, { mtime: 1, size: 0 });
 
 describe('follow-ups and preview (first Notebook app format)', () => {
-  it('finds #followup lines that are not checkboxes, with the tag and bullet removed', () => {
-    const n = parse('- Confirm oak vs walnut finish with Dana #followup\n#followup Chase legal\n- [ ] A task #followup\n```\n- code #followup\n```\n');
+  it('finds #followup lines, with the tag and bullet removed, and open tasks tagged #followup too; not code, not finished tasks', () => {
+    const n = parse(
+      '- Confirm oak vs walnut finish with Dana #followup\n#followup Chase legal\n- [ ] A task #followup\n- [x] Done one #followup\n```\n- code #followup\n```\n',
+    );
     expect(n.followups).toEqual([
       { line: 1, title: 'Confirm oak vs walnut finish with Dana' },
       { line: 2, title: 'Chase legal' },
+      { line: 3, title: 'A task' },
     ]);
-    expect(n.tasks).toHaveLength(1);
+    expect(n.tasks).toHaveLength(2); // the follow-up tag does not take a task out of the task list
+  });
+  it('a task note tagged followup is a follow-up until it is finished (what the one-line quick add makes)', () => {
+    const open = parse('---\ntitle: doing things\nstatus: todo\ntags: [followup]\n---\n\n', 'tasks/doing things.md');
+    expect(open.fileTask).toBeDefined();
+    expect(open.followups).toEqual([{ line: 1, title: 'doing things' }]);
+    const done = parse('---\ntitle: doing things\nstatus: done\ntags: [followup]\n---\n\n', 'tasks/doing things.md');
+    expect(done.followups).toEqual([]);
+    const plain = parse('---\ntitle: x\nstatus: todo\ntags: [other]\n---\n\n', 'tasks/x.md');
+    expect(plain.followups).toEqual([]);
   });
   it('writes the preview as plain words, without images, links or emphasis', () => {
     const n = parse('![logo](a/b.png)\n\n- See [[kickoff-call]] and [[pricing|Pricing notes]] and [site](https://x.com), **bold** `code`');
@@ -173,5 +185,22 @@ describe('closing out a project', () => {
         .map((t) => t.item.title)
         .sort(),
     ).toEqual(['Loose job', 'New job', 'Old job', 'Only old', 'Shared']);
+  });
+});
+
+describe('follow-ups across the vault', () => {
+  it('lists a quick-added task note tagged followup, so Home and the Tasks Follow-ups view show it', async () => {
+    const index = new VaultIndex(
+      new MemoryStorage({
+        'tasks/doing things.md': '---\ntitle: doing things\nstatus: todo\ntags: [followup]\n---\n\n',
+        'tasks/finished.md': '---\ntitle: finished\nstatus: done\ntags: [followup]\n---\n\n',
+        'n.md': '- Call back #followup\n',
+      }),
+    );
+    await index.scan();
+    expect(listFollowUps(index).map((f) => [f.path, f.line, f.title])).toEqual([
+      ['n.md', 1, 'Call back'],
+      ['tasks/doing things.md', 1, 'doing things'],
+    ]);
   });
 });

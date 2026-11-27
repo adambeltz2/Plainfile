@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versions follow
 `MAJOR.MINOR.PATCH`. The version in `package.json` is bumped on every
 deploy-intended change, together with an entry here.
 
+## [2.15.1] - 2026-11-27
+
+### Fixed
+- **A task tagged #followup now shows in Follow-ups.** Typing `doing things #followup` in the one-line add makes a task, and Follow-ups listed only lines that are not checkboxes, so the task never appeared there. Follow-ups now include any open task tagged `#followup` (a task made with the one-line add, or a checkbox line), and it leaves the list when it is done. It stays in Tasks as before. Home's Follow-ups card, the Tasks Follow-ups view and a project's follow-ups all follow.
+
 ## [2.15.0] - 2026-11-27
 
 ### Added
