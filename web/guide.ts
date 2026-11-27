@@ -238,7 +238,7 @@ export function html(): string {
   h += section(
     'notebook',
     'Follow-ups and projects',
-    '<p>From the first Notebook app, still supported. Any line tagged <code>#followup</code> appears in Follow-ups. A note with <code>active</code> or <code>sortOrder</code> becomes a numbered card in Projects. Make one with <b>+ New</b> then <b>Project</b>: it creates a folder with an index note, and the + Task and + Note buttons on its card file new things inside it.</p>' +
+    '<p>From the first Notebook app, still supported. Any line tagged <code>#followup</code> appears in Follow-ups, and so does any task (a checkbox line, or a task made with the one-line add) tagged <code>#followup</code> until it is done. A note with <code>active</code> or <code>sortOrder</code> becomes a numbered card in Projects. Make one with <b>+ New</b> then <b>Project</b>: it creates a folder with an index note, and the + Task and + Note buttons on its card file new things inside it.</p>' +
       block('follow', 'A follow-up', EX.follow) +
       block('project', 'A project note', EX.project),
   );

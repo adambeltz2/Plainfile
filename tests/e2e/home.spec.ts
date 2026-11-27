@@ -61,6 +61,18 @@ test.describe('Home', () => {
     await expect(page.locator('.cm-content')).toBeVisible();
   });
 
+  test('a task added from the one-line bar with #followup shows in Follow-ups and is still a task', async ({ page }) => {
+    await openVault(page, { 'a.md': '# A\n' }, true, 'home');
+    await expect(card(page, 'Follow-ups')).toContainText('None');
+    await page.locator('#quick-text').fill('doing things #followup');
+    await page.locator('#quick-text').press('Enter');
+    await expect(card(page, 'Follow-ups')).toContainText('doing things');
+    await expect(card(page, 'Follow-ups').locator('h3 .n')).toHaveText('1');
+    await nav(page, 'Tasks').click();
+    await page.locator('.hub-q, #hub-q').fill('doing things'); // a search spans every date view
+    await expect(page.getByRole('tab', { name: /^Tasks 1/ })).toBeVisible(); // it is still a task: the list has it
+  });
+
   test('on a phone Home has no sideways scroll and the quick bar and stats show', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await openVault(page, { 'a.md': '# A\n' }, true, 'home');
