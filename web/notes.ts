@@ -1,8 +1,8 @@
 import { noteKind } from '../src/note-kind';
 import { newNoteForLink, type LinkAt } from '../src/linknote';
-import { deleteNote, listTrash, planDelete, purgeTrashItem, restoreNote, type DeletePlan, type TrashItem } from '../src/delete';
-import { lineDiff, type LineChange } from '../src/diff';
-import { listVersions, readVersion, shouldSnapshot, snapshot, stampToDate, type Version } from '../src/history';
+import { listTrash, purgeTrashItem } from '../src/delete';
+import { lineDiff } from '../src/diff';
+import { readVersion, shouldSnapshot, snapshot } from '../src/history';
 import { bestLinkTarget } from '../src/fixes';
 import {
   addFrontmatterListItem,
@@ -29,71 +29,15 @@ import { outline } from '../src/outline';
 import { linkTargets, suggestionsFor, type LinkTarget } from '../src/vocabulary';
 import { ConflictError } from '../src/storage';
 import { readingStats } from '../src/render';
-import type { EditorHandle } from './editor';
 import { MOD } from './keys';
 import { errorMessage, onVaultChange, projectRef, render, state, today } from './store';
 import { esc } from './util';
 
-interface At {
-  line?: number;
-  offset?: number;
-  /** A word to select once the note is open, such as the one a search matched. */
-  find?: string;
-}
+import { notes, setStatus, type At } from './notes-state';
+import { deleteConfirmHtml, doDelete as deleteOpenNote, refreshTrash, restoreFromTrash as restoreTrashed, trashHtml } from './notes-trash';
+import { historyHtml, loadVersions, restoreVersion as restoreVersionText, updateHistoryButtons } from './notes-history';
 
-function loadPanes(): { list: boolean; details: boolean } {
-  try {
-    const v = JSON.parse(localStorage.getItem('plainfile.panes') ?? 'null') as { list?: boolean; details?: boolean } | null;
-    return { list: v?.list !== false, details: v?.details !== false };
-  } catch {
-    return { list: true, details: true };
-  }
-}
-
-export const notes = {
-  path: undefined as string | undefined,
-  mtime: 0,
-  saved: '',
-  handle: undefined as EditorHandle | undefined,
-  timer: 0,
-  sideTimer: 0,
-  saving: false,
-  conflict: false,
-  missing: false,
-  status: '',
-  diff: undefined as LineChange | undefined,
-  xray: false,
-  /** Asking where the folder is on this computer, so a note's full path can be copied. */
-  pathPrompt: false,
-  /** In focus mode, the side panel that is showing over the note, if any. */
-  peek: undefined as undefined | 'list' | 'details',
-  yaml: false,
-  filter: '',
-  pending: {} as At,
-  /** The delete confirmation that is showing: move to trash, or the second step for permanent. */
-  /** Which side panels show on a wide screen. Remembered in this browser. */
-  panes: loadPanes(),
-  confirmDelete: undefined as undefined | 'trash' | 'permanent',
-  /** A clicked link to a note that does not exist yet, waiting for Create or Cancel. */
-  missingLink: undefined as undefined | { path: string; title: string; content: string },
-  /** A delete is in progress, so the buttons say so and cannot be pressed twice. */
-  deleting: false,
-  lastDeleted: undefined as undefined | { title: string; path: string; trashPath?: string },
-  trash: [] as TrashItem[],
-  trashOpen: false,
-  purgeArm: undefined as string | undefined,
-  versions: [] as Version[],
-  historyOpen: false,
-  /** The Contents list in the side panel: open unless folded away. */
-  tocOpen: true,
-  lastSnapshotAt: undefined as number | undefined,
-  compare: undefined as undefined | { path: string; text: string },
-  /** Focus mode: the editor alone, centred, with everything else hidden. */
-  focus: false,
-  wantFocus: false,
-  /** How many notes the list shows. A huge folder would otherwise mean thousands of buttons. */
-  listLimit: 300,
-};
+export { notes, refreshTrash, updateHistoryButtons };
 
 const STATUSES = ['todo', 'doing', 'waiting', 'done'];
 /** The priorities offered in Properties. Any A to Z already in a note is kept and shown as well. */
@@ -110,12 +54,6 @@ onVaultChange(() => {
 });
 
 /* ---------- saving ---------- */
-
-function setStatus(text: string): void {
-  notes.status = text;
-  const el = document.getElementById('note-status');
-  if (el) el.textContent = text;
-}
 
 function schedule(): void {
   window.clearTimeout(notes.timer);
@@ -494,111 +432,6 @@ function listHtml(): string {
   return h;
 }
 
-const stamp = (): string => new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-
-function deleteConfirmHtml(): string {
-  const idx = state.index;
-  const path = notes.path;
-  if (!idx || !path) return '';
-  let plan: DeletePlan;
-  try {
-    plan = planDelete(idx, path, stamp());
-  } catch {
-    return '';
-  }
-  const from = [...new Set(plan.linkedFrom.map((l) => l.path))];
-  let h = `<div class="notice err" role="alertdialog" aria-label="Delete note"><b>Delete “${esc(plan.title)}”?</b><ul class="small" style="margin:6px 0 0;padding-left:18px">`;
-  h += from.length
-    ? `<li>${from.length} note${from.length === 1 ? ' links' : 's link'} here. Those links will point nowhere until you fix them in Vault health: <span class="mono">${from.slice(0, 3).map(esc).join(', ')}${from.length > 3 ? ` and ${from.length - 3} more` : ''}</span></li>`
-    : '<li>No other note links here.</li>';
-  if (plan.openTasks) h += `<li>${plan.openTasks} open task${plan.openTasks === 1 ? '' : 's'} in it will leave Today.</li>`;
-  if (plan.isProjectIndex) h += '<li>This is a project note, so the project card goes away. The other files in the folder stay.</li>';
-  h += '</ul>';
-  if (notes.confirmDelete === 'permanent') {
-    h +=
-      '<p class="small" style="margin:8px 0 0"><b>This removes the file from your folder for good. There is no undo.</b></p>' +
-      `<div class="row-gap"><button class="btn primary" data-act="delete-perm-yes"${notes.deleting ? ' disabled' : ''}>${notes.deleting ? 'Deleting…' : 'Yes, delete permanently'}</button><button class="btn" data-act="delete-cancel"${notes.deleting ? ' disabled' : ''}>Cancel</button></div>`;
-  } else {
-    h +=
-      `<div class="row-gap"><button class="btn primary" data-act="delete-trash"${notes.deleting ? ' disabled' : ''}>${notes.deleting ? 'Moving to trash…' : 'Move to trash'}</button><button class="btn" data-act="delete-perm"${notes.deleting ? ' disabled' : ''}>Delete permanently…</button><button class="btn" data-act="delete-cancel"${notes.deleting ? ' disabled' : ''}>Cancel</button></div>` +
-      '<p class="muted small" style="margin:6px 0 0">Moving to trash keeps a copy in <span class="mono">.plainfile/trash/</span> that you can restore.</p>';
-  }
-  return `${h}</div>`;
-}
-
-function trashHtml(): string {
-  const items = notes.trash;
-  if (!items.length) return '';
-  let h = `<div class="trash"><button class="link small" data-act="trash-toggle" aria-expanded="${notes.trashOpen}">Trash (${items.length})</button>`;
-  if (notes.trashOpen) {
-    h += `<ul class="plain small">${items
-      .map(
-        (i) =>
-          `<li class="trow"><span class="mono" title="${esc(i.originalPath)}">${esc(i.originalPath)}</span><span class="acts">` +
-          `<button class="btn small" data-act="trash-restore" data-trash="${esc(i.trashPath)}">Restore</button>` +
-          `<button class="btn small" data-act="trash-purge" data-trash="${esc(i.trashPath)}">${notes.purgeArm === i.trashPath ? 'Really delete?' : 'Delete forever'}</button></span></li>`,
-      )
-      .join('')}</ul>`;
-  }
-  return `${h}</div>`;
-}
-
-export async function refreshTrash(): Promise<void> {
-  const s = state.storage;
-  notes.trash = s ? await listTrash(s).catch(() => []) : [];
-  const el = document.getElementById('note-trash');
-  if (el) el.innerHTML = trashHtml();
-}
-
-async function doDelete(trash: boolean): Promise<void> {
-  const { storage, index } = state;
-  const path = notes.path;
-  if (!storage || !index || !path || notes.deleting) return;
-  window.clearTimeout(notes.timer);
-  notes.deleting = true;
-  refreshBanner();
-  await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))); // let "Moving to trash…" show before the slow part
-  try {
-    const plan = planDelete(index, path, stamp());
-    const r = await deleteNote(storage, index, plan, { trash });
-    notes.handle?.destroy();
-    notes.handle = undefined;
-    notes.path = undefined;
-    notes.confirmDelete = undefined;
-    notes.lastDeleted = { title: plan.title, path, trashPath: r.trashedTo };
-    if (state.selected && !index.getTask(state.selected)) {
-      state.selected = undefined;
-      state.context = undefined;
-    }
-    await refreshTrash();
-  } catch (e) {
-    notes.confirmDelete = undefined;
-    state.error =
-      e instanceof ConflictError
-        ? 'That note changed on disk, so it was not deleted. Reload it and try again.'
-        : `Could not delete ${path}. ${errorMessage(e)}`;
-  } finally {
-    notes.deleting = false;
-  }
-  render();
-}
-
-async function restoreFromTrash(trashPath: string): Promise<void> {
-  const { storage, index } = state;
-  if (!storage || !index) return;
-  const item = (await listTrash(storage)).find((i) => i.trashPath === trashPath);
-  if (!item) return;
-  try {
-    const restored = await restoreNote(storage, index, item);
-    notes.lastDeleted = undefined;
-    await refreshTrash();
-    await openNote(restored);
-  } catch (e) {
-    state.error = `Could not restore ${item.originalPath}. ${errorMessage(e)}`;
-    render();
-  }
-}
-
 /** "320 words · 1 min read" for the open note, from what is in the editor. */
 function statsText(): string {
   const text = notes.handle?.getText() ?? state.index?.notes.get(notes.path ?? '')?.text ?? '';
@@ -721,83 +554,6 @@ function propsHtml(): string {
   if (!hasPriority) add.push('<button class="btn small" data-act="add-prop" data-key="priority" data-val="A">+ Priority</button>');
   if (!hasDue) add.push(`<button class="btn small" data-act="add-prop" data-key="due" data-val="${esc(addDays(today(), 7))}">+ Due date</button>`);
   return out + (add.length ? `<div class="row-gap">${add.join('')}</div>` : '');
-}
-
-export function updateHistoryButtons(): void {
-  const h = notes.handle;
-  const u = document.getElementById('note-undo') as HTMLButtonElement | null;
-  const r = document.getElementById('note-redo') as HTMLButtonElement | null;
-  if (u) u.disabled = !h?.canUndo();
-  if (r) r.disabled = !h?.canRedo();
-}
-
-async function refreshVersions(): Promise<void> {
-  const { storage } = state;
-  if (!storage || !notes.path) return;
-  notes.versions = await listVersions(storage, notes.path).catch(() => []);
-  refreshSide();
-}
-
-function ago(d: Date): string {
-  const s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
-  if (s < 90) return 'just now';
-  if (s < 3600) return `${Math.round(s / 60)} min ago`;
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
-  return `${Math.round(s / 86400)} d ago`;
-}
-
-function sizeOf(n: number): string {
-  return n < 1024 ? `${n} bytes` : `${(n / 1024).toFixed(1)} KB`;
-}
-
-function historyHtml(): string {
-  const n = notes.versions.length;
-  let h = `<h2 style="margin-top:16px">History <button class="btn small" data-act="history-toggle" aria-expanded="${notes.historyOpen}">${n} saved</button></h2>`;
-  if (!n)
-    return `${h}<p class="muted small" style="margin:0">Earlier versions of this note appear here after you edit and save it, so a mistake can be undone even after you close it.</p>`;
-  if (!notes.historyOpen) return h;
-  const cur = notes.handle?.getText() ?? '';
-  h += '<ul class="plain small">';
-  for (const v of notes.versions) {
-    const d = stampToDate(v.stamp);
-    h +=
-      `<li class="vrow"><div><b>${esc(d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }))}</b> <span class="muted">${esc(ago(d))} · ${esc(sizeOf(v.size))}</span></div>` +
-      `<span class="acts"><button class="btn small" data-act="ver-compare" data-ver="${esc(v.path)}">Compare</button><button class="btn small" data-act="ver-restore" data-ver="${esc(v.path)}">Restore</button></span>`;
-    if (notes.compare?.path === v.path) {
-      const c = lineDiff(cur, notes.compare.text);
-      h += '<div class="diff plain-box" style="width:100%">';
-      if (!c) h += '<div class="muted">Identical to what you have now.</div>';
-      else {
-        h += `<div class="cap">If you restore this</div><div class="muted">from line ${c.start}</div>`;
-        for (const l of c.removed.slice(0, 5)) h += `<div class="del"><span class="sg">−</span><span>${esc(l) || ' '}</span></div>`;
-        for (const l of c.added.slice(0, 5)) h += `<div class="add"><span class="sg">+</span><span>${esc(l) || ' '}</span></div>`;
-        const more = Math.max(c.removed.length, c.added.length) - 5;
-        if (more > 0) h += `<div class="muted">and ${more} more changed line${more === 1 ? '' : 's'}</div>`;
-      }
-      h += '</div>';
-    }
-    h += '</li>';
-  }
-  return `${h}</ul><p class="muted small" style="margin:6px 0 0">Restoring is an edit, so Undo brings back what you had.</p>`;
-}
-
-async function restoreVersion(path: string): Promise<void> {
-  const h = notes.handle;
-  const { storage } = state;
-  const v = notes.versions.find((x) => x.path === path);
-  if (!h || !storage || !notes.path || !v) return;
-  const text = await readVersion(storage, v);
-  try {
-    await snapshot(storage, notes.path, h.getText());
-    notes.lastSnapshotAt = Date.now();
-  } catch {
-    /* best effort */
-  }
-  h.applyText(text);
-  notes.compare = undefined;
-  setStatus('Restored an earlier version. Undo brings back what you had.');
-  await refreshVersions();
-  updateHistoryButtons();
 }
 
 /** The little buttons that collapse a side panel, and the edge tabs that bring it back. Wide screens only. */
@@ -1279,4 +1035,23 @@ export function addProject(): void {
   if (!now.some((x) => x.toLowerCase() === name.toLowerCase())) h.applyText(setProjects(h.getText(), [...now, name]));
   refreshSide();
   document.getElementById('prop-project')?.focus();
+}
+
+/** Reads the open note's saved versions and redraws the side panel. */
+async function refreshVersions(): Promise<void> {
+  await loadVersions();
+  refreshSide();
+}
+
+async function restoreVersion(path: string): Promise<void> {
+  await restoreVersionText(path);
+  refreshSide();
+}
+
+async function doDelete(trash: boolean): Promise<void> {
+  await deleteOpenNote(trash, refreshBanner);
+}
+
+async function restoreFromTrash(trashPath: string): Promise<void> {
+  await restoreTrashed(trashPath, openNote);
 }
